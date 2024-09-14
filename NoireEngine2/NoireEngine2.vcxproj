@@ -66,7 +66,10 @@
     <NMakeBuildCommandLine>node src/Maekfile.js</NMakeBuildCommandLine>
     <NMakeOutput>src/bin/main.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src</NMakeIncludeSearchPath>
+    <AdditionalOptions>/std:c++20</AdditionalOptions>
+    <NMakeForcedIncludes>
+    </NMakeForcedIncludes>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <NMakeBuildCommandLine>node Maekfile.js</NMakeBuildCommandLine>
@@ -88,7 +91,13 @@
   <ItemGroup>
     <ClCompile Include="src\Helpers.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\PosColVertex.cpp" />
+    <ClCompile Include="src\PosColVertex.hpp" />
+    <ClCompile Include="src\PosNorTexVertex.cpp" />
     <ClCompile Include="src\RTG.cpp" />
+    <ClCompile Include="src\Tutorial-BackgroundPipeline.cpp" />
+    <ClCompile Include="src\Tutorial-LinesPipeline.cpp" />
+    <ClCompile Include="src\Tutorial-ObjectsPipeline.cpp" />
     <ClCompile Include="src\Tutorial.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -96,10 +105,21 @@
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3native.h" />
     <ClInclude Include="src\Helpers.hpp" />
     <ClInclude Include="src\InputEvent.hpp" />
+    <ClInclude Include="src\mat4.hpp" />
+    <ClInclude Include="src\PosNorTexVertex.hpp" />
     <ClInclude Include="src\refsol.hpp" />
     <ClInclude Include="src\RTG.hpp" />
     <ClInclude Include="src\Tutorial.hpp" />
     <ClInclude Include="src\VK.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\background.frag" />
+    <None Include="src\background.vert" />
+    <None Include="src\lines.frag" />
+    <None Include="src\lines.vert" />
+    <None Include="src\Maekfile.js" />
+    <None Include="src\objects.frag" />
+    <None Include="src\objects.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
