@@ -27,7 +27,8 @@ ThreadPool::ThreadPool(uint32_t threadCount) {
 	}
 }
 
-ThreadPool::~ThreadPool() {
+ThreadPool::~ThreadPool() 
+{
 	std::unique_lock<std::mutex> lock(queueMutex);
 	stop = true;
 
@@ -37,7 +38,8 @@ ThreadPool::~ThreadPool() {
 		worker.join();
 }
 
-void ThreadPool::Wait() {
+void ThreadPool::Wait() 
+{
 	std::unique_lock<std::mutex> lock(queueMutex);
 
 	condition.wait(lock, [this]() {
