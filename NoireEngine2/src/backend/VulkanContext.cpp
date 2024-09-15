@@ -1,9 +1,11 @@
 #include "VulkanContext.hpp"
 
 #include <vulkan/vk_enum_string_helper.h>
-#include <format>
 
-VulkanContext::VulkanContext()
+VulkanContext::VulkanContext() :
+    s_Instance(std::make_unique<VulkanInstance>()),
+    s_PhysicalDevice(std::make_unique<PhysicalDevice>(*s_Instance)),
+    s_LogicalDevice(std::make_unique<LogicalDevice>(*s_Instance, *s_PhysicalDevice))
 {
 }
 
@@ -33,4 +35,12 @@ void VulkanContext::VK_CHECK(VkResult err, const char* msg)
         return;
 
     std::runtime_error(std::format("[vulkan] Error: {}, with err {}", msg, string_VkResult(err)));
+}
+
+void VulkanContext::CreatePipelineCache()
+{
+    VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+    pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+    VK_CHECK(vkCreatePipelineCache(*s_LogicalDevice, &pipelineCacheCreateInfo, nullptr, &m_PipelineCache),
+        "[vulkan] Error creating pipeline cache");
 }

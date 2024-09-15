@@ -29,6 +29,9 @@ const main_objs = [
 const vulkan_objs = [
 	maek.CPP('backend/VulkanContext.cpp'),
 	maek.CPP('backend/devices/VulkanInstance.cpp'),
+	maek.CPP('backend/devices/LogicalDevice.cpp'),
+	maek.CPP('backend/devices/PhysicalDevice.cpp'),
+	maek.CPP('backend/devices/Surface.cpp'),
 ]
 
 // executable

@@ -90,6 +90,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\backend\devices\LogicalDevice.cpp" />
+    <ClCompile Include="src\backend\devices\PhysicalDevice.cpp" />
+    <ClCompile Include="src\backend\devices\Surface.cpp" />
     <ClCompile Include="src\core\layers\LayerStack.cpp" />
     <ClCompile Include="src\core\Time.cpp" />
     <ClCompile Include="src\backend\VulkanContext.cpp" />
@@ -100,6 +103,9 @@
     <ClInclude Include="src\Application.hpp" />
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h" />
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3native.h" />
+    <ClInclude Include="src\backend\devices\LogicalDevice.hpp" />
+    <ClInclude Include="src\backend\devices\PhysicalDevice.hpp" />
+    <ClInclude Include="src\backend\devices\Surface.hpp" />
     <ClInclude Include="src\core\Core.hpp" />
     <ClInclude Include="src\core\KeyCodes.hpp" />
     <ClInclude Include="src\core\layers\Layer.hpp" />

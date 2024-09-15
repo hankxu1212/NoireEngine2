@@ -1,7 +1,4 @@
-#include "VulkanInstance.hpp"
-
-#include <iostream>
-#include <format>
+#include "backend/VulkanContext.hpp"
 
 static bool CheckValidationLayerSupport(const std::vector<const char*>& g_ValidationLayers) {
     uint32_t layerCount;
@@ -111,25 +108,6 @@ const std::vector<const char*> VulkanInstance::ValidationLayers = {
 
 VulkanInstance::VulkanInstance()
 {
-    VkDebugUtilsMessengerCreateInfoEXT debug_create_info{};
-    CreateInstance(debug_create_info);
-
-    if (m_EnableValidationLayers) {
-        VulkanContext::VK_CHECK(CreateDebugUtilsMessengerEXT(m_Instance, &debug_create_info, nullptr, &m_DebugMessenger),
-            "[vulkan] Error: cannot create debug messenger");
-    }
-}
-
-VulkanInstance::~VulkanInstance()
-{
-    if (m_EnableValidationLayers) {
-        DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
-    }
-    vkDestroyInstance(m_Instance, nullptr);
-}
-
-void VulkanInstance::CreateInstance(VkDebugUtilsMessengerCreateInfoEXT& debug_create_info) {
-    // Application Info
     VkApplicationInfo app_info{};
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     app_info.pApplicationName = "Noire Engine Application";
@@ -144,10 +122,11 @@ void VulkanInstance::CreateInstance(VkDebugUtilsMessengerCreateInfoEXT& debug_cr
     instance_create_info.pApplicationInfo = &app_info;
 
     // Validation Layers
-    if (m_EnableValidationLayers && !CheckValidationLayerSupport(ValidationLayers))
+    if (ValidationLayersEnabled && !CheckValidationLayerSupport(ValidationLayers))
         std::runtime_error("[vulkan] Error: Failed validation layer support check");
 
-    if (m_EnableValidationLayers) {
+    VkDebugUtilsMessengerCreateInfoEXT debug_create_info {};
+    if (ValidationLayersEnabled) {
         instance_create_info.enabledLayerCount = static_cast<uint32_t>(ValidationLayers.size());
         instance_create_info.ppEnabledLayerNames = ValidationLayers.data();
 
@@ -174,7 +153,7 @@ void VulkanInstance::CreateInstance(VkDebugUtilsMessengerCreateInfoEXT& debug_cr
     vkEnumerateInstanceExtensionProperties(nullptr, &properties_count, properties.data());
 
     // Enable required extensions (portability and some MoltenSDK compatability stuff)
-    if (m_EnableValidationLayers) {
+    if (ValidationLayersEnabled) {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
     if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
@@ -190,4 +169,17 @@ void VulkanInstance::CreateInstance(VkDebugUtilsMessengerCreateInfoEXT& debug_cr
     instance_create_info.ppEnabledExtensionNames = extensions.data();
     VulkanContext::VK_CHECK(vkCreateInstance(&instance_create_info, nullptr, &m_Instance),
         "[vulkan] Error: cannot create instance");
+
+    if (ValidationLayersEnabled) {
+        VulkanContext::VK_CHECK(CreateDebugUtilsMessengerEXT(m_Instance, &debug_create_info, nullptr, &m_DebugMessenger),
+            "[vulkan] Error: cannot create debug messenger");
+    }
+}
+
+VulkanInstance::~VulkanInstance()
+{
+    if (ValidationLayersEnabled) {
+        DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
+    }
+    vkDestroyInstance(m_Instance, nullptr);
 }
