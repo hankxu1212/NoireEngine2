@@ -2,8 +2,10 @@
 
 #include <bitset>
 #include <functional>
+#include <memory>
 
 #include "utils/Type.hpp"
+#include "utils/Singleton.hpp"
 
 template<typename Base>
 class ModuleFactory {
@@ -73,27 +75,6 @@ public:
 			return true;
 		}
 
-		/**
-		  * Creates a new module singleton instance and registers into the module registry map.
-		  * @tparam Args Modules that will be initialized before this module.
-		  * @return A dummy value in static initialization.
-		  * Note: classes that use RegisterCreate() must implement static T* Create()
-		*/
-		template<typename ... Args>
-		static bool RegisterCreate(typename Base::UpdateStage stage, typename Base::DestroyStage destroyStage, Requires<Args...>&& requiredModules = {}) 
-		{
-			TypeId index = Type<Base>::template GetTypeId<T>();
-
-			RegistryMap& registryMap = ModuleFactory::GetRegistry();
-
-			registryMap[index] = { 
-				[]() {
-					moduleInstance = T::Create();
-					return std::unique_ptr<Base>(moduleInstance);
-				}, stage, destroyStage, requiredModules.Get() 
-			};
-			return true;
-		}
 	protected:
 		inline static T* moduleInstance = nullptr;
 	};

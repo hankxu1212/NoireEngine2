@@ -26,8 +26,13 @@ const main_objs = [
 	maek.CPP('core/window/Window.cpp')
 ];
 
+const vulkan_objs = [
+	maek.CPP('backend/VulkanContext.cpp'),
+	maek.CPP('backend/devices/VulkanInstance.cpp'),
+]
+
 // executable
-const main_exe = maek.LINK([...main_objs], 'bin/main');
+const main_exe = maek.LINK([...main_objs, ...vulkan_objs], 'bin/main');
 maek.TARGETS = [main_exe];
 
 //- - - - - - - - - - - - - - - - - - - - -
@@ -87,6 +92,7 @@ function custom_flags_and_rules() {
 			`/I${VULKAN_SDK}/Include`,
 			`/I../src/`,
 			`/I../vendor/glfw-3.4.bin.WIN64/include`,
+			`/I../vendor/glm/`,
 			'/O2'
 		];
 

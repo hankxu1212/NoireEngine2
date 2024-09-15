@@ -94,6 +94,7 @@
     <ClCompile Include="src\core\Time.cpp" />
     <ClCompile Include="src\backend\VulkanContext.cpp" />
     <ClCompile Include="src\core\window\Window.cpp" />
+    <ClCompile Include="src\backend\devices\VulkanInstance.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.hpp" />
@@ -115,6 +116,7 @@
     <ClInclude Include="src\utils\Type.hpp" />
     <ClInclude Include="src\backend\VulkanContext.hpp" />
     <ClInclude Include="src\core\window\Window.hpp" />
+    <ClInclude Include="src\backend\devices\VulkanInstance.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />

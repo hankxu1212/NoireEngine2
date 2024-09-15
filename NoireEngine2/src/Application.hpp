@@ -68,8 +68,8 @@ private:
 	bool								m_Running = true;
 	bool								m_Minimized = false;
 	float								m_LastFrameTime = 0.0f;
-	uint16_t							m_FPS;
-	uint16_t							m_FPS_Accumulator;
+	uint16_t							m_FPS = 0;
+	uint16_t							m_FPS_Accumulator = 0;
 
 	LayerStack							m_LayerStack;
 
@@ -77,7 +77,7 @@ private:
 	std::mutex							m_MainThreadQueueMutex;
 
 	std::map<TypeId, std::unique_ptr<Module>>				m_Modules;
-	std::map<Module::UpdateStage, std::vector<TypeId>>			m_ModuleStages;
+	std::map<Module::UpdateStage, std::vector<TypeId>>		m_ModuleStages;
 	std::map<Module::DestroyStage, std::vector<TypeId>>		m_ModuleDestroyStages;
 private:
 	static Application* s_Instance;
