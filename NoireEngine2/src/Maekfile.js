@@ -23,6 +23,7 @@ const main_objs = [
 	maek.CPP('Entrypoint.cpp'),
 	maek.CPP('Application.cpp'),
 	maek.CPP('core/layers/LayerStack.cpp'),
+	maek.CPP('core/window/Window.cpp')
 ];
 
 // executable

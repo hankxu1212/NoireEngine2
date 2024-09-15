@@ -92,6 +92,8 @@
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\core\layers\LayerStack.cpp" />
     <ClCompile Include="src\core\Time.cpp" />
+    <ClCompile Include="src\backend\VulkanContext.cpp" />
+    <ClCompile Include="src\core\window\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.hpp" />
@@ -108,9 +110,11 @@
     <ClInclude Include="src\core\events\Event.hpp" />
     <ClInclude Include="src\core\events\KeyEvent.hpp" />
     <ClInclude Include="src\core\events\MouseEvent.hpp" />
-    <ClInclude Include="src\resources\Module.hpp" />
+    <ClInclude Include="src\core\resources\Module.hpp" />
     <ClInclude Include="src\utils\Singleton.hpp" />
     <ClInclude Include="src\utils\Type.hpp" />
+    <ClInclude Include="src\backend\VulkanContext.hpp" />
+    <ClInclude Include="src\core\window\Window.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />

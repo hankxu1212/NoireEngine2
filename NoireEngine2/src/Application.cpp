@@ -3,11 +3,21 @@
 #include "core/Core.hpp"
 #include "Application.hpp"
 #include "core/Time.hpp"
+#include "core/window/Window.hpp"
 
+Application* Application::s_Instance = nullptr;
 float Time::DeltaTime;
 
 Application::Application(const ApplicationSpecification& specification)
+	: m_Specification(specification)
 {
+	s_Instance = this;
+
+	for (auto it = Module::GetRegistry().begin(); it != Module::GetRegistry().end(); ++it)
+		CreateModule(it);
+
+	// initializes window
+	Window::Get()->SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
 }
 
 Application::~Application()
@@ -35,10 +45,10 @@ void Application::Run()
 
 			UpdateStage(Module::UpdateStage::Normal);
 
-			//for (Layer* layer : m_LayerStack)
-			//{
-			//	layer->OnUpdate();
-			//}
+			for (Layer* layer : m_LayerStack)
+			{
+				layer->OnUpdate();
+			}
 
 			UpdateStage(Module::UpdateStage::Post);
 
@@ -65,6 +75,19 @@ void Application::SubmitToMainThread(const std::function<void()>& function)
 	std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
 
 	m_MainThreadQueue.emplace_back(function);
+}
+
+void Application::OnEvent(Event& e)
+{
+	e.Dispatch<WindowCloseEvent>(NE_BIND_EVENT_FN(Application::OnWindowClose));
+	e.Dispatch<WindowResizeEvent>(NE_BIND_EVENT_FN(Application::OnWindowResize));
+
+	for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
+	{
+		if (e.Handled)
+			break;
+		(*it)->OnEvent(e);
+	}
 }
 
 bool Application::OnWindowClose(WindowCloseEvent& e)

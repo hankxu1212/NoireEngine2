@@ -7,7 +7,7 @@
 #include <map>
 
 #include "utils/Singleton.hpp"
-#include "resources/Module.hpp"
+#include "core/resources/Module.hpp"
 #include "core/events/ApplicationEvent.hpp"
 #include "core/layers/LayerStack.hpp"
 
@@ -39,13 +39,16 @@ public:
 	Application(const ApplicationSpecification& specification);
 	~Application();
 
+	void SubmitToMainThread(const std::function<void()>& function);
+
+	void OnEvent(Event& e);
+
+	void Close();
+
 	static Application& Get() { return *s_Instance; }
 	static const char* GetArgs() { return s_Instance->GetSpecification().CommandLineArgs.Args[0]; }
 	static const ApplicationSpecification& GetSpecification() { return s_Instance->m_Specification; }
 	static const uint16_t GetFPS() { return s_Instance->m_FPS; }
-
-	void SubmitToMainThread(const std::function<void()>& function);
-	void Close();
 
 private:
 	void Run();
