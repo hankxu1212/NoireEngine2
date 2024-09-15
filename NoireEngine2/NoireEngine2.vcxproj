@@ -90,7 +90,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\core\layers\LayerStack.cpp" />
     <ClCompile Include="src\core\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -99,8 +98,6 @@
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3native.h" />
     <ClInclude Include="src\core\Core.hpp" />
     <ClInclude Include="src\core\KeyCodes.hpp" />
-    <ClInclude Include="src\core\layers\Layer.hpp" />
-    <ClInclude Include="src\core\layers\LayerStack.hpp" />
     <ClInclude Include="src\core\MouseCodes.hpp" />
     <ClInclude Include="src\core\Time.hpp" />
     <ClInclude Include="src\Entrypoint.cpp" />
