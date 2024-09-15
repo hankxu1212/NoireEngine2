@@ -7,12 +7,12 @@ class LogicalDevice;
 class PhysicalDevice;
 class Window;
 
-class VulkanSurface 
+class Surface 
 {
 	friend class VulkanContext;
 public:
-	VulkanSurface(const VulkanInstance& instance, const PhysicalDevice& physicalDevice, const LogicalDevice& logicalDevice, Window* window);
-	~VulkanSurface();
+	Surface(const VulkanInstance& instance, const PhysicalDevice& physicalDevice, const LogicalDevice& logicalDevice, Window* window);
+	~Surface();
 
 	void UpdateCapabilities();
 

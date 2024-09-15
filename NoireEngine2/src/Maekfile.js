@@ -35,7 +35,8 @@ const vulkan_objs = [
 	maek.CPP('backend/devices/PhysicalDevice.cpp'),
 	maek.CPP('backend/devices/Surface.cpp'),
 	maek.CPP('backend/commands/CommandBuffer.cpp'),
-	maek.CPP('backend/commands/CommandPool.cpp')
+	maek.CPP('backend/commands/CommandPool.cpp'),
+	maek.CPP('backend/images/Image.cpp')
 ]
 
 // executable

@@ -1,6 +1,6 @@
 #include "backend/VulkanContext.hpp"
 
-VulkanSurface::VulkanSurface(const VulkanInstance& instance, const PhysicalDevice& physicalDevice, const LogicalDevice& logicalDevice, Window* window) :
+Surface::Surface(const VulkanInstance& instance, const PhysicalDevice& physicalDevice, const LogicalDevice& logicalDevice, Window* window) :
 	m_Window(window)
 {
 	// Creates the glfw surface.
@@ -48,12 +48,12 @@ VulkanSurface::VulkanSurface(const VulkanInstance& instance, const PhysicalDevic
 	assert(presentSupport && "[vulkan] Error: Present queue family does not have presentation support");
 }
 
-VulkanSurface::~VulkanSurface() 
+Surface::~Surface() 
 {
 	vkDestroySurfaceKHR(*(VulkanContext::Get()->getInstance()), m_Surface, nullptr);
 }
 
-void VulkanSurface::UpdateCapabilities()
+void Surface::UpdateCapabilities()
 {
 	VulkanContext::VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*(VulkanContext::Get()->getPhysicalDevice()), m_Surface, &m_Capabilities),
 		"[vulkan] Error: cannot get surface capabilities.");

@@ -61,7 +61,3 @@ void Bitmap::Write(const std::filesystem::path& filename)
 	std::unique_ptr<uint8_t[]> png(stbi_write_png_to_mem(data.get(), size.x * bytesPerPixel, size.x, size.y, bytesPerPixel, &len));
 	os.write(reinterpret_cast<char*>(png.get()), len);
 }
-
-uint32_t Bitmap::GetLength() const {
-	return size.x * size.y * bytesPerPixel;
-}

@@ -16,8 +16,9 @@ public:
 
 	operator bool() const noexcept { return !data; }
 
-	uint32_t GetLength() const;
-private:
+	uint32_t GetLength() const { return size.x * size.y * bytesPerPixel; }
+
+public:
 	std::unique_ptr<uint8_t[]> data;
 	glm::uvec2 size;
 	uint32_t bytesPerPixel = 0;
