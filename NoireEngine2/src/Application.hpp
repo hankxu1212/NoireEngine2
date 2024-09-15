@@ -9,6 +9,7 @@
 #include "utils/Singleton.hpp"
 #include "resources/Module.hpp"
 #include "core/events/ApplicationEvent.hpp"
+#include "core/layers/LayerStack.hpp"
 
 int main(int argc, char** argv);
 
@@ -66,6 +67,8 @@ private:
 	float								m_LastFrameTime = 0.0f;
 	uint16_t							m_FPS;
 	uint16_t							m_FPS_Accumulator;
+
+	LayerStack							m_LayerStack;
 
 	std::vector<std::function<void()>>	m_MainThreadQueue;
 	std::mutex							m_MainThreadQueueMutex;

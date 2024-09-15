@@ -17,7 +17,6 @@ Application::~Application()
 void Application::Run()
 {
 	auto before = std::chrono::high_resolution_clock::now();
-
 	while (m_Running)
 	{
 		auto after = std::chrono::high_resolution_clock::now();
@@ -35,6 +34,11 @@ void Application::Run()
 			UpdateStage(Module::UpdateStage::Pre);
 
 			UpdateStage(Module::UpdateStage::Normal);
+
+			//for (Layer* layer : m_LayerStack)
+			//{
+			//	layer->OnUpdate();
+			//}
 
 			UpdateStage(Module::UpdateStage::Post);
 
