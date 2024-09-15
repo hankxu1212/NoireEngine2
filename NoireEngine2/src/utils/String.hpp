@@ -1,10 +1,11 @@
 #pragma once
 
 #include <vector>
+#include "utils/Type.hpp"
 
 /**
-	* @brief Helper class for C++ strings.
-	*/
+  * @brief Helper class for C++ strings.
+*/
 class String {
 public:
 	String() = delete;
