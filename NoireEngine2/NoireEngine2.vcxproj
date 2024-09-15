@@ -90,6 +90,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\backend\commands\CommandBuffer.cpp" />
+    <ClCompile Include="src\backend\commands\CommandPool.cpp" />
     <ClCompile Include="src\backend\devices\LogicalDevice.cpp" />
     <ClCompile Include="src\backend\devices\PhysicalDevice.cpp" />
     <ClCompile Include="src\backend\devices\Surface.cpp" />
@@ -103,6 +105,8 @@
     <ClInclude Include="src\Application.hpp" />
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h" />
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3native.h" />
+    <ClInclude Include="src\backend\commands\CommandBuffer.hpp" />
+    <ClInclude Include="src\backend\commands\CommandPool.hpp" />
     <ClInclude Include="src\backend\devices\LogicalDevice.hpp" />
     <ClInclude Include="src\backend\devices\PhysicalDevice.hpp" />
     <ClInclude Include="src\backend\devices\Surface.hpp" />

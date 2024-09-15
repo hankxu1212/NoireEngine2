@@ -37,6 +37,13 @@ void VulkanContext::VK_CHECK(VkResult err, const char* msg)
     std::runtime_error(std::format("[vulkan] Error: {}, with err {}", msg, string_VkResult(err)));
 }
 
+std::shared_ptr<CommandPool>& VulkanContext::GetCommandPool(const TID& threadId)
+{
+    if (auto it = m_CommandPools.find(threadId); it != m_CommandPools.end())
+        return it->second;
+    return m_CommandPools.emplace(threadId, std::make_shared<CommandPool>(threadId)).first->second;
+}
+
 void VulkanContext::CreatePipelineCache()
 {
     VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};

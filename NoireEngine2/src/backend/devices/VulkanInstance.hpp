@@ -3,7 +3,8 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
-class VulkanInstance {
+class VulkanInstance 
+{
 public:
 	VulkanInstance();
 	~VulkanInstance();
@@ -14,6 +15,7 @@ public:
 
 	static const std::vector<const char*>  ValidationLayers;
 	bool ValidationLayersEnabled = true;
+
 private:
 	VkDebugUtilsMessengerEXT		m_DebugMessenger = VK_NULL_HANDLE;
 	VkInstance						m_Instance = VK_NULL_HANDLE;

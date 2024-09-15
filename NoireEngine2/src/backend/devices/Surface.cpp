@@ -48,7 +48,8 @@ VulkanSurface::VulkanSurface(const VulkanInstance& instance, const PhysicalDevic
 	assert(presentSupport && "[vulkan] Error: Present queue family does not have presentation support");
 }
 
-VulkanSurface::~VulkanSurface() {
+VulkanSurface::~VulkanSurface() 
+{
 	vkDestroySurfaceKHR(*(VulkanContext::Get()->getInstance()), m_Surface, nullptr);
 }
 

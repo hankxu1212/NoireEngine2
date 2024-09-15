@@ -20,7 +20,8 @@ LogicalDevice::~LogicalDevice() {
 	vkDestroyDevice(m_LogicalDevice, nullptr);
 }
 
-void LogicalDevice::CreateQueueIndices() {
+void LogicalDevice::CreateQueueIndices() 
+{
 	uint32_t deviceQueueFamilyPropertyCount;
 	vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &deviceQueueFamilyPropertyCount, nullptr);
 	std::vector<VkQueueFamilyProperties> deviceQueueFamilyProperties(deviceQueueFamilyPropertyCount);
@@ -64,7 +65,8 @@ void LogicalDevice::CreateQueueIndices() {
 		std::runtime_error("Failed to find queue family supporting VK_QUEUE_GRAPHICS_BIT");
 }
 
-void LogicalDevice::CreateLogicalDevice() {
+void LogicalDevice::CreateLogicalDevice() 
+{
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	float queuePriorities[1] = { 0.0f };
 
