@@ -89,37 +89,31 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Helpers.cpp" />
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\PosColVertex.cpp" />
-    <ClCompile Include="src\PosColVertex.hpp" />
-    <ClCompile Include="src\PosNorTexVertex.cpp" />
-    <ClCompile Include="src\RTG.cpp" />
-    <ClCompile Include="src\Tutorial-BackgroundPipeline.cpp" />
-    <ClCompile Include="src\Tutorial-LinesPipeline.cpp" />
-    <ClCompile Include="src\Tutorial-ObjectsPipeline.cpp" />
-    <ClCompile Include="src\Tutorial.cpp" />
+    <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\core\layers\LayerStack.cpp" />
+    <ClCompile Include="src\core\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Application.hpp" />
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h" />
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3native.h" />
-    <ClInclude Include="src\Helpers.hpp" />
-    <ClInclude Include="src\InputEvent.hpp" />
-    <ClInclude Include="src\mat4.hpp" />
-    <ClInclude Include="src\PosNorTexVertex.hpp" />
-    <ClInclude Include="src\refsol.hpp" />
-    <ClInclude Include="src\RTG.hpp" />
-    <ClInclude Include="src\Tutorial.hpp" />
-    <ClInclude Include="src\VK.hpp" />
+    <ClInclude Include="src\core\Core.hpp" />
+    <ClInclude Include="src\core\KeyCodes.hpp" />
+    <ClInclude Include="src\core\layers\Layer.hpp" />
+    <ClInclude Include="src\core\layers\LayerStack.hpp" />
+    <ClInclude Include="src\core\MouseCodes.hpp" />
+    <ClInclude Include="src\core\Time.hpp" />
+    <ClInclude Include="src\Entrypoint.cpp" />
+    <ClInclude Include="src\core\events\ApplicationEvent.hpp" />
+    <ClInclude Include="src\core\events\Event.hpp" />
+    <ClInclude Include="src\core\events\KeyEvent.hpp" />
+    <ClInclude Include="src\core\events\MouseEvent.hpp" />
+    <ClInclude Include="src\resources\Module.hpp" />
+    <ClInclude Include="src\utils\Singleton.hpp" />
+    <ClInclude Include="src\utils\Type.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\background.frag" />
-    <None Include="src\background.vert" />
-    <None Include="src\lines.frag" />
-    <None Include="src\lines.vert" />
     <None Include="src\Maekfile.js" />
-    <None Include="src\objects.frag" />
-    <None Include="src\objects.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

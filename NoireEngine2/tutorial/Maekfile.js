@@ -10,23 +10,59 @@
 //  -q       quit on first error (otherwise builds as much as possible)
 //  --       optional separator between command line switches and targets (useful if you have a target named '-j1')
 //  targetN  target name. Posix-style path to a file to build, or an abstract target (word starting with ':')
+//
 
-
+//maek is configured using properties and methods of the `maek` object:
 const maek = init_maek();
+// (it's a quirk of javascript that function definitions anywhere in scope get 'hoisted'
+//   -- you can see the definition of init_maek by scrolling down.)
 
-// variables that control compiler and linker flags:
+//Read onward to discover how to configure Maek for your build!
+//======================================================================
+
+//set up variables that control compiler and linker flags:
 custom_flags_and_rules();
+//(moved to a function so the build definition is closer to the top of the file)
 
-// c++
+//maek.CPP(...) builds a c++ file:
+// it returns the path to the output object file
 const main_objs = [
-	maek.CPP('core/Time.cpp'),
-	maek.CPP('Entrypoint.cpp'),
-	maek.CPP('Application.cpp'),
-	maek.CPP('core/layers/LayerStack.cpp'),
+	maek.CPP('Tutorial.cpp'),
+	maek.CPP('RTG.cpp'),
+	maek.CPP('PosColVertex.cpp'),
+	maek.CPP('PosNorTexVertex.cpp'),
+	maek.CPP('Helpers.cpp'),
+	maek.CPP('main.cpp'),
 ];
 
-// executable
+//maek.GLSLC(...) builds a glsl source file:
+// it returns the path to the output .inl file
+
+//uncomment to build background shaders and pipeline:
+const background_shaders = [
+	maek.GLSLC('background.vert'),
+	maek.GLSLC('background.frag'),
+];
+main_objs.push( maek.CPP('Tutorial-BackgroundPipeline.cpp', undefined, { depends:[...background_shaders] } ) );
+
+//uncomment to build lines shaders and pipeline:
+const lines_shaders = [
+	maek.GLSLC('lines.vert'),
+	maek.GLSLC('lines.frag'),
+];
+main_objs.push( maek.CPP('Tutorial-LinesPipeline.cpp', undefined, { depends:[...lines_shaders] } ) );
+
+//uncomment to build objects shaders and pipeline:
+const objects_shaders = [
+	maek.GLSLC('objects.vert'),
+	maek.GLSLC('objects.frag'),
+];
+main_objs.push( maek.CPP('Tutorial-ObjectsPipeline.cpp', undefined, { depends:[...objects_shaders] } ) );
+
+
 const main_exe = maek.LINK([...main_objs], 'bin/main');
+
+//default targets:
 maek.TARGETS = [main_exe];
 
 //- - - - - - - - - - - - - - - - - - - - -
@@ -84,7 +120,6 @@ function custom_flags_and_rules() {
 		];
 		maek.options.CPPFlags = [
 			`/I${VULKAN_SDK}/Include`,
-			`/I../src/`,
 			`/I../vendor/glfw-3.4.bin.WIN64/include`,
 			'/O2'
 		];
@@ -248,15 +283,15 @@ function init_maek() {
 	}
 
 	if (maek.OS === 'windows') {
-		DEFAULT_OPTIONS.CPP = ['cl.exe', '/nologo', '/EHsc', '/Z7', '/std:c++20', '/W4', '/WX', '/MD'];
+		DEFAULT_OPTIONS.CPP = ['cl.exe', '/nologo', '/EHsc', '/Z7', '/std:c++17', '/W4', '/WX', '/MD'];
 		//TODO: could embed manifest to set UTF8 codepage
 		DEFAULT_OPTIONS.LINK = ['link.exe', '/nologo', '/SUBSYSTEM:CONSOLE', '/DEBUG:FASTLINK', '/INCREMENTAL:NO'];
 	} else if (maek.OS === 'linux') {
-		DEFAULT_OPTIONS.CPP = ['g++', '-std=c++20', '-Wall', '-Werror', '-g'];
-		DEFAULT_OPTIONS.LINK = ['g++', '-std=c++20', '-Wall', '-Werror', '-g'];
+		DEFAULT_OPTIONS.CPP = ['g++', '-std=c++17', '-Wall', '-Werror', '-g'];
+		DEFAULT_OPTIONS.LINK = ['g++', '-std=c++17', '-Wall', '-Werror', '-g'];
 	} else if (maek.OS === 'macos') {
-		DEFAULT_OPTIONS.CPP = ['clang++', '-std=c++20', '-Wall', '-Werror', '-g'];
-		DEFAULT_OPTIONS.LINK = ['clang++', '-std=c++20', '-Wall', '-Werror', '-g'];
+		DEFAULT_OPTIONS.CPP = ['clang++', '-std=c++17', '-Wall', '-Werror', '-g'];
+		DEFAULT_OPTIONS.LINK = ['clang++', '-std=c++17', '-Wall', '-Werror', '-g'];
 	}
 	maek.DEFAULT_OPTIONS = DEFAULT_OPTIONS;
 
