@@ -23,7 +23,9 @@ const main_objs = [
 	maek.CPP('Entrypoint.cpp'),
 	maek.CPP('Application.cpp'),
 	maek.CPP('core/layers/LayerStack.cpp'),
-	maek.CPP('core/window/Window.cpp')
+	maek.CPP('core/window/Window.cpp'),
+	maek.CPP('core/resources/Files.cpp'),
+	maek.CPP('core/Bitmap.cpp')
 ];
 
 const vulkan_objs = [
