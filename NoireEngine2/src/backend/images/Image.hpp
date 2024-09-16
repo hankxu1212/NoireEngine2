@@ -7,12 +7,12 @@ class CommandBuffer;
 class Bitmap;
 	
 // A representation of a Vulkan image, sampler, and view.
-class VulkanImage : public Descriptor {
+class Image : public Descriptor {
 public:
-	VulkanImage(VkFilter filter, VkSamplerAddressMode addressMode, VkSampleCountFlagBits samples, VkImageLayout layout, VkImageUsageFlags usage,
+	Image(VkFilter filter, VkSamplerAddressMode addressMode, VkSampleCountFlagBits samples, VkImageLayout layout, VkImageUsageFlags usage,
 		VkFormat format, uint32_t mipLevels, uint32_t arrayLayers, const VkExtent3D& extent);
 
-	~VulkanImage();
+	~Image();
 
 	WriteDescriptorSet getWriteDescriptor(uint32_t binding, VkDescriptorType descriptorType, const std::optional<OffsetSize>& offsetSize) const override;
 

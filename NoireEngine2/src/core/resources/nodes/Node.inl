@@ -196,15 +196,15 @@ Node& operator<<(Node& node, const std::chrono::time_point<T>& timePoint) {
 // Pair objects
 template<typename T, typename K>
 const Node& operator>>(const Node& node, std::pair<T, K>& pair) {
-	node["first"].Get(pair.first);
-	node["second"].Get(pair.second);
+	pair.first = node["first"];
+	pair.second = node["second"];
 	return node;
 }
 
 template<typename T, typename K>
 Node& operator<<(Node& node, const std::pair<T, K>& pair) {
-	node["first"].Set(pair.first);
-	node["second"].Set(pair.second);
+	node["first"] = pair.first;
+	node["second"] = pair.second;
 	return node;
 }
 

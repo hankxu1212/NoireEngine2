@@ -11,4 +11,4 @@ public:
 	Singleton(Singleton&&) noexcept = default;
 	Singleton& operator=(const Singleton&) = delete;
 	Singleton& operator=(Singleton&&) noexcept = default;
-};
+};	

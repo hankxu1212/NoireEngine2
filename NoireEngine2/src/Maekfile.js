@@ -24,10 +24,11 @@ const main_objs = [
 	maek.CPP('Application.cpp'),
 	maek.CPP('core/layers/LayerStack.cpp'),
 	maek.CPP('core/window/Window.cpp'),
-	maek.CPP('core/resources/Files.cpp'),
 	maek.CPP('core/Bitmap.cpp'),
 	maek.CPP('utils/ThreadPool.cpp'),
-	maek.CPP('core/resources/nodes/Node.cpp')
+	maek.CPP('core/resources/Files.cpp'),
+	maek.CPP('core/resources/nodes/Node.cpp'),
+	maek.CPP('core/resources/Resources.cpp')
 ];
 
 const vulkan_objs = [
@@ -39,6 +40,7 @@ const vulkan_objs = [
 	maek.CPP('backend/commands/CommandBuffer.cpp'),
 	maek.CPP('backend/commands/CommandPool.cpp'),
 	maek.CPP('backend/images/Image.cpp'),
+	maek.CPP('backend/buffers/Buffer.cpp')
 ]
 
 // executable

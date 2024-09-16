@@ -13,7 +13,9 @@ Application::Application(const ApplicationSpecification& specification)
 {
 	s_Instance = this;
 
-	for (auto it = Module::GetRegistry().begin(); it != Module::GetRegistry().end(); ++it)
+	auto& registry = Module::GetRegistry();
+
+	for (auto it = registry.begin(); it != registry.end(); ++it)
 		CreateModule(it);
 
 	// initializes window
@@ -165,7 +167,6 @@ void Application::DestroyModule(TypeId id, Module::DestroyStage stage)
 		}
 	}
 
-	// TODO: check if a module has been deleted
 	std::cout << "Trying to delete module ID: " << id << std::endl;
 	m_Modules[id].reset();
 	std::cout << "Successfully deleted module ID: " << id << std::endl;

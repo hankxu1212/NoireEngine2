@@ -20,10 +20,10 @@ static Application* CreateApplication(ApplicationCommandLineArgs args)
 int main(int argc, char** argv)
 {
     try {
-        // Creates Application
         auto app = CreateApplication({ argc, argv });
         app->Run();
         delete app;
+        return 0;
     }
     catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;

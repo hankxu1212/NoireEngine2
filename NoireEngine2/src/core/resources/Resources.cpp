@@ -4,8 +4,6 @@ Resources::Resources() :
 	elapsedPurge(5s) {
 }
 
-Resources::~Resources() { }
-
 void Resources::Update() 
 {
 	if (elapsedPurge.GetElapsed() != 0) {

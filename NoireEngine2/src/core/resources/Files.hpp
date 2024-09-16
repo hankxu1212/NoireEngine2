@@ -4,9 +4,8 @@
 
 #include <filesystem>
 
-class Files : public Module::Registrar<Files>
+class Files
 {
-	inline static const bool Registered = Register(UpdateStage::Never, DestroyStage::Normal);
 public:
 	static std::optional<std::string> Read(const std::filesystem::path& path);
 };

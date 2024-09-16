@@ -10,6 +10,7 @@
 
 #include <ostream>
 #include <vector>
+#include <variant>
 
 enum class NodeType : uint8_t {
 	Object, Array, String, Boolean, Integer, Decimal, Null, // Type of node value.
@@ -20,7 +21,25 @@ class Node
 {
 public:
 	using NodeValue = std::string;
+	
 	using NodeProperty = std::pair<std::string, Node>;
+
+	struct View 
+	{
+		using Key = std::variant<std::string, uint32_t>;
+
+		// construct a new view
+		View(Node* parent, Key key, Node* value) :
+			parent(parent),
+			value(value),
+			keys{ std::move(key) } {
+		}
+
+		Node* parent = nullptr;
+		Node* value = nullptr;
+		std::vector<Key> keys;
+	};
+
 public:
 	Node() {}
 	Node(const Node &node) = default;
@@ -44,6 +63,10 @@ public:
 	template<typename T>
 	void Set(T&& value);
 
+	bool HasProperty(const std::string& name) const;
+	bool HasProperty(uint32_t index) const;
+	View GetProperty(const std::string& name);
+	View GetProperty(uint32_t index);
 	Node& AddProperty(const Node& node);
 	Node& AddProperty(Node&& node = {});
 	Node& AddProperty(const std::string& name, const Node& node);
@@ -53,6 +76,9 @@ public:
 	Node RemoveProperty(const std::string& name);
 	Node RemoveProperty(const Node& node);
 	
+	View operator[](const std::string& name);
+	View operator[](uint32_t index);
+
 	Node& operator=(const Node& rhs) = default;
 	Node& operator=(Node&& rhs) noexcept = default;
 	

@@ -3,6 +3,7 @@
 #include <bitset>
 #include <functional>
 #include <memory>
+#include <iostream>
 
 #include "utils/Type.hpp"
 #include "utils/Singleton.hpp"
@@ -64,9 +65,7 @@ public:
 		{
 			TypeId index = Type<Base>::template GetTypeId<T>();
 			
-			RegistryMap& registryMap = ModuleFactory::GetRegistry();
-
-			registryMap[index] = {
+			ModuleFactory::GetRegistry()[index] = {
 				[]() {
 					moduleInstance = new T();
 					return std::unique_ptr<Base>(moduleInstance);
@@ -99,7 +98,7 @@ public:
 	using StageIndex = std::pair<UpdateStage, TypeId>;
 
 	virtual ~Module() = default;
-	virtual void Update() {};
+	virtual void Update() = 0;
 };
 
 template class Type<Module>;

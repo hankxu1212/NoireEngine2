@@ -60,6 +60,36 @@ void Node::Set(T&& value) {
 	*this << value;
 }
 
+bool Node::HasProperty(const std::string& name) const {
+	for (const auto& [propertyName, property] : properties) {
+		if (propertyName == name)
+			return true;
+	}
+
+	return false;
+}
+
+bool Node::HasProperty(uint32_t index) const {
+	return index < properties.size();
+}
+
+// TODO: Duplicate
+Node::View Node::GetProperty(const std::string& name) {
+	for (auto& [propertyName, property] : properties) {
+		if (propertyName == name)
+			return { this, name, &property };
+	}
+	return { this, name, nullptr };
+}
+
+// TODO: Duplicate
+Node::View Node::GetProperty(uint32_t index) {
+	if (index < properties.size())
+		return { this, index, &properties[index].second };
+
+	return { this, index, nullptr };
+}
+
 Node& Node::AddProperty(const Node& node) {
 	type = NodeType::Array;
 	return properties.emplace_back(NodeProperty("", node)).second;
@@ -114,6 +144,15 @@ Node Node::RemoveProperty(const Node& node) {
 	return {};
 }
 
+Node::View Node::operator[](const std::string& name)
+{
+	return GetProperty(name);
+}
+
+Node::View Node::operator[](uint32_t index)
+{
+	return GetProperty(index);
+}
 
 bool Node::operator==(const Node& rhs) const {
 	return value == rhs.value && properties.size() == rhs.properties.size() &&

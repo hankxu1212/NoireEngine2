@@ -83,7 +83,6 @@ private:
 	std::map<TypeId, std::unique_ptr<Module>>				m_Modules;
 	std::map<Module::UpdateStage, std::vector<TypeId>>		m_ModuleStages;
 	std::map<Module::DestroyStage, std::vector<TypeId>>		m_ModuleDestroyStages;
-
 private:
 	static Application* s_Instance;
 	friend int ::main(int argc, char** argv);

@@ -6,7 +6,7 @@
 
 constexpr static float ANISOTROPY = 16.0f;
 
-VulkanImage::VulkanImage(VkFilter filter, VkSamplerAddressMode addressMode, VkSampleCountFlagBits samples, VkImageLayout layout, VkImageUsageFlags usage, VkFormat format, uint32_t mipLevels,
+Image::Image(VkFilter filter, VkSamplerAddressMode addressMode, VkSampleCountFlagBits samples, VkImageLayout layout, VkImageUsageFlags usage, VkFormat format, uint32_t mipLevels,
 	uint32_t arrayLayers, const VkExtent3D& extent) :
 	extent(extent),
 	samples(samples),
@@ -19,7 +19,7 @@ VulkanImage::VulkanImage(VkFilter filter, VkSamplerAddressMode addressMode, VkSa
 	layout(layout) {
 }
 
-VulkanImage::~VulkanImage() {
+Image::~Image() {
 	auto logicalDevice = VulkanContext::GetDevice();
 	vkDestroyImageView(logicalDevice, view, nullptr);
 	vkDestroySampler(logicalDevice, sampler, nullptr);
@@ -27,7 +27,7 @@ VulkanImage::~VulkanImage() {
 	vkDestroyImage(logicalDevice, image, nullptr);
 }
 
-WriteDescriptorSet VulkanImage::getWriteDescriptor(uint32_t binding, VkDescriptorType descriptorType, const std::optional<OffsetSize>& offsetSize) const {
+WriteDescriptorSet Image::getWriteDescriptor(uint32_t binding, VkDescriptorType descriptorType, const std::optional<OffsetSize>& offsetSize) const {
 	VkDescriptorImageInfo imageInfo = {};
 	imageInfo.sampler = sampler;
 	imageInfo.imageView = view;
@@ -43,7 +43,7 @@ WriteDescriptorSet VulkanImage::getWriteDescriptor(uint32_t binding, VkDescripto
 	return { descriptorWrite, imageInfo };
 }
 
-VkDescriptorSetLayoutBinding VulkanImage::GetDescriptorSetLayout(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stage, uint32_t count) {
+VkDescriptorSetLayoutBinding Image::GetDescriptorSetLayout(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stage, uint32_t count) {
 	VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
 	descriptorSetLayoutBinding.binding = binding;
 	descriptorSetLayoutBinding.descriptorType = descriptorType;
@@ -53,7 +53,7 @@ VkDescriptorSetLayoutBinding VulkanImage::GetDescriptorSetLayout(uint32_t bindin
 	return descriptorSetLayoutBinding;
 }
 
-std::unique_ptr<Bitmap> VulkanImage::getBitmap(uint32_t mipLevel, uint32_t arrayLayer) const {
+std::unique_ptr<Bitmap> Image::getBitmap(uint32_t mipLevel, uint32_t arrayLayer) const {
 	auto logicalDevice = VulkanContext::GetDevice();
 
 	glm::vec2 size(int32_t(extent.width >> mipLevel), int32_t(extent.height >> mipLevel));
@@ -83,11 +83,11 @@ std::unique_ptr<Bitmap> VulkanImage::getBitmap(uint32_t mipLevel, uint32_t array
 	return bitmap;
 }
 
-uint32_t VulkanImage::getMipLevels(const VkExtent3D& extent) {
+uint32_t Image::getMipLevels(const VkExtent3D& extent) {
 	return static_cast<uint32_t>(std::floor(std::log2(std::max(extent.width, std::max(extent.height, extent.depth)))) + 1);
 }
 
-bool VulkanImage::HasDepth(VkFormat format) {
+bool Image::HasDepth(VkFormat format) {
 	static const std::vector<VkFormat> DEPTH_FORMATS = {
 		VK_FORMAT_D16_UNORM, VK_FORMAT_X8_D24_UNORM_PACK32, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM_S8_UINT,
 		VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT
@@ -95,12 +95,12 @@ bool VulkanImage::HasDepth(VkFormat format) {
 	return std::find(DEPTH_FORMATS.begin(), DEPTH_FORMATS.end(), format) != std::end(DEPTH_FORMATS);
 }
 
-bool VulkanImage::HasStencil(VkFormat format) {
+bool Image::HasStencil(VkFormat format) {
 	static const std::vector<VkFormat> STENCIL_FORMATS = { VK_FORMAT_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT };
 	return std::find(STENCIL_FORMATS.begin(), STENCIL_FORMATS.end(), format) != std::end(STENCIL_FORMATS);
 }
 
-void VulkanImage::CreateImage(VkImage& image, VkDeviceMemory& memory, const VkExtent3D& extent, VkFormat format, VkSampleCountFlagBits samples,
+void Image::CreateImage(VkImage& image, VkDeviceMemory& memory, const VkExtent3D& extent, VkFormat format, VkSampleCountFlagBits samples,
 	VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, uint32_t mipLevels, uint32_t arrayLayers, VkImageType type) {
 
 	auto logicalDevice = VulkanContext::GetDevice();
@@ -132,7 +132,7 @@ void VulkanImage::CreateImage(VkImage& image, VkDeviceMemory& memory, const VkEx
 	VulkanContext::VK_CHECK(vkBindImageMemory(logicalDevice, image, memory, 0), "[vulkan] Error: cannot bind image memory.");
 }
 
-void VulkanImage::CreateImageSampler(VkSampler& sampler, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic, uint32_t mipLevels) {
+void Image::CreateImageSampler(VkSampler& sampler, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic, uint32_t mipLevels) {
 	VkSamplerCreateInfo samplerCreateInfo = {};
 	samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	samplerCreateInfo.magFilter = filter;
@@ -156,7 +156,7 @@ void VulkanImage::CreateImageSampler(VkSampler& sampler, VkFilter filter, VkSamp
 		"[vulkan] Error: failed to create texture sampler.");
 }
 
-void VulkanImage::CreateImageView(const VkImage& image, VkImageView& imageView, VkImageViewType type, VkFormat format, VkImageAspectFlags imageAspect,
+void Image::CreateImageView(const VkImage& image, VkImageView& imageView, VkImageViewType type, VkFormat format, VkImageAspectFlags imageAspect,
 	uint32_t mipLevels, uint32_t baseMipLevel, uint32_t layerCount, uint32_t baseArrayLayer) {
 
 	VkImageViewCreateInfo imageViewCreateInfo = {};
@@ -174,7 +174,7 @@ void VulkanImage::CreateImageView(const VkImage& image, VkImageView& imageView, 
 		"[vulkan] Cannot create image view");
 }
 
-void VulkanImage::CreateMipmaps(const VkImage& image, const VkExtent3D& extent, VkFormat format, VkImageLayout dstImageLayout, uint32_t mipLevels,
+void Image::CreateMipmaps(const VkImage& image, const VkExtent3D& extent, VkFormat format, VkImageLayout dstImageLayout, uint32_t mipLevels,
 	uint32_t baseArrayLayer, uint32_t layerCount) {
 
 	// Get device properites for the requested Image format.
@@ -253,7 +253,7 @@ void VulkanImage::CreateMipmaps(const VkImage& image, const VkExtent3D& extent, 
 	commandBuffer.SubmitIdle();
 }
 
-void VulkanImage::TransitionImageLayout(const VkImage& image, VkFormat format, VkImageLayout srcImageLayout, VkImageLayout dstImageLayout,
+void Image::TransitionImageLayout(const VkImage& image, VkFormat format, VkImageLayout srcImageLayout, VkImageLayout dstImageLayout,
 	VkImageAspectFlags imageAspect, uint32_t mipLevels, uint32_t baseMipLevel, uint32_t layerCount, uint32_t baseArrayLayer) {
 
 	CommandBuffer commandBuffer;
@@ -333,7 +333,7 @@ void VulkanImage::TransitionImageLayout(const VkImage& image, VkFormat format, V
 	commandBuffer.SubmitIdle();
 }
 
-void VulkanImage::InsertImageMemoryBarrier(const CommandBuffer& commandBuffer, const VkImage& image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask,
+void Image::InsertImageMemoryBarrier(const CommandBuffer& commandBuffer, const VkImage& image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask,
 	VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,
 	VkImageAspectFlags imageAspect, uint32_t mipLevels, uint32_t baseMipLevel, uint32_t layerCount, uint32_t baseArrayLayer) {
 	VkImageMemoryBarrier imageMemoryBarrier = {};
@@ -353,7 +353,7 @@ void VulkanImage::InsertImageMemoryBarrier(const CommandBuffer& commandBuffer, c
 	vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 }
 
-void VulkanImage::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, const VkExtent3D& extent, uint32_t layerCount, uint32_t baseArrayLayer) {
+void Image::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, const VkExtent3D& extent, uint32_t layerCount, uint32_t baseArrayLayer) {
 	CommandBuffer commandBuffer;
 
 	VkBufferImageCopy region = {};
@@ -371,7 +371,7 @@ void VulkanImage::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image
 	commandBuffer.SubmitIdle();
 }
 
-bool VulkanImage::CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory& dstImageMemory, VkFormat srcFormat, const VkExtent3D& extent,
+bool Image::CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory& dstImageMemory, VkFormat srcFormat, const VkExtent3D& extent,
 	VkImageLayout srcImageLayout, uint32_t mipLevel, uint32_t arrayLayer) {
 	auto physicalDevice = VulkanContext::Get()->getPhysicalDevice();
 	auto surface = VulkanContext::Get()->getSurface(0);

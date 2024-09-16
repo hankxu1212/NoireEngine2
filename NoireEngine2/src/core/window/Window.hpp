@@ -11,7 +11,7 @@ class Window : public Module::Registrar<Window>
 public:
 	Window();
 
-	~Window();
+	virtual ~Window();
 
 	void Update();
 

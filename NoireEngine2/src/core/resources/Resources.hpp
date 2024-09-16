@@ -4,7 +4,7 @@
 #include "Files.hpp"
 #include "Resource.hpp"
 #include "Module.hpp"
-#include "core/resources/nodes/Node.hpp"
+#include "nodes/Node.hpp"
 #include "core/Timer.hpp"
 
 /**
@@ -17,8 +17,6 @@ class Resources : public Module::Registrar<Resources>
 	inline static const bool Registered = Register(UpdateStage::Post, DestroyStage::Normal);
 public:
 	Resources();
-
-	~Resources();
 
 	void Update() override;
 
