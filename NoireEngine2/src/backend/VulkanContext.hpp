@@ -9,7 +9,6 @@
 
 #include "core/Core.hpp"
 
-#include "core/resources/Module.hpp"
 #include "core/window/Window.hpp"
 
 #include "devices/VulkanInstance.hpp"
@@ -20,9 +19,17 @@
 #include "commands/CommandBuffer.hpp"
 #include "commands/CommandPool.hpp"
 
-class VulkanContext : public Module::Registrar<VulkanContext>
+#include "renderpass/Swapchain.hpp"
+
+class VulkanContext : Singleton
 {
-	inline static const bool Registered = Register(UpdateStage::Render, DestroyStage::Post, Requires<Window>());
+public:
+	static VulkanContext& Get() 
+	{
+		static VulkanContext instance;
+		return instance;
+	}
+
 public:
 	VulkanContext();
 
@@ -36,15 +43,27 @@ public:
 
 	void WaitForCommands();
 
+	/* Finds physical device memory properties given a certain type filter */
+	static uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
 public:
 	static void VK_CHECK(VkResult err, const char* msg);
 
-	static inline const VkDevice			GetDevice() { return *(VulkanContext::Get()->getLogicalDevice()); }
+	static inline const VkDevice			GetDevice() { return *(VulkanContext::Get().getLogicalDevice()); }
 	inline const LogicalDevice*				getLogicalDevice() const { return s_LogicalDevice.get(); }
 	inline const VulkanInstance*			getInstance() const { return s_Instance.get(); }
 	inline const PhysicalDevice*			getPhysicalDevice() const { return s_PhysicalDevice.get(); }
 
 	std::shared_ptr<CommandPool>&			GetCommandPool(const TID& threadId = std::this_thread::get_id());
+
+	inline const Surface*					getSurface(std::size_t id) const { return m_Surfaces[id].get(); }
+	inline const SwapChain*					getSwapChain() { return m_Swapchains[0].get(); }
+
+	inline const VkSemaphore				getPresentSemaphore() { return m_PerSurfaceBuffers[0]->getPresentSemaphore(); }
+	inline const VkSemaphore				getRenderSemaphore() { return m_PerSurfaceBuffers[0]->getRenderSemaphore(); }
+	inline const VkFence					getFence() { return m_PerSurfaceBuffers[0]->getFence(); }
+	inline const std::size_t				getCurrentFrame() { return m_PerSurfaceBuffers[0]->currentFrame; }
+
 
 private:
 	std::unique_ptr<VulkanInstance>				s_Instance;
@@ -73,6 +92,9 @@ private:
 
 	std::unordered_map<TID, std::shared_ptr<CommandPool>>		m_CommandPools;
 
+	std::vector<std::unique_ptr<PerSurfaceBuffers>>				m_PerSurfaceBuffers;
+	std::vector<std::unique_ptr<Surface>>						m_Surfaces;
+	std::vector<std::unique_ptr<SwapChain>>						m_Swapchains;
 private:
 	void CreatePipelineCache();
 };

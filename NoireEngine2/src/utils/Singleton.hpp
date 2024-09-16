@@ -4,7 +4,6 @@ class Singleton
 {
 protected:
 	Singleton() = default;
-	virtual ~Singleton() = default;
 
 public:
 	Singleton(const Singleton&) = delete;

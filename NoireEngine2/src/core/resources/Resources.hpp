@@ -1,9 +1,7 @@
 #pragma once
 
 #include "utils/ThreadPool.hpp"
-#include "Files.hpp"
 #include "Resource.hpp"
-#include "Module.hpp"
 #include "nodes/Node.hpp"
 #include "core/Timer.hpp"
 
@@ -12,13 +10,21 @@
   * Resources are held alive as long as they are in use,
   * A existing resource is queried by node value.
 */
-class Resources : public Module::Registrar<Resources> 
+class Resources : Singleton
 {
-	inline static const bool Registered = Register(UpdateStage::Post, DestroyStage::Normal);
+public:
+	static Resources& Get()
+	{
+		static Resources instance;
+		return instance;
+	}
+
 public:
 	Resources();
 
-	void Update() override;
+	~Resources();
+
+	void Update();
 
 	std::shared_ptr<Resource> Find(const std::type_index& typeIndex, const Node& node) const;
 

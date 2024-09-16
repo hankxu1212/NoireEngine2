@@ -199,6 +199,8 @@ Window::Window()
 
 Window::~Window()
 {
+	std::cout << "Destroyed window module\n" << std::flush;
+
 	glfwDestroyWindow(m_Window);
 	--s_GLFWWindowCount;
 

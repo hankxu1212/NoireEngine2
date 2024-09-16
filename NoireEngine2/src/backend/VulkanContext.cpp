@@ -11,6 +11,7 @@ VulkanContext::VulkanContext() :
 
 VulkanContext::~VulkanContext()
 {
+    std::cout << "Destroyed vulkan context module\n";
 }
 
 void VulkanContext::Update()
@@ -31,7 +32,7 @@ void VulkanContext::WaitForCommands()
 
 uint32_t VulkanContext::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
-    auto& mems = VulkanContext::Get()->getPhysicalDevice()->getMemoryProperties();
+    auto& mems = VulkanContext::Get().getPhysicalDevice()->getMemoryProperties();
     for (uint32_t i = 0; i < mems.memoryTypeCount; i++) {
         if ((typeFilter & (1 << i)) && (mems.memoryTypes[i].propertyFlags & properties) == properties) {
             return i;

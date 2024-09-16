@@ -5,13 +5,18 @@
 #include "Application.hpp"
 
 // Represents an abstraction on GLFW window
-class Window : public Module::Registrar<Window> 
+class Window : Singleton
 {
-	inline static const bool Registered = Register(UpdateStage::Pre, DestroyStage::Post);
+public:
+	static Window& Get()
+	{
+		static Window instance;
+		return instance;
+	}
 public:
 	Window();
-
-	virtual ~Window();
+	
+	~Window();
 
 	void Update();
 

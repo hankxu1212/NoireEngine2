@@ -1,7 +1,14 @@
 #include "Resources.hpp"
 
+#include <iostream>
+
 Resources::Resources() :
 	elapsedPurge(5s) {
+}
+
+Resources::~Resources()
+{
+	std::cout << "Destroyed resources module\n";
 }
 
 void Resources::Update() 

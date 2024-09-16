@@ -1,98 +1,106 @@
-/*****************************************************************//**
- * \file   Node.hpp
- * \brief  Used to serialize resources. A node represent a handle to a serialized engine resource
- * 
- * \author Hank Xu
- * \date   September 2024
- *********************************************************************/
-
 #pragma once
 
 #include <ostream>
-#include <vector>
-#include <variant>
 
-enum class NodeType : uint8_t {
-	Object, Array, String, Boolean, Integer, Decimal, Null, // Type of node value.
-	Unknown, Token, EndOfFile, // Used in tokenizers.
-};
+#include "NodeView.hpp"
 
-class Node
-{
+/**
+ * @brief Class that is used to represent a tree of UFT-8 values, used in serialization.
+ */
+class Node final {
 public:
-	using NodeValue = std::string;
-	
-	using NodeProperty = std::pair<std::string, Node>;
-
-	struct View 
-	{
-		using Key = std::variant<std::string, uint32_t>;
-
-		// construct a new view
-		View(Node* parent, Key key, Node* value) :
-			parent(parent),
-			value(value),
-			keys{ std::move(key) } {
-		}
-
-		Node* parent = nullptr;
-		Node* value = nullptr;
-		std::vector<Key> keys;
-	};
-
-public:
-	Node() {}
+	Node() {} // = default;
 	Node(const Node &node) = default;
-	Node(Node &&node) = default;
-
-	void Clear();
-	bool IsValid() const;
+	Node(Node &&node) noexcept = default;
 
 	template<typename T>
 	T Get() const;
+	template<typename T>
+	T GetWithFallback(const T &fallback) const;
+	template<typename T>
+	bool Get(T &dest) const;
+	template<typename T, typename K>
+	bool GetWithFallback(T &dest, const K &fallback) const;
+	template<typename T>
+	bool Get(T &&dest) const;
+	template<typename T, typename K>
+	bool GetWithFallback(T &&dest, const K &fallback) const;
+	template<typename T>
+	void Set(const T &value);
+	template<typename T>
+	void Set(T &&value);
+	
+	/**
+	 * Clears all properties from this node.
+	 */
+	void Clear();
+
+	/**
+	 * Gets if the node has a value, or has properties that have values.
+	 * @return If the node is internally valid.
+	 */
+	bool IsValid() const;
 
 	template<typename T>
-	bool Get(T& dest) const;
+	Node &Append(const T &value);
+	template<typename ...Args>
+	Node &Append(const Args &...args);
 	
-	template<typename T>
-	bool Get(T&& dest) const;
-	
-	template<typename T>
-	void Set(const T& value);
-	
-	template<typename T>
-	void Set(T&& value);
+	//Node &Merge(Node &&node);
 
-	bool HasProperty(const std::string& name) const;
+	bool HasProperty(const std::string &name) const;
 	bool HasProperty(uint32_t index) const;
-	View GetProperty(const std::string& name);
-	View GetProperty(uint32_t index);
-	Node& AddProperty(const Node& node);
-	Node& AddProperty(Node&& node = {});
-	Node& AddProperty(const std::string& name, const Node& node);
-	Node& AddProperty(const std::string& name, Node&& node = {});
-	Node& AddProperty(uint32_t index, const Node& node);
-	Node& AddProperty(uint32_t index, Node&& node = {});
-	Node RemoveProperty(const std::string& name);
-	Node RemoveProperty(const Node& node);
-	
-	View operator[](const std::string& name);
-	View operator[](uint32_t index);
+	NodeConstView GetProperty(const std::string &name) const;
+	NodeConstView GetProperty(uint32_t index) const;
+	NodeView GetProperty(const std::string &name);
+	NodeView GetProperty(uint32_t index);
+	Node &AddProperty(const Node &node);
+	Node &AddProperty(Node &&node = {});
+	Node &AddProperty(const std::string &name, const Node &node);
+	Node &AddProperty(const std::string &name, Node &&node = {});
+	Node &AddProperty(uint32_t index, const Node &node);
+	Node &AddProperty(uint32_t index, Node &&node = {});
+	Node RemoveProperty(const std::string &name);
+	Node RemoveProperty(const Node &node);
 
-	Node& operator=(const Node& rhs) = default;
-	Node& operator=(Node&& rhs) noexcept = default;
-	
+	NodeConstView GetPropertyWithBackup(const std::string &name, const std::string &backupName) const;
+	NodeConstView GetPropertyWithValue(const std::string &name, const NodeValue &propertyValue) const;
+	NodeView GetPropertyWithBackup(const std::string &name, const std::string &backupName);
+	NodeView GetPropertyWithValue(const std::string &name, const NodeValue &propertyValue);
+
+	NodeConstView operator[](const std::string &name) const;
+	NodeConstView operator[](uint32_t index) const;
+	NodeView operator[](const std::string &name);
+	NodeView operator[](uint32_t index);
+
+	Node &operator=(const Node &rhs) = default;
+	Node &operator=(Node &&rhs) noexcept = default;
+	Node &operator=(const NodeConstView &rhs);
+	Node &operator=(NodeConstView &&rhs);
+	Node &operator=(NodeView &rhs);
+	Node &operator=(NodeView &&rhs);
 	template<typename T>
-	Node& operator=(const T& rhs);
+	Node &operator=(const T &rhs);
 
-	bool operator==(const Node& rhs) const;
-	bool operator!=(const Node& rhs) const;
-	bool operator<(const Node& rhs) const;
+	bool operator==(const Node &rhs) const;
+	bool operator!=(const Node &rhs) const;
+	bool operator<(const Node &rhs) const;
 
-public:
-	std::vector<NodeProperty> properties;
+	const NodeProperties &GetProperties() const { return properties; }
+	NodeProperties &GetProperties() { return properties; }
+
+	const NodeValue &GetValue() const { return value; }
+	void SetValue(NodeValue v) { this->value = std::move(v); }
+
+	const NodeType &GetType() const { return type; }
+	void SetType(NodeType t) { this->type = t; }
+
+protected:
+	NodeProperties properties;
 	NodeValue value;
 	NodeType type = NodeType::Object;
 };
 
 #include "Node.inl"
+#include "NodeConstView.inl"
+#include "NodeView.inl"

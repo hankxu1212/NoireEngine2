@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core/resources/Module.hpp"
-
 #include <filesystem>
 
 class Files
