@@ -42,6 +42,9 @@ public:
 	void SubmitToMainThread(const std::function<void()>& function);
 
 	void OnEvent(Event& e);
+	
+	void PushLayer(Layer* layer);
+	void PushOverlay(Layer* layer);
 
 	void Close();
 
@@ -49,6 +52,7 @@ public:
 	static const char* GetArgs() { return s_Instance->GetSpecification().CommandLineArgs.Args[0]; }
 	static const ApplicationSpecification& GetSpecification() { return s_Instance->m_Specification; }
 	static const uint16_t GetFPS() { return s_Instance->m_FPS; }
+	static const LayerStack& GetLayerStack() { return s_Instance->m_LayerStack; }
 
 private:
 	void Run();
@@ -79,6 +83,7 @@ private:
 	std::map<TypeId, std::unique_ptr<Module>>				m_Modules;
 	std::map<Module::UpdateStage, std::vector<TypeId>>		m_ModuleStages;
 	std::map<Module::DestroyStage, std::vector<TypeId>>		m_ModuleDestroyStages;
+
 private:
 	static Application* s_Instance;
 	friend int ::main(int argc, char** argv);

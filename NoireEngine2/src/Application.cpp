@@ -22,6 +22,15 @@ Application::Application(const ApplicationSpecification& specification)
 
 Application::~Application()
 {
+	DestroyStage(Module::DestroyStage::Pre);
+
+	m_LayerStack.Detach();
+
+	DestroyStage(Module::DestroyStage::Normal);
+
+	m_LayerStack.Destroy();
+
+	DestroyStage(Module::DestroyStage::Post);
 }
 
 void Application::Run()
@@ -79,6 +88,8 @@ void Application::SubmitToMainThread(const std::function<void()>& function)
 
 void Application::OnEvent(Event& e)
 {
+	std::cout << e << std::endl;
+
 	e.Dispatch<WindowCloseEvent>(NE_BIND_EVENT_FN(Application::OnWindowClose));
 	e.Dispatch<WindowResizeEvent>(NE_BIND_EVENT_FN(Application::OnWindowResize));
 
@@ -107,6 +118,18 @@ bool Application::OnWindowResize(WindowResizeEvent& e)
 	//Renderer::OnWindowResize(e.getWidth(), e.getHeight());
 	m_Minimized = false;
 	return false;
+}
+
+void Application::PushLayer(Layer* layer)
+{
+	m_LayerStack.PushLayer(layer);
+	layer->OnAttach();
+}
+
+void Application::PushOverlay(Layer* layer)
+{
+	m_LayerStack.PushOverlay(layer);
+	layer->OnAttach();
 }
 
 void Application::Close()
@@ -142,7 +165,10 @@ void Application::DestroyModule(TypeId id, Module::DestroyStage stage)
 		}
 	}
 
+	// TODO: check if a module has been deleted
+	std::cout << "Trying to delete module ID: " << id << std::endl;
 	m_Modules[id].reset();
+	std::cout << "Successfully deleted module ID: " << id << std::endl;
 }
 
 void Application::UpdateStage(Module::UpdateStage stage) 
