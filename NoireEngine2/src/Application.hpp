@@ -7,7 +7,6 @@
 #include <map>
 
 #include "utils/Singleton.hpp"
-#include "core/resources/Module.hpp"
 #include "core/events/ApplicationEvent.hpp"
 #include "core/layers/LayerStack.hpp"
 
@@ -62,11 +61,6 @@ private:
 	bool OnWindowClose(WindowCloseEvent& e);
 	bool OnWindowResize(WindowResizeEvent& e);
 
-	void CreateModule(Module::RegistryMap::const_iterator it);
-	void DestroyModule(TypeId id, Module::DestroyStage stage);
-	void UpdateStage(Module::UpdateStage stage);
-	void DestroyStage(Module::DestroyStage stage);
-
 private:
 	ApplicationSpecification			m_Specification;
 	bool								m_Running = true;
@@ -79,10 +73,6 @@ private:
 
 	std::vector<std::function<void()>>	m_MainThreadQueue;
 	std::mutex							m_MainThreadQueueMutex;
-
-	std::map<TypeId, std::unique_ptr<Module>>				m_Modules;
-	std::map<Module::UpdateStage, std::vector<TypeId>>		m_ModuleStages;
-	std::map<Module::DestroyStage, std::vector<TypeId>>		m_ModuleDestroyStages;
 
 private:
 	static Application* s_Instance;

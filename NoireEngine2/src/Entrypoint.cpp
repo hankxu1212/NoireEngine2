@@ -23,6 +23,7 @@ int main(int argc, char** argv)
         auto app = CreateApplication({ argc, argv });
         app->Run();
         delete app;
+        std::cout << "Application successfully exited." << std::flush;
         return 0;
     }
     catch (std::exception& e) {

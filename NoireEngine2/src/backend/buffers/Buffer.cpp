@@ -6,7 +6,7 @@
 Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, const void* data) :
 	size(size)
 {
-	auto& logicalDevice = *(VulkanContext::Get()->getLogicalDevice());
+	auto& logicalDevice = *(VulkanContext::Get().getLogicalDevice());
 
 	std::array<uint32_t, 3> queueFamily = {
 		logicalDevice.getGraphicsFamily(),
@@ -64,7 +64,7 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
 
 Buffer::~Buffer() 
 {
-	VulkanContext::VK_CHECK(vkQueueWaitIdle(VulkanContext::Get()->getLogicalDevice()->getGraphicsQueue()), "[vulkan] wait idle fail on destroying buffer");
+	VulkanContext::VK_CHECK(vkQueueWaitIdle(VulkanContext::Get().getLogicalDevice()->getGraphicsQueue()), "[vulkan] wait idle fail on destroying buffer");
 	vkDestroyBuffer(VulkanContext::GetDevice(), buffer, nullptr);
 	vkFreeMemory(VulkanContext::GetDevice(), bufferMemory, nullptr);
 }

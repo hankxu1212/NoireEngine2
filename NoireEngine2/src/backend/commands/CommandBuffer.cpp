@@ -1,7 +1,7 @@
 #include "backend/VulkanContext.hpp"
 
 CommandBuffer::CommandBuffer(bool begin, VkQueueFlagBits queueType, VkCommandBufferLevel bufferLevel) :
-	r_CommandPool(VulkanContext::Get()->GetCommandPool()),
+	r_CommandPool(VulkanContext::Get().GetCommandPool()),
 	m_QueueType(queueType)
 {
 	VkCommandBufferAllocateInfo cmdBufferInfo = {};
@@ -95,7 +95,7 @@ VkQueue CommandBuffer::GetQueue() const
 	switch (m_QueueType) 
 	{
 	case VK_QUEUE_GRAPHICS_BIT:
-		return VulkanContext::Get()->getLogicalDevice()->getGraphicsQueue();
+		return VulkanContext::Get().getLogicalDevice()->getGraphicsQueue();
 	case VK_QUEUE_COMPUTE_BIT:
 		std::runtime_error("[CommandBuffers] Compute shader/pipeline is not implemented!");
 		//return logicalDevice->GetComputeQueue();

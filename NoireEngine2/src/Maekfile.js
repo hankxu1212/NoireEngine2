@@ -27,7 +27,9 @@ const main_objs = [
 	maek.CPP('core/Bitmap.cpp'),
 	maek.CPP('core/resources/Files.cpp'),
 	maek.CPP('core/resources/nodes/Node.cpp'),
-	maek.CPP('core/resources/Resources.cpp')
+	maek.CPP('core/resources/nodes/NodeConstView.cpp'),
+	maek.CPP('core/resources/nodes/NodeView.cpp'),
+	maek.CPP('core/resources/Resources.cpp'),
 ];
 
 const util_objs = [
@@ -46,6 +48,7 @@ const vulkan_objs = [
 	maek.CPP('backend/commands/CommandBuffer.cpp'),
 	maek.CPP('backend/commands/CommandPool.cpp'),
 	maek.CPP('backend/images/Image.cpp'),
+	maek.CPP('backend/images/Image2D.cpp'),
 	maek.CPP('backend/buffers/Buffer.cpp'),
 	maek.CPP('backend/renderpass/Swapchain.cpp')
 ]
@@ -96,7 +99,7 @@ function custom_flags_and_rules() {
 		maek.options.LINK = [
 			'link.exe', '/nologo',
 			'/SUBSYSTEM:CONSOLE', //yes, you don't need WinMain to use the win32 API (!)
-			'/DEBUG:FASTLINK', '/INCREMENTAL:NO'
+			'/DEBUG:FULL', '/INCREMENTAL:NO'
 		];
 		maek.options.LINKLibs = [
 			'User32.lib',
@@ -112,7 +115,7 @@ function custom_flags_and_rules() {
 			`/I../src/`,
 			`/I../vendor/glfw-3.4.bin.WIN64/include`,
 			`/I../vendor/glm/`,
-			'/O2'
+			'/O1'
 		];
 
 	} else if (maek.OS === 'macos') {

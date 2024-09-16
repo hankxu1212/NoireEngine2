@@ -13,26 +13,14 @@ Application::Application(const ApplicationSpecification& specification)
 {
 	s_Instance = this;
 
-	auto& registry = Module::GetRegistry();
-
-	for (auto it = registry.begin(); it != registry.end(); ++it)
-		CreateModule(it);
-
 	// initializes window
-	Window::Get()->SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
+	Window::Get().SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
 }
 
 Application::~Application()
 {
-	DestroyStage(Module::DestroyStage::Pre);
-
 	m_LayerStack.Detach();
-
-	DestroyStage(Module::DestroyStage::Normal);
-
 	m_LayerStack.Destroy();
-
-	DestroyStage(Module::DestroyStage::Post);
 }
 
 void Application::Run()
@@ -48,22 +36,14 @@ void Application::Run()
 
 		ExecuteMainThreadQueue();
 
-		UpdateStage(Module::UpdateStage::Always);
-
 		if (!m_Minimized)
 		{
-			UpdateStage(Module::UpdateStage::Pre);
-
-			UpdateStage(Module::UpdateStage::Normal);
+			Window::Get().Update();
 
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnUpdate();
 			}
-
-			UpdateStage(Module::UpdateStage::Post);
-
-			UpdateStage(Module::UpdateStage::Render);
 		}
 	}
 }
@@ -137,49 +117,4 @@ void Application::PushOverlay(Layer* layer)
 void Application::Close()
 {
 	m_Running = false;
-}
-
-void Application::CreateModule(Module::RegistryMap::const_iterator it) 
-{
-	if (m_Modules.find(it->first) != m_Modules.end())
-		return;
-
-	// TODO: Prevent circular dependencies.
-	for (auto requireId : it->second.requiredModules)
-		CreateModule(Module::GetRegistry().find(requireId));
-
-	auto&& module = it->second.create();
-	m_Modules[it->first] = std::move(module);
-	m_ModuleStages[it->second.stage].emplace_back(it->first);
-	m_ModuleDestroyStages[it->second.destroyStage].emplace_back(it->first);
-}
-
-void Application::DestroyModule(TypeId id, Module::DestroyStage stage) 
-{
-	if (!m_Modules[id])
-		return;
-
-	// Destroy all module dependencies first.
-	for (const auto& [registrarId, registrar] : Module::GetRegistry()) {
-		if (std::find(registrar.requiredModules.begin(), registrar.requiredModules.end(), id) != registrar.requiredModules.end()
-			&& registrar.destroyStage == stage) {
-			DestroyModule(registrarId, stage);
-		}
-	}
-
-	std::cout << "Trying to delete module ID: " << id << std::endl;
-	m_Modules[id].reset();
-	std::cout << "Successfully deleted module ID: " << id << std::endl;
-}
-
-void Application::UpdateStage(Module::UpdateStage stage) 
-{
-	for (auto& moduleId : m_ModuleStages[stage])
-		m_Modules[moduleId]->Update();
-}
-
-void Application::DestroyStage(Module::DestroyStage stage)
-{
-	for (auto& moduleId : m_ModuleDestroyStages[stage])
-		DestroyModule(moduleId, stage);
 }
