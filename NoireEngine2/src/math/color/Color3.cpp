@@ -106,13 +106,14 @@ constexpr Color3& Color3::operator/=(float rhs) {
 }
 
 namespace std {
-template<>
-struct hash<Color3> {
-	size_t operator()(const Color3& colour) const noexcept {
-		size_t seed = 0;
-		Math::HashCombine(seed, colour.rgb[0]);
-		Math::HashCombine(seed, colour.rgb[1]);
-		Math::HashCombine(seed, colour.rgb[2]);
-		return seed;
-	}
-};
+	template<>
+	struct hash<Color3> {
+		size_t operator()(const Color3& colour) const noexcept {
+			size_t seed = 0;
+			Math::HashCombine(seed, colour.rgb[0]);
+			Math::HashCombine(seed, colour.rgb[1]);
+			Math::HashCombine(seed, colour.rgb[2]);
+			return seed;
+		}
+	};
+}

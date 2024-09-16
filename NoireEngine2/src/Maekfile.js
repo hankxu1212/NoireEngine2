@@ -25,11 +25,17 @@ const main_objs = [
 	maek.CPP('core/layers/LayerStack.cpp'),
 	maek.CPP('core/window/Window.cpp'),
 	maek.CPP('core/Bitmap.cpp'),
-	maek.CPP('utils/ThreadPool.cpp'),
 	maek.CPP('core/resources/Files.cpp'),
 	maek.CPP('core/resources/nodes/Node.cpp'),
 	maek.CPP('core/resources/Resources.cpp')
 ];
+
+const util_objs = [
+	maek.CPP('utils/ThreadPool.cpp'),
+	maek.CPP('math/Math.cpp'),
+	maek.CPP('math/color/Color3.cpp'),
+	maek.CPP('math/color/Color4.cpp'),
+]
 
 const vulkan_objs = [
 	maek.CPP('backend/VulkanContext.cpp'),
@@ -40,11 +46,12 @@ const vulkan_objs = [
 	maek.CPP('backend/commands/CommandBuffer.cpp'),
 	maek.CPP('backend/commands/CommandPool.cpp'),
 	maek.CPP('backend/images/Image.cpp'),
-	maek.CPP('backend/buffers/Buffer.cpp')
+	maek.CPP('backend/buffers/Buffer.cpp'),
+	maek.CPP('backend/renderpass/Swapchain.cpp')
 ]
 
 // executable
-const main_exe = maek.LINK([...main_objs, ...vulkan_objs], 'bin/main');
+const main_exe = maek.LINK([...main_objs, ...vulkan_objs, ...util_objs], 'bin/main');
 maek.TARGETS = [main_exe];
 
 //- - - - - - - - - - - - - - - - - - - - -
