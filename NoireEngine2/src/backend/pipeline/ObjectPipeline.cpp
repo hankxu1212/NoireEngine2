@@ -1,11 +1,13 @@
 #include "ObjectPipeline.hpp"
 
-#include <iostream>
 #include <array>
 
 #include "backend/VulkanContext.hpp"
-#include "math/Math.hpp"
 #include "backend/shader/VulkanShader.h"
+#include "math/Math.hpp"
+#include "core/Time.hpp"
+
+#include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
 
 static uint32_t vert_code[] =
 #include "spv/objects.vert.inl"
@@ -15,9 +17,10 @@ static uint32_t frag_code[] =
 #include "spv/objects.frag.inl"
 ;
 
-ObjectPipeline::ObjectPipeline(VkRenderPass& renderpass)
+ObjectPipeline::ObjectPipeline(Renderer* renderer) :
+	VulkanPipeline(renderer)
 {
-	CreatePipeline(renderpass, 0);
+	CreatePipeline(m_BindedRenderer->m_Renderpass, 0);
 	CreateWorkspaces();
 }
 
@@ -305,346 +308,325 @@ void ObjectPipeline::CreatePipeline(VkRenderPass& renderpass, uint32_t subpass)
 
 void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
-	////get more convenient names for the current workspace and target framebuffer:
-	//Workspace& workspace = workspaces[surfaceId];
-	//VkFramebuffer framebuffer = swapchain_framebuffers[render_params.image_index];
+	//get more convenient names for the current workspace and target framebuffer:
+	Workspace& workspace = workspaces[surfaceId];
+	VkFramebuffer framebuffer = m_BindedRenderer->m_Framebuffers[VulkanContext::Get().getCurrentFrame()];
 
-	////record (into `workspace.command_buffer`) commands that run a `render_pass` that just clears `framebuffer`:
-	//VK(vkResetCommandBuffer(workspace.command_buffer, 0));
-	//{ //begin recording:
-	//	VkCommandBufferBeginInfo begin_info{
-	//		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-	//		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, //will record again every submit
-	//	};
-	//	VK(vkBeginCommandBuffer(workspace.command_buffer, &begin_info));
-	//}
+	{ //upload world info:
+		//host-side copy into World_src:
+		memcpy(workspace.World_src.data(), &world, sizeof(world));
 
-	//if (!lines_vertices.empty()) { //upload lines vertices:
-	//	//[re-]allocate lines buffers if needed:
-	//	size_t needed_bytes = lines_vertices.size() * sizeof(lines_vertices[0]);
-	//	if (workspace.lines_vertices_src.handle == VK_NULL_HANDLE || workspace.lines_vertices_src.size < needed_bytes) {
-	//		//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
-	//		size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
+		//add device-side copy from World_src -> World:
+		assert(workspace.World_src.getSize() == workspace.World.getSize());
+		VkBufferCopy copy_region{
+			.srcOffset = 0,
+			.dstOffset = 0,
+			.size = workspace.World_src.getSize(),
+		};
+		vkCmdCopyBuffer(commandBuffer, workspace.World_src.getBuffer(), workspace.World.getBuffer(), 1, &copy_region);
+	}
 
-	//		workspace.lines_vertices_src = rtg.helpers.create_buffer(
-	//			new_bytes,
-	//			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
-	//			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //host-visible memory, coherent (no special sync needed)
-	//			Helpers::Mapped //get a pointer to the memory
-	//		);
-	//		workspace.lines_vertices = rtg.helpers.create_buffer(
-	//			new_bytes,
-	//			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //going to use as vertex buffer, also going to have GPU into this memory
-	//			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, //GPU-local memory
-	//			Helpers::Unmapped //don't get a pointer to the memory
-	//		);
+	if (!object_instances.empty()) { //upload object transforms:
+		size_t needed_bytes = object_instances.size() * sizeof(Transform);
+		if (workspace.Transforms_src.getBuffer() == VK_NULL_HANDLE || workspace.Transforms_src.getSize() < needed_bytes) {
+			//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
+			size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
+			if (workspace.Transforms_src.getBuffer()) {
+				workspace.Transforms_src.Destroy();
+			}
+			if (workspace.Transforms.getBuffer()) {
+				workspace.Transforms.Destroy();
+			}
+			workspace.Transforms_src = Buffer(
+				new_bytes,
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //host-visible memory, coherent (no special sync needed)
+				Buffer::Mapped //get a pointer to the memory
+			);
+			workspace.Transforms = Buffer(
+				new_bytes,
+				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //going to use as storage buffer, also going to have GPU into this memory
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, //GPU-local memory
+				Buffer::Unmapped //don't get a pointer to the memory
+			);
 
-	//		std::cout << "Re-allocated lines buffers to " << new_bytes << " bytes." << std::endl;
-	//	}
+			//update the descriptor set:
+			VkDescriptorBufferInfo Transforms_info{
+				.buffer = workspace.Transforms.getBuffer(),
+				.offset = 0,
+				.range = workspace.Transforms.getSize(),
+			};
 
-	//	assert(workspace.lines_vertices_src.size == workspace.lines_vertices.size);
-	//	assert(workspace.lines_vertices_src.size >= needed_bytes);
+			std::array< VkWriteDescriptorSet, 1 > writes{
+				VkWriteDescriptorSet{
+					.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+					.dstSet = workspace.Transforms_descriptors,
+					.dstBinding = 0,
+					.dstArrayElement = 0,
+					.descriptorCount = 1,
+					.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+					.pBufferInfo = &Transforms_info,
+				},
+			};
 
-	//	//host-side copy into lines_vertices_src:
-	//	assert(workspace.lines_vertices_src.allocation.mapped);
-	//	std::memcpy(workspace.lines_vertices_src.allocation.data(), lines_vertices.data(), needed_bytes);
+			vkUpdateDescriptorSets(
+				VulkanContext::GetDevice(),
+				uint32_t(writes.size()), writes.data(), //descriptorWrites count, data
+				0, nullptr //descriptorCopies count, data
+			);
 
-	//	//device-side copy from lines_vertices_src -> lines_vertices:
-	//	VkBufferCopy copy_region{
-	//		.srcOffset = 0,
-	//		.dstOffset = 0,
-	//		.size = needed_bytes,
-	//	};
-	//	vkCmdCopyBuffer(workspace.command_buffer, workspace.lines_vertices_src.handle, workspace.lines_vertices.handle, 1, &copy_region);
-	//}
+			std::cout << "Re-allocated object transforms buffers to " << new_bytes << " bytes." << std::endl;
+		}
 
-	//{ //upload camera info:
-	//	LinesPipeline::Camera camera{
-	//		.CLIP_FROM_WORLD = CLIP_FROM_WORLD
-	//	};
-	//	assert(workspace.Camera_src.size == sizeof(camera));
+		assert(workspace.Transforms_src.getSize() == workspace.Transforms.getSize());
+		assert(workspace.Transforms_src.getSize() >= needed_bytes);
 
-	//	//host-side copy into Camera_src:
-	//	memcpy(workspace.Camera_src.allocation.data(), &camera, sizeof(camera));
+		{ //copy transforms into Transforms_src:
+			assert(workspace.Transforms_src.data() != nullptr);
+			Transform* out = reinterpret_cast<Transform*>(workspace.Transforms_src.data());
+			for (ObjectInstance const& inst : object_instances) {
+				*out = inst.transform;
+				++out;
+			}
+		}
 
-	//	//add device-side copy from Camera_src -> Camera:
-	//	assert(workspace.Camera_src.size == workspace.Camera.size);
-	//	VkBufferCopy copy_region{
-	//		.srcOffset = 0,
-	//		.dstOffset = 0,
-	//		.size = workspace.Camera_src.size,
-	//	};
-	//	vkCmdCopyBuffer(workspace.command_buffer, workspace.Camera_src.handle, workspace.Camera.handle, 1, &copy_region);
-	//}
+		//device-side copy from Transforms_src -> Transforms:
+		VkBufferCopy copy_region{
+			.srcOffset = 0,
+			.dstOffset = 0,
+			.size = needed_bytes,
+		};
+		vkCmdCopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), 1, &copy_region);
+	}
 
-	//{ //upload world info:
-	//	assert(workspace.Camera_src.size == sizeof(world));
+	{ //memory barrier to make sure copies complete before rendering happens:
+		VkMemoryBarrier memory_barrier{
+			.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+			.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
+			.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+		};
 
-	//	//host-side copy into World_src:
-	//	memcpy(workspace.World_src.allocation.data(), &world, sizeof(world));
+		vkCmdPipelineBarrier(commandBuffer,
+			VK_PIPELINE_STAGE_TRANSFER_BIT, //srcStageMask
+			VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, //dstStageMask
+			0, //dependencyFlags
+			1, &memory_barrier, //memoryBarriers (count, data)
+			0, nullptr, //bufferMemoryBarriers (count, data)
+			0, nullptr //imageMemoryBarriers (count, data)
+		);
+	}
 
-	//	//add device-side copy from World_src -> World:
-	//	assert(workspace.World_src.size == workspace.World.size);
-	//	VkBufferCopy copy_region{
-	//		.srcOffset = 0,
-	//		.dstOffset = 0,
-	//		.size = workspace.World_src.size,
-	//	};
-	//	vkCmdCopyBuffer(workspace.command_buffer, workspace.World_src.handle, workspace.World.handle, 1, &copy_region);
-	//}
+	{ //render pass
+		std::array< VkClearValue, 2 > clear_values{
+			VkClearValue{.color{.float32{1.0f, 0.5f, 0.5f, 1.0f} } },
+			VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
+		};
 
-	//if (!object_instances.empty()) { //upload object transforms:
-	//	size_t needed_bytes = object_instances.size() * sizeof(ObjectsPipeline::Transform);
-	//	if (workspace.Transforms_src.handle == VK_NULL_HANDLE || workspace.Transforms_src.size < needed_bytes) {
-	//		//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
-	//		size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
-	//		if (workspace.Transforms_src.handle) {
-	//			rtg.helpers.destroy_buffer(std::move(workspace.Transforms_src));
-	//		}
-	//		if (workspace.Transforms.handle) {
-	//			rtg.helpers.destroy_buffer(std::move(workspace.Transforms));
-	//		}
-	//		workspace.Transforms_src = rtg.helpers.create_buffer(
-	//			new_bytes,
-	//			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
-	//			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //host-visible memory, coherent (no special sync needed)
-	//			Helpers::Mapped //get a pointer to the memory
-	//		);
-	//		workspace.Transforms = rtg.helpers.create_buffer(
-	//			new_bytes,
-	//			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //going to use as storage buffer, also going to have GPU into this memory
-	//			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, //GPU-local memory
-	//			Helpers::Unmapped //don't get a pointer to the memory
-	//		);
+		VkRenderPassBeginInfo begin_info{
+			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+			.renderPass = m_BindedRenderer->m_Renderpass,
+			.framebuffer = framebuffer,
+			.renderArea{
+				.offset = {.x = 0, .y = 0},
+				.extent = VulkanContext::Get().getSwapChain()->getExtent(),
+			},
+			.clearValueCount = uint32_t(clear_values.size()),
+			.pClearValues = clear_values.data(),
+		};
 
-	//		//update the descriptor set:
-	//		VkDescriptorBufferInfo Transforms_info{
-	//			.buffer = workspace.Transforms.handle,
-	//			.offset = 0,
-	//			.range = workspace.Transforms.size,
-	//		};
+		vkCmdBeginRenderPass(commandBuffer, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-	//		std::array< VkWriteDescriptorSet, 1 > writes{
-	//			VkWriteDescriptorSet{
-	//				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-	//				.dstSet = workspace.Transforms_descriptors,
-	//				.dstBinding = 0,
-	//				.dstArrayElement = 0,
-	//				.descriptorCount = 1,
-	//				.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-	//				.pBufferInfo = &Transforms_info,
-	//			},
-	//		};
+		{ //set scissor rectangle:
+			VkRect2D scissor{
+				.offset = {.x = 0, .y = 0},
+				.extent = VulkanContext::Get().getSwapChain()->getExtent(),
+			};
+			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+		}
+		{ //configure viewport transform:
+			VkViewport viewport{
+				.x = 0.0f,
+				.y = 0.0f,
+				.width = float(VulkanContext::Get().getSwapChain()->getExtent().width),
+				.height = float(VulkanContext::Get().getSwapChain()->getExtent().height),
+				.minDepth = 0.0f,
+				.maxDepth = 1.0f,
+			};
+			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+		}
 
-	//		vkUpdateDescriptorSets(
-	//			rtg.device,
-	//			uint32_t(writes.size()), writes.data(), //descriptorWrites count, data
-	//			0, nullptr //descriptorCopies count, data
-	//		);
+		{ //draw with the objects pipeline:
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
 
-	//		std::cout << "Re-allocated object transforms buffers to " << new_bytes << " bytes." << std::endl;
-	//	}
+			{ //use object_vertices (offset 0) as vertex buffer binding 0:
+				std::array< VkBuffer, 1 > vertex_buffers{ vertexBuffer.getBuffer()};
+				std::array< VkDeviceSize, 1 > offsets{ 0 };
+				vkCmdBindVertexBuffers(commandBuffer, 0, uint32_t(vertex_buffers.size()), vertex_buffers.data(), offsets.data());
+			}
 
-	//	assert(workspace.Transforms_src.size == workspace.Transforms.size);
-	//	assert(workspace.Transforms_src.size >= needed_bytes);
+			{ //bind Transforms descriptor set:
+				std::array< VkDescriptorSet, 2 > descriptor_sets{
+					workspace.World_descriptors, //0: World
+					workspace.Transforms_descriptors, //1: Transforms
+				};
+				vkCmdBindDescriptorSets(
+					commandBuffer, //command buffer
+					VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+					m_PipelineLayout, //pipeline layout
+					0, //first set
+					uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+					0, nullptr //dynamic offsets count, ptr
+				);
+			}
 
-	//	{ //copy transforms into Transforms_src:
-	//		assert(workspace.Transforms_src.allocation.mapped);
-	//		ObjectsPipeline::Transform* out = reinterpret_cast<ObjectsPipeline::Transform*>(workspace.Transforms_src.allocation.data());
-	//		for (ObjectInstance const& inst : object_instances) {
-	//			*out = inst.transform;
-	//			++out;
-	//		}
-	//	}
+			//Camera descriptor set is still bound, but unused(!)
 
-	//	//device-side copy from Transforms_src -> Transforms:
-	//	VkBufferCopy copy_region{
-	//		.srcOffset = 0,
-	//		.dstOffset = 0,
-	//		.size = needed_bytes,
-	//	};
-	//	vkCmdCopyBuffer(workspace.command_buffer, workspace.Transforms_src.handle, workspace.Transforms.handle, 1, &copy_region);
-	//}
+			//draw all instances:
+			for (ObjectInstance const& inst : object_instances) {
+				uint32_t index = uint32_t(&inst - &object_instances[0]);
 
-	//{ //memory barrier to make sure copies complete before rendering happens:
-	//	VkMemoryBarrier memory_barrier{
-	//		.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
-	//		.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
-	//		.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-	//	};
+				//bind texture descriptor set:
+				vkCmdBindDescriptorSets(
+					commandBuffer, //command buffer
+					VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+					m_PipelineLayout, //pipeline layout
+					2, //second set
+					1, nullptr/*&texture_descriptors[inst.texture]*/, //descriptor sets count, ptr
+					0, nullptr //dynamic offsets count, ptr
+				);
 
-	//	vkCmdPipelineBarrier(workspace.command_buffer,
-	//		VK_PIPELINE_STAGE_TRANSFER_BIT, //srcStageMask
-	//		VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, //dstStageMask
-	//		0, //dependencyFlags
-	//		1, &memory_barrier, //memoryBarriers (count, data)
-	//		0, nullptr, //bufferMemoryBarriers (count, data)
-	//		0, nullptr //imageMemoryBarriers (count, data)
-	//	);
-	//}
+				vkCmdDraw(commandBuffer, inst.vertices.count, 1, inst.vertices.first, index);
+			}
 
-	//{ //render pass
-	//	std::array< VkClearValue, 2 > clear_values{
-	//		VkClearValue{.color{.float32{1.0f, 0.5f, 0.5f, 1.0f} } },
-	//		VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
-	//	};
+			//draw all vertices:
+			vkCmdDraw(commandBuffer, uint32_t(vertexBuffer.getSize() / sizeof(Vertex)), 1, 0, 0);
+		}
 
-	//	VkRenderPassBeginInfo begin_info{
-	//		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-	//		.renderPass = render_pass,
-	//		.framebuffer = framebuffer,
-	//		.renderArea{
-	//			.offset = {.x = 0, .y = 0},
-	//			.extent = rtg.swapchain_extent,
-	//		},
-	//		.clearValueCount = uint32_t(clear_values.size()),
-	//		.pClearValues = clear_values.data(),
-	//	};
+		vkCmdEndRenderPass(commandBuffer);
+	}
+}
 
-	//	vkCmdBeginRenderPass(workspace.command_buffer, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
+inline glm::mat4 look_at(
+	float eye_x, float eye_y, float eye_z,
+	float target_x, float target_y, float target_z,
+	float up_x, float up_y, float up_z) {
 
-	//	{ //set scissor rectangle:
-	//		VkRect2D scissor{
-	//			.offset = {.x = 0, .y = 0},
-	//			.extent = rtg.swapchain_extent,
-	//		};
-	//		vkCmdSetScissor(workspace.command_buffer, 0, 1, &scissor);
-	//	}
-	//	{ //configure viewport transform:
-	//		VkViewport viewport{
-	//			.x = 0.0f,
-	//			.y = 0.0f,
-	//			.width = float(rtg.swapchain_extent.width),
-	//			.height = float(rtg.swapchain_extent.height),
-	//			.minDepth = 0.0f,
-	//			.maxDepth = 1.0f,
-	//		};
-	//		vkCmdSetViewport(workspace.command_buffer, 0, 1, &viewport);
-	//	}
+	//NOTE: this would be a lot cleaner with a vec3 type and some overloads!
 
-	//	{ //draw with the background pipeline:
-	//		vkCmdBindPipeline(workspace.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, background_pipeline.handle);
+	//compute vector from eye to target:
+	float in_x = target_x - eye_x;
+	float in_y = target_y - eye_y;
+	float in_z = target_z - eye_z;
 
-	//		{ //push time:
-	//			BackgroundPipeline::Push push{
-	//				.time = float(time),
-	//			};
-	//			vkCmdPushConstants(workspace.command_buffer, background_pipeline.layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(push), &push);
-	//		}
+	//normalize 'in' vector:
+	float inv_in_len = 1.0f / std::sqrt(in_x * in_x + in_y * in_y + in_z * in_z);
+	in_x *= inv_in_len;
+	in_y *= inv_in_len;
+	in_z *= inv_in_len;
 
-	//		vkCmdDraw(workspace.command_buffer, 3, 1, 0, 0);
-	//	}
+	//make 'up' orthogonal to 'in':
+	float in_dot_up = in_x * up_x + in_y * up_y + in_z * up_z;
+	up_x -= in_dot_up * in_x;
+	up_y -= in_dot_up * in_y;
+	up_z -= in_dot_up * in_z;
 
-	//	{ //draw with the lines pipeline:
-	//		vkCmdBindPipeline(workspace.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lines_pipeline.handle);
+	//normalize 'up' vector:
+	float inv_up_len = 1.0f / std::sqrt(up_x * up_x + up_y * up_y + up_z * up_z);
+	up_x *= inv_up_len;
+	up_y *= inv_up_len;
+	up_z *= inv_up_len;
 
-	//		{ //use lines_vertices (offset 0) as vertex buffer binding 0:
-	//			std::array< VkBuffer, 1 > vertex_buffers{ workspace.lines_vertices.handle };
-	//			std::array< VkDeviceSize, 1 > offsets{ 0 };
-	//			vkCmdBindVertexBuffers(workspace.command_buffer, 0, uint32_t(vertex_buffers.size()), vertex_buffers.data(), offsets.data());
-	//		}
+	//compute 'right' vector as 'in' x 'up'
+	float right_x = in_y * up_z - in_z * up_y;
+	float right_y = in_z * up_x - in_x * up_z;
+	float right_z = in_x * up_y - in_y * up_x;
 
-	//		{ //bind Camera descriptor set:
-	//			std::array< VkDescriptorSet, 1 > descriptor_sets{
-	//				workspace.Camera_descriptors, //0: Camera
-	//			};
-	//			vkCmdBindDescriptorSets(
-	//				workspace.command_buffer, //command buffer
-	//				VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-	//				lines_pipeline.layout, //pipeline layout
-	//				0, //first set
-	//				uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
-	//				0, nullptr //dynamic offsets count, ptr
-	//			);
-	//		}
+	//compute dot products of right, in, up with eye:
+	float right_dot_eye = right_x * eye_x + right_y * eye_y + right_z * eye_z;
+	float up_dot_eye = up_x * eye_x + up_y * eye_y + up_z * eye_z;
+	float in_dot_eye = in_x * eye_x + in_y * eye_y + in_z * eye_z;
 
-	//		//draw lines vertices:
-	//		vkCmdDraw(workspace.command_buffer, uint32_t(lines_vertices.size()), 1, 0, 0);
-	//	}
+	//final matrix: (computes (right . (v - eye), up . (v - eye), -in . (v-eye), v.w )
+	return glm::mat4{ //note: column-major storage order
+		right_x, up_x, -in_x, 0.0f,
+		right_y, up_y, -in_y, 0.0f,
+		right_z, up_z, -in_z, 0.0f,
+		-right_dot_eye, -up_dot_eye, in_dot_eye, 1.0f,
+	};
+}
 
-	//	{ //draw with the objects pipeline:
-	//		vkCmdBindPipeline(workspace.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, objects_pipeline.handle);
+void ObjectPipeline::Update()
+{
+	static float time = 0;
+	time += Time::DeltaTime;
 
-	//		{ //use object_vertices (offset 0) as vertex buffer binding 0:
-	//			std::array< VkBuffer, 1 > vertex_buffers{ object_vertices.handle };
-	//			std::array< VkDeviceSize, 1 > offsets{ 0 };
-	//			vkCmdBindVertexBuffers(workspace.command_buffer, 0, uint32_t(vertex_buffers.size()), vertex_buffers.data(), offsets.data());
-	//		}
+	{ //static sun and sky:
+		world.SKY_DIRECTION.x = 0.0f;
+		world.SKY_DIRECTION.y = 0.0f;
+		world.SKY_DIRECTION.z = 1.0f;
 
-	//		{ //bind Transforms descriptor set:
-	//			std::array< VkDescriptorSet, 2 > descriptor_sets{
-	//				workspace.World_descriptors, //0: World
-	//				workspace.Transforms_descriptors, //1: Transforms
-	//			};
-	//			vkCmdBindDescriptorSets(
-	//				workspace.command_buffer, //command buffer
-	//				VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-	//				objects_pipeline.layout, //pipeline layout
-	//				0, //first set
-	//				uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
-	//				0, nullptr //dynamic offsets count, ptr
-	//			);
-	//		}
+		world.SKY_ENERGY.r = 0.1f;
+		world.SKY_ENERGY.g = 0.1f;
+		world.SKY_ENERGY.b = 0.2f;
 
-	//		//Camera descriptor set is still bound, but unused(!)
+		world.SUN_DIRECTION.x = 6.0f / 23.0f;
+		world.SUN_DIRECTION.y = 13.0f / 23.0f;
+		world.SUN_DIRECTION.z = -18.0f / 23.0f;
 
-	//		//draw all instances:
-	//		for (ObjectInstance const& inst : object_instances) {
-	//			uint32_t index = uint32_t(&inst - &object_instances[0]);
+		world.SUN_ENERGY.r = 1.0f;
+		world.SUN_ENERGY.g = 0.0f;
+		world.SUN_ENERGY.b = 0.0f;
+	}
 
-	//			//bind texture descriptor set:
-	//			vkCmdBindDescriptorSets(
-	//				workspace.command_buffer, //command buffer
-	//				VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-	//				objects_pipeline.layout, //pipeline layout
-	//				2, //second set
-	//				1, &texture_descriptors[inst.texture], //descriptor sets count, ptr
-	//				0, nullptr //dynamic offsets count, ptr
-	//			);
+	{ //camera orbiting the origin:
+		float ang = Math::PI<float> * 2.0f * 10.0f * (time / 100.0f);
+		CLIP_FROM_WORLD = glm::perspective(
+			60.0f / Math::PI<float> * 180.0f, //vfov
+			1920.0f / 1080, //aspect
+			0.1f, //near
+			1000.0f //far
+		) * look_at(
+			3.0f * std::cos(ang), 3.0f * std::sin(ang), 1.0f, //eye
+			0.0f, 0.0f, 0.5f, //target
+			0.0f, 0.0f, 1.0f //up
+		);
+	}
 
-	//			vkCmdDraw(workspace.command_buffer, inst.vertices.count, 1, inst.vertices.first, index);
-	//		}
+	{ //make some objects:
+		object_instances.clear();
 
-	//		//draw all vertices:
-	//		vkCmdDraw(workspace.command_buffer, uint32_t(object_vertices.size / sizeof(ObjectsPipeline::Vertex)), 1, 0, 0);
-	//	}
+		for (int i = 0; i < 10; i++)
+		{
+			for (int j = 0; j < 10; j++)
+			{
+				for (int k = 0; k < 5; k++) {
+					glm::mat4 WORLD_FROM_LOCAL{
+						0.2f, 0.0f, 0.0f, 0.0f,
+						0.0f, 0.2f, 0.0f, 0.0f,
+						0.0f, 0.0f, 0.2f, 0.0f,
+						i * 0.3f / k, j * 0.2f / k, 1.0f * k * std::sin(0.1f * time), 1.0f,
+					};
 
-	//	vkCmdEndRenderPass(workspace.command_buffer);
-	//}
-
-	//VK(vkEndCommandBuffer(workspace.command_buffer));
-
-	////submit `workspace.command buffer` for the GPU to run:
-	//{
-	//	std::array< VkSemaphore, 1 > wait_semaphores{
-	//	render_params.image_available
-	//	};
-	//	std::array< VkPipelineStageFlags, 1 > wait_stages{
-	//		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-	//	};
-	//	static_assert(wait_semaphores.size() == wait_stages.size(), "every semaphore needs a stage");
-
-	//	std::array< VkSemaphore, 1 > signal_semaphores{
-	//		render_params.image_done
-	//	};
-	//	VkSubmitInfo submit_info{
-	//		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-	//		.waitSemaphoreCount = uint32_t(wait_semaphores.size()),
-	//		.pWaitSemaphores = wait_semaphores.data(),
-	//		.pWaitDstStageMask = wait_stages.data(),
-	//		.commandBufferCount = 1,
-	//		.pCommandBuffers = &workspace.command_buffer,
-	//		.signalSemaphoreCount = uint32_t(signal_semaphores.size()),
-	//		.pSignalSemaphores = signal_semaphores.data(),
-	//	};
-
-	//	VK(vkQueueSubmit(rtg.graphics_queue, 1, &submit_info, render_params.workspace_available));
-	//}
+					object_instances.emplace_back(ObjectInstance{
+						.vertices = plane_vertices,
+						.transform{
+							.CLIP_FROM_LOCAL = CLIP_FROM_WORLD * WORLD_FROM_LOCAL,
+							.WORLD_FROM_LOCAL = WORLD_FROM_LOCAL,
+							.WORLD_FROM_LOCAL_NORMAL = WORLD_FROM_LOCAL,
+						},
+						.texture = 1,
+						});
+				}
+			}
+		}
+	}
 }
 
 void ObjectPipeline::CreateWorkspaces()
 {
 	workspaces.resize(VulkanContext::Get().getWorkspaceSize());
+	std::cout << "Created workspace of size " << workspaces.size();
+	assert(workspaces.size() > 0);
 	
 	for (Workspace& workspace : workspaces) 
 	{
@@ -776,5 +758,7 @@ void ObjectPipeline::CreateWorkspaces()
 
 		//copy data to buffer:
 		Buffer::TransferToBuffer(vertices.data(), bytes, vertexBuffer.getBuffer());
+
+		plane_vertices.count = uint32_t(vertices.size()) - plane_vertices.first;
 	}
 }

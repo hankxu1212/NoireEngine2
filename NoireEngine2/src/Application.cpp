@@ -21,7 +21,7 @@ Application::Application(const ApplicationSpecification& specification)
 	Window::Get().SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
 	VulkanContext::Get().OnAddWindow(&Window::Get());
 
-	VulkanContext::Get().InitializeRenderer();
+	//VulkanContext::Get().InitializeRenderer();
 }
 
 Application::~Application()

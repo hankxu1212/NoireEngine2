@@ -7,10 +7,9 @@ Renderer::Renderer()
 {
 }
 
-void Renderer::Initialize()
+void Renderer::CreatePipelines()
 {
-	CreateRenderPass();
-	objectPipeline = std::make_unique<ObjectPipeline>(m_Renderpass);
+	objectPipeline = std::make_unique<ObjectPipeline>(this);
 }
 
 void Renderer::CreateRenderPass()
@@ -100,6 +99,7 @@ void Renderer::Cleanup()
 
 void Renderer::Update()
 {
+	objectPipeline->Update();
 }
 
 void Renderer::Render(const CommandBuffer& commandBuffer, uint32_t surfaceId)
@@ -109,6 +109,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer, uint32_t surfaceId)
 
 void Renderer::Rebuild()
 {
+	std::cout << "Rebuilt renderer and frame buffers\n";
 	if (s_SwapchainDepthImage != nullptr && s_SwapchainDepthImage->getImage() != VK_NULL_HANDLE) {
 		DestroyFrameBuffers();
 	}

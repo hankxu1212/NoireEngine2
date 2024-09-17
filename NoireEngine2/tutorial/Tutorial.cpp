@@ -1123,8 +1123,8 @@ void Tutorial::update(float dt) {
 					};
 
 					object_instances.emplace_back(ObjectInstance{
-						.vertices = plane_vertices,
 						.transform{
+						.vertices = plane_vertices,
 							.CLIP_FROM_LOCAL = CLIP_FROM_WORLD * WORLD_FROM_LOCAL,
 							.WORLD_FROM_LOCAL = WORLD_FROM_LOCAL,
 							.WORLD_FROM_LOCAL_NORMAL = WORLD_FROM_LOCAL,

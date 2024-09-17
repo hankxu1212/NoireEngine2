@@ -46,7 +46,7 @@ void VulkanContext::Update()
 {
     s_Renderer->Update();
 
-    for (auto [surfaceId, swapchain] : Enumerate(m_Swapchains)) 
+    for (auto [surfaceId, swapchain] : Enumerate(m_Swapchains))
     {
         auto& perSurfaceBuffer = m_PerSurfaceBuffers[surfaceId];
 
@@ -66,8 +66,26 @@ void VulkanContext::Update()
         }
 
         std::unique_ptr<CommandBuffer>& commandBuffer = perSurfaceBuffer->commandBuffers[swapchain->getActiveImageIndex()];
+        
+        commandBuffer->Begin();
 
         s_Renderer->Render(*commandBuffer, static_cast<uint32_t>(surfaceId));
+        
+        // submit the command buffer
+        {
+            commandBuffer->End();
+            commandBuffer->Submit(perSurfaceBuffer->getPresentSemaphore(),
+                perSurfaceBuffer->getRenderSemaphore(),
+                perSurfaceBuffer->getFence());
+
+            auto presentResult = swapchain->QueuePresent(s_LogicalDevice->getPresentQueue(), perSurfaceBuffer->getRenderSemaphore());
+            if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
+                perSurfaceBuffer->framebufferResized = true;
+            }
+            else if (presentResult != VK_SUCCESS) {
+                VK_CHECK(presentResult, "[vulkan] Failed to present swap chain image!");
+            }
+        }
 
         perSurfaceBuffer->currentFrame = (perSurfaceBuffer->currentFrame + 1) % swapchain->getImageCount();
     }
@@ -81,12 +99,13 @@ void VulkanContext::OnWindowResize(uint32_t width, uint32_t height)
 void VulkanContext::OnAddWindow(Window* window)
 {
     m_Surfaces.emplace_back(std::make_unique<Surface>(*s_VulkanInstance, *s_PhysicalDevice, *s_LogicalDevice, window));
+    s_Renderer->CreateRenderPass();
     RecreateSwapchain();
+    s_Renderer->CreatePipelines();
 }
 
 void VulkanContext::InitializeRenderer()
 {
-    s_Renderer->Initialize();
 }
 
 void VulkanContext::WaitForCommands()

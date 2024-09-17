@@ -11,8 +11,8 @@ class Renderer
 {
 public:
 	Renderer();
-	
-	void Initialize();
+
+	void CreatePipelines();
 
 	void CreateRenderPass();
 
@@ -31,12 +31,12 @@ public:
 
 	bool enabled = true;
 
-private:
+public:
+	VkRenderPass							m_Renderpass = VK_NULL_HANDLE;
 	void DestroyFrameBuffers();
 	
 	std::unique_ptr<ObjectPipeline>			objectPipeline;
 	
-	VkRenderPass							m_Renderpass = VK_NULL_HANDLE;
 	std::unique_ptr<ImageDepth>				s_SwapchainDepthImage;
 	std::vector<VkFramebuffer>				m_Framebuffers;
 };
