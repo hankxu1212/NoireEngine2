@@ -28,6 +28,15 @@ ObjectPipeline::~ObjectPipeline()
 {
 	VkDevice device = VulkanContext::GetDevice();
 
+	if (texture_descriptor_pool) {
+		vkDestroyDescriptorPool(device, texture_descriptor_pool, nullptr);
+		texture_descriptor_pool = nullptr;
+
+		//this also frees the descriptor sets allocated from the pool:
+		texture_descriptors.clear();
+	}
+
+
 	if (m_PipelineLayout != VK_NULL_HANDLE) {
 		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
 		m_PipelineLayout = VK_NULL_HANDLE;
@@ -491,7 +500,7 @@ void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surface
 					VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
 					m_PipelineLayout, //pipeline layout
 					2, //second set
-					1, nullptr/*&texture_descriptors[inst.texture]*/, //descriptor sets count, ptr
+					1, &texture_descriptors[inst.texture], //descriptor sets count, ptr
 					0, nullptr //dynamic offsets count, ptr
 				);
 
@@ -760,5 +769,58 @@ void ObjectPipeline::CreateWorkspaces()
 		Buffer::TransferToBuffer(vertices.data(), bytes, vertexBuffer.getBuffer());
 
 		plane_vertices.count = uint32_t(vertices.size()) - plane_vertices.first;
+	}
+
+	textures.resize(1);
+	textures[0] = std::make_shared<Image2D>("F:/gameDev/Engines/NoireEngine2/NoireEngine2/src/textures/default.png");
+
+	{ // create the texture descriptor pool
+		uint32_t per_texture = uint32_t(textures.size()); //for easier-to-read counting
+
+		std::array< VkDescriptorPoolSize, 1> pool_sizes{
+			VkDescriptorPoolSize{
+				.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				.descriptorCount = 1 * 1 * per_texture, //one descriptor per set, one set per texture
+			},
+		};
+
+		VkDescriptorPoolCreateInfo create_info{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+			.flags = 0, //because CREATE_FREE_DESCRIPTOR_SET_BIT isn't included, *can't* free individual descriptors allocated from this pool
+			.maxSets = 1 * per_texture, //one set per texture
+			.poolSizeCount = uint32_t(pool_sizes.size()),
+			.pPoolSizes = pool_sizes.data(),
+		};
+
+		VulkanContext::VK_CHECK(
+			vkCreateDescriptorPool(VulkanContext::GetDevice(), &create_info, nullptr, &texture_descriptor_pool),
+			"[vulkan] Allocating descriptor pool failed");
+	}
+
+	{ //allocate and write the texture descriptor sets
+		//allocate the descriptors (using the same alloc_info):
+		VkDescriptorSetAllocateInfo alloc_info{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+			.descriptorPool = texture_descriptor_pool,
+			.descriptorSetCount = 1,
+			.pSetLayouts = &set2_TEXTURE,
+		};
+		texture_descriptors.assign(1, VK_NULL_HANDLE);
+		for (VkDescriptorSet& descriptor_set : texture_descriptors) {
+			VulkanContext::VK_CHECK(
+				vkAllocateDescriptorSets(VulkanContext::GetDevice(), &alloc_info, &descriptor_set),
+				"[vulkan] Allocating descriptor set failed");
+		}
+
+		//write descriptors for textures:
+		std::vector< VkWriteDescriptorSet > writes(textures.size());
+
+		for (auto const& image : textures) {
+			size_t i = &image - &textures[0];
+			writes[i] = image->getWriteDescriptor(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER).getWriteDescriptorSet();
+			writes[i].dstSet = texture_descriptors[i];
+		}
+
+		vkUpdateDescriptorSets(VulkanContext::GetDevice(), uint32_t(writes.size()), writes.data(), 0, nullptr);
 	}
 }

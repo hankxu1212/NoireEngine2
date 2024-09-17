@@ -50,5 +50,9 @@ public:
 	Descriptor() = default;
 	virtual ~Descriptor() = default;
 
-	virtual WriteDescriptorSet getWriteDescriptor(uint32_t binding, VkDescriptorType descriptorType, const std::optional<OffsetSize>& offsetSize) const = 0;
+	virtual WriteDescriptorSet getWriteDescriptor(
+		uint32_t binding, 
+		VkDescriptorType descriptorType, 
+		const std::optional<OffsetSize>& offsetSize=std::nullopt
+	) const = 0;
 };

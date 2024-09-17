@@ -210,6 +210,21 @@
     <None Include="src\shaders\objects.vert" />
     <None Include="tutorial\README.md" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="src\textures\default.png" />
+    <Image Include="src\textures\default_gray.png" />
+    <Image Include="src\textures\icon-back.png" />
+    <Image Include="src\textures\icon-file-1.png" />
+    <Image Include="src\textures\icon-file-2.png" />
+    <Image Include="src\textures\icon-folder-1.png" />
+    <Image Include="src\textures\icon-folder-2.png" />
+    <Image Include="src\textures\icon-mat.png" />
+    <Image Include="src\textures\icon-mesh.png" />
+    <Image Include="src\textures\icon-shader.png" />
+    <Image Include="src\textures\NE-icon.png" />
+    <Image Include="src\textures\statue.jpg" />
+    <Image Include="src\textures\viking_room.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

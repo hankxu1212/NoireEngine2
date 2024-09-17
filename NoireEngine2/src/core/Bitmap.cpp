@@ -1,5 +1,6 @@
 #include "Bitmap.hpp"
 
+#include <iostream>
 #include <fstream>
 
 #ifndef __STDC_LIB_EXT1__
@@ -37,17 +38,18 @@ Bitmap::Bitmap(std::unique_ptr<uint8_t[]>&& _data, const glm::vec2 _size, uint32
 }
 
 void Bitmap::Load(const std::filesystem::path& filename) {
-	auto fileLoaded = Files::Read(filename);
+	uint8_t* image = stbi_load(
+		filename.string().c_str(), 
+		reinterpret_cast<int32_t*>(&size.x), 
+		reinterpret_cast<int32_t*>(&size.y), 
+		reinterpret_cast<int32_t*>(&bytesPerPixel), 
+		3
+	);
+	
+	data = std::unique_ptr<uint8_t[]>(image);
 
-	if (!fileLoaded) {
-		std::runtime_error(std::format("[vulkan]: Bitmap could not be loaded: {}", filename.string()));
-		return;
-	}
-
-	data = std::unique_ptr<uint8_t[]>(stbi_load_from_memory(reinterpret_cast<uint8_t*>(fileLoaded->data()), static_cast<uint32_t>(fileLoaded->size()),
-		reinterpret_cast<int32_t*>(&size.x), reinterpret_cast<int32_t*>(&size.y), reinterpret_cast<int32_t*>(&bytesPerPixel), STBI_rgb_alpha));
 	if (!data)
-		std::runtime_error(std::format("[vulkan]: stbi load from memory failed: {}", filename.string()));
+		std::cerr << (std::format("[vulkan]: stbi load failed: {}", filename.string()));
 	bytesPerPixel = 4;
 }
 

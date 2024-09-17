@@ -3,6 +3,7 @@
 #include "VulkanPipeline.hpp"
 #include "renderer/PosNorTexVertex.hpp"
 #include "backend/buffers/Buffer.hpp"
+#include "backend/images/Image2D.hpp"
 
 #include "glm/glm.hpp"
 #include <type_traits>
@@ -67,6 +68,10 @@ private:
 	std::vector<Workspace> workspaces;
 
 	Buffer vertexBuffer;
+
+	VkDescriptorPool texture_descriptor_pool = VK_NULL_HANDLE;
+	std::vector< VkDescriptorSet > texture_descriptors; //allocated from texture_descriptor
+	std::vector<std::shared_ptr<Image2D>> textures;
 
 	struct ObjectVertices {
 		uint32_t first = 0;

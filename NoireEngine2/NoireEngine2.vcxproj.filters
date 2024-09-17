@@ -348,4 +348,45 @@
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="src\textures\default.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\default_gray.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\icon-back.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\icon-file-1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\icon-file-2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\icon-folder-1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\icon-folder-2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\icon-mat.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\icon-mesh.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\icon-shader.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\NE-icon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\statue.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\textures\viking_room.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

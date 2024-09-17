@@ -16,7 +16,11 @@ public:
 
 	void Destroy();
 
-	WriteDescriptorSet getWriteDescriptor(uint32_t binding, VkDescriptorType descriptorType, const std::optional<OffsetSize>& offsetSize) const override;
+	WriteDescriptorSet getWriteDescriptor(
+		uint32_t binding, 
+		VkDescriptorType descriptorType, 
+		const std::optional<OffsetSize>& offsetSize=std::nullopt
+	) const override;
 
 	static VkDescriptorSetLayoutBinding GetDescriptorSetLayout(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stage, uint32_t count);
 

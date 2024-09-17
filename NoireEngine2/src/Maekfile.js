@@ -138,7 +138,6 @@ function custom_flags_and_rules() {
 			`/I../src/`,
 			`/I../vendor/glfw-3.4.bin.WIN64/include`,
 			`/I../vendor/glm/`,
-			'/O1'
 		];
 
 	} else if (maek.OS === 'macos') {
