@@ -35,6 +35,10 @@ struct ApplicationSpecification
 class Application : Singleton
 {
 public:
+	static Application& Get() { return *s_Instance; }
+	static Application* s_Instance;
+
+public:
 	Application(const ApplicationSpecification& specification);
 	~Application();
 
@@ -47,7 +51,6 @@ public:
 
 	void Close();
 
-	static Application& Get() { return *s_Instance; }
 	static const char* GetArgs() { return s_Instance->GetSpecification().CommandLineArgs.Args[0]; }
 	static const ApplicationSpecification& GetSpecification() { return s_Instance->m_Specification; }
 	static const uint16_t GetFPS() { return s_Instance->m_FPS; }
@@ -75,6 +78,5 @@ private:
 	std::mutex							m_MainThreadQueueMutex;
 
 private:
-	static Application* s_Instance;
 	friend int ::main(int argc, char** argv);
 };

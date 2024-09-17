@@ -20,6 +20,11 @@ Image::Image(VkFilter filter, VkSamplerAddressMode addressMode, VkSampleCountFla
 }
 
 Image::~Image() {
+	Destroy();
+}
+
+void Image::Destroy()
+{
 	auto logicalDevice = VulkanContext::GetDevice();
 	vkDestroyImageView(logicalDevice, view, nullptr);
 	vkDestroySampler(logicalDevice, sampler, nullptr);

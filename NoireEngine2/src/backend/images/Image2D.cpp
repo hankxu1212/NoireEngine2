@@ -102,6 +102,7 @@ void Image2D::Load(std::unique_ptr<Bitmap> loadBitmap) {
 		bufferStaging.UnmapMemory();
 
 		CopyBufferToImage(bufferStaging.getBuffer(), image, extent, arrayLayers, 0);
+		bufferStaging.Destroy();
 	}
 
 	if (mipmap) {

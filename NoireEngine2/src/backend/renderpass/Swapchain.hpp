@@ -40,6 +40,7 @@ public:
 	operator const VkSwapchainKHR& () const { return swapchain; }
 
 	const VkExtent2D&					getExtent() const { return extent; }
+	glm::uvec2							getExtentVec2() const { return { extent.width, extent.height }; }
 	uint32_t							getImageCount() const { return imageCount; }
 	VkSurfaceTransformFlagsKHR			getPreTransform() const { return preTransform; }
 	VkCompositeAlphaFlagBitsKHR			getCompositeAlpha() const { return compositeAlpha; }

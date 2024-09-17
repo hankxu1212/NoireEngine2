@@ -66,7 +66,7 @@
     <NMakeBuildCommandLine>node src/Maekfile.js</NMakeBuildCommandLine>
     <NMakeOutput>src/bin/main.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src;vendor/glm</NMakeIncludeSearchPath>
     <AdditionalOptions>/std:c++20</AdditionalOptions>
     <NMakeForcedIncludes>
     </NMakeForcedIncludes>
@@ -89,47 +89,126 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\pipeline\ObjectPipeline.cpp" />
+    <ClCompile Include="src\backend\renderer\Renderer.cpp" />
+    <ClCompile Include="src\backend\buffers\Buffer.cpp" />
+    <ClCompile Include="src\core\resources\Files.cpp" />
+    <ClCompile Include="src\core\Bitmap.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\backend\commands\CommandBuffer.cpp" />
     <ClCompile Include="src\backend\commands\CommandPool.cpp" />
     <ClCompile Include="src\backend\devices\LogicalDevice.cpp" />
     <ClCompile Include="src\backend\devices\PhysicalDevice.cpp" />
     <ClCompile Include="src\backend\devices\Surface.cpp" />
+    <ClCompile Include="src\backend\images\Image.cpp" />
+    <ClCompile Include="src\backend\images\Image2D.cpp" />
+    <ClCompile Include="src\backend\images\ImageDepth.cpp" />
+    <ClCompile Include="src\backend\renderpass\VulkanFramebuffers.cpp" />
+    <ClCompile Include="src\backend\renderpass\VulkanRenderPass.cpp" />
+    <ClCompile Include="src\backend\renderpass\Swapchain.cpp" />
     <ClCompile Include="src\core\layers\LayerStack.cpp" />
+    <ClCompile Include="src\core\resources\nodes\Node.cpp" />
+    <ClCompile Include="src\core\resources\nodes\NodeConstView.cpp" />
+    <ClCompile Include="src\core\resources\nodes\NodeView.cpp" />
+    <ClCompile Include="src\core\resources\Resources.cpp" />
     <ClCompile Include="src\core\Time.cpp" />
     <ClCompile Include="src\backend\VulkanContext.cpp" />
     <ClCompile Include="src\core\window\Window.cpp" />
     <ClCompile Include="src\backend\devices\VulkanInstance.cpp" />
+    <ClCompile Include="src\math\color\Color3.cpp" />
+    <ClCompile Include="src\math\color\Color4.cpp" />
+    <ClCompile Include="src\math\Math.cpp" />
+    <ClCompile Include="src\utils\String.cpp" />
+    <ClCompile Include="src\utils\ThreadPool.cpp" />
+    <ClCompile Include="tutorial\Helpers.cpp" />
+    <ClCompile Include="tutorial\main.cpp" />
+    <ClCompile Include="tutorial\PosColVertex.cpp" />
+    <ClCompile Include="src\renderer\PosNorTexVertex.cpp" />
+    <ClCompile Include="tutorial\RTG.cpp" />
+    <ClCompile Include="tutorial\Tutorial-BackgroundPipeline.cpp" />
+    <ClCompile Include="tutorial\Tutorial-LinesPipeline.cpp" />
+    <ClCompile Include="tutorial\Tutorial-ObjectsPipeline.cpp" />
+    <ClCompile Include="tutorial\Tutorial.cpp" />
+    <ClCompile Include="src\backend\shader\VulkanShader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\pipeline\ObjectPipeline.hpp" />
+    <ClInclude Include="src\backend\pipeline\VulkanPipeline.hpp" />
+    <ClInclude Include="src\backend\renderer\Renderer.hpp" />
+    <ClInclude Include="src\backend\buffers\Buffer.hpp" />
+    <ClInclude Include="src\core\resources\Files.hpp" />
+    <ClInclude Include="src\core\Bitmap.hpp" />
     <ClInclude Include="src\Application.hpp" />
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h" />
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3native.h" />
     <ClInclude Include="src\backend\commands\CommandBuffer.hpp" />
     <ClInclude Include="src\backend\commands\CommandPool.hpp" />
+    <ClInclude Include="src\backend\descriptor\Descriptor.hpp" />
     <ClInclude Include="src\backend\devices\LogicalDevice.hpp" />
     <ClInclude Include="src\backend\devices\PhysicalDevice.hpp" />
     <ClInclude Include="src\backend\devices\Surface.hpp" />
+    <ClInclude Include="src\backend\images\Image.hpp" />
+    <ClInclude Include="src\backend\images\Image2D.hpp" />
+    <ClInclude Include="src\backend\images\ImageDepth.hpp" />
+    <ClInclude Include="src\backend\renderpass\VulkanFramebuffers.h" />
+    <ClInclude Include="src\backend\renderpass\VulkanRenderPass.h" />
+    <ClInclude Include="src\backend\renderpass\Swapchain.hpp" />
     <ClInclude Include="src\core\Core.hpp" />
     <ClInclude Include="src\core\KeyCodes.hpp" />
     <ClInclude Include="src\core\layers\Layer.hpp" />
     <ClInclude Include="src\core\layers\LayerStack.hpp" />
     <ClInclude Include="src\core\MouseCodes.hpp" />
+    <ClInclude Include="src\core\resources\nodes\Node.hpp" />
+    <ClInclude Include="src\core\resources\nodes\NodeConstView.hpp" />
+    <ClInclude Include="src\core\resources\nodes\NodeView.hpp" />
+    <ClInclude Include="src\core\resources\Resource.hpp" />
+    <ClInclude Include="src\core\resources\Resources.hpp" />
     <ClInclude Include="src\core\Time.hpp" />
+    <ClInclude Include="src\core\Timer.hpp" />
     <ClInclude Include="src\Entrypoint.cpp" />
     <ClInclude Include="src\core\events\ApplicationEvent.hpp" />
     <ClInclude Include="src\core\events\Event.hpp" />
     <ClInclude Include="src\core\events\KeyEvent.hpp" />
     <ClInclude Include="src\core\events\MouseEvent.hpp" />
-    <ClInclude Include="src\core\resources\Module.hpp" />
+    <ClInclude Include="src\math\color\Color.hpp" />
+    <ClInclude Include="src\math\color\Color3.hpp" />
+    <ClInclude Include="src\math\color\Color4.hpp" />
+    <ClInclude Include="src\math\Math.hpp" />
+    <ClInclude Include="src\utils\Enumerate.hpp" />
     <ClInclude Include="src\utils\Singleton.hpp" />
+    <ClInclude Include="src\utils\stb_image.h" />
+    <ClInclude Include="src\utils\stb_image_write.h" />
+    <ClInclude Include="src\utils\String.hpp" />
+    <ClInclude Include="src\utils\ThreadPool.hpp" />
     <ClInclude Include="src\utils\Type.hpp" />
     <ClInclude Include="src\backend\VulkanContext.hpp" />
     <ClInclude Include="src\core\window\Window.hpp" />
     <ClInclude Include="src\backend\devices\VulkanInstance.hpp" />
+    <ClInclude Include="tutorial\Helpers.hpp" />
+    <ClInclude Include="tutorial\InputEvent.hpp" />
+    <ClInclude Include="tutorial\mat4.hpp" />
+    <ClInclude Include="tutorial\PosColVertex.hpp" />
+    <ClInclude Include="src\renderer\PosNorTexVertex.hpp" />
+    <ClInclude Include="tutorial\refsol.hpp" />
+    <ClInclude Include="tutorial\RTG.hpp" />
+    <ClInclude Include="tutorial\Tutorial.hpp" />
+    <ClInclude Include="tutorial\VK.hpp" />
+    <ClInclude Include="src\backend\shader\VulkanShader.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\core\resources\nodes\Node.inl" />
+    <None Include="src\core\resources\nodes\NodeConstView.inl" />
+    <None Include="src\core\resources\nodes\NodeView.inl" />
     <None Include="src\Maekfile.js" />
+    <None Include="tutorial\background.frag" />
+    <None Include="tutorial\background.vert" />
+    <None Include="tutorial\lines.frag" />
+    <None Include="tutorial\lines.vert" />
+    <None Include="tutorial\maek-cache.json" />
+    <None Include="tutorial\Maekfile.js" />
+    <None Include="src\shaders\objects.frag" />
+    <None Include="src\shaders\objects.vert" />
+    <None Include="tutorial\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

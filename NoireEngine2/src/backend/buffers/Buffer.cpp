@@ -3,9 +3,33 @@
 #include "Buffer.hpp"
 #include "backend/VulkanContext.hpp"
 
-Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, const void* data) :
-	size(size)
+Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map)
 {
+	CreateBuffer(size, usage, properties, map);
+}
+
+void Buffer::Destroy()
+{
+	if (buffer == VK_NULL_HANDLE || bufferMemory == VK_NULL_HANDLE)
+		return;
+
+	if (mapped != nullptr) {
+		UnmapMemory();
+		mapped = nullptr;
+	}
+
+	VulkanContext::VK_CHECK(vkQueueWaitIdle(VulkanContext::Get().getLogicalDevice()->getGraphicsQueue()), "[vulkan] wait idle fail on destroying buffer");
+	vkDestroyBuffer(VulkanContext::GetDevice(), buffer, nullptr);
+	vkFreeMemory(VulkanContext::GetDevice(), bufferMemory, nullptr);
+
+	buffer = VK_NULL_HANDLE;
+	bufferMemory = VK_NULL_HANDLE;
+	m_Size = 0;
+}
+
+void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map)
+{
+	m_Size = size;
 	auto& logicalDevice = *(VulkanContext::Get().getLogicalDevice());
 
 	std::array<uint32_t, 3> queueFamily = {
@@ -30,7 +54,7 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
 	VkMemoryRequirements memoryRequirements;
 	vkGetBufferMemoryRequirements(logicalDevice, buffer, &memoryRequirements);
 
-	VkMemoryAllocateInfo memoryAllocateInfo {
+	VkMemoryAllocateInfo memoryAllocateInfo{
 		.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
 		.allocationSize = memoryRequirements.size,
 		.memoryTypeIndex = VulkanContext::FindMemoryType(memoryRequirements.memoryTypeBits, properties)
@@ -38,39 +62,15 @@ Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlag
 	VulkanContext::VK_CHECK(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &bufferMemory),
 		"[vulkan] Error: cannot allocate buffer memory");
 
-	// If a pointer to the buffer data has been passed, map the buffer and copy over the data.
-	if (data) {
-		void *mapped;
+	if (map == Mapped)
 		MapMemory(&mapped);
-		std::memcpy(mapped, data, size);
-
-		// If host coherency hasn't been requested, do a manual flush to make writes visible.
-		if ((properties & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0) {
-			VkMappedMemoryRange mappedMemoryRange = {
-				.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
-				.memory = bufferMemory,
-				.offset = 0,
-				.size = size
-			};
-			vkFlushMappedMemoryRanges(logicalDevice, 1, &mappedMemoryRange);
-		}
-
-		UnmapMemory();
-	}
 
 	// Attach the memory to the buffer object.
 	VulkanContext::VK_CHECK(vkBindBufferMemory(logicalDevice, buffer, bufferMemory, 0), "[vulkan] Error: cannot bind buffer memory");
 }
 
-Buffer::~Buffer() 
-{
-	VulkanContext::VK_CHECK(vkQueueWaitIdle(VulkanContext::Get().getLogicalDevice()->getGraphicsQueue()), "[vulkan] wait idle fail on destroying buffer");
-	vkDestroyBuffer(VulkanContext::GetDevice(), buffer, nullptr);
-	vkFreeMemory(VulkanContext::GetDevice(), bufferMemory, nullptr);
-}
-
 void Buffer::MapMemory(void **data) const {
-	VulkanContext::VK_CHECK(vkMapMemory(VulkanContext::GetDevice(), bufferMemory, 0, size, 0, data), "[vulkan] Error: failed to map buffer memory");
+	VulkanContext::VK_CHECK(vkMapMemory(VulkanContext::GetDevice(), bufferMemory, 0, m_Size, 0, data), "[vulkan] Error: failed to map buffer memory");
 }
 
 void Buffer::UnmapMemory() const {
@@ -101,3 +101,18 @@ void Buffer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize siz
 
 	commandBuffer.SubmitIdle();
 }
+
+void Buffer::TransferToBuffer(void* data, size_t size, VkBuffer dstBuffer)
+{
+	Buffer transferSource = Buffer(
+		size,
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		Mapped
+	);
+
+	std::memcpy(transferSource.mapped, data, size);
+
+	CopyBuffer(transferSource.buffer, dstBuffer, size);
+}
+

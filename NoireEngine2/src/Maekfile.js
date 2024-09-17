@@ -18,7 +18,7 @@ const maek = init_maek();
 custom_flags_and_rules();
 
 // c++
-const main_objs = [
+const core_objs = [
 	maek.CPP('core/Time.cpp'),
 	maek.CPP('Entrypoint.cpp'),
 	maek.CPP('Application.cpp'),
@@ -31,6 +31,10 @@ const main_objs = [
 	maek.CPP('core/resources/nodes/NodeView.cpp'),
 	maek.CPP('core/resources/Resources.cpp'),
 ];
+
+const renderer_objs = [
+	maek.CPP('renderer/PosNorTexVertex.cpp'),
+]
 
 const util_objs = [
 	maek.CPP('utils/ThreadPool.cpp'),
@@ -49,12 +53,31 @@ const vulkan_objs = [
 	maek.CPP('backend/commands/CommandPool.cpp'),
 	maek.CPP('backend/images/Image.cpp'),
 	maek.CPP('backend/images/Image2D.cpp'),
+	maek.CPP('backend/images/ImageDepth.cpp'),
 	maek.CPP('backend/buffers/Buffer.cpp'),
-	maek.CPP('backend/renderpass/Swapchain.cpp')
+	maek.CPP('backend/renderpass/Swapchain.cpp'),
+	maek.CPP('backend/renderer/Renderer.cpp'),
+	maek.CPP('backend/shader/VulkanShader.cpp')
 ]
 
+const objects_shaders = [
+	maek.GLSLC('shaders/objects.vert'),
+	maek.GLSLC('shaders/objects.frag'),
+];
+vulkan_objs.push(maek.CPP('backend/pipeline/ObjectPipeline.cpp', undefined, { depends: [...objects_shaders] }));
+
+
 // executable
-const main_exe = maek.LINK([...main_objs, ...vulkan_objs, ...util_objs], 'bin/main');
+const main_exe = maek.LINK
+	([
+		...core_objs,
+		...renderer_objs,
+		...util_objs,
+		...vulkan_objs,
+	],
+	'bin/main'
+);
+
 maek.TARGETS = [main_exe];
 
 //- - - - - - - - - - - - - - - - - - - - -

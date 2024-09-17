@@ -63,7 +63,7 @@
     <ClCompile Include="src\backend\images\Image2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\backend\images\VulkanImageDepth.cpp">
+    <ClCompile Include="src\backend\images\ImageDepth.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\core\Bitmap.cpp">
@@ -84,12 +84,6 @@
     <ClCompile Include="src\backend\buffers\Buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\backend\buffers\UniformBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\backend\buffers\UniformManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="tutorial\Helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -99,7 +93,7 @@
     <ClCompile Include="tutorial\PosColVertex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tutorial\PosNorTexVertex.cpp">
+    <ClCompile Include="src\renderer\PosNorTexVertex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tutorial\RTG.cpp">
@@ -133,6 +127,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\core\resources\nodes\NodeView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\renderer\Renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\pipeline\ObjectPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\shader\VulkanShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -218,7 +221,7 @@
     <ClInclude Include="src\backend\renderpass\Swapchain.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\backend\images\VulkanImageDepth.h">
+    <ClInclude Include="src\backend\images\ImageDepth.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\backend\images\Image.hpp">
@@ -263,12 +266,6 @@
     <ClInclude Include="src\backend\buffers\Buffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\backend\buffers\UniformBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\backend\buffers\UniformManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="tutorial\Helpers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -281,7 +278,7 @@
     <ClInclude Include="tutorial\PosColVertex.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="tutorial\PosNorTexVertex.hpp">
+    <ClInclude Include="src\renderer\PosNorTexVertex.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="tutorial\refsol.hpp">
@@ -317,6 +314,18 @@
     <ClInclude Include="src\core\resources\nodes\NodeView.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\backend\renderer\Renderer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\pipeline\ObjectPipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\shader\VulkanShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\pipeline\VulkanPipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />
@@ -326,8 +335,8 @@
     <None Include="tutorial\lines.vert" />
     <None Include="tutorial\maek-cache.json" />
     <None Include="tutorial\Maekfile.js" />
-    <None Include="tutorial\objects.frag" />
-    <None Include="tutorial\objects.vert" />
+    <None Include="src\shaders\objects.frag" />
+    <None Include="src\shaders\objects.vert" />
     <None Include="tutorial\README.md" />
     <None Include="src\core\resources\nodes\Node.inl">
       <Filter>Header Files</Filter>

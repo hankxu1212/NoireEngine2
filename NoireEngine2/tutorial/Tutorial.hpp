@@ -86,8 +86,6 @@ struct Tutorial : RTG::Application {
 		};
 		static_assert(sizeof(Transform) == 16 * 4 + 16 * 4 + 16 * 4, "Transform is the expected size.");
 
-
-
 		//no push constants
 
 		VkPipelineLayout layout = VK_NULL_HANDLE;

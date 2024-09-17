@@ -4,15 +4,25 @@
 
 #include "Application.hpp"
 
+
 // Represents an abstraction on GLFW window
 class Window : Singleton
 {
 public:
-	static Window& Get()
+	static Window* s_Instance;
+
+	static Window& Get() { return *s_Instance; }
+
+	static void Initialize()
 	{
-		static Window instance;
-		return instance;
+		s_Instance = new Window();
 	}
+
+	static void Destroy()
+	{
+		delete s_Instance;
+	}
+
 public:
 	Window();
 	

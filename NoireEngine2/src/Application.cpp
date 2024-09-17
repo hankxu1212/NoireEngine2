@@ -4,6 +4,7 @@
 #include "Application.hpp"
 #include "core/Time.hpp"
 #include "core/window/Window.hpp"
+#include "backend/VulkanContext.hpp"
 
 Application* Application::s_Instance = nullptr;
 float Time::DeltaTime;
@@ -13,14 +14,22 @@ Application::Application(const ApplicationSpecification& specification)
 {
 	s_Instance = this;
 
+	Window::Initialize();
+	VulkanContext::Initialize();
+
 	// initializes window
 	Window::Get().SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
+	VulkanContext::Get().OnAddWindow(&Window::Get());
+
+	VulkanContext::Get().InitializeRenderer();
 }
 
 Application::~Application()
 {
 	m_LayerStack.Detach();
 	m_LayerStack.Destroy();
+
+	VulkanContext::Destroy();
 }
 
 void Application::Run()
@@ -44,6 +53,8 @@ void Application::Run()
 			{
 				layer->OnUpdate();
 			}
+
+			VulkanContext::Get().Update();
 		}
 	}
 }
@@ -97,7 +108,7 @@ bool Application::OnWindowResize(WindowResizeEvent& e)
 		return false;
 	}
 
-	//Renderer::OnWindowResize(e.getWidth(), e.getHeight());
+	VulkanContext::Get().OnWindowResize(e.m_Width, e.m_Height);
 	m_Minimized = false;
 	return false;
 }
