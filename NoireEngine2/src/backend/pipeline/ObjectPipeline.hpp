@@ -15,15 +15,11 @@ class ObjectPipeline : public VulkanPipeline
 public:
 	ObjectPipeline(Renderer* renderer);
 	virtual ~ObjectPipeline();
-
-	void CreateShaders() override;
-	void CreateDescriptors() override;
-	void CreatePipeline(VkRenderPass& renderpass, uint32_t subpass) override;
+public:
 	void Render(const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
 	void Update() override;
 
-	void CreateWorkspaces();
 
 	using Vertex = PosNorTexVertex;
 
@@ -45,6 +41,12 @@ public:
 		glm::mat4 WORLD_FROM_LOCAL_NORMAL;
 	};
 	static_assert(sizeof(Transform) == 16 * 4 + 16 * 4 + 16 * 4, "Transform is the expected size.");
+
+private:
+	void CreateDescriptors();
+	void CreateDescriptorPool();
+	void CreatePipeline(VkRenderPass& renderpass, uint32_t subpass) override;
+	void PrepareWorkspace();
 
 private:
 	VkDescriptorSetLayout set0_World = VK_NULL_HANDLE;

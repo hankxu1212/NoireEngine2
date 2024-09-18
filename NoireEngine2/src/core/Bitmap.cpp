@@ -45,7 +45,7 @@ void Bitmap::Load(const std::filesystem::path& filename) {
 		reinterpret_cast<int32_t*>(&size.x), 
 		reinterpret_cast<int32_t*>(&size.y), 
 		reinterpret_cast<int32_t*>(&bytesPerPixel), 
-		3
+		4
 	);
 	
 	data = std::unique_ptr<uint8_t[]>(image);

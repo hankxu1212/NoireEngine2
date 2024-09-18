@@ -14,8 +14,6 @@ protected:
 	VulkanPipeline(Renderer* renderer) : m_BindedRenderer(renderer) {}
 	virtual ~VulkanPipeline() = default;
 public:
-	virtual void CreateShaders() {}
-	virtual void CreateDescriptors() {}
 	virtual void CreatePipeline(VkRenderPass& renderpass, uint32_t subpass) {}
 	
 	virtual void Update() {}

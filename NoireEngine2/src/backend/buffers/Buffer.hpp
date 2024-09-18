@@ -4,7 +4,8 @@
 
 class CommandBuffer;
 
-// Buffer with no automatic memory management
+// Buffer with NO automatic memory management
+// NOTE: You HAVE TO deallocate manually
 class Buffer {
 public:
 	enum MapFlag {
@@ -44,8 +45,8 @@ public:
 	void*						data() const { return reinterpret_cast<char*>(mapped); }
 
 protected:
-	VkBuffer buffer;
-	VkDeviceSize m_Size;
-	VkDeviceMemory bufferMemory = VK_NULL_HANDLE;
-	void* mapped = nullptr;
+	VkBuffer				buffer = VK_NULL_HANDLE;
+	VkDeviceSize			m_Size = 0;
+	VkDeviceMemory			bufferMemory = VK_NULL_HANDLE;
+	void*					mapped = nullptr;
 };

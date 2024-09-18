@@ -69,6 +69,8 @@ void Image2D::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t bas
 	bufferStaging.UnmapMemory();
 
 	CopyBufferToImage(bufferStaging.getBuffer(), image, extent, layerCount, baseArrayLayer);
+
+	bufferStaging.Destroy();
 }
 
 void Image2D::Load(std::unique_ptr<Bitmap> loadBitmap) {
@@ -102,6 +104,7 @@ void Image2D::Load(std::unique_ptr<Bitmap> loadBitmap) {
 		bufferStaging.UnmapMemory();
 
 		CopyBufferToImage(bufferStaging.getBuffer(), image, extent, arrayLayers, 0);
+
 		bufferStaging.Destroy();
 	}
 

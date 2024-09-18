@@ -20,8 +20,10 @@ static uint32_t frag_code[] =
 ObjectPipeline::ObjectPipeline(Renderer* renderer) :
 	VulkanPipeline(renderer)
 {
+	CreateDescriptors();
+	CreateDescriptorPool();
 	CreatePipeline(m_BindedRenderer->m_Renderpass, 0);
-	CreateWorkspaces();
+	PrepareWorkspace();
 }
 
 ObjectPipeline::~ObjectPipeline()
@@ -89,35 +91,8 @@ ObjectPipeline::~ObjectPipeline()
 	}
 }
 
-void ObjectPipeline::CreateShaders()
-{
-}
-
 void ObjectPipeline::CreateDescriptors()
 {
-}
-
-void ObjectPipeline::CreatePipeline(VkRenderPass& renderpass, uint32_t subpass)
-{
-	VulkanShader vert_module(vert_code);
-	VulkanShader frag_module(frag_code);
-
-	//shader code for vertex and fragment pipeline stages:
-	std::array< VkPipelineShaderStageCreateInfo, 2 > stages{
-		VkPipelineShaderStageCreateInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-			.stage = VK_SHADER_STAGE_VERTEX_BIT,
-			.module = vert_module,
-			.pName = "main"
-		},
-		VkPipelineShaderStageCreateInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-			.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.module = frag_module,
-			.pName = "main"
-		},
-	};
-
 	{ //the set0_World layout holds world info in a uniform buffer used in the fragment shader:
 		std::array< VkDescriptorSetLayoutBinding, 1 > bindings{
 			VkDescriptorSetLayoutBinding{
@@ -196,6 +171,47 @@ void ObjectPipeline::CreatePipeline(VkRenderPass& renderpass, uint32_t subpass)
 		VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout),
 			"[Vulkan] Create pipeline layout failed.");
 	}
+}
+
+void ObjectPipeline::CreateDescriptorPool()
+{
+	uint32_t numWorkspace = VulkanContext::Get().getWorkspaceSize(); //for easier-to-read counting
+	assert(numWorkspace == 1);
+	//we only need uniform buffer descriptors for the moment:
+	std::array< VkDescriptorPoolSize, 1> pool_sizes{
+		VkDescriptorPoolSize{
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.descriptorCount = 2 * numWorkspace, //one descriptor per set, one set per workspace
+		},
+	};
+
+	VkDescriptorPoolCreateInfo create_info
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.flags = 0, //because CREATE_FREE_DESCRIPTOR_SET_BIT isn't included, *can't* free individual descriptors allocated from this pool
+		.maxSets = 3 * numWorkspace, //two sets per workspace
+		.poolSizeCount = uint32_t(pool_sizes.size()),
+		.pPoolSizes = pool_sizes.data(),
+	};
+
+	VulkanContext::VK_CHECK(vkCreateDescriptorPool(VulkanContext::GetDevice(), &create_info, nullptr, &m_DescriptorPool),
+		"[Vulkan] Create descriptor pool failed");
+}
+
+void ObjectPipeline::CreatePipeline(VkRenderPass& renderpass, uint32_t subpass)
+{
+	///////////////////////////////////////////////////////////////////////
+	// Shaders
+
+	VulkanShader vertModule(vert_code, VulkanShader::ShaderStage::Vertex);
+	VulkanShader fragModule(frag_code, VulkanShader::ShaderStage::Frag);
+
+	std::array< VkPipelineShaderStageCreateInfo, 2 > stages{
+		vertModule.shaderStage(),
+		fragModule.shaderStage()
+	};
+
+	///////////////////////////////////////////////////////////////////////
 	
 	{
 		//the viewport and scissor state will be set at runtime for the pipeline:
@@ -298,30 +314,6 @@ void ObjectPipeline::CreatePipeline(VkRenderPass& renderpass, uint32_t subpass)
 		VulkanContext::VK_CHECK(
 			vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &create_info, nullptr, &m_Pipeline),
 			"[Vulkan] Create pipeline failed");
-	}
-
-	{ //create descriptor pool:
-		uint32_t numWorkspace = VulkanContext::Get().getWorkspaceSize(); //for easier-to-read counting
-		assert(numWorkspace == 1);
-		//we only need uniform buffer descriptors for the moment:
-		std::array< VkDescriptorPoolSize, 1> pool_sizes{
-			VkDescriptorPoolSize{
-				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				.descriptorCount = 2 * numWorkspace, //one descriptor per set, one set per workspace
-			},
-		};
-
-		VkDescriptorPoolCreateInfo create_info
-		{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-			.flags = 0, //because CREATE_FREE_DESCRIPTOR_SET_BIT isn't included, *can't* free individual descriptors allocated from this pool
-			.maxSets = 3 * numWorkspace, //two sets per workspace
-			.poolSizeCount = uint32_t(pool_sizes.size()),
-			.pPoolSizes = pool_sizes.data(),
-		};
-
-		VulkanContext::VK_CHECK(vkCreateDescriptorPool(VulkanContext::GetDevice(), &create_info, nullptr, &m_DescriptorPool),
-			"[Vulkan] Create descriptor pool failed");
 	}
 }
 
@@ -630,7 +622,7 @@ void ObjectPipeline::Update()
 	}
 }
 
-void ObjectPipeline::CreateWorkspaces()
+void ObjectPipeline::PrepareWorkspace()
 {
 	workspaces.resize(VulkanContext::Get().getWorkspaceSize());
 	std::cout << "Created workspace of size " << workspaces.size() << '\n';
@@ -770,7 +762,7 @@ void ObjectPipeline::CreateWorkspaces()
 	}
 
 	textures.resize(1);
-	textures[0] = std::make_shared<Image2D>("F:/gameDev/Engines/NoireEngine2/NoireEngine2/src/textures/default.png");
+	textures[0] = std::make_shared<Image2D>("F:/gameDev/Engines/NoireEngine2/NoireEngine2/src/textures/NE-icon.png");
 
 	{ // create the texture descriptor pool
 		uint32_t per_texture = uint32_t(textures.size()); //for easier-to-read counting
