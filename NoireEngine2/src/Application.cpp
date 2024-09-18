@@ -64,7 +64,7 @@ void Application::Run()
 				layer->OnUpdate();
 			}
 			scene->Update();
-			VulkanContext::Get().Update();
+ 			VulkanContext::Get().Update();
 		}
 	}
 }

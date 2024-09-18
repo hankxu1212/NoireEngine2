@@ -25,7 +25,9 @@ int main(int argc, char** argv)
         app->Run();
         delete app;
 
-        std::cout << "Application successfully exited." << std::flush;
+        std::cout << "Application successfully exited.\n\n";
+        
+        system("pause");
         return 0;
     }
     catch (std::exception& e) {

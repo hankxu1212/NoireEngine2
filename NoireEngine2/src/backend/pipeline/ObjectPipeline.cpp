@@ -36,6 +36,32 @@ ObjectPipeline::~ObjectPipeline()
 		texture_descriptors.clear();
 	}
 
+	textures.clear();
+
+	if (vertexBuffer.getBuffer() != VK_NULL_HANDLE)
+		vertexBuffer.Destroy();
+
+	for (Workspace& workspace : workspaces) {
+		if (workspace.Transforms_src.getBuffer() != VK_NULL_HANDLE) {
+			workspace.Transforms_src.Destroy();
+		}
+		if (workspace.Transforms.getBuffer() != VK_NULL_HANDLE) {
+			workspace.Transforms.Destroy();
+		}
+		if (workspace.World.getBuffer() != VK_NULL_HANDLE) {
+			workspace.World.Destroy();
+		}
+		if (workspace.World_src.getBuffer() != VK_NULL_HANDLE) {
+			workspace.World_src.Destroy();
+		}
+	}
+	workspaces.clear();
+
+	if (m_DescriptorPool) {
+		vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
+		m_DescriptorPool = nullptr;
+		//(this also frees the descriptor sets allocated from the pool)
+	}
 
 	if (m_PipelineLayout != VK_NULL_HANDLE) {
 		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
@@ -60,22 +86,6 @@ ObjectPipeline::~ObjectPipeline()
 	if (set2_TEXTURE != VK_NULL_HANDLE) {
 		vkDestroyDescriptorSetLayout(device, set2_TEXTURE, nullptr);
 		set2_TEXTURE = VK_NULL_HANDLE;
-	}
-
-	for (Workspace& workspace : workspaces) {
-		if (workspace.Transforms_src.getBuffer() != VK_NULL_HANDLE) {
-			workspace.Transforms_src.Destroy();
-		}
-		if (workspace.Transforms.getBuffer() != VK_NULL_HANDLE) {
-			workspace.Transforms.Destroy();
-		}
-		if (workspace.World.getBuffer() != VK_NULL_HANDLE) {
-			workspace.World.Destroy();
-		}
-		if (workspace.World_src.getBuffer() != VK_NULL_HANDLE) {
-			workspace.World_src.Destroy();
-		}
-
 	}
 }
 
@@ -292,9 +302,9 @@ void ObjectPipeline::CreatePipeline(VkRenderPass& renderpass, uint32_t subpass)
 
 	{ //create descriptor pool:
 		uint32_t numWorkspace = VulkanContext::Get().getWorkspaceSize(); //for easier-to-read counting
-
+		assert(numWorkspace == 1);
 		//we only need uniform buffer descriptors for the moment:
-		std::array< VkDescriptorPoolSize, 2> pool_sizes{
+		std::array< VkDescriptorPoolSize, 1> pool_sizes{
 			VkDescriptorPoolSize{
 				.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 				.descriptorCount = 2 * numWorkspace, //one descriptor per set, one set per workspace
@@ -399,13 +409,7 @@ void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surface
 			}
 		}
 
-		//device-side copy from Transforms_src -> Transforms:
-		VkBufferCopy copy_region{
-			.srcOffset = 0,
-			.dstOffset = 0,
-			.size = needed_bytes,
-		};
-		vkCmdCopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), 1, &copy_region);
+		Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), needed_bytes);
 	}
 
 	{ //memory barrier to make sure copies complete before rendering happens:
@@ -488,8 +492,6 @@ void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surface
 				);
 			}
 
-			//Camera descriptor set is still bound, but unused(!)
-
 			//draw all instances:
 			for (ObjectInstance const& inst : object_instances) {
 				uint32_t index = uint32_t(&inst - &object_instances[0]);
@@ -506,9 +508,6 @@ void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surface
 
 				vkCmdDraw(commandBuffer, inst.vertices.count, 1, inst.vertices.first, index);
 			}
-
-			//draw all vertices:
-			vkCmdDraw(commandBuffer, uint32_t(vertexBuffer.getSize() / sizeof(Vertex)), 1, 0, 0);
 		}
 
 		vkCmdEndRenderPass(commandBuffer);
@@ -623,7 +622,7 @@ void ObjectPipeline::Update()
 							.WORLD_FROM_LOCAL = WORLD_FROM_LOCAL,
 							.WORLD_FROM_LOCAL_NORMAL = WORLD_FROM_LOCAL,
 						},
-						.texture = 1,
+						.texture = 0,
 						});
 				}
 			}
@@ -634,7 +633,7 @@ void ObjectPipeline::Update()
 void ObjectPipeline::CreateWorkspaces()
 {
 	workspaces.resize(VulkanContext::Get().getWorkspaceSize());
-	std::cout << "Created workspace of size " << workspaces.size();
+	std::cout << "Created workspace of size " << workspaces.size() << '\n';
 	assert(workspaces.size() > 0);
 	
 	for (Workspace& workspace : workspaces) 
@@ -648,8 +647,7 @@ void ObjectPipeline::CreateWorkspaces()
 		workspace.World = Buffer(
 			sizeof(World),
 			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			Buffer::Mapped
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
 
 		{ //allocate descriptor set for World descriptor
@@ -776,7 +774,7 @@ void ObjectPipeline::CreateWorkspaces()
 
 	{ // create the texture descriptor pool
 		uint32_t per_texture = uint32_t(textures.size()); //for easier-to-read counting
-
+		assert(per_texture == 1);
 		std::array< VkDescriptorPoolSize, 1> pool_sizes{
 			VkDescriptorPoolSize{
 				.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,

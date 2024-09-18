@@ -203,6 +203,7 @@
     <ClInclude Include="src\math\vector\Vec3.h" />
     <ClInclude Include="src\math\vector\Vec4.h" />
     <ClInclude Include="src\utils\Enumerate.hpp" />
+    <ClInclude Include="src\utils\Logger.hpp" />
     <ClInclude Include="src\utils\Singleton.hpp" />
     <ClInclude Include="src\utils\stb_image.h" />
     <ClInclude Include="src\utils\stb_image_write.h" />

@@ -170,7 +170,7 @@ struct Tutorial : RTG::Application {
 
 	ObjectsPipeline::World world;
 
-	struct ObjectInstance {
+	class ObjectInstance {
 		ObjectVertices vertices;
 		ObjectsPipeline::Transform transform;
 		uint32_t texture = 0;

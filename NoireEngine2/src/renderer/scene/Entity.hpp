@@ -46,8 +46,8 @@ public:
 	// stores transforms in a matrix stack, and push transform matrices in a reverse order
 	void RenderPass(TransformMatrixStack& matrixStack);
 
-	Entity* parent()				{ return m_Parent; }
 public:
+	Entity* parent()				{ return m_Parent; }
 	Transform* transform()			{ return s_Transform.get(); }
 	UUID& id()						{ return m_Id; }
 	std::string& name()				{ return m_Name; }

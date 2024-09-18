@@ -1,4 +1,5 @@
 #include "backend/VulkanContext.hpp"
+#include "utils/Logger.hpp"
 
 static bool CheckValidationLayerSupport(const std::vector<const char*>& g_ValidationLayers) {
     uint32_t layerCount;
@@ -35,13 +36,14 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 {
     switch (messageSeverity) {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-        std::cout << "[vulkan] " <<  pCallbackData->pMessage;
+        std::prl(pCallbackData->pMessage, std::WHITE);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-        std::cout << "[vulkan] " << pCallbackData->pMessage;
+        std::prl(pCallbackData->pMessage, std::YELLOW);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        std::cerr << "[vulkan] " << pCallbackData->pMessage;
+        std::prl(pCallbackData->pMessage, std::RED);
+        //std::cerr << "[vulkan] " << pCallbackData->pMessage << std::endl;
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
 #ifdef VK_VERBOSE_CALLBACK

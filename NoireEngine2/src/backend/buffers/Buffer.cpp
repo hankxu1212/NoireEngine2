@@ -29,6 +29,7 @@ void Buffer::Destroy()
 
 void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map)
 {
+
 	m_Size = size;
 	auto& logicalDevice = *(VulkanContext::Get().getLogicalDevice());
 
@@ -94,12 +95,15 @@ void Buffer::InsertBufferMemoryBarrier(const CommandBuffer &commandBuffer, const
 
 void Buffer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
 	CommandBuffer commandBuffer;
+	CopyBuffer(commandBuffer, srcBuffer, dstBuffer, size);
+	commandBuffer.SubmitIdle();
+}
 
+void Buffer::CopyBuffer(VkCommandBuffer cmdBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+{
 	VkBufferCopy copyRegion{};
 	copyRegion.size = size;
-	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-	commandBuffer.SubmitIdle();
+	vkCmdCopyBuffer(cmdBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 }
 
 void Buffer::TransferToBuffer(void* data, size_t size, VkBuffer dstBuffer)
@@ -114,5 +118,7 @@ void Buffer::TransferToBuffer(void* data, size_t size, VkBuffer dstBuffer)
 	std::memcpy(transferSource.mapped, data, size);
 
 	CopyBuffer(transferSource.buffer, dstBuffer, size);
+
+	transferSource.Destroy();
 }
 

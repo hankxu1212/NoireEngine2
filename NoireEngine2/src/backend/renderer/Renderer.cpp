@@ -95,6 +95,12 @@ void Renderer::CreateRenderPass()
 void Renderer::Cleanup()
 {
 	objectPipeline.reset();
+	
+	DestroyFrameBuffers();
+
+	if (m_Renderpass != VK_NULL_HANDLE) {
+		vkDestroyRenderPass(VulkanContext::GetDevice(), m_Renderpass, nullptr);
+	}
 }
 
 void Renderer::Update()
