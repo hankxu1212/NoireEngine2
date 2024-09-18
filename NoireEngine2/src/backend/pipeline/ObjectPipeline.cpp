@@ -604,9 +604,9 @@ void ObjectPipeline::Update()
 	{ //make some objects:
 		object_instances.clear();
 
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 1; i++)
 		{
-			for (int j = 0; j < 10; j++)
+			for (int j = 0; j < 1; j++)
 			{
 				for (int k = 0; k < 5; k++) {
 					glm::mat4 WORLD_FROM_LOCAL{
