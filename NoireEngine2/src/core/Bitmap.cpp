@@ -3,8 +3,10 @@
 #include <iostream>
 #include <fstream>
 
-#ifndef __STDC_LIB_EXT1__
-#define __STDC_LIB_EXT1__
+#ifndef __APPLE__
+	#ifndef __STDC_LIB_EXT1__
+	#define __STDC_LIB_EXT1__
+	#endif
 #endif
 
 #ifndef STB_IMAGE_IMPLEMENTATION
@@ -49,7 +51,7 @@ void Bitmap::Load(const std::filesystem::path& filename) {
 	data = std::unique_ptr<uint8_t[]>(image);
 
 	if (!data)
-		std::cerr << (std::format("[vulkan]: stbi load failed: {}", filename.string()));
+		std::cerr << "[vulkan]: stbi load failed:" << filename.string();
 	bytesPerPixel = 4;
 }
 

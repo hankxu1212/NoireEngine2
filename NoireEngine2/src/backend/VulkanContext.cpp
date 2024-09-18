@@ -61,7 +61,7 @@ void VulkanContext::Update()
         }
 
         if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR) {
-            std::runtime_error(std::format("[vulkan] Acquiring swapchain image resulted in {}", string_VkResult(acquireResult)));
+            std::cerr << "[vulkan] Acquiring swapchain image resulted in " <<  string_VkResult(acquireResult) << std::endl;
             return;
         }
 
@@ -150,7 +150,7 @@ void VulkanContext::VK_CHECK(VkResult err, const char* msg)
     if (err == VK_SUCCESS)
         return;
 
-    std::runtime_error(std::format("[vulkan] Error: {}, with err {}", msg, string_VkResult(err)));
+    std::cerr << "[vulkan] Error: " <<  msg << "with errno: " << string_VkResult(err);
 }
 
 std::shared_ptr<CommandPool>& VulkanContext::GetCommandPool(const TID& threadId)

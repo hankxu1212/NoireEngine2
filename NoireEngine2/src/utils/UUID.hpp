@@ -13,15 +13,11 @@ private:
 	uint64_t m_UUID;
 };
 
-namespace std {
-	template <typename T> struct hash;
-
-	template<>
-	struct hash<UUID>
+template<>
+struct std::hash<UUID>
+{
+	std::size_t operator()(const UUID& uuid) const
 	{
-		std::size_t operator()(const UUID& uuid) const
-		{
-			return (uint64_t)uuid;
-		}
-	};
-}
+		return (uint64_t)uuid;
+	}
+};

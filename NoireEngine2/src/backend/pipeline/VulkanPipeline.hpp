@@ -12,7 +12,7 @@ class VulkanPipeline : Singleton
 {
 protected:
 	VulkanPipeline(Renderer* renderer) : m_BindedRenderer(renderer) {}
-
+	virtual ~VulkanPipeline() = default;
 public:
 	virtual void CreateShaders() {}
 	virtual void CreateDescriptors() {}

@@ -10,11 +10,11 @@
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
 
 static uint32_t vert_code[] =
-#include "spv/objects.vert.inl"
+#include "spv/shaders/objects.vert.inl"
 ;
 
 static uint32_t frag_code[] =
-#include "spv/objects.frag.inl"
+#include "spv/shaders/objects.frag.inl"
 ;
 
 ObjectPipeline::ObjectPipeline(Renderer* renderer) :

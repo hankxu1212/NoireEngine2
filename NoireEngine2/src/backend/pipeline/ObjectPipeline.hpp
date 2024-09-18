@@ -14,14 +14,14 @@ class ObjectPipeline : public VulkanPipeline
 {
 public:
 	ObjectPipeline(Renderer* renderer);
-	~ObjectPipeline();
+	virtual ~ObjectPipeline();
 
 	void CreateShaders() override;
 	void CreateDescriptors() override;
 	void CreatePipeline(VkRenderPass& renderpass, uint32_t subpass) override;
 	void Render(const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
-	void Update();
+	void Update() override;
 
 	void CreateWorkspaces();
 

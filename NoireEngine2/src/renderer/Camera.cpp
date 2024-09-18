@@ -9,8 +9,9 @@ Camera::Camera()
 }
 
 Camera::Camera(Type type_, bool orthographic_, float orthographicScale_, float np, float fp)
-	: type(type_), orthographic(orthographic_), orthographicScale(orthographicScale_),
-	nearClipPlane(np), farClipPlane(fp) {
+	: nearClipPlane(np), farClipPlane(fp), 
+	orthographic(orthographic_), orthographicScale(orthographicScale_),
+	type(type_) {
 }
 
 void Camera::Update(const Transform& t)

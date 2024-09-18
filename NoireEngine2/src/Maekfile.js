@@ -160,21 +160,23 @@ function custom_flags_and_rules() {
 		VULKAN_SDK = process.env.VULKAN_SDK || `${process.env.HOME}/VulkanSDK/1.3.275.0/macOS`;
 		console.log(`Using VULKAN_SDK='${VULKAN_SDK}'; set VULKAN_SDK environment variable to override.`);
 
-		maek.options.CPP = ['clang++', '-std=c++20', '-Wall', '-Werror', '-g'];
-		maek.options.LINK = ['clang++', '-std=c++20', '-Wall', '-Werror', '-g'];
+		maek.options.CPP = ['clang++', '-std=c++20', '-Wall', '-g'];
+		maek.options.LINK = ['clang++', '-std=c++20', '-Wall', '-g'];
 
 		maek.options.CPPFlags = [
 			'-O2',
 			`-I${VULKAN_SDK}/include`,
 			`-I/opt/homebrew/include`, //for brew-installed GLFW
-			`-I../glfw-3.4.bin.MACOS/include`, //for release from github
+			`-I../src/`,
+			`-I../vendor/glfw-3.4.bin.MACOS/include`,
+			`-I../vendor/glm/`,
 		];
 
 		maek.options.LINKLibs = [
 			`-L${VULKAN_SDK}/lib`,
 			`-lvulkan`,
 			`-L/opt/homebrew/lib`, //for brew-installed GLFW
-			`-L../glfw-3.4.bin.MACOS/lib-arm64`, //for research from github
+			`-L../vendor/glfw-3.4.bin.MACOS/lib-arm64`, //for research from github
 			`-lglfw3`,
 			'-framework', 'AppKit',
 			'-framework', 'QuartzCore',

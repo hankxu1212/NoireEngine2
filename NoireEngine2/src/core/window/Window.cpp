@@ -77,7 +77,7 @@ static void glfwSetWindowCenter(GLFWwindow* window) {
 
 static void GLFWErrorCallback(int error, const char* description)
 {
-	std::runtime_error(std::format("GLFW Error: {}, {}", error, description));
+	std::cerr << "GLFW Error: " << error << ": " << description << std::endl;
 }
 
 Window::Window()

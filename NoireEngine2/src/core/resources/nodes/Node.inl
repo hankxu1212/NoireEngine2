@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <map>
 #include <unordered_map>
+#include <list>
 
 #include "core/resources/Resource.hpp"
 #include "utils/Enumerate.hpp"
@@ -437,28 +438,6 @@ const Node& operator>>(const Node& node, std::list<T>& list) {
 
 template<typename T>
 Node& operator<<(Node& node, const std::list<T>& list) {
-	for (const auto& x : list)
-		node.AddProperty() << x;
-
-	node.SetType(NodeType::Array);
-	return node;
-}
-
-template<typename T>
-const Node& operator>>(const Node& node, std::forward_list<T>& list) {
-	list.clear();
-
-	for (auto it = node.GetProperties().rbegin(); it != node.GetProperties().rend(); ++it) {
-		T x;
-		*it >> x;
-		list.emplace_front(std::move(x));
-	}
-
-	return node;
-}
-
-template<typename T>
-Node& operator<<(Node& node, const std::forward_list<T>& list) {
 	for (const auto& x : list)
 		node.AddProperty() << x;
 
