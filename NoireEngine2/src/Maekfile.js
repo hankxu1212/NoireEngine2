@@ -34,6 +34,13 @@ const core_objs = [
 
 const renderer_objs = [
 	maek.CPP('renderer/PosNorTexVertex.cpp'),
+	maek.CPP('renderer/Frustum.cpp'),
+	maek.CPP('renderer/Camera.cpp'),
+	maek.CPP('renderer/scene/Transform.cpp'),
+	maek.CPP('renderer/scene/Scene.cpp'),
+	maek.CPP('renderer/scene/Entity.cpp'),
+	maek.CPP('renderer/scene/SceneSerializer.cpp'),
+	maek.CPP('renderer/scene/Component.cpp'),
 ]
 
 const util_objs = [

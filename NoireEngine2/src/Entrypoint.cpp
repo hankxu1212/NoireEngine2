@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 #include "Application.hpp"
 
@@ -19,10 +21,12 @@ static Application* CreateApplication(ApplicationCommandLineArgs args)
 
 int main(int argc, char** argv)
 {
-    try {
+    try 
+    {
         auto app = CreateApplication({ argc, argv });
         app->Run();
         delete app;
+
         std::cout << "Application successfully exited." << std::flush;
         return 0;
     }

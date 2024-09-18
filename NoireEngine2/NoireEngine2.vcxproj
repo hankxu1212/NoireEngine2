@@ -89,6 +89,12 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\scene\SceneSerializer.cpp" />
+    <ClCompile Include="src\renderer\scene\Component.cpp" />
+    <ClCompile Include="src\renderer\Camera.cpp" />
+    <ClCompile Include="src\renderer\Frustum.cpp" />
+    <ClCompile Include="src\renderer\scene\Entity.cpp" />
+    <ClCompile Include="src\renderer\scene\Scene.cpp" />
     <ClCompile Include="src\backend\pipeline\ObjectPipeline.cpp" />
     <ClCompile Include="src\backend\renderer\Renderer.cpp" />
     <ClCompile Include="src\backend\buffers\Buffer.cpp" />
@@ -118,8 +124,16 @@
     <ClCompile Include="src\math\color\Color3.cpp" />
     <ClCompile Include="src\math\color\Color4.cpp" />
     <ClCompile Include="src\math\Math.cpp" />
+    <ClCompile Include="src\math\matrix\Mat2.cpp" />
+    <ClCompile Include="src\math\matrix\Mat3.cpp" />
+    <ClCompile Include="src\math\matrix\Mat4.cpp" />
+    <ClCompile Include="src\math\vector\Vec2.cpp" />
+    <ClCompile Include="src\math\vector\Vec3.cpp" />
+    <ClCompile Include="src\math\vector\Vec4.cpp" />
     <ClCompile Include="src\utils\String.cpp" />
     <ClCompile Include="src\utils\ThreadPool.cpp" />
+    <ClCompile Include="src\renderer\scene\Transform.cpp" />
+    <ClCompile Include="src\utils\UUID.cpp" />
     <ClCompile Include="tutorial\Helpers.cpp" />
     <ClCompile Include="tutorial\main.cpp" />
     <ClCompile Include="tutorial\PosColVertex.cpp" />
@@ -130,8 +144,15 @@
     <ClCompile Include="tutorial\Tutorial-ObjectsPipeline.cpp" />
     <ClCompile Include="tutorial\Tutorial.cpp" />
     <ClCompile Include="src\backend\shader\VulkanShader.cpp" />
+    <ClCompile Include="vendor\sejp\sejp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\scene\SceneSerializer.hpp" />
+    <ClInclude Include="src\renderer\scene\Component.hpp" />
+    <ClInclude Include="src\renderer\Camera.hpp" />
+    <ClInclude Include="src\renderer\Frustum.hpp" />
+    <ClInclude Include="src\renderer\scene\Entity.hpp" />
+    <ClInclude Include="src\renderer\scene\Scene.hpp" />
     <ClInclude Include="src\backend\pipeline\ObjectPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\VulkanPipeline.hpp" />
     <ClInclude Include="src\backend\renderer\Renderer.hpp" />
@@ -174,6 +195,12 @@
     <ClInclude Include="src\math\color\Color3.hpp" />
     <ClInclude Include="src\math\color\Color4.hpp" />
     <ClInclude Include="src\math\Math.hpp" />
+    <ClInclude Include="src\math\matrix\Mat2.h" />
+    <ClInclude Include="src\math\matrix\Mat3.h" />
+    <ClInclude Include="src\math\matrix\Mat4.h" />
+    <ClInclude Include="src\math\vector\Vec2.h" />
+    <ClInclude Include="src\math\vector\Vec3.h" />
+    <ClInclude Include="src\math\vector\Vec4.h" />
     <ClInclude Include="src\utils\Enumerate.hpp" />
     <ClInclude Include="src\utils\Singleton.hpp" />
     <ClInclude Include="src\utils\stb_image.h" />
@@ -184,6 +211,8 @@
     <ClInclude Include="src\backend\VulkanContext.hpp" />
     <ClInclude Include="src\core\window\Window.hpp" />
     <ClInclude Include="src\backend\devices\VulkanInstance.hpp" />
+    <ClInclude Include="src\renderer\scene\Transform.hpp" />
+    <ClInclude Include="src\utils\UUID.hpp" />
     <ClInclude Include="tutorial\Helpers.hpp" />
     <ClInclude Include="tutorial\InputEvent.hpp" />
     <ClInclude Include="tutorial\mat4.hpp" />
@@ -194,12 +223,14 @@
     <ClInclude Include="tutorial\Tutorial.hpp" />
     <ClInclude Include="tutorial\VK.hpp" />
     <ClInclude Include="src\backend\shader\VulkanShader.h" />
+    <ClInclude Include="vendor\sejp\sejp.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\core\resources\nodes\Node.inl" />
     <None Include="src\core\resources\nodes\NodeConstView.inl" />
     <None Include="src\core\resources\nodes\NodeView.inl" />
     <None Include="src\Maekfile.js" />
+    <None Include="src\scenes\s72\viewer\s72-viewer.html" />
     <None Include="tutorial\background.frag" />
     <None Include="tutorial\background.vert" />
     <None Include="tutorial\lines.frag" />
