@@ -4,21 +4,28 @@
 
 class Transform 
 {
-    static Transform base; // the center of absolute world coordinates.
 public:
     Transform() = default;
-    Transform(const Transform& other) : position(other.position), rotation(other.rotation), scale(other.scale), parent(other.parent) {}
+    Transform(const Transform& other);
 
-    Transform(glm::vec3 t) : position(t), parent(&base) {}
-    Transform(glm::vec3 t, glm::vec3 euler, glm::vec3 s) : position(t), rotation(euler), scale(s), parent(&base) {}
-    Transform(glm::vec3 t, glm::quat q, glm::vec3 s) : position(t), rotation(q), scale(s), parent(&base) {}
+    Transform(glm::vec3 t);
+    Transform(glm::vec3 t, glm::vec3 euler, glm::vec3 s);
+    Transform(glm::vec3 t, glm::quat q, glm::vec3 s);
 
-    glm::vec3 position = Vec3::Zero;
-    glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-    glm::vec3 scale = Vec3::One;
+    const glm::vec3& position() const { return m_Position; }
+    const glm::quat& rotation() const { return m_Rotation; }
+    const glm::vec3& scale() const { return m_Scale; }
 
-    Transform* parent = nullptr;
+    void SetPosition(glm::vec3&);
+    void SetRotation(glm::quat&);
+    void SetScale(glm::vec3&);
+
 public:
+    glm::vec3 m_Position = Vec3::Zero;
+    glm::quat m_Rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+    glm::vec3 m_Scale = Vec3::One;
+    Transform* parent = nullptr;
+
     // the local transformation matrix
     glm::mat4 Local() const;
 
@@ -73,12 +80,13 @@ public:
     bool operator!() const {
         return this == nullptr;
     }
+
 private:
     // attach a new transform as parent
     void AttachParent(Transform& parentTransform);
 
     // remove the current parent in hierarchy
     void RemoveParent();
-private:
-    friend class TransformComponent;
+
+    bool isDirty = true;
 };

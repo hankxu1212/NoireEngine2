@@ -10,5 +10,5 @@ Transform* Component::GetTransform()
 		return nullptr;
 	}
 
-	return entity->s_Transform.get();
+	return entity->transform();
 }

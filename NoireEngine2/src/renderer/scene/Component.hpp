@@ -14,4 +14,3 @@ public:
 private:
 	Entity* entity;
 };
-

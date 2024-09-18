@@ -1,23 +1,67 @@
 #include "Transform.hpp"
 
-Transform Transform::base;
+#include "Entity.hpp"
+
+Transform::Transform(const Transform& other) : 
+    m_Position(other.m_Position), m_Rotation(other.m_Rotation), m_Scale(other.m_Scale), parent(other.parent) {
+}
+
+Transform::Transform(glm::vec3 t) : 
+    m_Position(t), parent(Entity::root().transform()) {
+}
+
+Transform::Transform(glm::vec3 t, glm::vec3 euler, glm::vec3 s) : 
+    m_Position(t), m_Rotation(euler), m_Scale(s), parent(Entity::root().transform()) {
+}
+
+Transform::Transform(glm::vec3 t, glm::quat q, glm::vec3 s) : 
+    m_Position(t), m_Rotation(q), m_Scale(s), parent(Entity::root().transform()) {
+}
+
+void Transform::SetPosition(glm::vec3& newPosition)
+{
+    m_Position.x = newPosition.x;
+    m_Position.y = newPosition.z;
+    m_Position.z = newPosition.z;
+
+    isDirty = true;
+}
+
+void Transform::SetRotation(glm::quat& newRotation)
+{
+    m_Rotation.x = newRotation.x;
+    m_Rotation.y = newRotation.z;
+    m_Rotation.z = newRotation.z;
+    m_Rotation.w = newRotation.w;
+
+    isDirty = true;
+}
+
+void Transform::SetScale(glm::vec3& newScale)
+{
+    m_Scale.x = newScale.x;
+    m_Scale.y = newScale.z;
+    m_Scale.z = newScale.z;
+
+    isDirty = true;
+}
 
 // TODO: move all above to Vector3 or sth
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 glm::mat4 Transform::Local() const {
-    return glm::translate(Mat4::Identity, position) * glm::mat4_cast(rotation) * glm::scale(Mat4::Identity, scale);
+    return glm::translate(Mat4::Identity, m_Position) * glm::mat4_cast(m_Rotation) * glm::scale(Mat4::Identity, m_Scale);
 }
 
 glm::mat4 Transform::LocalInverse() const {
-    return glm::scale(Mat4::Identity, 1.0f / scale) * glm::mat4_cast(glm::inverse(rotation)) * glm::translate(Mat4::Identity, -position);
+    return glm::scale(Mat4::Identity, 1.0f / m_Scale) * glm::mat4_cast(glm::inverse(m_Rotation)) * glm::translate(Mat4::Identity, -m_Position);
 }
 
-glm::vec3 Transform::LocalInverseLocation() const { return -position; }
+glm::vec3 Transform::LocalInverseLocation() const { return -m_Position; }
 
-glm::vec3 Transform::LocalInverseScale() const { return 1.0f / scale; }
+glm::vec3 Transform::LocalInverseScale() const { return 1.0f / m_Scale; }
 
-glm::quat Transform::LocalInverseRotation() const { return glm::inverse(rotation); }
+glm::quat Transform::LocalInverseRotation() const { return glm::inverse(m_Rotation); }
 
 glm::mat4 Transform::World() const {
     if (parent) {
@@ -31,30 +75,30 @@ glm::mat4 Transform::World() const {
 glm::vec3 Transform::WorldLocation() const
 {
     if (parent) {
-        return parent->WorldLocation() + position;
+        return parent->WorldLocation() + m_Position;
     }
     else {
-        return position;
+        return m_Position;
     }
 }
 
 glm::vec3 Transform::WorldScale() const
 {
     if (parent) {
-        return parent->WorldScale() * scale;
+        return parent->WorldScale() * m_Scale;
     }
     else {
-        return scale;
+        return m_Scale;
     }
 }
 
 glm::quat Transform::WorldRotation() const
 {
     if (parent) {
-        return parent->WorldRotation() * rotation;
+        return parent->WorldRotation() * m_Rotation;
     }
     else {
-        return rotation;
+        return m_Rotation;
     }
 }
 
@@ -74,16 +118,16 @@ glm::vec3 Transform::WorldInverseScale() const { return 1.0f / WorldScale(); }
 glm::quat Transform::WorldInverseRotation() const { return glm::inverse(WorldRotation()); }
 
 bool operator!=(const Transform& a, const Transform& b) {
-    return a.parent != b.parent || a.position != b.position ||
-        a.rotation != b.rotation || a.scale != b.scale;
+    return a.parent != b.parent || a.m_Position != b.m_Position ||
+        a.m_Rotation != b.m_Rotation || a.m_Scale != b.m_Scale;
 }
 
-glm::vec3 Transform::Forward() const { return rotation * Vec3::Forward; }
-glm::vec3 Transform::Back() const { return rotation * Vec3::Back; }
-glm::vec3 Transform::Right() const { return rotation * Vec3::Right; }
-glm::vec3 Transform::Left() const { return rotation * Vec3::Left; }
-glm::vec3 Transform::Up() const { return rotation * Vec3::Up; }
-glm::vec3 Transform::Down() const { return rotation * Vec3::Down; }
+glm::vec3 Transform::Forward() const { return m_Rotation * Vec3::Forward; }
+glm::vec3 Transform::Back() const { return m_Rotation * Vec3::Back; }
+glm::vec3 Transform::Right() const { return m_Rotation * Vec3::Right; }
+glm::vec3 Transform::Left() const { return m_Rotation * Vec3::Left; }
+glm::vec3 Transform::Up() const { return m_Rotation * Vec3::Up; }
+glm::vec3 Transform::Down() const { return m_Rotation * Vec3::Down; }
 
 void Transform::Decompose(const glm::mat4& m, glm::vec3& pos, glm::quat& rot, glm::vec3& scale)
 {
@@ -101,7 +145,7 @@ void Transform::Decompose(const glm::mat4& m, glm::vec3& pos, glm::quat& rot, gl
 
 void Transform::Apply(glm::mat4& transformation)
 {
-    Decompose(transformation * Local(), position, rotation, scale);
+    Decompose(transformation * Local(), m_Position, m_Rotation, m_Scale);
 }
 
 glm::quat Transform::Rotation(const float& angle, const glm::vec3& axis, bool useRadians)
@@ -111,7 +155,7 @@ glm::quat Transform::Rotation(const float& angle, const glm::vec3& axis, bool us
 
 void Transform::Rotate(const float& angle, const glm::vec3& axis, bool useRadians)
 {
-    rotation = Rotation(angle, axis, useRadians) * rotation;
+    m_Rotation = Rotation(angle, axis, useRadians) * m_Rotation;
 }
 
 void Transform::RotateAround(const glm::vec3& point, const float& angle, const glm::vec3& axis)
@@ -121,16 +165,16 @@ void Transform::RotateAround(const glm::vec3& point, const float& angle, const g
 
 void Transform::RotateAround(const glm::vec3& point, const float& angle, const glm::quat& rot)
 {
-    position = rot * (position - point) + point;
-    rotation = rot * rotation;
+    m_Position = rot * (m_Position - point) + point;
+    m_Rotation = rot * m_Rotation;
 }
 
 void Transform::Translate(const glm::vec3& translation, bool useWorldspace)
 {
     if (!useWorldspace)
-        position += translation;
+        m_Position += translation;
     else {
-        position += WorldRotation() * translation;
+        m_Position += WorldRotation() * translation;
     }
 }
 
@@ -140,7 +184,7 @@ glm::vec3 lerp(glm::vec3& x, const glm::vec3& y, float t) {
 
 void Transform::LerpTo(const glm::vec3& targetPosition, float t)
 {
-    position = lerp(position, targetPosition, t);
+    m_Position = lerp(m_Position, targetPosition, t);
 }
 
 void Transform::AttachParent(Transform& parentTransform)

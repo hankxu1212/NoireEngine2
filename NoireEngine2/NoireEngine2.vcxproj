@@ -134,6 +134,7 @@
     <ClCompile Include="src\utils\ThreadPool.cpp" />
     <ClCompile Include="src\renderer\scene\Transform.cpp" />
     <ClCompile Include="src\utils\UUID.cpp" />
+    <ClCompile Include="src\renderer\scene\TransformMatrixStack.cpp" />
     <ClCompile Include="tutorial\Helpers.cpp" />
     <ClCompile Include="tutorial\main.cpp" />
     <ClCompile Include="tutorial\PosColVertex.cpp" />
@@ -213,6 +214,7 @@
     <ClInclude Include="src\backend\devices\VulkanInstance.hpp" />
     <ClInclude Include="src\renderer\scene\Transform.hpp" />
     <ClInclude Include="src\utils\UUID.hpp" />
+    <ClInclude Include="src\renderer\scene\TransformMatrixStack.hpp" />
     <ClInclude Include="tutorial\Helpers.hpp" />
     <ClInclude Include="tutorial\InputEvent.hpp" />
     <ClInclude Include="tutorial\mat4.hpp" />
