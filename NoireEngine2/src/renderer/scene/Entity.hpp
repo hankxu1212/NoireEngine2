@@ -11,6 +11,8 @@
 #include "renderer/components/Components.hpp"
 #include "Scene.hpp"
 
+#include "renderer/components/RendererComponent.hpp"
+
 class TransformMatrixStack;
 
 class Entity
@@ -104,12 +106,16 @@ public:
 	void SetScene(Scene* newScene) { m_Scene = newScene; }
 	Scene* scene() { return m_Scene; }
 
+	void SetRenderer(RendererComponent* newRenderer) { m_RendererComponent = newRenderer; }
+	RendererComponent* renderer() { return m_RendererComponent; }
+
 private:
 	std::unique_ptr<Transform>				s_Transform;
 	Entity*									m_Parent = nullptr;
 	std::list<std::unique_ptr<Entity>>		m_Children; // manages its children
 	std::vector<std::unique_ptr<Component>>	m_Components;
 	Scene*									m_Scene = nullptr;
+	RendererComponent*						m_RendererComponent;
 
 	UUID m_Id;
 	std::string m_Name;

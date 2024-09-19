@@ -354,14 +354,14 @@ void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 		{ //draw with the objects pipeline:
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
 
-			{ //use object_vertices (offset 0) as vertex buffer binding 0:
-				// Testing mesh
-				static Mesh mesh;
+			// { //use object_vertices (offset 0) as vertex buffer binding 0:
+			// 	// Testing mesh
+			// 	static Mesh mesh;
 
-				std::array< VkBuffer, 1 > vertex_buffers{ mesh.vertexBuffer().getBuffer() };
-				std::array< VkDeviceSize, 1 > offsets{ 0 };
-				vkCmdBindVertexBuffers(commandBuffer, 0, uint32_t(vertex_buffers.size()), vertex_buffers.data(), offsets.data());
-			}
+			// 	std::array< VkBuffer, 1 > vertex_buffers{ mesh.vertexBuffer().getBuffer() };
+			// 	std::array< VkDeviceSize, 1 > offsets{ 0 };
+			// 	vkCmdBindVertexBuffers(commandBuffer, 0, uint32_t(vertex_buffers.size()), vertex_buffers.data(), offsets.data());
+			// }
 
 			Workspace& workspace = workspaces[surfaceId];
 			{ //bind Transforms descriptor set:
@@ -381,11 +381,13 @@ void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 
 			//draw all instances:
 			const std::vector<ObjectInstance>& sceneObjectInstances = scene->objectInstances();
+			Mesh* previouslyBindedMesh = nullptr;
+
 			//std::cout << "Drawing: " << sceneObjectInstances.size() << std::endl;
 			for (ObjectInstance const& inst : sceneObjectInstances) {
 				//std::cout << glm::to_string(inst.m_TransformUniform.modelMatrix) << std::endl;
 				uint32_t index = uint32_t(&inst - &sceneObjectInstances[0]);
-
+				
 				//bind texture descriptor set:
 				vkCmdBindDescriptorSets(
 					commandBuffer, //command buffer
@@ -396,7 +398,11 @@ void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 					0, nullptr //dynamic offsets count, ptr
 				);
 
-				vkCmdDraw(commandBuffer, inst.numVertices, 1, inst.firstVertex, index);
+				if (inst->mesh != previouslyBindedMesh)
+					inst->BindMesh(commandBuffer, index);
+				previouslyBindedMesh = inst->mesh;
+
+				inst->Draw(commandBuffer, index);
 			}
 		}
 

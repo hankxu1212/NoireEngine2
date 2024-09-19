@@ -20,8 +20,11 @@ public:
 
 	const Buffer& vertexBuffer() const { return m_VertexBuffer; }
 
+	uint32_t getVertexCount() { return numVertices; }
+
 private:
 	Buffer m_VertexBuffer;
+	uint32_t numVertices;
 };
 
 

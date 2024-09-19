@@ -4,6 +4,8 @@
 
 #include "Mesh.hpp"
 
+class CommandBuffer;
+
 struct ObjectInstance
 {
 	struct TransformUniform 
@@ -19,9 +21,7 @@ struct ObjectInstance
 
 	Mesh* mesh;
 
-
-	//ObjectInstance(TransformUniform&& transform, uint32_t first, uint32_t count, Mesh* _mesh) :
-	//	m_TransformUniform(transform), firstVertex(first), numVertices(count), mesh(_mesh) {
-	//}
+	void BindMesh(const CommandBuffer& commandBuffer, uint32_t instanceID);
+	void Draw(const CommandBuffer& commandBuffer, uint32_t instanceID);
 };
 

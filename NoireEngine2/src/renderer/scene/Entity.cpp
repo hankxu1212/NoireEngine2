@@ -67,6 +67,8 @@ void Entity::RenderPass(TransformMatrixStack& matrixStack)
 	glm::mat4 model = s_Transform->World();
 
 	Camera* cam = m_Scene->mainCam()->camera();
+	
+	static std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
 
 	ObjectInstance instance
 	{
@@ -77,8 +79,8 @@ void Entity::RenderPass(TransformMatrixStack& matrixStack)
 			.modelMatrix_Normal = model,
 		},
 		.firstVertex = 0,
-		.numVertices = 20 * 16 * 6,
-		.mesh = nullptr
+		.numVertices = mesh.getVertexCount(),
+		.mesh = mesh.get()
 	};
 
 	m_Scene->PushObjectInstances(std::move(instance));
