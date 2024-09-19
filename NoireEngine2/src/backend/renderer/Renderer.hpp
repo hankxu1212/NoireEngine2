@@ -20,7 +20,6 @@ public:
 
 	void Update();
 
-
 	/**
 	 * Runs the render pipeline in the current renderpass.
 	 * @param commandBuffer The command buffer to record render command into.
@@ -31,9 +30,11 @@ public:
 
 	bool enabled = true;
 
+private:
+	void DestroyFrameBuffers();
+
 public:
 	VkRenderPass							m_Renderpass = VK_NULL_HANDLE;
-	void DestroyFrameBuffers();
 	
 	std::unique_ptr<ObjectPipeline>			objectPipeline;
 	

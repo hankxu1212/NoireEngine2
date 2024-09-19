@@ -43,19 +43,12 @@ ObjectPipeline::~ObjectPipeline()
 	if (vertexBuffer.getBuffer() != VK_NULL_HANDLE)
 		vertexBuffer.Destroy();
 
-	for (Workspace& workspace : workspaces) {
-		if (workspace.Transforms_src.getBuffer() != VK_NULL_HANDLE) {
-			workspace.Transforms_src.Destroy();
-		}
-		if (workspace.Transforms.getBuffer() != VK_NULL_HANDLE) {
-			workspace.Transforms.Destroy();
-		}
-		if (workspace.World.getBuffer() != VK_NULL_HANDLE) {
-			workspace.World.Destroy();
-		}
-		if (workspace.World_src.getBuffer() != VK_NULL_HANDLE) {
-			workspace.World_src.Destroy();
-		}
+	for (Workspace& workspace : workspaces) 
+	{
+		workspace.Transforms_src.Destroy();
+		workspace.Transforms.Destroy();
+		workspace.World.Destroy();
+		workspace.World_src.Destroy();
 	}
 	workspaces.clear();
 
@@ -153,24 +146,22 @@ void ObjectPipeline::CreateDescriptors()
 			"[vulkan] Create descriptor set layout failed");
 	}
 
-	{
-		std::array< VkDescriptorSetLayout, 3 > layouts{
-			set0_World,
-			set1_Transforms,
-			set2_TEXTURE,
-		};
+	std::array< VkDescriptorSetLayout, 3 > layouts{
+		set0_World,
+		set1_Transforms,
+		set2_TEXTURE,
+	};
 
-		VkPipelineLayoutCreateInfo create_info{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-			.setLayoutCount = uint32_t(layouts.size()),
-			.pSetLayouts = layouts.data(),
-			.pushConstantRangeCount = 0,
-			.pPushConstantRanges = nullptr,
-		};
+	VkPipelineLayoutCreateInfo create_info{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+		.setLayoutCount = uint32_t(layouts.size()),
+		.pSetLayouts = layouts.data(),
+		.pushConstantRangeCount = 0,
+		.pPushConstantRanges = nullptr,
+	};
 
-		VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout),
-			"[Vulkan] Create pipeline layout failed.");
-	}
+	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout),
+		"[Vulkan] Create pipeline layout failed.");
 }
 
 void ObjectPipeline::CreateDescriptorPool()
@@ -213,108 +204,106 @@ void ObjectPipeline::CreatePipeline(VkRenderPass& renderpass, uint32_t subpass)
 
 	///////////////////////////////////////////////////////////////////////
 	
-	{
-		//the viewport and scissor state will be set at runtime for the pipeline:
-		std::vector< VkDynamicState > dynamic_states{
-			VK_DYNAMIC_STATE_VIEWPORT,
-			VK_DYNAMIC_STATE_SCISSOR
-		};
-		VkPipelineDynamicStateCreateInfo dynamic_state{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-			.dynamicStateCount = uint32_t(dynamic_states.size()),
-			.pDynamicStates = dynamic_states.data()
-		};
+	//the viewport and scissor state will be set at runtime for the pipeline:
+	std::vector< VkDynamicState > dynamic_states{
+		VK_DYNAMIC_STATE_VIEWPORT,
+		VK_DYNAMIC_STATE_SCISSOR
+	};
+	VkPipelineDynamicStateCreateInfo dynamic_state{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+		.dynamicStateCount = uint32_t(dynamic_states.size()),
+		.pDynamicStates = dynamic_states.data()
+	};
 
 
-		//this pipeline will take no per-vertex inputs:
-		VkPipelineVertexInputStateCreateInfo vertex_input_state{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-			.vertexBindingDescriptionCount = 0,
-			.pVertexBindingDescriptions = nullptr,
-			.vertexAttributeDescriptionCount = 0,
-			.pVertexAttributeDescriptions = nullptr,
-		};
+	//this pipeline will take no per-vertex inputs:
+	VkPipelineVertexInputStateCreateInfo vertex_input_state{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		.vertexBindingDescriptionCount = 0,
+		.pVertexBindingDescriptions = nullptr,
+		.vertexAttributeDescriptionCount = 0,
+		.pVertexAttributeDescriptions = nullptr,
+	};
 
-		//this pipeline will draw triangles:
-		VkPipelineInputAssemblyStateCreateInfo input_assembly_state{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			.primitiveRestartEnable = VK_FALSE
-		};
+	//this pipeline will draw triangles:
+	VkPipelineInputAssemblyStateCreateInfo input_assembly_state{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+		.primitiveRestartEnable = VK_FALSE
+	};
 
-		//this pipeline will render to one viewport and scissor rectangle:
-		VkPipelineViewportStateCreateInfo viewport_state{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-			.viewportCount = 1,
-			.scissorCount = 1,
-		};
+	//this pipeline will render to one viewport and scissor rectangle:
+	VkPipelineViewportStateCreateInfo viewport_state{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+		.viewportCount = 1,
+		.scissorCount = 1,
+	};
 
-		//the rasterizer will cull back faces and fill polygons:
-		VkPipelineRasterizationStateCreateInfo rasterization_state{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-			.depthClampEnable = VK_FALSE,
-			.rasterizerDiscardEnable = VK_FALSE,
-			.polygonMode = VK_POLYGON_MODE_FILL,
-			.cullMode = VK_CULL_MODE_BACK_BIT,
-			.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
-			.depthBiasEnable = VK_FALSE,
-			.lineWidth = 1.0f,
-		};
+	//the rasterizer will cull back faces and fill polygons:
+	VkPipelineRasterizationStateCreateInfo rasterization_state{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+		.depthClampEnable = VK_FALSE,
+		.rasterizerDiscardEnable = VK_FALSE,
+		.polygonMode = VK_POLYGON_MODE_FILL,
+		.cullMode = VK_CULL_MODE_BACK_BIT,
+		.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+		.depthBiasEnable = VK_FALSE,
+		.lineWidth = 1.0f,
+	};
 
-		//multisampling will be disabled (one sample per pixel):
-		VkPipelineMultisampleStateCreateInfo multisample_state{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-			.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
-			.sampleShadingEnable = VK_FALSE,
-		};
+	//multisampling will be disabled (one sample per pixel):
+	VkPipelineMultisampleStateCreateInfo multisample_state{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+		.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
+		.sampleShadingEnable = VK_FALSE,
+	};
 
-		//depth test will be less, and stencil test will be disabled:
-		VkPipelineDepthStencilStateCreateInfo depth_stencil_state{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-			.depthTestEnable = VK_TRUE,
-			.depthWriteEnable = VK_TRUE,
-			.depthCompareOp = VK_COMPARE_OP_LESS,
-			.depthBoundsTestEnable = VK_FALSE,
-			.stencilTestEnable = VK_FALSE,
-		};
+	//depth test will be less, and stencil test will be disabled:
+	VkPipelineDepthStencilStateCreateInfo depth_stencil_state{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+		.depthTestEnable = VK_TRUE,
+		.depthWriteEnable = VK_TRUE,
+		.depthCompareOp = VK_COMPARE_OP_LESS,
+		.depthBoundsTestEnable = VK_FALSE,
+		.stencilTestEnable = VK_FALSE,
+	};
 
-		//there will be one color attachment with blending disabled:
-		std::array< VkPipelineColorBlendAttachmentState, 1 > attachment_states{
-			VkPipelineColorBlendAttachmentState{
-				.blendEnable = VK_FALSE,
-				.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-			},
-		};
-		VkPipelineColorBlendStateCreateInfo color_blend_state{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-			.logicOpEnable = VK_FALSE,
-			.attachmentCount = uint32_t(attachment_states.size()),
-			.pAttachments = attachment_states.data(),
-			.blendConstants{0.0f, 0.0f, 0.0f, 0.0f},
-		};
+	//there will be one color attachment with blending disabled:
+	std::array< VkPipelineColorBlendAttachmentState, 1 > attachment_states{
+		VkPipelineColorBlendAttachmentState{
+			.blendEnable = VK_FALSE,
+			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+		},
+	};
+	VkPipelineColorBlendStateCreateInfo color_blend_state{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+		.logicOpEnable = VK_FALSE,
+		.attachmentCount = uint32_t(attachment_states.size()),
+		.pAttachments = attachment_states.data(),
+		.blendConstants{0.0f, 0.0f, 0.0f, 0.0f},
+	};
 
-		//all of the above structures get bundled together into one very large create_info:
-		VkGraphicsPipelineCreateInfo create_info{
-			.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-			.stageCount = uint32_t(stages.size()),
-			.pStages = stages.data(),
-			.pVertexInputState = &Vertex::array_input_state,
-			.pInputAssemblyState = &input_assembly_state,
-			.pViewportState = &viewport_state,
-			.pRasterizationState = &rasterization_state,
-			.pMultisampleState = &multisample_state,
-			.pDepthStencilState = &depth_stencil_state,
-			.pColorBlendState = &color_blend_state,
-			.pDynamicState = &dynamic_state,
-			.layout = m_PipelineLayout,
-			.renderPass = renderpass,
-			.subpass = subpass,
-		};
+	//all of the above structures get bundled together into one very large create_info:
+	VkGraphicsPipelineCreateInfo create_info{
+		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+		.stageCount = uint32_t(stages.size()),
+		.pStages = stages.data(),
+		.pVertexInputState = &Vertex::array_input_state,
+		.pInputAssemblyState = &input_assembly_state,
+		.pViewportState = &viewport_state,
+		.pRasterizationState = &rasterization_state,
+		.pMultisampleState = &multisample_state,
+		.pDepthStencilState = &depth_stencil_state,
+		.pColorBlendState = &color_blend_state,
+		.pDynamicState = &dynamic_state,
+		.layout = m_PipelineLayout,
+		.renderPass = renderpass,
+		.subpass = subpass,
+	};
 
-		VulkanContext::VK_CHECK(
-			vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &create_info, nullptr, &m_Pipeline),
-			"[Vulkan] Create pipeline failed");
-	}
+	VulkanContext::VK_CHECK(
+		vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &create_info, nullptr, &m_Pipeline),
+		"[Vulkan] Create pipeline failed");
 }
 
 void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surfaceId)
@@ -338,16 +327,14 @@ void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surface
 	}
 
 	if (!object_instances.empty()) { //upload object transforms:
-		size_t needed_bytes = object_instances.size() * sizeof(Transform);
+		size_t needed_bytes = object_instances.size() * sizeof(TransformUniform);
 		if (workspace.Transforms_src.getBuffer() == VK_NULL_HANDLE || workspace.Transforms_src.getSize() < needed_bytes) {
 			//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
 			size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
-			if (workspace.Transforms_src.getBuffer()) {
-				workspace.Transforms_src.Destroy();
-			}
-			if (workspace.Transforms.getBuffer()) {
-				workspace.Transforms.Destroy();
-			}
+			
+			workspace.Transforms_src.Destroy();
+			workspace.Transforms.Destroy();
+
 			workspace.Transforms_src = Buffer(
 				new_bytes,
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
@@ -394,7 +381,7 @@ void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surface
 
 		{ //copy transforms into Transforms_src:
 			assert(workspace.Transforms_src.data() != nullptr);
-			Transform* out = reinterpret_cast<Transform*>(workspace.Transforms_src.data());
+			TransformUniform* out = reinterpret_cast<TransformUniform*>(workspace.Transforms_src.data());
 			for (ObjectInstance const& inst : object_instances) {
 				*out = inst.transform;
 				++out;
@@ -421,6 +408,8 @@ void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surface
 		);
 	}
 
+	VkExtent2D swapChainExtent = VulkanContext::Get().getSwapChain()->getExtent();
+
 	{ //render pass
 		std::array< VkClearValue, 2 > clear_values{
 			VkClearValue{.color{.float32{1.0f, 0.5f, 0.5f, 1.0f} } },
@@ -433,7 +422,7 @@ void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surface
 			.framebuffer = framebuffer,
 			.renderArea{
 				.offset = {.x = 0, .y = 0},
-				.extent = VulkanContext::Get().getSwapChain()->getExtent(),
+				.extent = swapChainExtent,
 			},
 			.clearValueCount = uint32_t(clear_values.size()),
 			.pClearValues = clear_values.data(),
@@ -444,7 +433,7 @@ void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surface
 		{ //set scissor rectangle:
 			VkRect2D scissor{
 				.offset = {.x = 0, .y = 0},
-				.extent = VulkanContext::Get().getSwapChain()->getExtent(),
+				.extent = swapChainExtent,
 			};
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 		}
@@ -452,8 +441,8 @@ void ObjectPipeline::Render(const CommandBuffer& commandBuffer, uint32_t surface
 			VkViewport viewport{
 				.x = 0.0f,
 				.y = 0.0f,
-				.width = float(VulkanContext::Get().getSwapChain()->getExtent().width),
-				.height = float(VulkanContext::Get().getSwapChain()->getExtent().height),
+				.width = float(swapChainExtent.width),
+				.height = float(swapChainExtent.height),
 				.minDepth = 0.0f,
 				.maxDepth = 1.0f,
 			};
@@ -555,7 +544,7 @@ inline glm::mat4 look_at(
 	};
 }
 
-void ObjectPipeline::Update()
+void ObjectPipeline::Update(const Scene* scene)
 {
 	static float time = 0;
 	time += Time::DeltaTime;
@@ -580,7 +569,7 @@ void ObjectPipeline::Update()
 
 	{ //camera orbiting the origin:
 		float ang = Math::PI<float> * 2.0f * 10.0f * (time / 100.0f);
-		CLIP_FROM_WORLD = glm::perspective(
+		projectionMatrix = glm::perspective(
 			60.0f / Math::PI<float> * 180.0f, //vfov
 			1920.0f / 1080, //aspect
 			0.1f, //near
@@ -600,7 +589,7 @@ void ObjectPipeline::Update()
 			for (int j = 0; j < 1; j++)
 			{
 				for (int k = 0; k < 5; k++) {
-					glm::mat4 WORLD_FROM_LOCAL{
+					glm::mat4 modelMatrix{
 						0.2f, 0.0f, 0.0f, 0.0f,
 						0.0f, 0.2f, 0.0f, 0.0f,
 						0.0f, 0.0f, 0.2f, 0.0f,
@@ -610,9 +599,9 @@ void ObjectPipeline::Update()
 					object_instances.emplace_back(ObjectInstance{
 						.vertices = plane_vertices,
 						.transform{
-							.CLIP_FROM_LOCAL = CLIP_FROM_WORLD * WORLD_FROM_LOCAL,
-							.WORLD_FROM_LOCAL = WORLD_FROM_LOCAL,
-							.WORLD_FROM_LOCAL_NORMAL = WORLD_FROM_LOCAL,
+							.viewMatrix = projectionMatrix * modelMatrix,
+							.modelMatrix = modelMatrix,
+							.modelMatrix_Normal = modelMatrix,
 						},
 						.texture = 0,
 						});

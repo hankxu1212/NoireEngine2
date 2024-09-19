@@ -9,6 +9,7 @@
 #include <type_traits>
 
 class Renderer;
+class MeshRenderInstance;
 
 class ObjectPipeline : public VulkanPipeline
 {
@@ -18,8 +19,7 @@ public:
 public:
 	void Render(const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
-	void Update() override;
-
+	void Update(const Scene* scene) override;
 
 	using Vertex = PosNorTexVertex;
 
@@ -31,16 +31,16 @@ public:
 		struct { float r, g, b, padding_; } SUN_ENERGY;
 	}world;
 
-	static_assert(sizeof(World) == 4 * 4 + 4 * 4 + 4 * 4 + 4 * 4, "World is the expected size.");
+	static_assert(sizeof(World) == 16 * 4, "World is the expected size.");
 
-	glm::mat4 CLIP_FROM_WORLD;
+	glm::mat4 projectionMatrix;
 
-	struct Transform {
-		glm::mat4 CLIP_FROM_LOCAL;
-		glm::mat4 WORLD_FROM_LOCAL;
-		glm::mat4 WORLD_FROM_LOCAL_NORMAL;
+	struct TransformUniform {
+		glm::mat4 viewMatrix;
+		glm::mat4 modelMatrix;
+		glm::mat4 modelMatrix_Normal;
 	};
-	static_assert(sizeof(Transform) == 16 * 4 + 16 * 4 + 16 * 4, "Transform is the expected size.");
+	static_assert(sizeof(TransformUniform) == 64 * 3, "Transform Uniform is the expected size.");
 
 private:
 	void CreateDescriptors();
@@ -81,7 +81,7 @@ private:
 	};
 	struct ObjectInstance {
 		ObjectVertices vertices;
-		Transform transform;
+		TransformUniform transform;
 		uint32_t texture = 0;
 	};
 	ObjectVertices plane_vertices;

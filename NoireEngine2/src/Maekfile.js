@@ -42,6 +42,8 @@ const renderer_objs = [
 	maek.CPP('renderer/scene/SceneSerializer.cpp'),
 	maek.CPP('renderer/scene/Component.cpp'),
 	maek.CPP('renderer/scene/TransformMatrixStack.cpp'),
+	maek.CPP('renderer/object/Mesh.cpp'),
+	maek.CPP('renderer/object/MeshRenderInstance.cpp'),
 ]
 
 const util_objs = [

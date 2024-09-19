@@ -7,6 +7,7 @@
 #include "backend/commands/CommandBuffer.hpp"
 
 class Renderer;
+class Scene;
 
 class VulkanPipeline : Singleton
 {
@@ -16,7 +17,7 @@ protected:
 public:
 	virtual void CreatePipeline(VkRenderPass& renderpass, uint32_t subpass) {}
 	
-	virtual void Update() {}
+	virtual void Update(const Scene* scene) {}
 
 	VkPipelineLayout			m_Layout = VK_NULL_HANDLE;
 	VkPipeline					m_Pipeline = VK_NULL_HANDLE;

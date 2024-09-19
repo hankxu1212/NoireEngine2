@@ -6,10 +6,6 @@
 #include "core/window/Window.hpp"
 #include "backend/VulkanContext.hpp"
 
-#include "renderer/scene/Scene.hpp"
-
-static std::unique_ptr<Scene> scene = std::make_unique<Scene>();
-
 Application* Application::s_Instance = nullptr;
 float Time::DeltaTime;
 
@@ -24,14 +20,6 @@ Application::Application(const ApplicationSpecification& specification)
 	// initializes window
 	Window::Get().SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
 	VulkanContext::Get().OnAddWindow(&Window::Get());
-
-	// construct a test scene
-	glm::vec3 e1T{ 0,2,0 };
-	Entity* e2 = scene->Instantiate(e1T);
-	e2->AddChild();
-	//scene->Instantiate();
-	//scene->Instantiate();
-	//scene->Instantiate();
 }
 
 Application::~Application()
@@ -63,7 +51,6 @@ void Application::Run()
 			{
 				layer->OnUpdate();
 			}
-			scene->Update();
  			VulkanContext::Get().Update();
 		}
 	}

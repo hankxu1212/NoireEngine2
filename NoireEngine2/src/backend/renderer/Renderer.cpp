@@ -3,8 +3,14 @@
 #include "backend/VulkanContext.hpp"
 #include <memory>
 
+#include "renderer/scene/Scene.hpp"
+static std::unique_ptr<Scene> scene = std::make_unique<Scene>();
+
 Renderer::Renderer()
 {
+	glm::vec3 e1T{ 0,2,0 };
+	Entity* e2 = scene->Instantiate(e1T);
+	e2->AddChild();
 }
 
 void Renderer::CreatePipelines()
@@ -105,7 +111,8 @@ void Renderer::Cleanup()
 
 void Renderer::Update()
 {
-	objectPipeline->Update();
+	scene->Update();
+	objectPipeline->Update(scene.get());
 }
 
 void Renderer::Render(const CommandBuffer& commandBuffer, uint32_t surfaceId)
