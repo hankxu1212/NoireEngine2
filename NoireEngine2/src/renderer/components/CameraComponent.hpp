@@ -12,7 +12,9 @@ public:
 public:
 	void Update() override;
 
-	std::pair<int, Camera*> makeKey() { return std::make_pair(priority, s_Camera.get()); }
+	std::pair<int, CameraComponent*> makeKey() { return std::make_pair(priority, this); }
+
+	operator Camera& () { return *s_Camera.get(); }
 
 private:
 	std::unique_ptr<Camera> s_Camera;

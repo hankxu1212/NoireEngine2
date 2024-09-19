@@ -3,6 +3,11 @@
 
 #include "renderer/scene/Entity.hpp"
 
+void Component::SetEntity(Entity* thisEntity)
+{
+	entity = thisEntity;
+}
+
 Transform* Component::GetTransform()
 {
 	if (!entity) {

@@ -2,6 +2,7 @@
 
 #include "SceneSerializer.hpp"
 #include "renderer/Camera.hpp"
+#include "renderer/components/Components.hpp"
 #include "core/Time.hpp"
 #include "Entity.hpp"
 
@@ -32,17 +33,14 @@ void Scene::Update()
 	//UpdateWorldUniform();
 
 	// update camera
-	Camera* cam = mainCam();
+	CameraComponent* cam = mainCam();
 	if (cam == nullptr)
 	{
 		std::cerr << "No camera active in scene!\n";
 		return;
 	}
-	static float time = 0;
-	time += Time::DeltaTime;
 
-	static Transform t(glm::vec3{ 0, 0, 20 }, glm::vec3(0, 0, 0));
-	cam->Update(t);
+	cam->Update();
 
 	// update entities and components
 	Entity::root().Update();
@@ -63,7 +61,7 @@ void Scene::PushObjectInstances(const ObjectInstance&& instance)
 	m_ObjectInstances.push_back(instance);
 }
 
-Camera* Scene::mainCam() const
+CameraComponent* Scene::mainCam() const
 {
 	if (m_Cameras.empty())
 		return nullptr;

@@ -1,6 +1,5 @@
 #pragma once
 
-//#include "Entity.hpp"
 #include "utils/Singleton.hpp"
 #include "TransformMatrixStack.hpp"
 #include "renderer/object/ObjectInstance.hpp"
@@ -8,9 +7,8 @@
 #include <filesystem>
 #include <set>
 
-
-class Camera;
 class Entity;
+class CameraComponent;
 
 class Scene : Singleton
 {
@@ -32,7 +30,7 @@ public:
 
 	void PushObjectInstances(const ObjectInstance&& instance);
 
-	inline Camera* mainCam() const;
+	inline CameraComponent* mainCam() const;
 
 	struct SceneUniform {
 		struct { float x, y, z, padding_; } SKY_DIRECTION;
@@ -61,7 +59,7 @@ private:
 
 private:
 	// a list of cameras with their priority as min heap key
-	std::set<std::pair<int, Camera*>> m_Cameras;
+	std::set<std::pair<int, CameraComponent*>> m_Cameras;
 	TransformMatrixStack m_MatrixStack;
 
 	//types for descriptors:

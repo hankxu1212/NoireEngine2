@@ -9,6 +9,7 @@ class Component
 public:
 	virtual void Update() {}
 
+	void SetEntity(Entity*);
 	Transform* GetTransform();
 
 private:

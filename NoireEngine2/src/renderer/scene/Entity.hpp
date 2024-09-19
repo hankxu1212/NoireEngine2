@@ -8,7 +8,7 @@
 #include <string>
 
 #include "Transform.hpp"
-#include "renderer/components/Component.hpp"
+#include "renderer/components/Components.hpp"
 #include "Scene.hpp"
 
 class TransformMatrixStack;
@@ -66,6 +66,8 @@ public:
 	{
 		m_Components.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
 		
+		m_Components.back()->SetEntity(this);
+
 		T& newComponent = *dynamic_cast<T*>(m_Components.back().get());
 		
 		m_Scene->OnComponentAdded(*this, newComponent);

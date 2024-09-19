@@ -133,6 +133,8 @@
     <ClCompile Include="src\math\vector\Vec2.cpp" />
     <ClCompile Include="src\math\vector\Vec3.cpp" />
     <ClCompile Include="src\math\vector\Vec4.cpp" />
+    <ClCompile Include="src\scripting\Behaviour.cpp" />
+    <ClCompile Include="src\scripting\ScriptingEngine.cpp" />
     <ClCompile Include="src\utils\String.cpp" />
     <ClCompile Include="src\utils\ThreadPool.cpp" />
     <ClCompile Include="src\renderer\scene\Transform.cpp" />
@@ -151,6 +153,7 @@
     <ClCompile Include="vendor\sejp\sejp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\scripting\Behaviour.hpp" />
     <ClInclude Include="src\renderer\components\CameraComponent.hpp" />
     <ClInclude Include="src\renderer\components\Components.hpp" />
     <ClInclude Include="src\renderer\object\Mesh.hpp" />
@@ -209,6 +212,7 @@
     <ClInclude Include="src\math\vector\Vec2.h" />
     <ClInclude Include="src\math\vector\Vec3.h" />
     <ClInclude Include="src\math\vector\Vec4.h" />
+    <ClInclude Include="src\scripting\ScriptingEngine.hpp" />
     <ClInclude Include="src\utils\Enumerate.hpp" />
     <ClInclude Include="src\utils\Logger.hpp" />
     <ClInclude Include="src\utils\Singleton.hpp" />

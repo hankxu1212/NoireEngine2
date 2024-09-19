@@ -11,10 +11,10 @@ static std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
 Renderer::Renderer()
 {
-	glm::quat q{ 0,0,0,0 };
+	glm::quat q{ 1,0,0,0 };
 	glm::vec3 s{ 1,1,1 };
 
-	glm::vec3 e1T{ 0,0,0 };
+	glm::vec3 e1T{ 0,0,40 };
 	auto e1 = scene->Instantiate(e1T, q, s);
 	e1->AddComponent<CameraComponent>();
 

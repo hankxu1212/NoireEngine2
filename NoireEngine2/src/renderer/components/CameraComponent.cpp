@@ -4,6 +4,7 @@
 
 void CameraComponent::Update()
 {
+	s_Camera->Update(*GetTransform());
 }
 
 CameraComponent::CameraComponent()

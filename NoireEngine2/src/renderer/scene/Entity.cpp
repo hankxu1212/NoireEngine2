@@ -1,8 +1,8 @@
 #include "Entity.hpp"
+
 #include "TransformMatrixStack.hpp"
 #include "Scene.hpp"
 #include "renderer/object/ObjectInstance.hpp"
-#include "renderer/Camera.hpp"
 
 #include <iostream>
 
@@ -62,11 +62,13 @@ void Entity::RenderPass(TransformMatrixStack& matrixStack)
 
 	glm::mat4 model = matrixStack.Peek();
 
+	Camera& cam = *m_Scene->mainCam();
+
 	ObjectInstance instance
 	{
 		.m_TransformUniform
 		{
-			.viewMatrix = m_Scene->mainCam()->getProjectionMatrix() * m_Scene->mainCam()->getViewMatrix() * model,
+			.viewMatrix = cam.getProjectionMatrix() * cam.getViewMatrix() * model,
 			.modelMatrix = model,
 			.modelMatrix_Normal = model,
 		},

@@ -6,6 +6,8 @@
 #include "core/window/Window.hpp"
 #include "backend/VulkanContext.hpp"
 
+#include "scripting/ScriptingEngine.hpp"
+
 Application* Application::s_Instance = nullptr;
 float Time::DeltaTime;
 
@@ -20,6 +22,8 @@ Application::Application(const ApplicationSpecification& specification)
 	// initializes window
 	Window::Get().SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
 	VulkanContext::Get().OnAddWindow(&Window::Get());
+
+	PushLayer(new ScriptingEngine());
 }
 
 Application::~Application()
@@ -28,6 +32,7 @@ Application::~Application()
 	m_LayerStack.Destroy();
 
 	VulkanContext::Destroy();
+	Window::Destroy();
 }
 
 void Application::Run()

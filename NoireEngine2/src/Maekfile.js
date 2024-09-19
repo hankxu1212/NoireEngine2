@@ -87,6 +87,11 @@ const objects_shaders = [
 ];
 vulkan_objs.push(maek.CPP('backend/pipeline/ObjectPipeline.cpp', undefined, { depends: [...objects_shaders] }));
 
+const scripting_objs = [
+	maek.CPP('scripting/Behaviour.cpp'),
+	maek.CPP('scripting/ScriptingEngine.cpp'),
+]
+
 
 // executable
 const main_exe = maek.LINK
@@ -96,6 +101,7 @@ const main_exe = maek.LINK
 		...util_objs,
 		...vulkan_objs,
 		...component_objs,
+		...scripting_objs
 	],
 	'bin/main'
 );
