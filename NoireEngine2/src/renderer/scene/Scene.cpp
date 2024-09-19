@@ -3,6 +3,7 @@
 #include "SceneSerializer.hpp"
 #include "renderer/Camera.hpp"
 #include "core/Time.hpp"
+#include "Entity.hpp"
 
 #include <iostream>
 
@@ -64,13 +65,10 @@ void Scene::PushObjectInstances(const ObjectInstance&& instance)
 
 Camera* Scene::mainCam() const
 {
-	//if (m_Cameras.empty())
-	//	return nullptr;
+	if (m_Cameras.empty())
+		return nullptr;
 
-	//return m_Cameras.begin()->second;
-
-	static std::unique_ptr<Camera> cam = std::make_unique<Camera>();
-	return cam.get();
+	return m_Cameras.begin()->second;
 }
 
 void Scene::UpdateWorldUniform()

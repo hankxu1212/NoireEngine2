@@ -1,5 +1,6 @@
 #include "Camera.hpp"
 #include "core/window/Window.hpp"
+#include "Camera.hpp"
 
 Camera::Camera()
 {

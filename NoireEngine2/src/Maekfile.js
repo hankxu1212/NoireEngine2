@@ -40,10 +40,14 @@ const renderer_objs = [
 	maek.CPP('renderer/scene/Scene.cpp'),
 	maek.CPP('renderer/scene/Entity.cpp'),
 	maek.CPP('renderer/scene/SceneSerializer.cpp'),
-	maek.CPP('renderer/scene/Component.cpp'),
 	maek.CPP('renderer/scene/TransformMatrixStack.cpp'),
 	maek.CPP('renderer/object/Mesh.cpp'),
 	maek.CPP('renderer/object/ObjectInstance.cpp'),
+]
+
+const component_objs = [
+	maek.CPP('renderer/components/Component.cpp'),
+	maek.CPP('renderer/components/CameraComponent.cpp'),
 ]
 
 const util_objs = [
@@ -91,6 +95,7 @@ const main_exe = maek.LINK
 		...renderer_objs,
 		...util_objs,
 		...vulkan_objs,
+		...component_objs,
 	],
 	'bin/main'
 );

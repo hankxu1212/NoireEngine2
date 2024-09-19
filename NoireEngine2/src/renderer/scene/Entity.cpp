@@ -28,6 +28,7 @@ Entity::Entity(const Entity&)
 
 Entity::~Entity()
 {
+	m_Components.clear();
 }
 
 void Entity::Update()
@@ -35,7 +36,7 @@ void Entity::Update()
 	// update components
 	for (auto& component : m_Components)
 	{
-		component.Update();
+		component->Update();
 	}
 
 	// traverse children in recursive manner

@@ -8,10 +8,10 @@
 #include <string>
 
 #include "Transform.hpp"
-#include "Component.hpp"
+#include "renderer/components/Component.hpp"
+#include "Scene.hpp"
 
 class TransformMatrixStack;
-class Scene;
 
 class Entity
 {
@@ -37,6 +37,12 @@ public:
 	~Entity();
 
 public:
+	/**
+	 * Add a child to an entity.
+	 * 
+	 * \param ...args parameters to construct the new entity
+	 * \return a pointer to the newly created entity
+	 */
 	template<typename... TArgs>
 	Entity* AddChild(TArgs&... args)
 	{
@@ -45,12 +51,26 @@ public:
 		return m_Children.back().get();
 	}
 
+	// Variation of AddChild where it takes in a scene to overwrite current scene.
 	template<typename... TArgs>
 	Entity* AddChild(Scene* scene, TArgs&... args)
 	{
 		m_Children.emplace_back(std::make_unique<Entity>(scene, args...));
 		m_Children.back()->m_Parent = this;
 		return m_Children.back().get();
+	}
+
+	// Adds a component to an entity
+	template<typename T, typename... Args>
+	T& AddComponent(Args&&... args)
+	{
+		m_Components.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+		
+		T& newComponent = *dynamic_cast<T*>(m_Components.back().get());
+		
+		m_Scene->OnComponentAdded(*this, newComponent);
+
+		return newComponent;
 	}
 
 	// dfs the scene graph and update components
@@ -72,7 +92,7 @@ private:
 	std::unique_ptr<Transform>				s_Transform;
 	Entity*									m_Parent = nullptr;
 	std::list<std::unique_ptr<Entity>>		m_Children; // manages its children
-	std::vector<Component>					m_Components;
+	std::vector<std::unique_ptr<Component>>	m_Components;
 	Scene*									m_Scene = nullptr;
 
 	UUID m_Id;

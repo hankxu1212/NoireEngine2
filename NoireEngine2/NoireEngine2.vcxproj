@@ -89,10 +89,11 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\components\CameraComponent.cpp" />
     <ClCompile Include="src\renderer\object\Mesh.cpp" />
     <ClCompile Include="src\renderer\object\ObjectInstance.cpp" />
     <ClCompile Include="src\renderer\scene\SceneSerializer.cpp" />
-    <ClCompile Include="src\renderer\scene\Component.cpp" />
+    <ClCompile Include="src\renderer\components\Component.cpp" />
     <ClCompile Include="src\renderer\Camera.cpp" />
     <ClCompile Include="src\renderer\Frustum.cpp" />
     <ClCompile Include="src\renderer\scene\Entity.cpp" />
@@ -150,10 +151,12 @@
     <ClCompile Include="vendor\sejp\sejp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\components\CameraComponent.hpp" />
+    <ClInclude Include="src\renderer\components\Components.hpp" />
     <ClInclude Include="src\renderer\object\Mesh.hpp" />
     <ClInclude Include="src\renderer\object\ObjectInstance.hpp" />
     <ClInclude Include="src\renderer\scene\SceneSerializer.hpp" />
-    <ClInclude Include="src\renderer\scene\Component.hpp" />
+    <ClInclude Include="src\renderer\components\Component.hpp" />
     <ClInclude Include="src\renderer\Camera.hpp" />
     <ClInclude Include="src\renderer\Frustum.hpp" />
     <ClInclude Include="src\renderer\scene\Entity.hpp" />

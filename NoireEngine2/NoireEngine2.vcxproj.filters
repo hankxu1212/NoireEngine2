@@ -177,7 +177,7 @@
     <ClCompile Include="src\utils\UUID.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\scene\Component.cpp">
+    <ClCompile Include="src\renderer\components\Component.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\scene\SceneSerializer.cpp">
@@ -190,6 +190,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\object\Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\components\CameraComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -419,7 +422,7 @@
     <ClInclude Include="src\utils\UUID.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\scene\Component.hpp">
+    <ClInclude Include="src\renderer\components\Component.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\scene\SceneSerializer.hpp">
@@ -435,6 +438,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\object\Mesh.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\components\CameraComponent.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\components\Components.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Entity.hpp"
+//#include "Entity.hpp"
 #include "utils/Singleton.hpp"
 #include "TransformMatrixStack.hpp"
 #include "renderer/object/ObjectInstance.hpp"
@@ -10,6 +10,7 @@
 
 
 class Camera;
+class Entity;
 
 class Scene : Singleton
 {
@@ -29,7 +30,6 @@ public:
 		return Entity::root().AddChild(this, args...);
 	}
 
-
 	void PushObjectInstances(const ObjectInstance&& instance);
 
 	inline Camera* mainCam() const;
@@ -48,6 +48,13 @@ public:
 
 
 	inline const std::vector<ObjectInstance>& objectInstances() const { return m_ObjectInstances; }
+
+public: // event functions. Do not create function definitions!
+	template<typename T>
+	void OnComponentAdded(Entity&, T&);
+
+	template<typename T>
+	void OnComponentRemoved(Entity&, T&);
 
 private:
 	void UpdateWorldUniform();

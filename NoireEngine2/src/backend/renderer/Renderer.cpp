@@ -1,10 +1,13 @@
 #include "Renderer.hpp"
 
 #include "backend/VulkanContext.hpp"
+#include "renderer/scene/Entity.hpp"
 #include <memory>
 
 #include "renderer/scene/Scene.hpp"
 static std::unique_ptr<Scene> scene = std::make_unique<Scene>();
+
+#include "renderer/components/Components.hpp"
 
 Renderer::Renderer()
 {
@@ -12,7 +15,8 @@ Renderer::Renderer()
 	glm::vec3 s{ 1,1,1 };
 
 	glm::vec3 e1T{ 0,0,0 };
-	scene->Instantiate(e1T, q, s);
+	auto e1 = scene->Instantiate(e1T, q, s);
+	e1->AddComponent<CameraComponent>();
 
 	glm::vec3 e2T{ 5,0,0 };
 	scene->Instantiate(e2T, q, s);
