@@ -23,11 +23,30 @@ Transform::Transform(glm::vec3 t, glm::quat q, glm::vec3 s) :
     m_Position(t), m_Rotation(q), m_Scale(s), parent(Entity::root().transform()) {
 }
 
+void Transform::SetPosition(glm::vec3 newPosition)
+{
+    m_Position.x = newPosition.x;
+    m_Position.y = newPosition.z;
+    m_Position.z = newPosition.z;
+
+    isDirty = true;
+}
+
 void Transform::SetPosition(glm::vec3& newPosition)
 {
     m_Position.x = newPosition.x;
     m_Position.y = newPosition.z;
     m_Position.z = newPosition.z;
+
+    isDirty = true;
+}
+
+void Transform::SetRotation(glm::quat newRotation)
+{
+    m_Rotation.x = newRotation.x;
+    m_Rotation.y = newRotation.z;
+    m_Rotation.z = newRotation.z;
+    m_Rotation.w = newRotation.w;
 
     isDirty = true;
 }
@@ -38,6 +57,15 @@ void Transform::SetRotation(glm::quat& newRotation)
     m_Rotation.y = newRotation.z;
     m_Rotation.z = newRotation.z;
     m_Rotation.w = newRotation.w;
+
+    isDirty = true;
+}
+
+void Transform::SetScale(glm::vec3 newScale)
+{
+    m_Scale.x = newScale.x;
+    m_Scale.y = newScale.z;
+    m_Scale.z = newScale.z;
 
     isDirty = true;
 }

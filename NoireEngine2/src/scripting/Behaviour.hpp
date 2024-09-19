@@ -1,8 +1,7 @@
 #pragma once
 
-#include "renderer/scene/Entity.hpp"
+#include "renderer/components/Component.hpp"
 #include "core/events/Event.hpp"
-#include "ScriptingEngine.hpp"
 
 /**
  * A script attached to in game entities (Monobehavior basically)

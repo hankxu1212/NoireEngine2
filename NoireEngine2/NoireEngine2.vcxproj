@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\input\NativeInput.cpp" />
     <ClCompile Include="src\renderer\components\CameraComponent.cpp" />
     <ClCompile Include="src\renderer\object\Mesh.cpp" />
     <ClCompile Include="src\renderer\object\ObjectInstance.cpp" />
@@ -134,6 +135,8 @@
     <ClCompile Include="src\math\vector\Vec3.cpp" />
     <ClCompile Include="src\math\vector\Vec4.cpp" />
     <ClCompile Include="src\scripting\Behaviour.cpp" />
+    <ClCompile Include="src\scripting\core\Input.cpp" />
+    <ClCompile Include="src\scripting\core\SceneNavigationCamera.cpp" />
     <ClCompile Include="src\scripting\ScriptingEngine.cpp" />
     <ClCompile Include="src\utils\String.cpp" />
     <ClCompile Include="src\utils\ThreadPool.cpp" />
@@ -153,6 +156,7 @@
     <ClCompile Include="vendor\sejp\sejp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\input\NativeInput.hpp" />
     <ClInclude Include="src\scripting\Behaviour.hpp" />
     <ClInclude Include="src\renderer\components\CameraComponent.hpp" />
     <ClInclude Include="src\renderer\components\Components.hpp" />
@@ -212,6 +216,8 @@
     <ClInclude Include="src\math\vector\Vec2.h" />
     <ClInclude Include="src\math\vector\Vec3.h" />
     <ClInclude Include="src\math\vector\Vec4.h" />
+    <ClInclude Include="src\scripting\core\Input.hpp" />
+    <ClInclude Include="src\scripting\core\SceneNavigationCamera.hpp" />
     <ClInclude Include="src\scripting\ScriptingEngine.hpp" />
     <ClInclude Include="src\utils\Enumerate.hpp" />
     <ClInclude Include="src\utils\Logger.hpp" />

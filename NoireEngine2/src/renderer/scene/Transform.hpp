@@ -17,8 +17,13 @@ public:
     const glm::quat& rotation() const { return m_Rotation; }
     const glm::vec3& scale() const { return m_Scale; }
 
+    void SetPosition(glm::vec3);
     void SetPosition(glm::vec3&);
+
+    void SetRotation(glm::quat);
     void SetRotation(glm::quat&);
+
+    void SetScale(glm::vec3);
     void SetScale(glm::vec3&);
 
 public:

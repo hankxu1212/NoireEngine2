@@ -75,6 +75,19 @@ public:
 		return newComponent;
 	}
 
+	template<typename T>
+	T* GetComponent() const
+	{
+		for (const auto& component : m_Components)
+		{
+			T* c = (T*)component.get();
+			if (c == nullptr)
+				continue;
+			return c;
+		}
+		return nullptr;
+	}
+
 	// dfs the scene graph and update components
 	void Update();
 

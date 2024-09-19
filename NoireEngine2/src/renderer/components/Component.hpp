@@ -12,6 +12,6 @@ public:
 	void SetEntity(Entity*);
 	Transform* GetTransform();
 
-private:
+protected:
 	Entity* entity;
 };

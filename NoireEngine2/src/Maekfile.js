@@ -30,6 +30,7 @@ const core_objs = [
 	maek.CPP('core/resources/nodes/NodeConstView.cpp'),
 	maek.CPP('core/resources/nodes/NodeView.cpp'),
 	maek.CPP('core/resources/Resources.cpp'),
+	maek.CPP('core/input/NativeInput.cpp')
 ];
 
 const renderer_objs = [
@@ -90,6 +91,8 @@ vulkan_objs.push(maek.CPP('backend/pipeline/ObjectPipeline.cpp', undefined, { de
 const scripting_objs = [
 	maek.CPP('scripting/Behaviour.cpp'),
 	maek.CPP('scripting/ScriptingEngine.cpp'),
+	maek.CPP('scripting/core/Input.cpp'),
+	maek.CPP('scripting/core/SceneNavigationCamera.cpp')
 ]
 
 

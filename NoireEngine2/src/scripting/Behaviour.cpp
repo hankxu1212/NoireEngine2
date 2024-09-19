@@ -1,6 +1,7 @@
 #include "Behaviour.hpp"
 
 #include "renderer/scene/Scene.hpp"
+#include "ScriptingEngine.hpp"
 
 template<> 
 void Scene::OnComponentAdded<Behaviour>(Entity& entity, Behaviour& component)
