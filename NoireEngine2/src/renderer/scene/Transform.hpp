@@ -9,6 +9,7 @@ public:
     Transform(const Transform& other);
 
     Transform(glm::vec3 t);
+    Transform(glm::vec3 t, glm::vec3 euler);
     Transform(glm::vec3 t, glm::vec3 euler, glm::vec3 s);
     Transform(glm::vec3 t, glm::quat q, glm::vec3 s);
 

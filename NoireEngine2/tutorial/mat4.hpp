@@ -67,7 +67,7 @@ inline mat4 perspective(float vfov, float aspect, float near, float far) {
 //  - eye_xyz to the origin
 //  - the unit length vector from eye_xyz to target_xyz to -z
 //  - an as-close-as-possible unit-length vector to up to +y
-inline mat4 look_at(
+inline mat4 LookAt(
 	float eye_x, float eye_y, float eye_z,
 	float target_x, float target_y, float target_z,
 	float up_x, float up_y, float up_z) {

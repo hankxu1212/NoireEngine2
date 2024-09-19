@@ -10,6 +10,11 @@ Transform::Transform(glm::vec3 t) :
     m_Position(t), parent(Entity::root().transform()) {
 }
 
+Transform::Transform(glm::vec3 t, glm::vec3 euler) :
+    m_Position(t), m_Rotation(euler), parent(Entity::root().transform())
+{
+}
+
 Transform::Transform(glm::vec3 t, glm::vec3 euler, glm::vec3 s) : 
     m_Position(t), m_Rotation(euler), m_Scale(s), parent(Entity::root().transform()) {
 }

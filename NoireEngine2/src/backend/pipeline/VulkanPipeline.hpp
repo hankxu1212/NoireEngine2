@@ -17,6 +17,8 @@ protected:
 public:
 	virtual void CreatePipeline(VkRenderPass& renderpass, uint32_t subpass) {}
 	
+	virtual void Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId) {}
+
 	virtual void Update(const Scene* scene) {}
 
 	VkPipelineLayout			m_Layout = VK_NULL_HANDLE;

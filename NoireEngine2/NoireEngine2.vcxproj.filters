@@ -186,7 +186,7 @@
     <ClCompile Include="src\renderer\scene\TransformMatrixStack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\object\MeshRenderInstance.cpp">
+    <ClCompile Include="src\renderer\object\ObjectInstance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\object\Mesh.cpp">
@@ -431,7 +431,7 @@
     <ClInclude Include="src\utils\Logger.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\object\MeshRenderInstance.hpp">
+    <ClInclude Include="src\renderer\object\ObjectInstance.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\object\Mesh.hpp">

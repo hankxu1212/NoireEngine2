@@ -90,7 +90,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\renderer\object\Mesh.cpp" />
-    <ClCompile Include="src\renderer\object\MeshRenderInstance.cpp" />
+    <ClCompile Include="src\renderer\object\ObjectInstance.cpp" />
     <ClCompile Include="src\renderer\scene\SceneSerializer.cpp" />
     <ClCompile Include="src\renderer\scene\Component.cpp" />
     <ClCompile Include="src\renderer\Camera.cpp" />
@@ -151,7 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\renderer\object\Mesh.hpp" />
-    <ClInclude Include="src\renderer\object\MeshRenderInstance.hpp" />
+    <ClInclude Include="src\renderer\object\ObjectInstance.hpp" />
     <ClInclude Include="src\renderer\scene\SceneSerializer.hpp" />
     <ClInclude Include="src\renderer\scene\Component.hpp" />
     <ClInclude Include="src\renderer\Camera.hpp" />

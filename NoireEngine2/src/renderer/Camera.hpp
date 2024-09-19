@@ -32,7 +32,7 @@ public:
 
 
     float nearClipPlane = 0.1f;
-    float farClipPlane = 100.0f;
+    float farClipPlane = 1000.0f;
     float fieldOfView = 60.0f;
 
     float screenWidth = -1;

@@ -12,6 +12,8 @@ public:
 	const glm::mat4& Peek() const;
 	void Clear();
 
+	size_t Size() { return stack.size(); }
+
 private:
 	glm::mat4 currentMatrix = Mat4::Identity;
 	std::vector<glm::mat4> stack;

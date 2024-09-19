@@ -1079,7 +1079,7 @@ void Tutorial::update(float dt) {
 			rtg.swapchain_extent.width / float(rtg.swapchain_extent.height), //aspect
 			0.1f, //near
 			1000.0f //far
-		) * look_at(
+		) * LookAt(
 			3.0f * std::cos(ang), 3.0f * std::sin(ang), 1.0f, //eye
 			0.0f, 0.0f, 0.5f, //target
 			0.0f, 0.0f, 1.0f //up
