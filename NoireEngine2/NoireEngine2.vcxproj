@@ -89,8 +89,10 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\components\renderer_components\MeshRendererComponent.cpp" />
     <ClCompile Include="src\core\input\NativeInput.cpp" />
     <ClCompile Include="src\renderer\components\CameraComponent.cpp" />
+    <ClCompile Include="src\renderer\components\renderer_components\RendererComponent.cpp" />
     <ClCompile Include="src\renderer\object\Mesh.cpp" />
     <ClCompile Include="src\renderer\object\ObjectInstance.cpp" />
     <ClCompile Include="src\renderer\scene\SceneSerializer.cpp" />
@@ -156,7 +158,9 @@
     <ClCompile Include="vendor\sejp\sejp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\components\renderer_components\MeshRendererComponent.hpp" />
     <ClInclude Include="src\core\input\NativeInput.hpp" />
+    <ClInclude Include="src\renderer\components\renderer_components\RendererComponent.hpp" />
     <ClInclude Include="src\scripting\Behaviour.hpp" />
     <ClInclude Include="src\renderer\components\CameraComponent.hpp" />
     <ClInclude Include="src\renderer\components\Components.hpp" />

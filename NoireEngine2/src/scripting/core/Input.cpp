@@ -1,4 +1,5 @@
 #include "Input.hpp"
+#include "renderer/scene/Scene.hpp"
 
 namespace Core
 {
@@ -28,4 +29,16 @@ namespace Core
 	{
 		return NativeInput::GetMousePosition() - lastMouseScreenPos;
 	}
+}
+
+template<>
+void Scene::OnComponentAdded<Core::Input>(Entity& entity, Core::Input& component)
+{
+	this->OnComponentAdded<Behaviour>(entity, component);
+}
+
+template<>
+void Scene::OnComponentRemoved<Core::Input>(Entity& entity, Core::Input& component)
+{
+	this->OnComponentRemoved<Behaviour>(entity, component);
 }

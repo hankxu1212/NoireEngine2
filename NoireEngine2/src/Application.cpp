@@ -16,14 +16,33 @@ Application::Application(const ApplicationSpecification& specification)
 {
 	s_Instance = this;
 
+	// initialize scripting engine
+	ScriptingEngine* scriptingEngine = new ScriptingEngine();
+
+	// initialize glfw window
 	Window::Initialize();
+	
+	// initialize instance, physical device, and logical device, also renderer
 	VulkanContext::Initialize();
+
+	// renderer initialized here
+
+	// scene initialization occurs here in renderer
+
+	// all objects pushed here
 
 	// initializes window
 	Window::Get().SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
+
+	// initialize new surface, create new render pass, frame bufferr, swapchain
 	VulkanContext::Get().OnAddWindow(&Window::Get());
 
-	PushLayer(new ScriptingEngine());
+	// create pipelines here
+
+	// create object pipeline, descriptor sets and pools and scene buffers
+
+	// calls start on all scripts here
+	PushLayer(scriptingEngine);
 }
 
 Application::~Application()

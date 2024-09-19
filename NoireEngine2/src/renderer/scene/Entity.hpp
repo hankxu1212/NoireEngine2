@@ -102,6 +102,7 @@ public:
 	std::list<std::unique_ptr<Entity>>& children() { return m_Children; }
 
 	void SetScene(Scene* newScene) { m_Scene = newScene; }
+	Scene* scene() { return m_Scene; }
 
 private:
 	std::unique_ptr<Transform>				s_Transform;

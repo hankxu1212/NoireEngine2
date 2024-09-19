@@ -14,21 +14,24 @@ Renderer::Renderer()
 	glm::quat q{ 1,0,0,0 };
 	glm::vec3 s{ 1,1,1 };
 
-	glm::vec3 e1T{ 0,0,40 };
-	auto e1 = scene->Instantiate(e1T, q, s);
+	glm::vec3 e1T{ 0,0,20 };
+	Entity* e1 = scene->Instantiate(e1T, q, s);
 	e1->AddComponent<CameraComponent>();
+	e1->AddComponent<Core::SceneNavigationCamera>();
 
-	glm::vec3 e2T{ 5,0,0 };
-	scene->Instantiate(e2T, q, s);
+	Entity* e2 = scene->Instantiate();
+	e2->AddComponent<Core::Input>();
 
-	glm::vec3 e3T{ 5,0,5 };
-	scene->Instantiate(e3T, q, s);
+	scene->Instantiate();
 
-	glm::vec3 e4T{ 0,0,5 };
-	scene->Instantiate(e4T, q, s);
+	glm::vec3 e2T{ 0,2,5 };
+	scene->Instantiate(e2T);
 
-	glm::vec3 e5T{ 0,2,0 };
-	scene->Instantiate(e5T, q, s);
+	//glm::vec3 e4T{ 0,0,5 };
+	//scene->Instantiate(e4T, q, s);
+
+	//glm::vec3 e5T{ 0,2,0 };
+	//scene->Instantiate(e5T, q, s);
 	//e2->AddChild();
 }
 

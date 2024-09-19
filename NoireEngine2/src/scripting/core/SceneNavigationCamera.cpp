@@ -3,6 +3,9 @@
 #include "core/Time.hpp"
 #include "renderer/Camera.hpp"
 #include "renderer/scene/Entity.hpp"
+#include "renderer/scene/Scene.hpp"
+
+#include "glm/gtx/string_cast.hpp"
 
 namespace Core {
 	void SceneNavigationCamera::Awake()
@@ -12,6 +15,8 @@ namespace Core {
 
 	void SceneNavigationCamera::Start()
 	{
+		std::cout << "Start camera script" << std::endl;
+
 		transform = GetTransform();
 		nativeCamera = entity->GetComponent<CameraComponent>()->camera();
 
@@ -118,7 +123,20 @@ namespace Core {
 			if (radius < minimumRadius) 
 				radius = minimumRadius;
 			transform->SetPosition(anchorPoint - radius * anchorDir);
+			std::cout << glm::to_string(transform->position());
 		}
 		return false;
 	}
+}
+
+template<>
+void Scene::OnComponentAdded<Core::SceneNavigationCamera>(Entity& entity, Core::SceneNavigationCamera& component)
+{
+	this->OnComponentAdded<Behaviour>(entity, component);
+}
+
+template<>
+void Scene::OnComponentRemoved<Core::SceneNavigationCamera>(Entity& entity, Core::SceneNavigationCamera& component)
+{
+	this->OnComponentRemoved<Behaviour>(entity, component);
 }

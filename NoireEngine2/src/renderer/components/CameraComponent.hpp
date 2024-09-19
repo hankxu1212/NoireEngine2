@@ -14,7 +14,6 @@ public:
 
 	std::pair<int, CameraComponent*> makeKey() { return std::make_pair(priority, this); }
 
-	operator Camera& () { return *s_Camera.get(); }
 	Camera* camera() { return s_Camera.get(); }
 
 private:

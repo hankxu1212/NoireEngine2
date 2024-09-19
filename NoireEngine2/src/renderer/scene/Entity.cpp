@@ -50,25 +50,29 @@ void Entity::Update()
 
 void Entity::RenderPass(TransformMatrixStack& matrixStack)
 {
-	matrixStack.Multiply(s_Transform->Local());
+	//matrixStack.Multiply(s_Transform->Local());
 
 	for (auto& child : m_Children)
 	{
-		matrixStack.Push();
+		//matrixStack.Push();
 		child->RenderPass(matrixStack);
-		matrixStack.Pop();
+		//matrixStack.Pop();
 	}
 
+	//glm::mat4 model = matrixStack.Peek();
 
-	glm::mat4 model = matrixStack.Peek();
+	if (!m_Components.empty())
+		return;
 
-	Camera& cam = *m_Scene->mainCam();
+	glm::mat4 model = s_Transform->World();
+
+	Camera* cam = m_Scene->mainCam()->camera();
 
 	ObjectInstance instance
 	{
 		.m_TransformUniform
 		{
-			.viewMatrix = cam.getProjectionMatrix() * cam.getViewMatrix() * model,
+			.viewMatrix = cam->getProjectionMatrix() * cam->getViewMatrix() * model,
 			.modelMatrix = model,
 			.modelMatrix_Normal = model,
 		},

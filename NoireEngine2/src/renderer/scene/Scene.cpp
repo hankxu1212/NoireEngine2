@@ -29,18 +29,14 @@ void Scene::Unload()
 
 void Scene::Update()
 {
-	// TODO: update lightings
-	//UpdateWorldUniform();
-
-	// update camera
-	CameraComponent* cam = mainCam();
-	if (cam == nullptr)
+	if (mainCam() == nullptr)
 	{
-		std::cerr << "No camera active in scene!\n";
+		std::cerr << "Did not find main camera!\n";
 		return;
 	}
 
-	cam->Update();
+	// TODO: update lightings
+	//UpdateWorldUniform();
 
 	// update entities and components
 	Entity::root().Update();

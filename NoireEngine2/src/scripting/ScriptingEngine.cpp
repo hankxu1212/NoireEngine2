@@ -9,7 +9,10 @@ ScriptingEngine::ScriptingEngine() : Layer("ScriptingEngine") {
 
 void ScriptingEngine::OnAttach()
 {
-
+    for (const auto& script : m_Scripts)
+    {
+        script.second->Start();
+    }
 }
 
 void ScriptingEngine::OnDetach()

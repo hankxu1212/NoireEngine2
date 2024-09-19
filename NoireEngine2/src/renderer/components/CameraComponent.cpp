@@ -1,6 +1,7 @@
 #include "CameraComponent.hpp"
 
 #include "renderer/scene/Scene.hpp"
+#include <iostream>
 
 void CameraComponent::Update()
 {
@@ -9,6 +10,7 @@ void CameraComponent::Update()
 
 CameraComponent::CameraComponent()
 {
+	std::cout << "Created camera component\n";
 	s_Camera = std::make_unique<Camera>();
 }
 

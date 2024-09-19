@@ -7,6 +7,7 @@ template<>
 void Scene::OnComponentAdded<Behaviour>(Entity& entity, Behaviour& component)
 {
 	component.Awake();
+	ScriptingEngine::Get()->Add(&component);
 }
 
 template<>
