@@ -65,10 +65,7 @@ Mesh::Mesh()
 	//copy data to buffer:
 	Buffer::TransferToBuffer(vertices.data(), bytes, m_VertexBuffer.getBuffer());
 
-	// TODO: add back this line!!
-	//plane_vertices.count = uint32_t(vertices.size()) - plane_vertices.first;
-
-	numVertices = vertices.size();
+	numVertices = static_cast<uint32_t>(vertices.size());
 }
 
 Mesh::~Mesh()

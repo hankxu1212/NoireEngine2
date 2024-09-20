@@ -16,6 +16,7 @@ class ObjectPipeline : public VulkanPipeline
 {
 public:
 	ObjectPipeline(Renderer* renderer);
+
 	virtual ~ObjectPipeline();
 
 	using Vertex = PosNorTexVertex;
@@ -27,11 +28,16 @@ public:
 
 private:
 	void CreateDescriptors();
+	
 	void CreateDescriptorPool();
+	
 	void CreatePipeline(VkRenderPass& renderpass, uint32_t subpass) override;
+	
 	void PrepareWorkspace();
 
 	void PushSceneDrawInfo(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
+
+	void RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
 private:
 	VkDescriptorSetLayout set0_World = VK_NULL_HANDLE;

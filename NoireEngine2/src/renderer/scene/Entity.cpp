@@ -61,27 +61,32 @@ void Entity::RenderPass(TransformMatrixStack& matrixStack)
 
 	//glm::mat4 model = matrixStack.Peek();
 
-	if (!m_Components.empty())
-		return;
 
-	glm::mat4 model = s_Transform->World();
-
-	Camera* cam = m_Scene->mainCam()->camera();
-	
-	static std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
-
-	ObjectInstance instance
+	const glm::mat4 model = s_Transform->World();
+	for (auto& component : m_Components)
 	{
-		.m_TransformUniform
-		{
-			.viewMatrix = cam->getProjectionMatrix() * cam->getViewMatrix() * model,
-			.modelMatrix = model,
-			.modelMatrix_Normal = model,
-		},
-		.firstVertex = 0,
-		.numVertices = mesh.getVertexCount(),
-		.mesh = mesh.get()
-	};
+		component->Render(model);
+	}
 
-	m_Scene->PushObjectInstances(std::move(instance));
+//	if (!m_Components.empty())
+//		return;
+//
+//	Camera* cam = m_Scene->mainCam()->camera();
+//	
+//	static std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
+//
+//	ObjectInstance instance
+//	{
+//		.m_TransformUniform
+//		{
+//			.viewMatrix = cam->getProjectionMatrix() * cam->getViewMatrix() * model,
+//			.modelMatrix = model,
+//			.modelMatrix_Normal = model,
+//		},
+//		.firstVertex = 0,
+//		.numVertices = mesh->getVertexCount(),
+//		.mesh = mesh.get()
+//	};
+//
+//	m_Scene->PushObjectInstances(std::move(instance));
 }

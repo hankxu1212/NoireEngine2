@@ -210,9 +210,6 @@
     <ClCompile Include="src\core\input\NativeInput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\components\renderer_components\MeshRendererComponent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\renderer\components\renderer_components\RendererComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -480,9 +477,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\core\input\NativeInput.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\renderer\components\renderer_components\MeshRendererComponent.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\components\renderer_components\RendererComponent.hpp">

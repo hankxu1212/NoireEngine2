@@ -3,6 +3,8 @@
 
 #include "renderer/scene/Entity.hpp"
 
+#define CHECK_ENTITY 	if (!entity) { std::cerr << "Entity is null!"; return nullptr; }
+
 void Component::SetEntity(Entity* thisEntity)
 {
 	entity = thisEntity;
@@ -10,10 +12,12 @@ void Component::SetEntity(Entity* thisEntity)
 
 Transform* Component::GetTransform()
 {
-	if (!entity) {
-		std::cerr << "Entity is null!";
-		return nullptr;
-	}
-
+	CHECK_ENTITY
 	return entity->transform();
+}
+
+Scene* Component::GetScene()
+{
+	CHECK_ENTITY
+	return entity->scene();
 }

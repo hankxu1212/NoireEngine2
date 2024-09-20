@@ -78,21 +78,6 @@ void Buffer::UnmapMemory() const {
 	vkUnmapMemory(VulkanContext::GetDevice(), bufferMemory);
 }
 
-void Buffer::InsertBufferMemoryBarrier(const CommandBuffer &commandBuffer, const VkBuffer &buffer, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask,
-	VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDeviceSize offset, VkDeviceSize size) {
-	VkBufferMemoryBarrier bufferMemoryBarrier {
-		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-		.srcAccessMask = srcAccessMask,
-		.dstAccessMask = dstAccessMask,
-		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.buffer = buffer,
-		.offset = offset,
-		.size = size
-	};
-	vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 1, &bufferMemoryBarrier, 0, nullptr);
-}
-
 void Buffer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
 	CommandBuffer commandBuffer;
 	CopyBuffer(commandBuffer, srcBuffer, dstBuffer, size);
@@ -120,5 +105,19 @@ void Buffer::TransferToBuffer(void* data, size_t size, VkBuffer dstBuffer)
 	CopyBuffer(transferSource.buffer, dstBuffer, size);
 
 	transferSource.Destroy();
+}
+
+VkBufferMemoryBarrier Buffer::CreateMemoryBarrier(VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, uint32_t offset)
+{
+	return {
+		.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+		.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
+		.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.buffer = buffer,
+		.offset = offset,
+		.size = m_Size
+	};
 }
 

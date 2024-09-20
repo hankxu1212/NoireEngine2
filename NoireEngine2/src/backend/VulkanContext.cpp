@@ -10,12 +10,13 @@ VulkanContext* VulkanContext::s_Instance = nullptr;
 VulkanContext::VulkanContext() :
     s_VulkanInstance(std::make_unique<VulkanInstance>()),
     s_PhysicalDevice(std::make_unique<PhysicalDevice>(*s_VulkanInstance)),
-    s_LogicalDevice(std::make_unique<LogicalDevice>(*s_VulkanInstance, *s_PhysicalDevice)),
-    s_Renderer(std::make_unique<Renderer>())
+    s_LogicalDevice(std::make_unique<LogicalDevice>(*s_VulkanInstance, *s_PhysicalDevice))
 {
     s_Instance = this;
 
     CreatePipelineCache();
+
+    s_Renderer = std::make_unique<Renderer>();
 }
 
 VulkanContext::~VulkanContext()

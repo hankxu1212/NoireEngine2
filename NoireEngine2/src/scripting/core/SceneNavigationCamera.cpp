@@ -123,7 +123,6 @@ namespace Core {
 			if (radius < minimumRadius) 
 				radius = minimumRadius;
 			transform->SetPosition(anchorPoint - radius * anchorDir);
-			std::cout << glm::to_string(transform->position());
 		}
 		return false;
 	}

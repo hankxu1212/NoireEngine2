@@ -24,8 +24,11 @@ ObjectPipeline::ObjectPipeline(Renderer* renderer) :
 	VulkanPipeline(renderer)
 {
 	CreateDescriptors();
+
 	CreateDescriptorPool();
+
 	CreatePipeline(m_BindedRenderer->m_Renderpass, 0);
+
 	PrepareWorkspace();
 }
 
@@ -33,7 +36,8 @@ ObjectPipeline::~ObjectPipeline()
 {
 	VkDevice device = VulkanContext::GetDevice();
 
-	if (texture_descriptor_pool) {
+	if (texture_descriptor_pool) 
+	{
 		vkDestroyDescriptorPool(device, texture_descriptor_pool, nullptr);
 		texture_descriptor_pool = nullptr;
 
@@ -167,7 +171,7 @@ void ObjectPipeline::CreateDescriptors()
 void ObjectPipeline::CreateDescriptorPool()
 {
 	uint32_t numWorkspace = VulkanContext::Get().getWorkspaceSize(); //for easier-to-read counting
-	assert(numWorkspace == 1);
+
 	//we only need uniform buffer descriptors for the moment:
 	std::array< VkDescriptorPoolSize, 1> pool_sizes{
 		VkDescriptorPoolSize{
@@ -312,102 +316,44 @@ void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 
 	VkExtent2D swapChainExtent = VulkanContext::Get().getSwapChain()->getExtent();
 
-	{ //render pass
-		static std::array< VkClearValue, 2 > clear_values{
-			VkClearValue{.color{.float32{1.0f, 0.5f, 0.5f, 1.0f} } },
-			VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
+	static std::array< VkClearValue, 2 > clear_values{
+		VkClearValue{.color{.float32{1.0f, 0.5f, 0.5f, 1.0f} } },
+		VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
+	};
+
+	VkRenderPassBeginInfo begin_info{
+		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+		.renderPass = m_BindedRenderer->m_Renderpass,
+		.framebuffer = m_BindedRenderer->m_Framebuffers[VulkanContext::Get().getCurrentFrame()],
+		.renderArea{
+			.offset = {.x = 0, .y = 0},
+			.extent = swapChainExtent,
+		},
+		.clearValueCount = uint32_t(clear_values.size()),
+		.pClearValues = clear_values.data(),
+	};
+
+	vkCmdBeginRenderPass(commandBuffer, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
+	{
+		VkRect2D scissor{
+			.offset = {.x = 0, .y = 0},
+			.extent = swapChainExtent,
 		};
-
-		VkRenderPassBeginInfo begin_info{
-			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-			.renderPass = m_BindedRenderer->m_Renderpass,
-			.framebuffer = m_BindedRenderer->m_Framebuffers[VulkanContext::Get().getCurrentFrame()],
-			.renderArea{
-				.offset = {.x = 0, .y = 0},
-				.extent = swapChainExtent,
-			},
-			.clearValueCount = uint32_t(clear_values.size()),
-			.pClearValues = clear_values.data(),
+		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+			
+		VkViewport viewport{
+			.x = 0.0f,
+			.y = 0.0f,
+			.width = float(swapChainExtent.width),
+			.height = float(swapChainExtent.height),
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f,
 		};
+		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-		vkCmdBeginRenderPass(commandBuffer, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
-
-		{ //set scissor rectangle:
-			VkRect2D scissor{
-				.offset = {.x = 0, .y = 0},
-				.extent = swapChainExtent,
-			};
-			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-		}
-		{ //configure viewport transform:
-			VkViewport viewport{
-				.x = 0.0f,
-				.y = 0.0f,
-				.width = float(swapChainExtent.width),
-				.height = float(swapChainExtent.height),
-				.minDepth = 0.0f,
-				.maxDepth = 1.0f,
-			};
-			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-		}
-
-		{ //draw with the objects pipeline:
-			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
-
-			// { //use object_vertices (offset 0) as vertex buffer binding 0:
-			// 	// Testing mesh
-			// 	static Mesh mesh;
-
-			// 	std::array< VkBuffer, 1 > vertex_buffers{ mesh.vertexBuffer().getBuffer() };
-			// 	std::array< VkDeviceSize, 1 > offsets{ 0 };
-			// 	vkCmdBindVertexBuffers(commandBuffer, 0, uint32_t(vertex_buffers.size()), vertex_buffers.data(), offsets.data());
-			// }
-
-			Workspace& workspace = workspaces[surfaceId];
-			{ //bind Transforms descriptor set:
-				std::array< VkDescriptorSet, 2 > descriptor_sets{
-					workspace.World_descriptors, //0: World
-					workspace.Transforms_descriptors, //1: Transforms
-				};
-				vkCmdBindDescriptorSets(
-					commandBuffer, //command buffer
-					VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-					m_PipelineLayout, //pipeline layout
-					0, //first set
-					uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
-					0, nullptr //dynamic offsets count, ptr
-				);
-			}
-
-			//draw all instances:
-			const std::vector<ObjectInstance>& sceneObjectInstances = scene->objectInstances();
-			Mesh* previouslyBindedMesh = nullptr;
-
-			//std::cout << "Drawing: " << sceneObjectInstances.size() << std::endl;
-			for (ObjectInstance const& inst : sceneObjectInstances) {
-				//std::cout << glm::to_string(inst.m_TransformUniform.modelMatrix) << std::endl;
-				uint32_t index = uint32_t(&inst - &sceneObjectInstances[0]);
-				
-				//bind texture descriptor set:
-				vkCmdBindDescriptorSets(
-					commandBuffer, //command buffer
-					VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-					m_PipelineLayout, //pipeline layout
-					2, //second set
-					1, &texture_descriptors[0], //descriptor sets count, ptr
-					0, nullptr //dynamic offsets count, ptr
-				);
-
-				if (inst->mesh != previouslyBindedMesh)
-					inst->BindMesh(commandBuffer, index);
-				previouslyBindedMesh = inst->mesh;
-
-				inst->Draw(commandBuffer, index);
-			}
-		}
-
-		vkCmdEndRenderPass(commandBuffer);
+		RenderPass(scene, commandBuffer, surfaceId);
 	}
+	vkCmdEndRenderPass(commandBuffer);
 }
 
 void ObjectPipeline::Update(const Scene* scene)
@@ -419,6 +365,7 @@ void ObjectPipeline::PrepareWorkspace()
 {
 	workspaces.resize(VulkanContext::Get().getWorkspaceSize());
 	std::cout << "Created workspace of size " << workspaces.size() << '\n';
+
 	assert(workspaces.size() > 0);
 	
 	for (Workspace& workspace : workspaces) 
@@ -445,7 +392,6 @@ void ObjectPipeline::PrepareWorkspace()
 
 			VulkanContext::VK_CHECK(vkAllocateDescriptorSets(VulkanContext::GetDevice(), &alloc_info, &workspace.World_descriptors),
 				"[vulkan] create descriptor set failed");
-			//NOTE: will actually fill in this descriptor set just a bit lower
 		}
 
 		{ //allocate descriptor set for Transforms descriptor
@@ -548,25 +494,31 @@ void ObjectPipeline::PrepareWorkspace()
 void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
 	Workspace& workspace = workspaces[surfaceId];
-	{ //upload world info:
+
+	//upload world info:
+	{ 
 		//host-side copy into World_src:
 		memcpy(workspace.World_src.data(), scene->sceneUniform(), scene->sceneUniformSize());
 
 		//add device-side copy from World_src -> World:
 		assert(workspace.World_src.getSize() == workspace.World.getSize());
-		VkBufferCopy copy_region{
-			.srcOffset = 0,
-			.dstOffset = 0,
-			.size = workspace.World_src.getSize(),
-		};
-		vkCmdCopyBuffer(commandBuffer, workspace.World_src.getBuffer(), workspace.World.getBuffer(), 1, &copy_region);
+		Buffer::CopyBuffer(
+			commandBuffer.getCommandBuffer(),
+			workspace.World_src.getBuffer(),
+			workspace.World.getBuffer(),
+			workspace.World_src.getSize()
+		);
 	}
 
 	const std::vector<ObjectInstance>& sceneObjectInstances = scene->objectInstances();
 
-	if (!sceneObjectInstances.empty()) { //upload object transforms:
+	//upload object transforms and allocate needed bytes
+	if (!sceneObjectInstances.empty()) 
+	{
 		size_t needed_bytes = sceneObjectInstances.size() * sizeof(ObjectInstance::TransformUniform);
-		if (workspace.Transforms_src.getBuffer() == VK_NULL_HANDLE || workspace.Transforms_src.getSize() < needed_bytes) {
+		if (workspace.Transforms_src.getBuffer() == VK_NULL_HANDLE 
+			|| workspace.Transforms_src.getSize() < needed_bytes) 
+		{
 			//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
 			size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
 
@@ -582,8 +534,7 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 			workspace.Transforms = Buffer(
 				new_bytes,
 				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //going to use as storage buffer, also going to have GPU into this memory
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, //GPU-local memory
-				Buffer::Unmapped //don't get a pointer to the memory
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT //GPU-local memory
 			);
 
 			//update the descriptor set:
@@ -630,19 +581,67 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 	}
 
 	{ //memory barrier to make sure copies complete before rendering happens:
-		VkMemoryBarrier memory_barrier{
-			.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
-			.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
-			.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+		std::array< VkBufferMemoryBarrier, 2> memoryBarriers = { 
+			workspace.Transforms_src.CreateMemoryBarrier(VK_ACCESS_MEMORY_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT),
+			workspace.Transforms.CreateMemoryBarrier(VK_ACCESS_MEMORY_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT),
 		};
 
 		vkCmdPipelineBarrier(commandBuffer,
 			VK_PIPELINE_STAGE_TRANSFER_BIT, //srcStageMask
 			VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, //dstStageMask
 			0, //dependencyFlags
-			1, &memory_barrier, //memoryBarriers (count, data)
-			0, nullptr, //bufferMemoryBarriers (count, data)
+			0, nullptr, //memoryBarriers (count, data)
+			2, memoryBarriers.data(), //bufferMemoryBarriers (count, data)
 			0, nullptr //imageMemoryBarriers (count, data)
 		);
+	}
+}
+
+//draw with the objects pipeline:
+void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+{
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
+
+	Workspace& workspace = workspaces[surfaceId];
+	{ //bind Transforms descriptor set:
+		std::array< VkDescriptorSet, 2 > descriptor_sets{
+			workspace.World_descriptors, //0: World
+			workspace.Transforms_descriptors, //1: Transforms
+		};
+		vkCmdBindDescriptorSets(
+			commandBuffer, //command buffer
+			VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+			m_PipelineLayout, //pipeline layout
+			0, //first set
+			uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+			0, nullptr //dynamic offsets count, ptr
+		);
+	}
+
+	//draw all instances:
+	const std::vector<ObjectInstance>& sceneObjectInstances = scene->objectInstances();
+	Mesh* previouslyBindedMesh = nullptr;
+
+	//std::cout << "Drawing: " << sceneObjectInstances.size() << std::endl;
+	for (ObjectInstance const& inst : sceneObjectInstances)
+	{
+		//std::cout << glm::to_string(inst.m_TransformUniform.modelMatrix) << std::endl;
+		uint32_t index = uint32_t(&inst - &sceneObjectInstances[0]);
+
+		//bind texture descriptor set:
+		vkCmdBindDescriptorSets(
+			commandBuffer, //command buffer
+			VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+			m_PipelineLayout, //pipeline layout
+			2, //second set
+			1, &texture_descriptors[0], //descriptor sets count, ptr
+			0, nullptr //dynamic offsets count, ptr
+		);
+
+		if (inst.mesh != previouslyBindedMesh)
+			inst.BindMesh(commandBuffer, index);
+		previouslyBindedMesh = inst.mesh;
+
+		inst.Draw(commandBuffer, index);
 	}
 }

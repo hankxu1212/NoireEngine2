@@ -49,6 +49,7 @@ const renderer_objs = [
 const component_objs = [
 	maek.CPP('renderer/components/Component.cpp'),
 	maek.CPP('renderer/components/CameraComponent.cpp'),
+	maek.CPP('renderer/components/renderer_components/RendererComponent.cpp'),
 ]
 
 const util_objs = [

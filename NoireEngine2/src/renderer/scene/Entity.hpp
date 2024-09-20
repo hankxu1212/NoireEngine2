@@ -11,7 +11,7 @@
 #include "renderer/components/Components.hpp"
 #include "Scene.hpp"
 
-#include "renderer/components/RendererComponent.hpp"
+#include "renderer/components/renderer_components/RendererComponent.hpp"
 
 class TransformMatrixStack;
 

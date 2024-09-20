@@ -30,14 +30,13 @@ public:
 
 	void UnmapMemory() const;
 
-	static void InsertBufferMemoryBarrier(const CommandBuffer &commandBuffer, const VkBuffer &buffer, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask,
-		VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDeviceSize offset = 0, VkDeviceSize size = VK_WHOLE_SIZE);
-		
 	static void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+	
 	static void CopyBuffer(VkCommandBuffer cmdBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-
+	
 	static void TransferToBuffer(void* data, size_t size, VkBuffer dstBuffer);
 
+	VkBufferMemoryBarrier CreateMemoryBarrier(VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, uint32_t offset=0);
 public:
 	VkDeviceSize				getSize() const { return m_Size; }
 	const VkBuffer&				getBuffer() const { return buffer; }
