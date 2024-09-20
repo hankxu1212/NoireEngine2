@@ -25,7 +25,7 @@ public:
 		return r;
 	}
 
-	Entity();
+	Entity() = default;
 
 	template<typename... TArgs>
 	Entity(Scene* scene, TArgs&... args) :

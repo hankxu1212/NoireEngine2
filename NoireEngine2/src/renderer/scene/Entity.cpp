@@ -6,10 +6,6 @@
 
 #include <iostream>
 
-Entity::Entity()
-{
-}
-
 Entity::~Entity()
 {
 	m_Components.clear();

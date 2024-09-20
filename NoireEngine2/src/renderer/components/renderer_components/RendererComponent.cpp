@@ -5,6 +5,8 @@
 #include "renderer/Camera.hpp"
 #include "renderer/components/CameraComponent.hpp"
 
+#include <iostream>
+
 RendererComponent::RendererComponent(Mesh* mesh_) :
 	mesh(mesh_)
 {

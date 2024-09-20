@@ -57,8 +57,7 @@ void Scene::Update()
  	}
 }
 
-/*
-static Transform* LoadAsTransform(sejp::value& val)
+static bool LoadAsTransform(sejp::value& val, glm::vec3& outPosition, glm::quat& outRotation, glm::vec3& outScale)
 {
 	try {
 		const auto& obj = val.as_object().value();
@@ -72,20 +71,27 @@ static Transform* LoadAsTransform(sejp::value& val)
 		const auto& scale = obj.at("scale").as_array().value();
 		assert(scale.size() == 3);
 
-		glm::vec3 pos{ translation[0].as_float(), translation[1].as_float(), translation[2].as_float() };
+		outPosition.x = translation[0].as_float();
+		outPosition.y = translation[1].as_float();
+		outPosition.z = translation[2].as_float();
 
-		glm::quat rot = glm::quat(rotation[0].as_float(), rotation[1].as_float(), rotation[2].as_float(), rotation[3].as_float());
+		outRotation.x = rotation[0].as_float();
+		outRotation.y = rotation[1].as_float();
+		outRotation.z = rotation[2].as_float();
+		outRotation.w = rotation[3].as_float();
 
-		glm::vec3 scl{ scale[0].as_float(), scale[1].as_float(), scale[2].as_float() };
+		outScale.x = scale[0].as_float();
+		outScale.y = scale[1].as_float();
+		outScale.z = scale[2].as_float();
 
-		return new Transform(pos, rot, scl);
+		return true;
 	}
 	catch (std::exception& e) {
 		std::cout << "Failed to deserialize value as Transform: " << e.what() << std::endl;
-		return nullptr;
+
+		return false;
 	}
 }
-*/
 
 void Scene::Deserialize(const std::string& path)
 {
@@ -166,8 +172,14 @@ void Scene::Deserialize(const std::string& path)
 					return;
 				}
 
-				//Transform *t = LoadAsTransform(nodeMap[nodeName]);
-				//Instantiate();
+				glm::vec3 p, s;
+				glm::quat r;
+				if (LoadAsTransform(nodeMap[nodeName], p, r, s)) {
+					static std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
+					auto e = Instantiate(p, r, s);
+					e->AddComponent<RendererComponent>(mesh.get());
+					std::cout << "Instantiated!\n";
+				}
 			};
 
 			for (const auto& root : roots)

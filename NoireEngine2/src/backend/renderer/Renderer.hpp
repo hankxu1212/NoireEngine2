@@ -40,5 +40,7 @@ public:
 	
 	std::unique_ptr<ImageDepth>				s_SwapchainDepthImage;
 	std::vector<VkFramebuffer>				m_Framebuffers;
+
+	Scene* scene;
 };
 

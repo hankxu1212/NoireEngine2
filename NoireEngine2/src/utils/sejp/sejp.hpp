@@ -18,6 +18,9 @@ namespace sejp {
 	
 	//generic value:
 	struct value {
+
+		value() = default;
+
 		//internals:
 		std::shared_ptr< parsed const > data;
 		uint32_t index; //(opaque) index data's value storage

@@ -5,12 +5,13 @@
 #include <memory>
 
 #include "renderer/scene/Scene.hpp"
-static std::unique_ptr<Scene> scene = std::make_unique<Scene>("../scenes/examples/sg-Articulation.s72");
 
 #include "renderer/components/Components.hpp"
 
 Renderer::Renderer()
 {
+	scene = new Scene("../scenes/examples/sg-Articulation.s72");
+
 	glm::quat q{ 1,0,0,0 };
 	glm::vec3 s{ 1,1,1 };
 
@@ -132,17 +133,19 @@ void Renderer::Cleanup()
 	if (m_Renderpass != VK_NULL_HANDLE) {
 		vkDestroyRenderPass(VulkanContext::GetDevice(), m_Renderpass, nullptr);
 	}
+
+	delete scene;
 }
 
 void Renderer::Update()
 {
 	scene->Update();
-	objectPipeline->Update(scene.get());
+	objectPipeline->Update(scene);
 }
 
 void Renderer::Render(const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
-	objectPipeline->Render(scene.get(), commandBuffer, surfaceId);
+	objectPipeline->Render(scene, commandBuffer, surfaceId);
 }
 
 void Renderer::Rebuild()
