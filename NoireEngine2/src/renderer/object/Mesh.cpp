@@ -4,12 +4,11 @@
 #include <iostream>
 
 Mesh::Mesh(std::filesystem::path importPath) :
-	filename(std::move(importPath)) {
+	filename(importPath.string()) {
 }
 
 Mesh::~Mesh()
 {
-	std::cout << "Destroyed buffer" << std::endl;
 	m_VertexBuffer.Destroy();
 }
 
@@ -23,8 +22,10 @@ std::shared_ptr<Mesh> Mesh::Create(std::filesystem::path& importPath)
 
 std::shared_ptr<Mesh> Mesh::Create(const Node& node)
 {
-	if (auto resource = Resources::Get()->Find<Mesh>(node))
+	if (auto resource = Resources::Get()->Find<Mesh>(node)) {
+		std::cout << "Found old mesh...\n";
 		return resource;
+	}
 
 	auto result = std::make_shared<Mesh>("");
 	Resources::Get()->Add(node, std::dynamic_pointer_cast<Resource>(result));
@@ -35,7 +36,7 @@ std::shared_ptr<Mesh> Mesh::Create(const Node& node)
 
 void Mesh::Load()
 {
-	std::cout << "Instantiated mesh";
+	std::cout << "Instantiated mesh!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n";
 
 	std::vector<Vertex> vertices;
 

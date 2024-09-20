@@ -17,7 +17,7 @@ Node* NodeView::get() {
 			else if (const auto index = std::get_if<std::uint32_t>(&key))
 				value = &const_cast<Node*>(parent)->AddProperty(*index);
 			else
-				std::runtime_error("Key for node return is neither a int or a string");
+				throw std::runtime_error("Key for node return is neither a int or a string");
 
 			// Because the last key will set parent to the value parent usage should be avoided.
 			parent = value;

@@ -127,7 +127,7 @@ VulkanInstance::VulkanInstance()
 
     // Validation Layers
     if (ValidationLayersEnabled && !CheckValidationLayerSupport(ValidationLayers))
-        std::runtime_error("[vulkan] Error: Failed validation layer support check");
+        throw std::runtime_error("[vulkan] Error: Failed validation layer support check");
 
     VkDebugUtilsMessengerCreateInfoEXT debug_create_info {};
     if (ValidationLayersEnabled) {

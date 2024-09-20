@@ -120,8 +120,8 @@ PhysicalDevice::PhysicalDevice(const VulkanInstance& m_Instance) :
         m_MsaaSamples = GetMaxUsableSampleCount();
     }
     else {
-        std::runtime_error("[vulkan] Error: Failed to find a suitable physical device");
         m_PhysicalDevice = VK_NULL_HANDLE;
+        throw std::runtime_error("[vulkan] Error: Failed to find a suitable physical device");
     }
 }
 

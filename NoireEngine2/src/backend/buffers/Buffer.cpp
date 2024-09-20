@@ -20,6 +20,7 @@ void Buffer::Destroy()
 
 	VulkanContext::VK_CHECK(vkQueueWaitIdle(VulkanContext::Get()->getLogicalDevice()->getGraphicsQueue()), "[vulkan] wait idle fail on destroying buffer");
 	vkDestroyBuffer(VulkanContext::GetDevice(), buffer, nullptr);
+	std::cout << "Destroyed buffer" << std::endl;
 	vkFreeMemory(VulkanContext::GetDevice(), bufferMemory, nullptr);
 
 	buffer = VK_NULL_HANDLE;

@@ -23,15 +23,6 @@ Renderer::Renderer()
 	Entity* e2 = scene->Instantiate();
 	e2->AddComponent<Core::Input>();
 
-	std::filesystem::path aaa = "ddd";
-	auto mesh = Mesh::Create(aaa);
-	Entity* e3 = scene->Instantiate();
-	e3->AddComponent<RendererComponent>(mesh.get());
-
-	glm::vec3 e2T{ 0,2,5 };
-	scene->Instantiate(e2T);
-
-
 	//glm::vec3 e4T{ 0,0,5 };
 	//scene->Instantiate(e4T, q, s);
 

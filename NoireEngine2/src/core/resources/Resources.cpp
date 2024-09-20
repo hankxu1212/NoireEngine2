@@ -2,38 +2,6 @@
 
 #include <iostream>
 
-Resources::Resources() :
-	elapsedPurge(5s) {
-}
-
-Resources::~Resources()
-{
-	std::cout << "Destroyed resources module\n";
-}
-
-void Resources::Update() 
-{
-	if (elapsedPurge.GetElapsed() != 0) {
-		for (auto it = resources.begin(); it != resources.end();) {
-			for (auto it1 = it->second.begin(); it1 != it->second.end();) {
-				if ((*it1).second.use_count() <= 1) {
-					it1 = it->second.erase(it1);
-					continue;
-				}
-
-				++it1;
-			}
-
-			if (it->second.empty()) {
-				it = resources.erase(it);
-				continue;
-			}
-
-			++it;
-		}
-	}
-}
-
 std::shared_ptr<Resource> Resources::Find(const std::type_index& typeIndex, const Node& node) const 
 {
 	if (resources.find(typeIndex) == resources.end())

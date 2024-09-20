@@ -179,7 +179,6 @@ void Scene::Deserialize(const std::string& path)
 
 					auto e = Instantiate(p, r, s);
 					e->AddComponent<RendererComponent>(Mesh::Create(aaa).get());
-					std::cout << "Instantiated!\n";
 				}
 			};
 
@@ -204,11 +203,6 @@ void Scene::Deserialize(const std::string& path)
 //float near = get("near");
 //float far = get("far");
 //std::cout << aspect << " " << fov << " " << near << " " << far << std::endl;
-
-Entity* Scene::Instantiate(Transform* t)
-{
-	return Instantiate(t->position(), t->rotation(), t->scale());
-}
 
 void Scene::PushObjectInstances(const ObjectInstance&& instance)
 {

@@ -77,7 +77,7 @@ public:
 		auto l = Length();
 
 		if (l == 0.0f)
-			std::runtime_error("Can't normalize a zero length vector");
+			throw std::runtime_error("Can't normalize a zero length vector");
 
 		*this /= l;
 	}

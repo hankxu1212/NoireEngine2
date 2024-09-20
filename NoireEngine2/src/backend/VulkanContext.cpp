@@ -119,8 +119,7 @@ uint32_t VulkanContext::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlag
         }
     }
 
-    std::runtime_error("[vulkan] Error: failed to find suitable memory type!");
-    return 0;
+    throw std::runtime_error("[vulkan] Error: failed to find suitable memory type!");
 }
 
 VkFormat VulkanContext::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
@@ -137,8 +136,7 @@ VkFormat VulkanContext::FindSupportedFormat(const std::vector<VkFormat>& candida
         }
     }
 
-    std::runtime_error("[vulkan] Error: failed to find supported format!");
-    return VK_FORMAT_UNDEFINED;
+    throw std::runtime_error("[vulkan] Error: failed to find supported format!");
 }
 
 void VulkanContext::VK_CHECK(VkResult err, const char* msg)

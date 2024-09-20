@@ -329,7 +329,7 @@ void Image::TransitionImageLayout(const VkImage& image, VkFormat format, VkImage
 		imageMemoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 		break;
 	default:
-		std::runtime_error("Unsupported image layout transition destination");
+		throw std::runtime_error("Unsupported image layout transition destination");
 		break;
 	}
 

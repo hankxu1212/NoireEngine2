@@ -31,8 +31,6 @@ public:
 	template<typename... TArgs>
 	Entity* Instantiate(TArgs&... args) { return Entity::root().AddChild(this, args...); }
 
-	Entity* Instantiate(Transform*);
-
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Rendering and scene uniforms
 

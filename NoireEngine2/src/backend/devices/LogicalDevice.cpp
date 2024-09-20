@@ -62,7 +62,7 @@ void LogicalDevice::CreateQueueIndices()
 	}
 
 	if (!graphicsFamily)
-		std::runtime_error("Failed to find queue family supporting VK_QUEUE_GRAPHICS_BIT");
+		throw std::runtime_error("Failed to find queue family supporting VK_QUEUE_GRAPHICS_BIT");
 }
 
 void LogicalDevice::CreateLogicalDevice() 

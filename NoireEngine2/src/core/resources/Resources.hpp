@@ -16,11 +16,11 @@ class Resources : public Module::Registrar<Resources>
 	inline static const bool Registered = Register(UpdateStage::Post, DestroyStage::Normal);
 
 public:
-	Resources();
+	Resources() = default;
 
-	virtual ~Resources();
+	virtual ~Resources() = default;
 
-	void Update();
+	void Update() {}
 
 public:
 	std::shared_ptr<Resource> Find(const std::type_index& typeIndex, const Node& node) const;
@@ -51,6 +51,5 @@ public:
 
 private:
 	std::unordered_map<std::type_index, std::map<Node, std::shared_ptr<Resource>>> resources;
-	Timer elapsedPurge;
 	ThreadPool threadPool;
 };

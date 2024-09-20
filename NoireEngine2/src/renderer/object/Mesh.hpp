@@ -31,5 +31,5 @@ public:
 private:
 	Buffer m_VertexBuffer;
 	uint32_t numVertices;
-	std::filesystem::path filename;
+	std::string filename;
 };

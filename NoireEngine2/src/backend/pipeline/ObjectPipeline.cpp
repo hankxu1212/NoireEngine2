@@ -12,6 +12,8 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
 
+#include "core/resources/Files.hpp"
+
 static uint32_t vert_code[] =
 #include "spv/shaders/objects.vert.inl"
 ;
@@ -438,7 +440,7 @@ void ObjectPipeline::PrepareWorkspace()
 	}
 
 	textures.resize(1);
-	textures[0] = std::make_shared<Image2D>("F:/gameDev/Engines/NoireEngine2/NoireEngine2/src/textures/NE-icon.png");
+	textures[0] = std::make_shared<Image2D>(Files::Path("../textures/statue.jpg"));
 
 	{ // create the texture descriptor pool
 		uint32_t per_texture = uint32_t(textures.size()); //for easier-to-read counting

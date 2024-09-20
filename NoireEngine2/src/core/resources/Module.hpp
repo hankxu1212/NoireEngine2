@@ -52,10 +52,7 @@ public:
 				moduleInstance = nullptr;
 		}
 
-		static T* Get() { 
-			assert(moduleInstance);
-			return moduleInstance; 
-		}
+		static T* Get() { return moduleInstance; }
 
 	protected:
 		/**
