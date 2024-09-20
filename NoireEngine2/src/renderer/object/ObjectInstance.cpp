@@ -5,23 +5,25 @@
 #include <iostream>
 #include <array>
 
-void ObjectInstance::BindMesh(const CommandBuffer& commandBuffer, uint32_t instanceID) const
+bool ObjectInstance::BindMesh(const CommandBuffer& commandBuffer, uint32_t instanceID) const
 {
     if (mesh == nullptr)
     {
         std::cerr << "Did not find active mesh on this object instance!\n";
-        return;
+        return false;
     }
 
     if (mesh->vertexBuffer().getBuffer() == VK_NULL_HANDLE)
     {
         std::cerr << "Mesh vertex buffer is null\n";
-        return;
+        return false;
     }
 
     std::array< VkBuffer, 1 > vertex_buffers{ mesh->vertexBuffer().getBuffer() };
     std::array< VkDeviceSize, 1 > offsets{ 0 };
     vkCmdBindVertexBuffers(commandBuffer, 0, uint32_t(vertex_buffers.size()), vertex_buffers.data(), offsets.data());
+
+    return true;
 }
 
 void ObjectInstance::Draw(const CommandBuffer& commandBuffer, uint32_t instanceID) const

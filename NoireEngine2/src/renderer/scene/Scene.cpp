@@ -12,6 +12,10 @@
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
+#include <functional>
+
+typedef std::unordered_map<std::string, sejp::value> value_map_t; // { name, object map }
+typedef std::unordered_map<SceneNode::Type, value_map_t> SceneMap; // entire scene map
 
 Scene::Scene()
 {
@@ -57,7 +61,7 @@ void Scene::Update()
  	}
 }
 
-static bool LoadAsTransform(sejp::value& val, glm::vec3& outPosition, glm::quat& outRotation, glm::vec3& outScale)
+static bool LoadAsTransform(const sejp::value& val, glm::vec3& outPosition, glm::quat& outRotation, glm::vec3& outScale)
 {
 	try {
 		const auto& obj = val.as_object().value();
@@ -93,12 +97,65 @@ static bool LoadAsTransform(sejp::value& val, glm::vec3& outPosition, glm::quat&
 	}
 }
 
+static Entity* MakeNode(Scene* scene, value_map_t& nodeMap, const std::string& nodeName, Entity* parent)
+{
+	if (nodeMap.find(nodeName) == nodeMap.end())
+	{
+		std::cout << "Did not find this node with name: " << nodeName << std::endl;
+		return nullptr;
+	}
+
+	glm::vec3 p, s;
+	glm::quat r;
+
+	const auto& value = nodeMap[nodeName];
+
+	static std::filesystem::path aaa = "ddd";
+
+	Entity* newEntity = nullptr;
+
+	if (LoadAsTransform(value, p, r, s))
+	{
+		if (!parent)
+			newEntity = scene->Instantiate(p, r, s);
+		else
+			newEntity = parent->AddChild(p, r, s);
+
+		newEntity->AddComponent<RendererComponent>(Mesh::Create(aaa).get());
+	}
+
+	const auto& obj = value.as_object().value();
+	if (obj.find("children") == obj.end())
+		return nullptr; // no children!
+
+	const auto& childrenArrOpt = obj.at("children").as_array();
+	if (!childrenArrOpt)
+	{
+		std::cout << "Not a valid array format for children\n";
+		return nullptr; // not valid children array
+	}
+
+	for (const auto& childValue : childrenArrOpt.value())
+	{
+		const auto& childOpt = childValue.as_string();
+		if (!childOpt)
+		{
+			std::cout << "Not a valid string format for child\n";
+			continue; // not valid children array
+		}
+
+		// At last, the recursive call!
+		MakeNode(scene, nodeMap, childOpt.value(), newEntity);
+	}
+
+	return newEntity;
+}
+
 void Scene::Deserialize(const std::string& path)
 {
 	std::cout << "Loading scene: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << path << std::endl;
 
-	typedef std::unordered_map<std::string, sejp::value> value_map_t; // { name, object map }
-	std::unordered_map<SceneNode::Type, value_map_t> sceneMap; // entire scene map
+	SceneMap sceneMap; // entire scene map
 
 	std::vector<std::string> roots = {};
 
@@ -164,27 +221,9 @@ void Scene::Deserialize(const std::string& path)
 			// we start by traversing NODE objects first
 			value_map_t& nodeMap = sceneMap[SceneNode::Node];
 
-			// this function will be called recursively
-			auto MAKE_SINGLE_NODE = [&](const std::string& nodeName) {
-				if (nodeMap.find(nodeName) == nodeMap.end())
-				{
-					std::cout << "Did not find this node with name: " << nodeName << std::endl;
-					return;
-				}
-
-				glm::vec3 p, s;
-				glm::quat r;
-				if (LoadAsTransform(nodeMap[nodeName], p, r, s)) {
-					static std::filesystem::path aaa = "ddd";
-
-					auto e = Instantiate(p, r, s);
-					e->AddComponent<RendererComponent>(Mesh::Create(aaa).get());
-				}
-			};
-
 			for (const auto& root : roots)
 			{
-				MAKE_SINGLE_NODE(root);
+				MakeNode(this, nodeMap, root, nullptr);
 			}
 		}
 

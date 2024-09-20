@@ -21,7 +21,7 @@ struct ObjectInstance
 
 	Mesh* mesh;
 
-	void BindMesh(const CommandBuffer& commandBuffer, uint32_t instanceID) const;
+	bool BindMesh(const CommandBuffer& commandBuffer, uint32_t instanceID) const;
 
 	void Draw(const CommandBuffer& commandBuffer, uint32_t instanceID) const;
 };

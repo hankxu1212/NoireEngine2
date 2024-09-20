@@ -580,22 +580,22 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 		}
 
 		Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), needed_bytes);
-	}
 
-	{ //memory barrier to make sure copies complete before rendering happens:
-		std::array< VkBufferMemoryBarrier, 2> memoryBarriers = { 
-			workspace.Transforms_src.CreateMemoryBarrier(VK_ACCESS_MEMORY_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT),
-			workspace.Transforms.CreateMemoryBarrier(VK_ACCESS_MEMORY_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT),
-		};
+		{ //memory barrier to make sure copies complete before rendering happens:
+			std::array< VkBufferMemoryBarrier, 2> memoryBarriers = { 
+				workspace.Transforms_src.CreateMemoryBarrier(VK_ACCESS_MEMORY_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT),
+				workspace.Transforms.CreateMemoryBarrier(VK_ACCESS_MEMORY_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT),
+			};
 
-		vkCmdPipelineBarrier(commandBuffer,
-			VK_PIPELINE_STAGE_TRANSFER_BIT, //srcStageMask
-			VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, //dstStageMask
-			0, //dependencyFlags
-			0, nullptr, //memoryBarriers (count, data)
-			2, memoryBarriers.data(), //bufferMemoryBarriers (count, data)
-			0, nullptr //imageMemoryBarriers (count, data)
-		);
+			vkCmdPipelineBarrier(commandBuffer,
+				VK_PIPELINE_STAGE_TRANSFER_BIT, //srcStageMask
+				VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, //dstStageMask
+				0, //dependencyFlags
+				0, nullptr, //memoryBarriers (count, data)
+				2, memoryBarriers.data(), //bufferMemoryBarriers (count, data)
+				0, nullptr //imageMemoryBarriers (count, data)
+			);
+		}
 	}
 }
 
@@ -640,10 +640,12 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 			0, nullptr //dynamic offsets count, ptr
 		);
 
+		bool draw = true;
 		if (inst.mesh != previouslyBindedMesh)
-			inst.BindMesh(commandBuffer, index);
+			draw = inst.BindMesh(commandBuffer, index);
 		previouslyBindedMesh = inst.mesh;
 
-		inst.Draw(commandBuffer, index);
+		if (draw)
+			inst.Draw(commandBuffer, index);
 	}
 }
