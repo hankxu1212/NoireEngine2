@@ -138,9 +138,6 @@
     <ClCompile Include="src\backend\shader\VulkanShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\sejp\sejp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\renderer\scene\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -180,9 +177,6 @@
     <ClCompile Include="src\renderer\components\Component.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\scene\SceneSerializer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\renderer\scene\TransformMatrixStack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -211,6 +205,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\components\renderer_components\RendererComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\scene\SceneNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\sejp\sejp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -401,9 +401,6 @@
     <ClInclude Include="src\backend\pipeline\VulkanPipeline.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\sejp\sejp.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\renderer\scene\Scene.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -443,9 +440,6 @@
     <ClInclude Include="src\renderer\components\Component.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\scene\SceneSerializer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\renderer\scene\TransformMatrixStack.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -480,6 +474,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\components\renderer_components\RendererComponent.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\scene\SceneNode.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\sejp\sejp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

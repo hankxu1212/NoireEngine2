@@ -5,6 +5,7 @@
 class Files
 {
 public:
-	static std::optional<std::string> Read(const std::filesystem::path& path);
+	static std::vector<std::byte> Read(const std::string& pathFromExecutable);
+	static std::string Path(const std::string& suffix);
 };
 

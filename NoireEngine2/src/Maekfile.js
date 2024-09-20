@@ -40,8 +40,8 @@ const renderer_objs = [
 	maek.CPP('renderer/scene/Transform.cpp'),
 	maek.CPP('renderer/scene/Scene.cpp'),
 	maek.CPP('renderer/scene/Entity.cpp'),
-	maek.CPP('renderer/scene/SceneSerializer.cpp'),
 	maek.CPP('renderer/scene/TransformMatrixStack.cpp'),
+	maek.CPP('renderer/scene/SceneNode.cpp'),
 	maek.CPP('renderer/object/Mesh.cpp'),
 	maek.CPP('renderer/object/ObjectInstance.cpp'),
 ]
@@ -64,6 +64,7 @@ const util_objs = [
 	maek.CPP('math/matrix/Mat3.cpp'),
 	maek.CPP('math/matrix/Mat4.cpp'),
 	maek.CPP('utils/UUID.cpp'),
+	maek.CPP('utils/sejp/sejp.cpp'),
 ]
 
 const vulkan_objs = [

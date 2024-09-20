@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "renderer/scene/Scene.hpp"
-static std::unique_ptr<Scene> scene = std::make_unique<Scene>();
+static std::unique_ptr<Scene> scene = std::make_unique<Scene>("../scenes/examples/sg-Articulation.s72");
 
 #include "renderer/components/Components.hpp"
 

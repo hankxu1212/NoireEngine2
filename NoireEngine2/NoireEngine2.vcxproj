@@ -94,7 +94,6 @@
     <ClCompile Include="src\renderer\components\renderer_components\RendererComponent.cpp" />
     <ClCompile Include="src\renderer\object\Mesh.cpp" />
     <ClCompile Include="src\renderer\object\ObjectInstance.cpp" />
-    <ClCompile Include="src\renderer\scene\SceneSerializer.cpp" />
     <ClCompile Include="src\renderer\components\Component.cpp" />
     <ClCompile Include="src\renderer\Camera.cpp" />
     <ClCompile Include="src\renderer\Frustum.cpp" />
@@ -135,10 +134,12 @@
     <ClCompile Include="src\math\vector\Vec2.cpp" />
     <ClCompile Include="src\math\vector\Vec3.cpp" />
     <ClCompile Include="src\math\vector\Vec4.cpp" />
+    <ClCompile Include="src\renderer\scene\SceneNode.cpp" />
     <ClCompile Include="src\scripting\Behaviour.cpp" />
     <ClCompile Include="src\scripting\core\Input.cpp" />
     <ClCompile Include="src\scripting\core\SceneNavigationCamera.cpp" />
     <ClCompile Include="src\scripting\ScriptingEngine.cpp" />
+    <ClCompile Include="src\utils\sejp\sejp.cpp" />
     <ClCompile Include="src\utils\String.cpp" />
     <ClCompile Include="src\utils\ThreadPool.cpp" />
     <ClCompile Include="src\renderer\scene\Transform.cpp" />
@@ -154,17 +155,16 @@
     <ClCompile Include="tutorial\Tutorial-ObjectsPipeline.cpp" />
     <ClCompile Include="tutorial\Tutorial.cpp" />
     <ClCompile Include="src\backend\shader\VulkanShader.cpp" />
-    <ClCompile Include="vendor\sejp\sejp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\input\NativeInput.hpp" />
     <ClInclude Include="src\renderer\components\renderer_components\RendererComponent.hpp" />
+    <ClInclude Include="src\renderer\scene\SceneNode.hpp" />
     <ClInclude Include="src\scripting\Behaviour.hpp" />
     <ClInclude Include="src\renderer\components\CameraComponent.hpp" />
     <ClInclude Include="src\renderer\components\Components.hpp" />
     <ClInclude Include="src\renderer\object\Mesh.hpp" />
     <ClInclude Include="src\renderer\object\ObjectInstance.hpp" />
-    <ClInclude Include="src\renderer\scene\SceneSerializer.hpp" />
     <ClInclude Include="src\renderer\components\Component.hpp" />
     <ClInclude Include="src\renderer\Camera.hpp" />
     <ClInclude Include="src\renderer\Frustum.hpp" />
@@ -223,6 +223,7 @@
     <ClInclude Include="src\scripting\ScriptingEngine.hpp" />
     <ClInclude Include="src\utils\Enumerate.hpp" />
     <ClInclude Include="src\utils\Logger.hpp" />
+    <ClInclude Include="src\utils\sejp\sejp.hpp" />
     <ClInclude Include="src\utils\Singleton.hpp" />
     <ClInclude Include="src\utils\stb_image.h" />
     <ClInclude Include="src\utils\stb_image_write.h" />
@@ -245,7 +246,6 @@
     <ClInclude Include="tutorial\Tutorial.hpp" />
     <ClInclude Include="tutorial\VK.hpp" />
     <ClInclude Include="src\backend\shader\VulkanShader.h" />
-    <ClInclude Include="vendor\sejp\sejp.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\core\resources\nodes\Node.inl" />

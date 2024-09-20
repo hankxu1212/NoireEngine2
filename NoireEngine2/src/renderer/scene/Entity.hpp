@@ -25,16 +25,17 @@ public:
 		return r;
 	}
 
-	Entity() = default;
+	Entity();
 
-	Entity(Scene* scene);
-	
-	Entity(Scene* scene, glm::vec3& position);
-	Entity(Scene* scene, glm::vec3& position, glm::quat& rotation, glm::vec3& scale);
+	template<typename... TArgs>
+	Entity(Scene* scene, TArgs&... args) :
+		m_Scene(scene), s_Transform(std::make_unique<Transform>(args...)) {
+	}
 
-	Entity(Scene* scene, const char* name);
-
-	Entity(const Entity&);
+	template<typename... TArgs>
+	Entity(Scene* scene, const char* name, TArgs&... args) :
+		m_Scene(scene), m_Name(name), s_Transform(std::make_unique<Transform>(args...)) {
+	}
 
 	~Entity();
 
@@ -57,6 +58,7 @@ public:
 	template<typename... TArgs>
 	Entity* AddChild(Scene* scene, TArgs&... args)
 	{
+		m_Scene = scene;
 		m_Children.emplace_back(std::make_unique<Entity>(scene, args...));
 		m_Children.back()->m_Parent = this;
 		return m_Children.back().get();

@@ -6,27 +6,35 @@
 
 #include <filesystem>
 #include <set>
+#include <unordered_map>
 
 class Entity;
 class CameraComponent;
+class Transform;
 
 class Scene : Singleton
 {
 public:
 	Scene();
-	Scene(std::filesystem::path& path);
+	Scene(const std::string& path);
 	~Scene();
 
 	void Unload();
 
 	void Update();
 
+	void Deserialize(const std::string& path);
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Entity management
 
 	template<typename... TArgs>
-	Entity* Instantiate(TArgs&... args)
-	{
-		return Entity::root().AddChild(this, args...);
-	}
+	Entity* Instantiate(TArgs&... args) { return Entity::root().AddChild(this, args...); }
+
+	Entity* Instantiate(Transform*);
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Rendering and scene uniforms
 
 	void PushObjectInstances(const ObjectInstance&& instance);
 
@@ -40,10 +48,9 @@ public:
 	};
 	static_assert(sizeof(SceneUniform) == 16 * 4, "World is the expected size.");
 
-
 	inline const void* sceneUniform() const { return &m_SceneInfo; }
-	inline size_t sceneUniformSize() const { return sizeof(m_SceneInfo); }
 
+	inline size_t sceneUniformSize() const { return sizeof(m_SceneInfo); }
 
 	inline const std::vector<ObjectInstance>& objectInstances() const { return m_ObjectInstances; }
 
