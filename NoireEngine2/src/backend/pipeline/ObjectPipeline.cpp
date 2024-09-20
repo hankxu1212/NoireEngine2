@@ -440,7 +440,7 @@ void ObjectPipeline::PrepareWorkspace()
 	}
 
 	textures.resize(1);
-	textures[0] = std::make_shared<Image2D>(Files::Path("../textures/statue.jpg"));
+	textures[0] = std::make_shared<Image2D>(Files::Path("../textures/default_gray.png"));
 
 	{ // create the texture descriptor pool
 		uint32_t per_texture = uint32_t(textures.size()); //for easier-to-read counting
@@ -582,17 +582,21 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 		Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), needed_bytes);
 
 		{ //memory barrier to make sure copies complete before rendering happens:
-			std::array< VkBufferMemoryBarrier, 2> memoryBarriers = { 
-				workspace.Transforms_src.CreateMemoryBarrier(VK_ACCESS_MEMORY_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT),
+			std::array< VkBufferMemoryBarrier, 1> memoryBarriers = { 
 				workspace.Transforms.CreateMemoryBarrier(VK_ACCESS_MEMORY_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT),
 			};
+
+			// we only allow a workspace to be "reused" once its work has been fully cleared and executed 
+			// so src is never in danger of being overwritten 
+			// -- we only write to it by direct memory mapped writes from the host and the device reads it with the copy command
+			// -- Ajax
 
 			vkCmdPipelineBarrier(commandBuffer,
 				VK_PIPELINE_STAGE_TRANSFER_BIT, //srcStageMask
 				VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, //dstStageMask
 				0, //dependencyFlags
 				0, nullptr, //memoryBarriers (count, data)
-				2, memoryBarriers.data(), //bufferMemoryBarriers (count, data)
+				1, memoryBarriers.data(), //bufferMemoryBarriers (count, data)
 				0, nullptr //imageMemoryBarriers (count, data)
 			);
 		}

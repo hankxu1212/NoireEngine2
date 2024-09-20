@@ -4,7 +4,6 @@
 #include "renderer/components/Components.hpp"
 #include "core/Time.hpp"
 #include "Entity.hpp"
-#include "utils/sejp/sejp.hpp"
 #include "core/resources/Files.hpp"
 #include "SceneNode.hpp"
 #include "utils/Enumerate.hpp"
@@ -13,9 +12,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
-
-typedef std::unordered_map<std::string, sejp::value> value_map_t; // { name, object map }
-typedef std::unordered_map<SceneNode::Type, value_map_t> SceneMap; // entire scene map
 
 Scene::Scene()
 {
@@ -97,55 +93,96 @@ static bool LoadAsTransform(const sejp::value& val, glm::vec3& outPosition, glm:
 	}
 }
 
-static Entity* MakeNode(Scene* scene, value_map_t& nodeMap, const std::string& nodeName, Entity* parent)
+static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::string& nodeName, Entity* parent)
 {
+	const Scene::TValueUMap& nodeMap = sceneMap[SceneNode::Node];
+
 	if (nodeMap.find(nodeName) == nodeMap.end())
 	{
 		std::cout << "Did not find this node with name: " << nodeName << std::endl;
 		return nullptr;
 	}
 
-	glm::vec3 p, s;
-	glm::quat r;
-
-	const auto& value = nodeMap[nodeName];
-
-	static std::filesystem::path aaa = "ddd";
-
+	const auto& value = nodeMap.at(nodeName);
 	Entity* newEntity = nullptr;
 
+	glm::vec3 p, s;
+	glm::quat r;
 	if (LoadAsTransform(value, p, r, s))
 	{
 		if (!parent)
 			newEntity = scene->Instantiate(p, r, s);
 		else
 			newEntity = parent->AddChild(p, r, s);
-
-		newEntity->AddComponent<RendererComponent>(Mesh::Create(aaa).get());
 	}
 
 	const auto& obj = value.as_object().value();
-	if (obj.find("children") == obj.end())
-		return nullptr; // no children!
 
-	const auto& childrenArrOpt = obj.at("children").as_array();
-	if (!childrenArrOpt)
+	// add mesh nodes
 	{
-		std::cout << "Not a valid array format for children\n";
-		return nullptr; // not valid children array
-	}
+		const Scene::TValueUMap& meshMap = sceneMap[SceneNode::Mesh];
 
-	for (const auto& childValue : childrenArrOpt.value())
-	{
-		const auto& childOpt = childValue.as_string();
-		if (!childOpt)
+		if (obj.find("mesh") == obj.end())
+			return nullptr; // no mesh!
+
+		const auto& meshStrOpt = obj.at("mesh").as_string();
+		if (!meshStrOpt)
 		{
-			std::cout << "Not a valid string format for child\n";
-			continue; // not valid children array
+			std::cout << "Not a valid string format for mesh!\n";
+			goto make_children; // not valid children array
+		}
+		const auto& meshName = meshStrOpt.value();
+		
+		// try to find mesh in scene map
+		if (meshMap.find(meshName) == meshMap.end())
+		{
+			std::cout << "Did not find mesh with name: " << meshName << ". Skipping...\n";
+			goto make_children; // not valid children array
+		}
+		
+		const auto& meshObjOpt = meshMap.at(meshName).as_object();
+		if (!meshObjOpt)
+		{
+			std::cout << "Not a valid map format for mesh:" << meshName << ". Skipping...\n";
+			goto make_children; // not valid children map
 		}
 
-		// At last, the recursive call!
-		MakeNode(scene, nodeMap, childOpt.value(), newEntity);
+		const auto& meshObjMap = meshObjOpt.value();
+
+		// yea im lazy, gonna wrap everything in one try catch instead...
+		try {
+			Mesh::Deserialize(newEntity, meshObjMap);
+		}
+		catch (std::exception& e) {
+			std::cout << "Failed to make mesh. with error: " << e.what() << std::endl;
+			goto make_children;
+		}
+	}
+
+make_children: // recursively call on children
+	{
+		if (obj.find("children") == obj.end())
+			return nullptr; // no children!
+
+		const auto& childrenArrOpt = obj.at("children").as_array();
+		if (!childrenArrOpt)
+		{
+			std::cout << "Not a valid array format for children!\n";
+			return nullptr; // not valid children array
+		}
+
+		for (const auto& childValue : childrenArrOpt.value())
+		{
+			const auto& childOpt = childValue.as_string();
+			if (!childOpt)
+			{
+				std::cout << "Not a valid string format for child!\n";
+				continue; // not valid children array
+			}
+
+			// At last, the recursive call!
+			MakeNode(scene, sceneMap, childOpt.value(), newEntity);
+		}
 	}
 
 	return newEntity;
@@ -155,9 +192,10 @@ void Scene::Deserialize(const std::string& path)
 {
 	std::cout << "Loading scene: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << path << std::endl;
 
-	SceneMap sceneMap; // entire scene map
+	TSceneMap sceneMap; // entire scene map
 
 	std::vector<std::string> roots = {};
+	bool foundScene = false;
 
 	try {
 		sejp::value loaded = sejp::load(Files::Path(path));
@@ -189,8 +227,6 @@ void Scene::Deserialize(const std::string& path)
 				// add all node names to be used later
 				if (type == SceneNode::Scene)
 				{
-					static bool foundScene = false;
-
 					if (foundScene)
 						throw std::runtime_error("More than one scene object found!");
 
@@ -219,11 +255,9 @@ void Scene::Deserialize(const std::string& path)
 		{
 			// now we will start building the scene graph
 			// we start by traversing NODE objects first
-			value_map_t& nodeMap = sceneMap[SceneNode::Node];
-
 			for (const auto& root : roots)
 			{
-				MakeNode(this, nodeMap, root, nullptr);
+				MakeNode(this, sceneMap, root, nullptr);
 			}
 		}
 

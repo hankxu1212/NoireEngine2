@@ -1,7 +1,10 @@
 #include "Mesh.hpp"
 
-#include "math/Math.hpp"
 #include <iostream>
+
+#include "math/Math.hpp"
+#include "core/resources/Files.hpp"
+#include "renderer/scene/Entity.hpp"
 
 Mesh::Mesh(std::filesystem::path importPath) :
 	filename(importPath.string()) {
@@ -12,7 +15,53 @@ Mesh::~Mesh()
 	m_VertexBuffer.Destroy();
 }
 
+Mesh::Object Mesh::Deserialize(const Scene::TValueMap& obj)
+{
+	const auto& attributesMap = obj.at("attributes").as_object().value();
+
+	auto GET_ATTRIBUTE = [&attributesMap](const char* key) {
+		const auto& attributeMap = attributesMap.at(key).as_object().value();
+		return Mesh::Attribute
+		{
+			attributeMap.at("src").as_string().value(),
+			(uint32_t)attributeMap.at("offset").as_number().value(),
+			(uint32_t)attributeMap.at("stride").as_number().value(),
+			attributeMap.at("format").as_string().value(),
+		};
+		};
+
+	return {
+		obj.at("name").as_string().value(),
+		obj.at("topology").as_string().value(),
+		(uint32_t)obj.at("count").as_number().value(),
+		{
+			GET_ATTRIBUTE("POSITION"),
+			GET_ATTRIBUTE("NORMAL"),
+			GET_ATTRIBUTE("TANGENT"),
+			GET_ATTRIBUTE("TEXCOORD")
+		},
+		obj.at("material").as_string().value()
+	};
+}
+
+void Mesh::Deserialize(Entity* entity, const Scene::TValueMap& obj)
+{
+	if (!entity)
+		throw std::runtime_error("Entity pointer is null while trying to load mesh from file.");
+
+	Mesh::Object meshObject = Mesh::Deserialize(obj);
+	entity->AddComponent<RendererComponent>(Mesh::Create(meshObject.attributes[0].src).get());
+}
+
 std::shared_ptr<Mesh> Mesh::Create(std::filesystem::path& importPath)
+{
+	Mesh temp(importPath);
+	Node node;
+	node << temp;
+	return Create(node);
+}
+
+std::shared_ptr<Mesh> Mesh::Create(const std::string& importPath)
 {
 	Mesh temp(importPath);
 	Node node;
@@ -23,7 +72,7 @@ std::shared_ptr<Mesh> Mesh::Create(std::filesystem::path& importPath)
 std::shared_ptr<Mesh> Mesh::Create(const Node& node)
 {
 	if (auto resource = Resources::Get()->Find<Mesh>(node)) {
-		std::cout << "Found old mesh...\n";
+		std::cout << "Reusing old mesh at: " << resource->filename << std::endl;
 		return resource;
 	}
 
@@ -36,10 +85,11 @@ std::shared_ptr<Mesh> Mesh::Create(const Node& node)
 
 void Mesh::Load()
 {
-	std::cout << "Instantiated mesh!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n";
+	std::cout << "Instantiated mesh from path: " << filename << std::endl;
 
-	std::vector<Vertex> vertices;
+	//std::vector<Vertex> vertices;
 
+	/*
 	constexpr float R2 = 1.0f; //tube radius
 
 	constexpr uint32_t U_STEPS = 20;
@@ -87,27 +137,33 @@ void Mesh::Load()
 	}
 
 	size_t bytes = vertices.size() * sizeof(vertices[0]);
+	*/
+
+	//assert(vertices.size() == 20 * 16 * 6);
+
+	const std::string fullPath = "../scenes/examples/" + filename;
+	std::vector<std::byte> bytes = Files::Read(fullPath);
 
 	m_VertexBuffer = Buffer(
-		bytes,
+		bytes.size(),
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 	);
 
-	assert(vertices.size() == 20 * 16 * 6);
-
 	//copy data to buffer:
-	Buffer::TransferToBuffer(vertices.data(), bytes, m_VertexBuffer.getBuffer());
+	Buffer::TransferToBuffer(bytes.data(), bytes.size(), m_VertexBuffer.getBuffer());
 
-	numVertices = static_cast<uint32_t>(vertices.size());
+	numVertices = (uint32_t)bytes.size() / 48;
 }
 
 const Node& operator>>(const Node& node, Mesh& mesh) {
 	node["filename"].Get(mesh.filename);
+	node["numVertices"].Get(mesh.numVertices);
 	return node;
 }
 
 Node& operator<<(Node& node, const Mesh& mesh) {
 	node["filename"].Set(mesh.filename);
+	node["numVertices"].Set(mesh.numVertices);
 	return node;
 }

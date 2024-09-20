@@ -26,8 +26,6 @@ void Entity::Update()
 	}
 }
 
-#include "core/Time.hpp"
-
 void Entity::RenderPass(TransformMatrixStack& matrixStack)
 {
 	//matrixStack.Multiply(s_Transform->Local());

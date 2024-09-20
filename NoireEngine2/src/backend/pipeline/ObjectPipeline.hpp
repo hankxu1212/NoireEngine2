@@ -1,7 +1,7 @@
 #pragma once
 
 #include "VulkanPipeline.hpp"
-#include "renderer/PosNorTexVertex.hpp"
+#include "renderer/vertices/PosNorTanTexVertex.hpp"
 #include "backend/buffers/Buffer.hpp"
 #include "backend/images/Image2D.hpp"
 #include "renderer/object/ObjectInstance.hpp"
@@ -19,7 +19,7 @@ public:
 
 	virtual ~ObjectPipeline();
 
-	using Vertex = PosNorTexVertex;
+	using Vertex = PosNorTanTexVertex;
 
 public:
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);

@@ -20,12 +20,13 @@ void Buffer::Destroy()
 
 	VulkanContext::VK_CHECK(vkQueueWaitIdle(VulkanContext::Get()->getLogicalDevice()->getGraphicsQueue()), "[vulkan] wait idle fail on destroying buffer");
 	vkDestroyBuffer(VulkanContext::GetDevice(), buffer, nullptr);
-	std::cout << "Destroyed buffer" << std::endl;
 	vkFreeMemory(VulkanContext::GetDevice(), bufferMemory, nullptr);
 
 	buffer = VK_NULL_HANDLE;
 	bufferMemory = VK_NULL_HANDLE;
 	m_Size = 0;
+
+	//std::cout << "Destroyed buffer" << std::endl;
 }
 
 void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map)
@@ -111,8 +112,8 @@ VkBufferMemoryBarrier Buffer::CreateMemoryBarrier(VkAccessFlags srcAccessMask, V
 {
 	return {
 		.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-		.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
-		.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+		.srcAccessMask = srcAccessMask,
+		.dstAccessMask = dstAccessMask,
 		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 		.buffer = buffer,

@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\vertices\PosNorTanTexVertex.cpp" />
     <ClCompile Include="src\core\input\NativeInput.cpp" />
     <ClCompile Include="src\renderer\components\CameraComponent.cpp" />
     <ClCompile Include="src\renderer\components\renderer_components\RendererComponent.cpp" />
@@ -148,7 +149,7 @@
     <ClCompile Include="tutorial\Helpers.cpp" />
     <ClCompile Include="tutorial\main.cpp" />
     <ClCompile Include="tutorial\PosColVertex.cpp" />
-    <ClCompile Include="src\renderer\PosNorTexVertex.cpp" />
+    <ClCompile Include="src\renderer\vertices\PosNorTexVertex.cpp" />
     <ClCompile Include="tutorial\RTG.cpp" />
     <ClCompile Include="tutorial\Tutorial-BackgroundPipeline.cpp" />
     <ClCompile Include="tutorial\Tutorial-LinesPipeline.cpp" />
@@ -157,6 +158,7 @@
     <ClCompile Include="src\backend\shader\VulkanShader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\vertices\PosNorTanTexVertex.hpp" />
     <ClInclude Include="src\core\input\NativeInput.hpp" />
     <ClInclude Include="src\core\resources\Module.hpp" />
     <ClInclude Include="src\renderer\components\renderer_components\RendererComponent.hpp" />
@@ -241,7 +243,7 @@
     <ClInclude Include="tutorial\InputEvent.hpp" />
     <ClInclude Include="tutorial\mat4.hpp" />
     <ClInclude Include="tutorial\PosColVertex.hpp" />
-    <ClInclude Include="src\renderer\PosNorTexVertex.hpp" />
+    <ClInclude Include="src\renderer\vertices\PosNorTexVertex.hpp" />
     <ClInclude Include="tutorial\refsol.hpp" />
     <ClInclude Include="tutorial\RTG.hpp" />
     <ClInclude Include="tutorial\Tutorial.hpp" />

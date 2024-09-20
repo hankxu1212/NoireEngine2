@@ -2,8 +2,7 @@
 
 #include "math/Math.hpp"
 
-#include "Mesh.hpp"
-
+class Mesh;
 class CommandBuffer;
 
 struct ObjectInstance

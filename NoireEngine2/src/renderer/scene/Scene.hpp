@@ -3,10 +3,12 @@
 #include "utils/Singleton.hpp"
 #include "TransformMatrixStack.hpp"
 #include "renderer/object/ObjectInstance.hpp"
+#include "utils/sejp/sejp.hpp"
+#include "SceneNode.hpp"
 
 #include <filesystem>
-#include <set>
 #include <unordered_map>
+#include <set>
 
 class Entity;
 class CameraComponent;
@@ -14,6 +16,16 @@ class Transform;
 
 class Scene : Singleton
 {
+public:
+	// { name, serialized object map }
+	using TValueMap = std::map<std::string, sejp::value>;
+
+	// { name, serialized object unordered map }
+	using TValueUMap = std::unordered_map<std::string, sejp::value>;
+
+	// Maps from object type to serialized object maps
+	using TSceneMap = std::unordered_map<SceneNode::Type, TValueUMap>;
+
 public:
 	Scene();
 	Scene(const std::string& path);
