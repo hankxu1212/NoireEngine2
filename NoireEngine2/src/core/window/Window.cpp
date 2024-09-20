@@ -6,8 +6,6 @@
 #include "core/events/MouseEvent.hpp"
 #include "GLFW/glfw3native.h"
 
-Window* Window::s_Instance = nullptr;
-
 static uint8_t s_GLFWWindowCount = 0;
 
 static void glfwSetWindowCenter(GLFWwindow* window) {

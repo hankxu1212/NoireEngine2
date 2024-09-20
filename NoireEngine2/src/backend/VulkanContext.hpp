@@ -27,28 +27,14 @@
 /**
  * Manages Instance, Physical/Logical devices, Swapchains (to a certain extent) and surfaces.
  */
-class VulkanContext : Singleton
+class VulkanContext : public Module::Registrar<VulkanContext>
 {
-public:
-	static VulkanContext* s_Instance;
-
-	static VulkanContext& Get() { return *s_Instance; }
-
-	static void Initialize()
-	{
-		s_Instance = new VulkanContext();
-	}
-
-	static void Destroy()
-	{
-		delete s_Instance;
-	}
+	inline static const bool Registered = Register(UpdateStage::Render, DestroyStage::Post, Requires<Window>());
 
 public:
 	VulkanContext();
 
-	~VulkanContext();
-
+	virtual ~VulkanContext();
 
 	void Update();
 
@@ -76,7 +62,7 @@ public:
 public:
 	static void VK_CHECK(VkResult err, const char* msg);
 
-	static inline const VkDevice			GetDevice() { return *(VulkanContext::Get().getLogicalDevice()); }
+	static inline const VkDevice			GetDevice() { return *(VulkanContext::Get()->getLogicalDevice()); }
 	inline const LogicalDevice*				getLogicalDevice() const { return s_LogicalDevice.get(); }
 	inline const VulkanInstance*			getInstance() const { return s_VulkanInstance.get(); }
 	inline const PhysicalDevice*			getPhysicalDevice() const { return s_PhysicalDevice.get(); }

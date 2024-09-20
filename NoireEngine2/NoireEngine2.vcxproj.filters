@@ -482,6 +482,9 @@
     <ClInclude Include="src\utils\sejp\sejp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\resources\Module.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />

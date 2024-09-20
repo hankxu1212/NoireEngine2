@@ -4,8 +4,8 @@
 
 Camera::Camera()
 {
-	screenWidth = (float)Window::Get().m_Data.Width;
-	screenHeight = (float)Window::Get().m_Data.Height;
+	screenWidth = (float)Window::Get()->m_Data.Width;
+	screenHeight = (float)Window::Get()->m_Data.Height;
 	aspectRatio = screenWidth / screenHeight;
 }
 

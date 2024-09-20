@@ -5,18 +5,12 @@
 
 #include "utils/Enumerate.hpp"
 
-VulkanContext* VulkanContext::s_Instance = nullptr;
-
 VulkanContext::VulkanContext() :
     s_VulkanInstance(std::make_unique<VulkanInstance>()),
     s_PhysicalDevice(std::make_unique<PhysicalDevice>(*s_VulkanInstance)),
     s_LogicalDevice(std::make_unique<LogicalDevice>(*s_VulkanInstance, *s_PhysicalDevice))
 {
-    s_Instance = this;
-
     CreatePipelineCache();
-
-    s_Renderer = std::make_unique<Renderer>();
 }
 
 VulkanContext::~VulkanContext()
@@ -107,6 +101,7 @@ void VulkanContext::OnAddWindow(Window* window)
 
 void VulkanContext::InitializeRenderer()
 {
+    s_Renderer = std::make_unique<Renderer>();
 }
 
 void VulkanContext::WaitForCommands()
@@ -117,7 +112,7 @@ void VulkanContext::WaitForCommands()
 
 uint32_t VulkanContext::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
-    auto& mems = VulkanContext::Get().getPhysicalDevice()->getMemoryProperties();
+    auto& mems = VulkanContext::Get()->getPhysicalDevice()->getMemoryProperties();
     for (uint32_t i = 0; i < mems.memoryTypeCount; i++) {
         if ((typeFilter & (1 << i)) && (mems.memoryTypes[i].propertyFlags & properties) == properties) {
             return i;
@@ -132,7 +127,7 @@ VkFormat VulkanContext::FindSupportedFormat(const std::vector<VkFormat>& candida
 {
     for (VkFormat format : candidates) {
         VkFormatProperties props;
-        vkGetPhysicalDeviceFormatProperties(*(VulkanContext::Get().getPhysicalDevice()), format, &props);
+        vkGetPhysicalDeviceFormatProperties(*(VulkanContext::Get()->getPhysicalDevice()), format, &props);
 
         if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
             return format;

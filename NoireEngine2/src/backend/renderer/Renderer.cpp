@@ -23,7 +23,8 @@ Renderer::Renderer()
 	Entity* e2 = scene->Instantiate();
 	e2->AddComponent<Core::Input>();
 
-	static std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
+	std::filesystem::path aaa = "ddd";
+	auto mesh = Mesh::Create(aaa);
 	Entity* e3 = scene->Instantiate();
 	e3->AddComponent<RendererComponent>(mesh.get());
 
@@ -48,7 +49,7 @@ void Renderer::CreateRenderPass()
 {
 	std::array< VkAttachmentDescription, 2 > attachments{
 		VkAttachmentDescription { //0 - color attachment:
-			.format = VulkanContext::Get().getSurface(0)->getFormat().format,
+			.format = VulkanContext::Get()->getSurface(0)->getFormat().format,
 			.samples = VK_SAMPLE_COUNT_1_BIT,
 			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
@@ -156,7 +157,7 @@ void Renderer::Rebuild()
 	}
 
 	// TODO: add support for multiple swapchains
-	const SwapChain* swapchain = VulkanContext::Get().getSwapChain(0);
+	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
 	s_SwapchainDepthImage = std::make_unique<ImageDepth>(swapchain->getExtentVec2(), VK_SAMPLE_COUNT_1_BIT);
 
 	//Make framebuffers for each swapchain image:

@@ -8,6 +8,8 @@
 
 #include "scripting/ScriptingEngine.hpp"
 
+#include "core/resources/Resources.hpp"
+
 Application* Application::s_Instance = nullptr;
 float Time::DeltaTime;
 
@@ -19,23 +21,27 @@ Application::Application(const ApplicationSpecification& specification)
 	// initialize scripting engine
 	ScriptingEngine* scriptingEngine = new ScriptingEngine();
 
+	auto& registry = Module::GetRegistry();
+
+	for (auto it = registry.begin(); it != registry.end(); ++it)
+		CreateModule(it);
+
 	// initialize glfw window
-	Window::Initialize();
 	
 	// initialize instance, physical device, and logical device, also renderer
-	VulkanContext::Initialize();
 
 	// renderer initialized here
+	VulkanContext::Get()->InitializeRenderer();
 
 	// scene initialization occurs here in renderer
 
 	// all objects pushed here
 
 	// initializes window
-	Window::Get().SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
+	Window::Get()->SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
 
 	// initialize new surface, create new render pass, frame bufferr, swapchain
-	VulkanContext::Get().OnAddWindow(&Window::Get());
+	VulkanContext::Get()->OnAddWindow(Window::Get());
 
 	// create pipelines here
 
@@ -47,11 +53,15 @@ Application::Application(const ApplicationSpecification& specification)
 
 Application::~Application()
 {
+	DestroyStage(Module::DestroyStage::Pre);
+
 	m_LayerStack.Detach();
+
+	DestroyStage(Module::DestroyStage::Normal);
+
 	m_LayerStack.Destroy();
 
-	VulkanContext::Destroy();
-	Window::Destroy();
+	DestroyStage(Module::DestroyStage::Post);
 }
 
 void Application::Run()
@@ -69,13 +79,18 @@ void Application::Run()
 
 		if (!m_Minimized)
 		{
-			Window::Get().Update();
+			UpdateStage(Module::UpdateStage::Pre);
+
+			UpdateStage(Module::UpdateStage::Normal);
 
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnUpdate();
 			}
- 			VulkanContext::Get().Update();
+
+			UpdateStage(Module::UpdateStage::Post);
+
+			UpdateStage(Module::UpdateStage::Render);
 		}
 	}
 }
@@ -127,7 +142,7 @@ bool Application::OnWindowResize(WindowResizeEvent& e)
 		return false;
 	}
 
-	VulkanContext::Get().OnWindowResize(e.m_Width, e.m_Height);
+	VulkanContext::Get()->OnWindowResize(e.m_Width, e.m_Height);
 	m_Minimized = false;
 	return false;
 }
@@ -147,4 +162,47 @@ void Application::PushOverlay(Layer* layer)
 void Application::Close()
 {
 	m_Running = false;
+}
+
+void Application::CreateModule(Module::RegistryMap::const_iterator it)
+{
+	if (m_Modules.find(it->first) != m_Modules.end())
+		return;
+
+	// TODO: Prevent circular dependencies.
+	for (auto requireId : it->second.requiredModules)
+		CreateModule(Module::GetRegistry().find(requireId));
+
+	auto&& module = it->second.create();
+	m_Modules[it->first] = std::move(module);
+	m_ModuleStages[it->second.stage].emplace_back(it->first);
+	m_ModuleDestroyStages[it->second.destroyStage].emplace_back(it->first);
+}
+
+void Application::DestroyModule(TypeId id, Module::DestroyStage stage)
+{
+	if (!m_Modules[id])
+		return;
+
+	// Destroy all module dependencies first.
+	for (const auto& [registrarId, registrar] : Module::GetRegistry()) {
+		if (std::find(registrar.requiredModules.begin(), registrar.requiredModules.end(), id) != registrar.requiredModules.end()
+			&& registrar.destroyStage == stage) {
+			DestroyModule(registrarId, stage);
+		}
+	}
+
+	m_Modules[id].reset();
+}
+
+void Application::UpdateStage(Module::UpdateStage stage)
+{
+	for (auto& moduleId : m_ModuleStages[stage])
+		m_Modules[moduleId]->Update();
+}
+
+void Application::DestroyStage(Module::DestroyStage stage)
+{
+	for (auto& moduleId : m_ModuleDestroyStages[stage])
+		DestroyModule(moduleId, stage);
 }

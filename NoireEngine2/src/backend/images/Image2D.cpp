@@ -5,11 +5,11 @@
 #include "backend/buffers/Buffer.hpp"
 
 std::shared_ptr<Image2D> Image2D::Create(const Node& node) {
-	if (auto resource = Resources::Get().Find<Image2D>(node))
+	if (auto resource = Resources::Get()->Find<Image2D>(node))
 		return resource;
 
 	auto result = std::make_shared<Image2D>("");
-	Resources::Get().Add(node, std::dynamic_pointer_cast<Resource>(result));
+	Resources::Get()->Add(node, std::dynamic_pointer_cast<Resource>(result));
 	node >> *result;
 	result->Load();
 	return result;

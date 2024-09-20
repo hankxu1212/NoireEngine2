@@ -6,7 +6,7 @@ CommandPool::CommandPool(const TID& threadId) :
 	VkCommandPoolCreateInfo poolInfo = {
 		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 		.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-		.queueFamilyIndex = VulkanContext::Get().getLogicalDevice()->getGraphicsFamily(),
+		.queueFamilyIndex = VulkanContext::Get()->getLogicalDevice()->getGraphicsFamily(),
 	};
 
 	VulkanContext::VK_CHECK(vkCreateCommandPool(VulkanContext::GetDevice(), &poolInfo, nullptr, &m_CommandPool),

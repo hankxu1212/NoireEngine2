@@ -149,7 +149,7 @@ void Image::CreateImageSampler(VkSampler& sampler, VkFilter filter, VkSamplerAdd
 	samplerCreateInfo.mipLodBias = 0.0f;
 	samplerCreateInfo.anisotropyEnable = static_cast<VkBool32>(anisotropic);
 	samplerCreateInfo.maxAnisotropy =
-		(anisotropic && VulkanContext::Get().getLogicalDevice()->getEnabledFeatures().samplerAnisotropy) ? min(ANISOTROPY, VulkanContext::Get().getPhysicalDevice()->getProperties().limits.maxSamplerAnisotropy) : 1.0f;
+		(anisotropic && VulkanContext::Get()->getLogicalDevice()->getEnabledFeatures().samplerAnisotropy) ? min(ANISOTROPY, VulkanContext::Get()->getPhysicalDevice()->getProperties().limits.maxSamplerAnisotropy) : 1.0f;
 	//samplerCreateInfo.compareEnable = VK_FALSE;
 	//samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
 	samplerCreateInfo.minLod = 0.0f;
@@ -184,7 +184,7 @@ void Image::CreateMipmaps(const VkImage& image, const VkExtent3D& extent, VkForm
 
 	// Get device properites for the requested Image format.
 	VkFormatProperties formatProperties;
-	vkGetPhysicalDeviceFormatProperties(*(VulkanContext::Get().getPhysicalDevice()), format, &formatProperties);
+	vkGetPhysicalDeviceFormatProperties(*(VulkanContext::Get()->getPhysicalDevice()), format, &formatProperties);
 
 	// Mip-chain generation requires support for blit source and destination
 	assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT);
@@ -378,8 +378,8 @@ void Image::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, cons
 
 bool Image::CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory& dstImageMemory, VkFormat srcFormat, const VkExtent3D& extent,
 	VkImageLayout srcImageLayout, uint32_t mipLevel, uint32_t arrayLayer) {
-	auto physicalDevice = VulkanContext::Get().getPhysicalDevice();
-	auto surface = VulkanContext::Get().getSurface(0);
+	auto physicalDevice = VulkanContext::Get()->getPhysicalDevice();
+	auto surface = VulkanContext::Get()->getSurface(0);
 
 	// Checks blit swapchain support.
 	auto supportsBlit = true;

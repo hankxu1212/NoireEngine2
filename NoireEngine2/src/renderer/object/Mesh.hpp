@@ -1,20 +1,20 @@
 #pragma once
 
-#include <filesystem>
 #include "renderer/PosNorTexVertex.hpp"
 #include "backend/buffers/Buffer.hpp"
-#include "core/resources/Resource.hpp"
+#include "core/resources/Resources.hpp"
 
-class Mesh : Resource
+class Mesh : public Resource
 {
 public:
-	Mesh();
+	Mesh(std::filesystem::path importPath);
 	~Mesh();
 
 	using Vertex = PosNorTexVertex;
 
-	template<typename T>
-	void LoadModel(std::filesystem::path& importPath);
+	static std::shared_ptr<Mesh> Create(std::filesystem::path& importPath);
+
+	static std::shared_ptr<Mesh> Create(const Node& node);
 
 	virtual std::type_index getTypeIndex() const { return typeid(Mesh); }
 
@@ -22,13 +22,14 @@ public:
 
 	uint32_t getVertexCount() { return numVertices; }
 
+	// loads the mesh from filename
+	void Load();
+
+	friend const Node& operator>>(const Node& node, Mesh& mesh);
+	friend Node& operator<<(Node& node, const Mesh& mesh);
+
 private:
 	Buffer m_VertexBuffer;
 	uint32_t numVertices;
+	std::filesystem::path filename;
 };
-
-
-template<typename T>
-inline void Mesh::LoadModel(std::filesystem::path& importPath)
-{
-}

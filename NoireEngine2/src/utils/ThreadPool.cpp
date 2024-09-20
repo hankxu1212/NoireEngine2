@@ -29,8 +29,10 @@ ThreadPool::ThreadPool(uint32_t threadCount) {
 
 ThreadPool::~ThreadPool() 
 {
-	std::unique_lock<std::mutex> lock(queueMutex);
-	stop = true;
+	{ // do not attempt to remove this scope, or sth will go horribly wrong.
+		std::unique_lock<std::mutex> lock(queueMutex);
+		stop = true;
+	}
 
 	condition.notify_all();
 

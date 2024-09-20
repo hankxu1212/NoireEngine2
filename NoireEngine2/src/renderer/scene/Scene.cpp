@@ -175,9 +175,10 @@ void Scene::Deserialize(const std::string& path)
 				glm::vec3 p, s;
 				glm::quat r;
 				if (LoadAsTransform(nodeMap[nodeName], p, r, s)) {
-					static std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
+					static std::filesystem::path aaa = "ddd";
+
 					auto e = Instantiate(p, r, s);
-					e->AddComponent<RendererComponent>(mesh.get());
+					e->AddComponent<RendererComponent>(Mesh::Create(aaa).get());
 					std::cout << "Instantiated!\n";
 				}
 			};

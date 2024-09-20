@@ -18,7 +18,7 @@ void Buffer::Destroy()
 		mapped = nullptr;
 	}
 
-	VulkanContext::VK_CHECK(vkQueueWaitIdle(VulkanContext::Get().getLogicalDevice()->getGraphicsQueue()), "[vulkan] wait idle fail on destroying buffer");
+	VulkanContext::VK_CHECK(vkQueueWaitIdle(VulkanContext::Get()->getLogicalDevice()->getGraphicsQueue()), "[vulkan] wait idle fail on destroying buffer");
 	vkDestroyBuffer(VulkanContext::GetDevice(), buffer, nullptr);
 	vkFreeMemory(VulkanContext::GetDevice(), bufferMemory, nullptr);
 
@@ -29,9 +29,8 @@ void Buffer::Destroy()
 
 void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map)
 {
-
 	m_Size = size;
-	auto& logicalDevice = *(VulkanContext::Get().getLogicalDevice());
+	auto& logicalDevice = *(VulkanContext::Get()->getLogicalDevice());
 
 	std::array<uint32_t, 3> queueFamily = {
 		logicalDevice.getGraphicsFamily(),

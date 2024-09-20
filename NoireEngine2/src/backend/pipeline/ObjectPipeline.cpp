@@ -170,7 +170,7 @@ void ObjectPipeline::CreateDescriptors()
 
 void ObjectPipeline::CreateDescriptorPool()
 {
-	uint32_t numWorkspace = VulkanContext::Get().getWorkspaceSize(); //for easier-to-read counting
+	uint32_t numWorkspace = VulkanContext::Get()->getWorkspaceSize(); //for easier-to-read counting
 
 	//we only need uniform buffer descriptors for the moment:
 	std::array< VkDescriptorPoolSize, 1> pool_sizes{
@@ -314,7 +314,7 @@ void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 {
 	PushSceneDrawInfo(scene, commandBuffer, surfaceId);
 
-	VkExtent2D swapChainExtent = VulkanContext::Get().getSwapChain()->getExtent();
+	VkExtent2D swapChainExtent = VulkanContext::Get()->getSwapChain()->getExtent();
 
 	static std::array< VkClearValue, 2 > clear_values{
 		VkClearValue{.color{.float32{1.0f, 0.5f, 0.5f, 1.0f} } },
@@ -324,7 +324,7 @@ void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 	VkRenderPassBeginInfo begin_info{
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 		.renderPass = m_BindedRenderer->m_Renderpass,
-		.framebuffer = m_BindedRenderer->m_Framebuffers[VulkanContext::Get().getCurrentFrame()],
+		.framebuffer = m_BindedRenderer->m_Framebuffers[VulkanContext::Get()->getCurrentFrame()],
 		.renderArea{
 			.offset = {.x = 0, .y = 0},
 			.extent = swapChainExtent,
@@ -363,7 +363,7 @@ void ObjectPipeline::Update(const Scene* scene)
 
 void ObjectPipeline::PrepareWorkspace()
 {
-	workspaces.resize(VulkanContext::Get().getWorkspaceSize());
+	workspaces.resize(VulkanContext::Get()->getWorkspaceSize());
 	std::cout << "Created workspace of size " << workspaces.size() << '\n';
 
 	assert(workspaces.size() > 0);

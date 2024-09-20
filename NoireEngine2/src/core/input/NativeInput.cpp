@@ -6,20 +6,20 @@
 
 bool NativeInput::IsKeyPressed(const KeyCode key)
 {
-	auto state = glfwGetKey(Window::Get().m_Window, static_cast<int32_t>(key));
+	auto state = glfwGetKey(Window::Get()->m_Window, static_cast<int32_t>(key));
 	return state == GLFW_PRESS;
 }
 
 bool NativeInput::IsMouseButtonPressed(const MouseCode button)
 {
-	auto state = glfwGetMouseButton(Window::Get().m_Window, static_cast<int32_t>(button));
+	auto state = glfwGetMouseButton(Window::Get()->m_Window, static_cast<int32_t>(button));
 	return state == GLFW_PRESS;
 }
 
 glm::vec2 NativeInput::GetMousePosition()
 {
 	double xpos, ypos;
-	glfwGetCursorPos(Window::Get().m_Window, &xpos, &ypos);
+	glfwGetCursorPos(Window::Get()->m_Window, &xpos, &ypos);
 
 	return { (float)xpos, (float)ypos };
 }

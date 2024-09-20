@@ -158,6 +158,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\input\NativeInput.hpp" />
+    <ClInclude Include="src\core\resources\Module.hpp" />
     <ClInclude Include="src\renderer\components\renderer_components\RendererComponent.hpp" />
     <ClInclude Include="src\renderer\scene\SceneNode.hpp" />
     <ClInclude Include="src\scripting\Behaviour.hpp" />

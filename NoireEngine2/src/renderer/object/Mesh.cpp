@@ -1,9 +1,42 @@
 #include "Mesh.hpp"
 
 #include "math/Math.hpp"
+#include <iostream>
 
-Mesh::Mesh()
+Mesh::Mesh(std::filesystem::path importPath) :
+	filename(std::move(importPath)) {
+}
+
+Mesh::~Mesh()
 {
+	std::cout << "Destroyed buffer" << std::endl;
+	m_VertexBuffer.Destroy();
+}
+
+std::shared_ptr<Mesh> Mesh::Create(std::filesystem::path& importPath)
+{
+	Mesh temp(importPath);
+	Node node;
+	node << temp;
+	return Create(node);
+}
+
+std::shared_ptr<Mesh> Mesh::Create(const Node& node)
+{
+	if (auto resource = Resources::Get()->Find<Mesh>(node))
+		return resource;
+
+	auto result = std::make_shared<Mesh>("");
+	Resources::Get()->Add(node, std::dynamic_pointer_cast<Resource>(result));
+	node >> *result;
+	result->Load();
+	return result;
+}
+
+void Mesh::Load()
+{
+	std::cout << "Instantiated mesh";
+
 	std::vector<Vertex> vertices;
 
 	constexpr float R2 = 1.0f; //tube radius
@@ -68,7 +101,12 @@ Mesh::Mesh()
 	numVertices = static_cast<uint32_t>(vertices.size());
 }
 
-Mesh::~Mesh()
-{
-	m_VertexBuffer.Destroy();
+const Node& operator>>(const Node& node, Mesh& mesh) {
+	node["filename"].Get(mesh.filename);
+	return node;
+}
+
+Node& operator<<(Node& node, const Mesh& mesh) {
+	node["filename"].Set(mesh.filename);
+	return node;
 }

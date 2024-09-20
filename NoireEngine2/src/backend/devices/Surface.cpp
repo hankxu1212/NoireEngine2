@@ -50,11 +50,11 @@ Surface::Surface(const VulkanInstance& instance, const PhysicalDevice& physicalD
 
 Surface::~Surface() 
 {
-	vkDestroySurfaceKHR(*(VulkanContext::Get().getInstance()), m_Surface, nullptr);
+	vkDestroySurfaceKHR(*(VulkanContext::Get()->getInstance()), m_Surface, nullptr);
 }
 
 void Surface::UpdateCapabilities()
 {
-	VulkanContext::VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*(VulkanContext::Get().getPhysicalDevice()), m_Surface, &m_Capabilities),
+	VulkanContext::VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*(VulkanContext::Get()->getPhysicalDevice()), m_Surface, &m_Capabilities),
 		"[vulkan] Error: cannot get surface capabilities.");
 }

@@ -4,28 +4,25 @@
 #include "Resource.hpp"
 #include "nodes/Node.hpp"
 #include "core/Timer.hpp"
+#include "core/resources/Module.hpp"
 
 /**
   * @brief Module used for managing resources. 
   * Resources are held alive as long as they are in use,
   * A existing resource is queried by node value.
 */
-class Resources : Singleton
+class Resources : public Module::Registrar<Resources>
 {
-public:
-	static Resources& Get()
-	{
-		static Resources instance;
-		return instance;
-	}
+	inline static const bool Registered = Register(UpdateStage::Post, DestroyStage::Normal);
 
 public:
 	Resources();
 
-	~Resources();
+	virtual ~Resources();
 
 	void Update();
 
+public:
 	std::shared_ptr<Resource> Find(const std::type_index& typeIndex, const Node& node) const;
 
 	template<typename T>
