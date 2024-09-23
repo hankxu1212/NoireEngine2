@@ -27,6 +27,11 @@ bool ObjectInstance::BindMesh(const CommandBuffer& commandBuffer, uint32_t insta
     return true;
 }
 
+void ObjectInstance::BindVertexInput(const CommandBuffer& commandBuffer) const
+{
+    mesh->getVertexInput()->Bind(commandBuffer);
+}
+
 void ObjectInstance::Draw(const CommandBuffer& commandBuffer, uint32_t instanceID) const
 {
     vkCmdDraw(commandBuffer, numVertices, 1, firstVertex, instanceID);

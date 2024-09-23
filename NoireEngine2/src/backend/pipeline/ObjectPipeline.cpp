@@ -6,13 +6,12 @@
 #include "backend/shader/VulkanShader.h"
 #include "math/Math.hpp"
 #include "core/Time.hpp"
-
+#include <renderer/object/Mesh.hpp>
+#include "core/resources/Files.hpp"
 #include "renderer/scene/Scene.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
-
-#include "core/resources/Files.hpp"
 
 static uint32_t vert_code[] =
 #include "spv/shaders/objects.vert.inl"
@@ -295,7 +294,7 @@ void ObjectPipeline::CreatePipeline(VkRenderPass& renderpass, uint32_t subpass)
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		.stageCount = uint32_t(stages.size()),
 		.pStages = stages.data(),
-		.pVertexInputState = /*&Vertex::array_input_state*/VK_NULL_HANDLE,
+		.pVertexInputState = /*&VertexInput::array_input_state*/VK_NULL_HANDLE,
 		.pInputAssemblyState = &input_assembly_state,
 		.pViewportState = &viewport_state,
 		.pRasterizationState = &rasterization_state,
@@ -628,6 +627,9 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 	//draw all instances:
 	const std::vector<ObjectInstance>& sceneObjectInstances = scene->objectInstances();
 	Mesh* previouslyBindedMesh = nullptr;
+	VertexInput* previouslyBindedVertex = nullptr;
+
+	int i = 0;
 
 	//std::cout << "Drawing: " << sceneObjectInstances.size() << std::endl;
 	for (ObjectInstance const& inst : sceneObjectInstances)
@@ -645,15 +647,24 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 			0, nullptr //dynamic offsets count, ptr
 		);
 
+		VertexInput* vertexInputPtr = inst.mesh->getVertexInput().get();
+		if (previouslyBindedVertex == nullptr || vertexInputPtr == nullptr
+			|| *vertexInputPtr != *previouslyBindedVertex) {
+			inst.BindVertexInput(commandBuffer);
+			previouslyBindedVertex = vertexInputPtr;
+			i++;
+		}
+
 		bool draw = true;
 		if (inst.mesh != previouslyBindedMesh) 
 		{
 			draw = inst.BindMesh(commandBuffer, index);
-			Vertex::Bind(commandBuffer);
 		}
 		previouslyBindedMesh = inst.mesh;
 
 		if (draw)
 			inst.Draw(commandBuffer, index);
 	}
+
+	std::cout << "Binded " << i << " times this frame\n";
 }

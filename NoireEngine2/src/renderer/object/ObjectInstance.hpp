@@ -22,6 +22,8 @@ struct ObjectInstance
 
 	bool BindMesh(const CommandBuffer& commandBuffer, uint32_t instanceID) const;
 
+	void BindVertexInput(const CommandBuffer& commandBuffer) const;
+
 	void Draw(const CommandBuffer& commandBuffer, uint32_t instanceID) const;
 };
 
