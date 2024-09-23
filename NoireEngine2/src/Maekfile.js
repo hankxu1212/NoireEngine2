@@ -36,6 +36,7 @@ const core_objs = [
 const renderer_objs = [
 	maek.CPP('renderer/vertices/PosNorTexVertex.cpp'),
 	maek.CPP('renderer/vertices/PosNorTanTexVertex.cpp'),
+	//maek.CPP('renderer/vertices/Vertex.cpp'),
 	maek.CPP('renderer/Frustum.cpp'),
 	maek.CPP('renderer/Camera.cpp'),
 	maek.CPP('renderer/scene/Transform.cpp'),
@@ -162,6 +163,7 @@ function custom_flags_and_rules() {
 			'User32.lib',
 			`/LIBPATH:${VULKAN_SDK}/Lib`,
 			'vulkan-1.lib',
+			'shaderc.lib',
 			`/LIBPATH:../vendor/glfw-3.4.bin.WIN64/lib-vc2022`,
 			'glfw3.lib',
 			'gdi32.lib',

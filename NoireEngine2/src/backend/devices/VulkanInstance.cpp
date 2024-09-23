@@ -162,6 +162,9 @@ VulkanInstance::VulkanInstance()
     }
     if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
         extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+    else
+        std::runtime_error("no VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME extension found possible on this device. Aborting...\n");
+
     if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
     {
         extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);

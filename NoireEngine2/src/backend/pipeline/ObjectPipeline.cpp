@@ -210,11 +210,12 @@ void ObjectPipeline::CreatePipeline(VkRenderPass& renderpass, uint32_t subpass)
 
 	///////////////////////////////////////////////////////////////////////
 	
-	//the viewport and scissor state will be set at runtime for the pipeline:
 	std::vector< VkDynamicState > dynamic_states{
 		VK_DYNAMIC_STATE_VIEWPORT,
-		VK_DYNAMIC_STATE_SCISSOR
+		VK_DYNAMIC_STATE_SCISSOR,
+		VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
 	};
+
 	VkPipelineDynamicStateCreateInfo dynamic_state{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
 		.dynamicStateCount = uint32_t(dynamic_states.size()),
@@ -294,7 +295,7 @@ void ObjectPipeline::CreatePipeline(VkRenderPass& renderpass, uint32_t subpass)
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		.stageCount = uint32_t(stages.size()),
 		.pStages = stages.data(),
-		.pVertexInputState = &Vertex::array_input_state,
+		.pVertexInputState = /*&Vertex::array_input_state*/VK_NULL_HANDLE,
 		.pInputAssemblyState = &input_assembly_state,
 		.pViewportState = &viewport_state,
 		.pRasterizationState = &rasterization_state,
@@ -645,8 +646,11 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 		);
 
 		bool draw = true;
-		if (inst.mesh != previouslyBindedMesh)
+		if (inst.mesh != previouslyBindedMesh) 
+		{
 			draw = inst.BindMesh(commandBuffer, index);
+			Vertex::Bind(commandBuffer);
+		}
 		previouslyBindedMesh = inst.mesh;
 
 		if (draw)

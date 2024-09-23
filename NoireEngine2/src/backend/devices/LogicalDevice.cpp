@@ -4,7 +4,8 @@
 
 const std::vector<const char*> LogicalDevice::DeviceExtensions = { 
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-	VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME
+	VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
+	VK_EXT_VERTEX_INPUT_DYNAMIC_STATE_EXTENSION_NAME // dynamic vertex binding
 };
 
 LogicalDevice::LogicalDevice(const VulkanInstance& instance, const PhysicalDevice& physicalDevice) :
@@ -178,13 +179,24 @@ void LogicalDevice::CreateLogicalDevice()
 		std::cout << "Selected GPU does not support multi viewports!";
 		
 	VkDeviceCreateInfo deviceCreateInfo = {};
+
+	// enable dynamic vertex input state
+	VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT dynamicVertexInputExt{
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_INPUT_DYNAMIC_STATE_FEATURES_EXT,
+		.vertexInputDynamicState = true
+	};
+	
+	deviceCreateInfo.pNext = &dynamicVertexInputExt;
+
+	// add synchronization feature
 #ifdef VK_VERSION_1_3
-VkPhysicalDeviceSynchronization2Features sync2Ext{
-	.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
-	.synchronization2 = true
-};
-deviceCreateInfo.pNext = &sync2Ext;
+	VkPhysicalDeviceSynchronization2Features sync2Ext{
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
+		.synchronization2 = true
+	};
+	dynamicVertexInputExt.pNext = &sync2Ext;
 #endif
+
 	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 	deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();

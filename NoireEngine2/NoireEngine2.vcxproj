@@ -156,6 +156,7 @@
     <ClCompile Include="tutorial\Tutorial-ObjectsPipeline.cpp" />
     <ClCompile Include="tutorial\Tutorial.cpp" />
     <ClCompile Include="src\backend\shader\VulkanShader.cpp" />
+    <ClCompile Include="src\renderer\vertices\Vertex.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\renderer\vertices\PosNorTanTexVertex.hpp" />
@@ -249,6 +250,7 @@
     <ClInclude Include="tutorial\Tutorial.hpp" />
     <ClInclude Include="tutorial\VK.hpp" />
     <ClInclude Include="src\backend\shader\VulkanShader.h" />
+    <ClInclude Include="src\renderer\vertices\Vertex.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\core\resources\nodes\Node.inl" />

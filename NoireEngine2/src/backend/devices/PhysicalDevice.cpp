@@ -71,8 +71,15 @@ static int RateDeviceSuitability(VkPhysicalDevice device) {
         requiredExtensions.erase(extension.extensionName);
     }
 
-    if(!requiredExtensions.empty())
+    if (!requiredExtensions.empty())
+    {
+        std::cout << "These extentions were not found: ";
+        for (const auto& remainingExtensions : requiredExtensions)
+            std::cout << remainingExtensions << ", ";
+
+        std::cout << std::endl;
         return 0;
+    }
 
     // query device props
     VkPhysicalDeviceProperties deviceProperties;
