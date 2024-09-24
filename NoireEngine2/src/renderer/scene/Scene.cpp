@@ -189,7 +189,6 @@ static void MakeCamera(Entity* newEntity, const Scene::TValueMap& obj, const Sce
 	}
 }
 
-
 static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::string& nodeName, Entity* parent)
 {
 	NE_DEBUG("Creating entity", Logger::CYAN, Logger::BOLD);
@@ -201,10 +200,11 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 		std::cout << "Did not find this node with name: " << nodeName << std::endl;
 		return nullptr;
 	}
-
 	const auto& value = nodeMap.at(nodeName);
+
 	Entity* newEntity = nullptr;
 
+	// make transform
 	glm::vec3 p, s;
 	glm::quat r;
 	if (LoadAsTransform(value, p, r, s))
@@ -277,7 +277,6 @@ void Scene::Deserialize(const std::string& path)
 
 			// define some lambdas for parsing...
 			auto GET_STR = [&objMap](const char* key) { return objMap.at(key).as_string().value(); };
-			auto GET_ARR = [&objMap](const char* key) { return objMap.at(key).as_array().value(); };
 
 			try {
 				SceneNode::Type type = SceneNode::ObjectType(GET_STR("type"));
@@ -294,7 +293,7 @@ void Scene::Deserialize(const std::string& path)
 						throw std::runtime_error("More than one scene object found!");
 
 					foundScene = true;
-					const auto& rootsArr = GET_ARR("roots");
+					const auto& rootsArr = objMap.at("roots").as_array().value();
 					roots.resize(rootsArr.size());
 
 					for (const auto& [id, root] : Enumerate(rootsArr))
@@ -310,9 +309,7 @@ void Scene::Deserialize(const std::string& path)
 		}
 
 		if (sceneMap.find(SceneNode::Node) == sceneMap.end()) 
-		{
 			NE_WARN("Scene is empty");
-		}
 		else 
 		{
 			// traverse all node objects

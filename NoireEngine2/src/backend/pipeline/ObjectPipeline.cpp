@@ -639,7 +639,6 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 	//std::cout << "Drawing: " << sceneObjectInstances.size() << std::endl;
 	for (ObjectInstance const& inst : sceneObjectInstances)
 	{
-		//std::cout << glm::to_string(inst.m_TransformUniform.modelMatrix) << std::endl;
 		uint32_t index = uint32_t(&inst - &sceneObjectInstances[0]);
 
 		//bind texture descriptor set:

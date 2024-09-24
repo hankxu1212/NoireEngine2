@@ -6,6 +6,9 @@
 #include "core/resources/Files.hpp"
 #include "renderer/scene/Entity.hpp"
 #include "utils/Logger.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/string_cast.hpp"
+#include "glm/gtx/extended_min_max.hpp"
 
 Mesh::Mesh(const CreateInfo& createInfo) :
 	m_CreateInfo(createInfo)
@@ -110,7 +113,30 @@ void Mesh::Load()
 	//copy data to buffer:
 	Buffer::TransferToBuffer(bytes.data(), bytes.size(), m_VertexBuffer.getBuffer());
 
-	numVertices = (uint32_t)bytes.size() / 48;
+	numVertices = (uint32_t)bytes.size() / m_CreateInfo.attributes[0].stride;
+	assert(numVertices * m_CreateInfo.attributes[0].stride == bytes.size());
+
+	uint32_t positionSize = sizeof(glm::vec3);
+
+	// extract vertices and create AABB
+	m_AABB.min = glm::vec3(std::numeric_limits<float>::infinity());
+	m_AABB.max = -glm::vec3(std::numeric_limits<float>::infinity());
+
+	for (uint32_t i = 0; i < numVertices; ++i)
+	{
+		glm::vec3 position;
+		memcpy(glm::value_ptr(position), bytes.data() + i * m_CreateInfo.attributes[0].stride, positionSize);
+		
+		m_AABB.min = glm::min(m_AABB.min, position);
+		m_AABB.max = glm::max(m_AABB.max, position);
+	}
+
+	NE_INFO("Created AABB: min: {}, max: {}", glm::to_string(m_AABB.min), glm::to_string(m_AABB.min));
+}
+
+void Mesh::Update(const glm::mat4& model)
+{
+	m_AABB.Update(model);
 }
 
 const Node& operator>>(const Node& node, Mesh& mesh) {

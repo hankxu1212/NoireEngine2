@@ -4,6 +4,7 @@
 #include "backend/buffers/Buffer.hpp"
 #include "core/resources/Resources.hpp"
 #include "renderer/scene/Scene.hpp"
+#include "renderer/AABB.hpp"
 
 class Mesh : public Resource
 {
@@ -52,8 +53,7 @@ public:
 
 	~Mesh();
 
-public:
-
+public: // loading and initialization
 	static const CreateInfo Deserialize(const Scene::TValueMap& obj);
 	static void Deserialize(Entity* entity, const Scene::TValueMap& obj, const Scene::TSceneMap& sceneMap);
 
@@ -70,17 +70,22 @@ public:
 	friend Node& operator<<(Node& node, const CreateInfo& info);
 
 public:
+	void Update(const glm::mat4& model);
+
 	virtual std::type_index getTypeIndex() const { return typeid(Mesh); }
 
-	const Buffer& vertexBuffer() const { return m_VertexBuffer; }
+	inline const Buffer& vertexBuffer() const { return m_VertexBuffer; }
 
-	uint32_t getVertexCount() { return numVertices; }
+	inline uint32_t getVertexCount() const { return numVertices; }
 
-	VertexInput* getVertexInput() { return m_Vertex; }
+	inline VertexInput* getVertexInput() { return m_Vertex; }
+
+	inline const AABB& getAABB() const { return m_AABB; }
 
 private:
 	Buffer							m_VertexBuffer;
 	uint32_t						numVertices;
 	VertexInput*					m_Vertex;
 	CreateInfo						m_CreateInfo;
+	AABB							m_AABB;
 };

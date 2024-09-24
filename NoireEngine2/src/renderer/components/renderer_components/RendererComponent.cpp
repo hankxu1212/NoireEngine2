@@ -4,6 +4,7 @@
 #include "renderer/scene/Scene.hpp"
 #include "renderer/Camera.hpp"
 #include "renderer/components/CameraComponent.hpp"
+#include "renderer/object/Mesh.hpp"
 
 #include <iostream>
 
@@ -22,6 +23,11 @@ void RendererComponent::Update()
 void RendererComponent::Render(const glm::mat4& model)
 {
 	Camera* cam = GetScene()->mainCam()->camera();
+	mesh->Update(model);
+
+	// frustum culling
+	if (!cam->getViewFrustum().CubeInFrustum(mesh->getAABB().min, mesh->getAABB().max))
+		return;
 
 	GetScene()->PushObjectInstances({
 		{

@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\AABB.cpp" />
     <ClCompile Include="src\renderer\materials\Material.cpp" />
     <ClCompile Include="src\renderer\vertices\PosNorTanTexVertex.cpp" />
     <ClCompile Include="src\core\input\NativeInput.cpp" />
@@ -160,6 +161,7 @@
     <ClCompile Include="src\renderer\vertices\Vertex.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\AABB.hpp" />
     <ClInclude Include="src\renderer\materials\Material.hpp" />
     <ClInclude Include="src\renderer\vertices\PosNorTanTexVertex.hpp" />
     <ClInclude Include="src\core\input\NativeInput.hpp" />

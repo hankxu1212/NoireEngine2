@@ -38,7 +38,7 @@ void Camera::Update(const Transform& t)
 
 	projectionMatrix[1][1] *= -1;
 
-	//frustum.Update(viewMatrix, projectionMatrix);
+	frustum.Update(viewMatrix, projectionMatrix);
 
 	position = t.WorldLocation();
 }
