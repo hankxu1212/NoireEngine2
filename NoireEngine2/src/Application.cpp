@@ -7,8 +7,8 @@
 #include "backend/VulkanContext.hpp"
 
 #include "scripting/ScriptingEngine.hpp"
-
 #include "core/resources/Resources.hpp"
+#include "editor/Editor.hpp"
 
 Application* Application::s_Instance = nullptr;
 float Time::DeltaTime;
@@ -49,6 +49,9 @@ Application::Application(const ApplicationSpecification& specification)
 
 	// calls start on all scripts here
 	PushLayer(scriptingEngine);
+
+	// push editor window
+	//PushLayer(new Editor());
 }
 
 Application::~Application()
@@ -91,6 +94,11 @@ void Application::Run()
 			UpdateStage(Module::UpdateStage::Post);
 
 			UpdateStage(Module::UpdateStage::Render);
+
+			//for (Layer* layer : m_LayerStack)
+			//{
+			//	layer->OnImGuiRender();
+			//}
 		}
 	}
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "backend/pipeline/ObjectPipeline.hpp"
-#include "backend/images/ImageDepth.hpp"
 
 /**
  * A renderer manages the render pass, frame buffers, and swapchain to a certain extent
@@ -30,17 +29,9 @@ public:
 
 	bool enabled = true;
 
-private:
-	void DestroyFrameBuffers();
-
 public:
-	VkRenderPass							m_Renderpass = VK_NULL_HANDLE;
-	
 	std::unique_ptr<ObjectPipeline>			objectPipeline;
 	
-	std::unique_ptr<ImageDepth>				s_SwapchainDepthImage;
-	std::vector<VkFramebuffer>				m_Framebuffers;
-
 	Scene* scene;
 };
 

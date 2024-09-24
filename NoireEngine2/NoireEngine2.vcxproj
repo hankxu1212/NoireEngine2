@@ -66,7 +66,7 @@
     <NMakeBuildCommandLine>node src/Maekfile.js</NMakeBuildCommandLine>
     <NMakeOutput>src/bin/main.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src;vendor/glm</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src;vendor/glm;vendor;vendor/imgui</NMakeIncludeSearchPath>
     <AdditionalOptions>/std:c++20</AdditionalOptions>
     <NMakeForcedIncludes>
     </NMakeForcedIncludes>
@@ -89,6 +89,9 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\pipeline\ImGuiPipeline.cpp" />
+    <ClCompile Include="src\core\UI\ImGuiLayer.cpp" />
+    <ClCompile Include="src\editor\Editor.cpp" />
     <ClCompile Include="src\renderer\AABB.cpp" />
     <ClCompile Include="src\renderer\materials\Material.cpp" />
     <ClCompile Include="src\renderer\vertices\PosNorTanTexVertex.cpp" />
@@ -159,8 +162,59 @@
     <ClCompile Include="tutorial\Tutorial.cpp" />
     <ClCompile Include="src\backend\shader\VulkanShader.cpp" />
     <ClCompile Include="src\renderer\vertices\Vertex.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_allegro5.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_android.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_dx10.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_dx11.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_dx12.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_dx9.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_glut.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_opengl2.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_sdl3.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_sdlrenderer2.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_sdlrenderer3.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_wgpu.cpp" />
+    <ClCompile Include="vendor\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_allegro5\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_android_opengl3\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_glfw_opengl2\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_glfw_opengl3\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_glfw_vulkan\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_glfw_wgpu\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_glut_opengl2\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_null\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_sdl2_directx11\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_sdl2_opengl2\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_sdl2_opengl3\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_sdl2_sdlrenderer2\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_sdl2_vulkan\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_sdl3_opengl3\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_sdl3_sdlrenderer3\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_win32_directx10\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_win32_directx11\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_win32_directx12\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_win32_directx9\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\example_win32_opengl3\main.cpp" />
+    <ClCompile Include="vendor\imgui\examples\libs\usynergy\uSynergy.c" />
+    <ClCompile Include="vendor\imgui\imgui.cpp" />
+    <ClCompile Include="vendor\imgui\imgui_demo.cpp" />
+    <ClCompile Include="vendor\imgui\imgui_draw.cpp" />
+    <ClCompile Include="vendor\imgui\imgui_tables.cpp" />
+    <ClCompile Include="vendor\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="vendor\imgui\misc\cpp\imgui_stdlib.cpp" />
+    <ClCompile Include="vendor\imgui\misc\fonts\binary_to_compressed_c.cpp" />
+    <ClCompile Include="vendor\imgui\misc\freetype\imgui_freetype.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\pipeline\ImGuiPipeline.hpp" />
+    <ClInclude Include="src\core\UI\ImGuiExtension.hpp" />
+    <ClInclude Include="src\core\UI\ImGuiLayer.h" />
+    <ClInclude Include="src\core\UI\ImGuiRenderer.hpp" />
+    <ClInclude Include="src\editor\Editor.hpp" />
     <ClInclude Include="src\renderer\AABB.hpp" />
     <ClInclude Include="src\renderer\materials\Material.hpp" />
     <ClInclude Include="src\renderer\vertices\PosNorTanTexVertex.hpp" />
@@ -255,6 +309,40 @@
     <ClInclude Include="tutorial\VK.hpp" />
     <ClInclude Include="src\backend\shader\VulkanShader.h" />
     <ClInclude Include="src\renderer\vertices\Vertex.hpp" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_allegro5.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_android.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_dx10.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_dx12.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_dx9.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_glut.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_metal.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_opengl2.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_osx.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_sdl2.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_sdl3.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_sdlrenderer2.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_sdlrenderer3.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_vulkan.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_wgpu.h" />
+    <ClInclude Include="vendor\imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="vendor\imgui\examples\example_allegro5\imconfig_allegro5.h" />
+    <ClInclude Include="vendor\imgui\examples\libs\emscripten\emscripten_mainloop_stub.h" />
+    <ClInclude Include="vendor\imgui\examples\libs\glfw\include\GLFW\glfw3.h" />
+    <ClInclude Include="vendor\imgui\examples\libs\glfw\include\GLFW\glfw3native.h" />
+    <ClInclude Include="vendor\imgui\examples\libs\usynergy\uSynergy.h" />
+    <ClInclude Include="vendor\imgui\imconfig.h" />
+    <ClInclude Include="vendor\imgui\imgui.h" />
+    <ClInclude Include="vendor\imgui\imgui_internal.h" />
+    <ClInclude Include="vendor\imgui\imstb_rectpack.h" />
+    <ClInclude Include="vendor\imgui\imstb_textedit.h" />
+    <ClInclude Include="vendor\imgui\imstb_truetype.h" />
+    <ClInclude Include="vendor\imgui\misc\cpp\imgui_stdlib.h" />
+    <ClInclude Include="vendor\imgui\misc\freetype\imgui_freetype.h" />
+    <ClInclude Include="vendor\imgui\misc\single_file\imgui_single_file.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\core\resources\nodes\Node.inl" />
@@ -271,6 +359,8 @@
     <None Include="src\shaders\objects.frag" />
     <None Include="src\shaders\objects.vert" />
     <None Include="tutorial\README.md" />
+    <None Include="vendor\imgui\examples\example_glfw_wgpu\web\index.html" />
+    <None Include="vendor\imgui\examples\libs\emscripten\shell_minimal.html" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png" />

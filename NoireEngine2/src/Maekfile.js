@@ -71,6 +71,10 @@ const util_objs = [
 	maek.CPP('utils/sejp/sejp.cpp'),
 ]
 
+const editor_objs = [
+	maek.CPP('editor/Editor.cpp')
+]
+
 const vulkan_objs = [
 	maek.CPP('backend/VulkanContext.cpp'),
 	maek.CPP('backend/devices/VulkanInstance.cpp'),
@@ -94,6 +98,16 @@ const objects_shaders = [
 ];
 vulkan_objs.push(maek.CPP('backend/pipeline/ObjectPipeline.cpp', undefined, { depends: [...objects_shaders] }));
 
+const imgui_objs = [
+	maek.CPP('../vendor/imgui/imgui.cpp'),
+	maek.CPP('../vendor/imgui/imgui_demo.cpp'),
+	maek.CPP('../vendor/imgui/imgui_draw.cpp'),
+	maek.CPP('../vendor/imgui/imgui_tables.cpp'),
+	maek.CPP('../vendor/imgui/imgui_widgets.cpp'),
+	maek.CPP('../vendor/imgui/backends/imgui_impl_vulkan.cpp'),
+	maek.CPP('../vendor/imgui/backends/imgui_impl_glfw.cpp'),
+]
+
 const scripting_objs = [
 	maek.CPP('scripting/Behaviour.cpp'),
 	maek.CPP('scripting/ScriptingEngine.cpp'),
@@ -101,15 +115,16 @@ const scripting_objs = [
 	maek.CPP('scripting/core/SceneNavigationCamera.cpp')
 ]
 
-
 // executable
 const main_exe = maek.LINK
 	([
 		...core_objs,
 		...renderer_objs,
 		...util_objs,
+		...editor_objs,
 		...vulkan_objs,
 		...component_objs,
+		...imgui_objs,
 		...scripting_objs
 	],
 	'bin/main'
@@ -176,6 +191,8 @@ function custom_flags_and_rules() {
 			`/I../src/`,
 			`/I../vendor/glfw-3.4.bin.WIN64/include`,
 			`/I../vendor/glm/`,
+			`/I../vendor/`,
+			`/I../vendor/imgui/`,
 		];
 
 	} else if (maek.OS === 'macos') {
