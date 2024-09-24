@@ -24,21 +24,25 @@ Renderer::Renderer()
 
 	// initialize pipelines
 	objectPipeline = std::make_unique<ObjectPipeline>();
+	imguiPipeline = std::make_unique<ImGuiPipeline>();
 }
 
 void Renderer::CreateRenderPass()
 {
 	objectPipeline->CreateRenderPass();
+	imguiPipeline->CreateRenderPass();
 }
 
 void Renderer::CreatePipelines()
 {
 	objectPipeline->CreatePipeline();
+	imguiPipeline->CreatePipeline();
 }
 
 void Renderer::Cleanup()
 {
 	objectPipeline.reset();
+	imguiPipeline.reset();
 	delete scene;
 }
 
@@ -46,14 +50,17 @@ void Renderer::Update()
 {
 	scene->Update();
 	objectPipeline->Update(scene);
+	imguiPipeline->Update(scene);
 }
 
 void Renderer::Render(const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
 	objectPipeline->Render(scene, commandBuffer, surfaceId);
+	imguiPipeline->Render(scene, commandBuffer, surfaceId);
 }
 
 void Renderer::Rebuild()
 {
 	objectPipeline->Rebuild();
+	imguiPipeline->Rebuild();
 }

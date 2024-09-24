@@ -366,9 +366,6 @@
     <ClCompile Include="src\editor\Editor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\UI\ImGuiLayer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\backend\pipeline\ImGuiPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -761,13 +758,7 @@
     <ClInclude Include="src\editor\Editor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\UI\ImGuiExtension.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\UI\ImGuiLayer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\UI\ImGuiRenderer.hpp">
+    <ClInclude Include="src\editor\ImGuiExtension.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\backend\pipeline\ImGuiPipeline.hpp">

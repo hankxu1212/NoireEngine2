@@ -1,7 +1,7 @@
 #pragma once
 
 #include "backend/pipeline/ObjectPipeline.hpp"
-
+#include "backend/pipeline/ImGuiPipeline.hpp"
 /**
  * A renderer manages the render pass, frame buffers, and swapchain to a certain extent
  * It also manages all pipelines
@@ -19,10 +19,6 @@ public:
 
 	void Update();
 
-	/**
-	 * Runs the render pipeline in the current renderpass.
-	 * @param commandBuffer The command buffer to record render command into.
-	*/
 	void Render(const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
 	void Rebuild();
@@ -31,6 +27,7 @@ public:
 
 public:
 	std::unique_ptr<ObjectPipeline>			objectPipeline;
+	std::unique_ptr<ImGuiPipeline>			imguiPipeline;
 	
 	Scene* scene;
 };

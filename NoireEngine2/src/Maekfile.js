@@ -106,6 +106,7 @@ const imgui_objs = [
 	maek.CPP('../vendor/imgui/imgui_widgets.cpp'),
 	maek.CPP('../vendor/imgui/backends/imgui_impl_vulkan.cpp'),
 	maek.CPP('../vendor/imgui/backends/imgui_impl_glfw.cpp'),
+	maek.CPP('backend/pipeline/ImGuiPipeline.cpp'),
 ]
 
 const scripting_objs = [

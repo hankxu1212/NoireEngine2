@@ -77,3 +77,9 @@ std::string Files::Path(const std::string& suffix)
 	static std::string path = GetExecutableFile(); //cache result of GetExecutableFile()
 	return path + "/" + suffix;
 }
+
+std::string Files::Path(const char* suffix)
+{
+	const std::string& strPath = suffix;
+	return Path(strPath);
+}

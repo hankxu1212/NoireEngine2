@@ -66,7 +66,7 @@
     <NMakeBuildCommandLine>node src/Maekfile.js</NMakeBuildCommandLine>
     <NMakeOutput>src/bin/main.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src;vendor/glm;vendor;vendor/imgui</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src;vendor/glm;vendor;vendor/imgui;vendor/imgui/backends</NMakeIncludeSearchPath>
     <AdditionalOptions>/std:c++20</AdditionalOptions>
     <NMakeForcedIncludes>
     </NMakeForcedIncludes>
@@ -90,7 +90,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\backend\pipeline\ImGuiPipeline.cpp" />
-    <ClCompile Include="src\core\UI\ImGuiLayer.cpp" />
     <ClCompile Include="src\editor\Editor.cpp" />
     <ClCompile Include="src\renderer\AABB.cpp" />
     <ClCompile Include="src\renderer\materials\Material.cpp" />
@@ -211,9 +210,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\backend\pipeline\ImGuiPipeline.hpp" />
-    <ClInclude Include="src\core\UI\ImGuiExtension.hpp" />
-    <ClInclude Include="src\core\UI\ImGuiLayer.h" />
-    <ClInclude Include="src\core\UI\ImGuiRenderer.hpp" />
+    <ClInclude Include="src\editor\ImGuiExtension.hpp" />
     <ClInclude Include="src\editor\Editor.hpp" />
     <ClInclude Include="src\renderer\AABB.hpp" />
     <ClInclude Include="src\renderer\materials\Material.hpp" />

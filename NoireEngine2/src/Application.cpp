@@ -51,7 +51,7 @@ Application::Application(const ApplicationSpecification& specification)
 	PushLayer(scriptingEngine);
 
 	// push editor window
-	//PushLayer(new Editor());
+	PushLayer(new Editor());
 }
 
 Application::~Application()

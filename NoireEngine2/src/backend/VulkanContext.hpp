@@ -66,6 +66,7 @@ public:
 	inline const LogicalDevice*				getLogicalDevice() const { return s_LogicalDevice.get(); }
 	inline const VulkanInstance*			getInstance() const { return s_VulkanInstance.get(); }
 	inline const PhysicalDevice*			getPhysicalDevice() const { return s_PhysicalDevice.get(); }
+	inline const VkPipelineCache&			getPipelineCache() const { return m_PipelineCache; }
 
 	std::shared_ptr<CommandPool>&			GetCommandPool(const TID& threadId = std::this_thread::get_id());
 

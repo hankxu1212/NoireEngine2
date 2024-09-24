@@ -4,6 +4,7 @@
 #include <vulkan/vk_enum_string_helper.h>
 
 #include "utils/Enumerate.hpp"
+#include "utils/Logger.hpp"
 
 VulkanContext::VulkanContext() :
     s_VulkanInstance(std::make_unique<VulkanInstance>()),
@@ -144,7 +145,7 @@ void VulkanContext::VK_CHECK(VkResult err, const char* msg)
     if (err == VK_SUCCESS)
         return;
 
-    std::cerr << "[vulkan] Error: " <<  msg << "with errno: " << string_VkResult(err);
+    NE_ERROR(std::format("[vulkan] Error: {} with errorno: {}", msg, string_VkResult(err)));
 }
 
 std::shared_ptr<CommandPool>& VulkanContext::GetCommandPool(const TID& threadId)
