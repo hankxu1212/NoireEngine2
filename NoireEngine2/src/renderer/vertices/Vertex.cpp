@@ -86,7 +86,6 @@ std::shared_ptr<VertexInput> VertexInput::Create(const std::vector<Attribute>& a
 std::shared_ptr<VertexInput> VertexInput::Create(const Node& node)
 {
 	if (auto resource = Resources::Get()->Find<VertexInput>(node)) {
-		std::cout << "Reusing old mesh" << std::endl;
 		return resource;
 	}
 

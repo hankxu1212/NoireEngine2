@@ -11,6 +11,12 @@ Entity::~Entity()
 	m_Components.clear();
 }
 
+void Entity::SetParent(Entity* newParent)
+{
+	m_Parent = newParent;
+	s_Transform->parent = newParent->transform();
+}
+
 void Entity::Update()
 {
 	// update components

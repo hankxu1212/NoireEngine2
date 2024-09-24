@@ -16,12 +16,12 @@
 
 Scene::Scene()
 {
-	UpdateWorldUniform();
 }
 
 Scene::Scene(const std::string& path)
 {
 	Deserialize(path);
+	UpdateWorldUniform();
 }
 
 Scene::~Scene()
@@ -96,6 +96,8 @@ static bool LoadAsTransform(const sejp::value& val, glm::vec3& outPosition, glm:
 
 static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::string& nodeName, Entity* parent)
 {
+	std::cout << "\n\n\nCreating entity";
+
 	const Scene::TValueUMap& nodeMap = sceneMap[SceneNode::Node];
 
 	if (nodeMap.find(nodeName) == nodeMap.end())
@@ -113,8 +115,9 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 	{
 		if (!parent)
 			newEntity = scene->Instantiate(p, r, s);
-		else
+		else {
 			newEntity = parent->AddChild(p, r, s);
+		}
 	}
 
 	const auto& obj = value.as_object().value();
@@ -122,7 +125,7 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 	// add mesh/material nodes
 	{
 		if (obj.find("mesh") == obj.end())
-			return nullptr; // no mesh!
+			goto make_children;
 
 		const auto& meshStrOpt = obj.at("mesh").as_string();
 		if (!meshStrOpt)
@@ -162,21 +165,32 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 
 	// add camera nodes
 	{
+		//if (obj.find("mesh") == obj.end())
+		//	goto make_children;
 
+		//const std::string name = GET_STR("name");
+		//const auto& parameters = GET_MAP("perspective");
+		//auto get = [&parameters](const char* key) { return (float)parameters.at(key).as_float(); };
+		//float aspect = get("aspect");
+		//float fov = get("vfov");
+		//float near = get("near");
+		//float far = get("far");
+		//std::cout << aspect << " " << fov << " " << near << " " << far << std::endl;
 	}
 
 make_children: // recursively call on children
 	{
 		if (obj.find("children") == obj.end())
-			return nullptr; // no children!
+			return newEntity; // no children!
 
 		const auto& childrenArrOpt = obj.at("children").as_array();
 		if (!childrenArrOpt)
 		{
 			std::cout << "Not a valid array format for children!\n";
-			return nullptr; // not valid children array
+			return newEntity; // not valid children array
 		}
 
+		NE_INFO("Has {} children", childrenArrOpt.value().size());
 		for (const auto& childValue : childrenArrOpt.value())
 		{
 			const auto& childOpt = childValue.as_string();
@@ -187,6 +201,7 @@ make_children: // recursively call on children
 			}
 
 			// At last, the recursive call!
+			assert(newEntity);
 			MakeNode(scene, sceneMap, childOpt.value(), newEntity);
 		}
 	}
@@ -219,7 +234,6 @@ void Scene::Deserialize(const std::string& path)
 			// define some lambdas for parsing...
 			auto GET_STR = [&objMap](const char* key) { return objMap.at(key).as_string().value(); };
 			auto GET_ARR = [&objMap](const char* key) { return objMap.at(key).as_array().value(); };
-			//auto GET_MAP = [&objMap](const char* key) { return objMap.at(key).as_object().value(); };
 
 			try {
 				SceneNode::Type type = SceneNode::ObjectType(GET_STR("type"));
@@ -254,7 +268,7 @@ void Scene::Deserialize(const std::string& path)
 
 		if (sceneMap.find(SceneNode::Node) == sceneMap.end()) 
 		{
-			std::cout << "Warning: Scene is empty\n";
+			NE_WARN("Scene is empty");
 		}
 		else 
 		{
@@ -265,21 +279,12 @@ void Scene::Deserialize(const std::string& path)
 			}
 		}
 
-		std::cout << "Finished loading scene: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
+		NE_INFO("Finished loading scene");
 	}
 	catch (std::exception& e) {
-		std::cout << "Failed to deserialize a scene at: " << path << "with error: " << e.what() << std::endl;
+		NE_ERROR("Failed to deserialize a scene at: {} with error {} ", std::move(path), e.what());
 	}
 }
-
-//const std::string name = GET_STR("name");
-//const auto& parameters = GET_MAP("perspective");
-//auto get = [&parameters](const char* key) { return (float)parameters.at(key).as_float(); };
-//float aspect = get("aspect");
-//float fov = get("vfov");
-//float near = get("near");
-//float far = get("far");
-//std::cout << aspect << " " << fov << " " << near << " " << far << std::endl;
 
 void Scene::PushObjectInstances(const ObjectInstance&& instance)
 {
@@ -306,9 +311,9 @@ void Scene::UpdateWorldUniform()
 
 	m_SceneInfo.SUN_DIRECTION.x = 6.0f / 23.0f;
 	m_SceneInfo.SUN_DIRECTION.y = 13.0f / 23.0f;
-	m_SceneInfo.SUN_DIRECTION.z = -18.0f / 23.0f;
+	m_SceneInfo.SUN_DIRECTION.z = 18.0f / 23.0f;
 
 	m_SceneInfo.SUN_ENERGY.r = 1.0f;
-	m_SceneInfo.SUN_ENERGY.g = 0.0f;
-	m_SceneInfo.SUN_ENERGY.b = 0.0f;
+	m_SceneInfo.SUN_ENERGY.g = 1.0f;
+	m_SceneInfo.SUN_ENERGY.b = 0.9f;
 }

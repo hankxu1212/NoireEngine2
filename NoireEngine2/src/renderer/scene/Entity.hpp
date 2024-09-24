@@ -49,7 +49,7 @@ public:
 	Entity* AddChild(TArgs&... args)
 	{
 		m_Children.emplace_back(std::make_unique<Entity>(m_Scene, args...));
-		m_Children.back()->m_Parent = this;
+		m_Children.back()->SetParent(this);
 		return m_Children.back().get();
 	}
 
@@ -59,7 +59,7 @@ public:
 	{
 		m_Scene = scene;
 		m_Children.emplace_back(std::make_unique<Entity>(scene, args...));
-		m_Children.back()->m_Parent = this;
+		m_Children.back()->SetParent(this);
 		return m_Children.back().get();
 	}
 
@@ -90,6 +90,8 @@ public:
 		}
 		return nullptr;
 	}
+
+	void SetParent(Entity* newParent);
 
 	// dfs the scene graph and update components
 	void Update();

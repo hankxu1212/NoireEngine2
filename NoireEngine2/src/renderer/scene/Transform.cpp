@@ -7,20 +7,20 @@ Transform::Transform(const Transform& other) :
 }
 
 Transform::Transform(glm::vec3 t) : 
-    m_Position(t), parent(Entity::root().transform()) {
+    m_Position(t) {
 }
 
 Transform::Transform(glm::vec3 t, glm::vec3 euler) :
-    m_Position(t), m_Rotation(euler), parent(Entity::root().transform())
+    m_Position(t), m_Rotation(euler)
 {
 }
 
 Transform::Transform(glm::vec3 t, glm::vec3 euler, glm::vec3 s) : 
-    m_Position(t), m_Rotation(euler), m_Scale(s), parent(Entity::root().transform()) {
+    m_Position(t), m_Rotation(euler), m_Scale(s) {
 }
 
 Transform::Transform(glm::vec3 t, glm::quat q, glm::vec3 s) : 
-    m_Position(t), m_Rotation(q), m_Scale(s), parent(Entity::root().transform()) {
+    m_Position(t), m_Rotation(q), m_Scale(s) {
 }
 
 void Transform::SetPosition(glm::vec3 newPosition)

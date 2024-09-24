@@ -5,7 +5,7 @@
 #include "math/Math.hpp"
 #include "core/resources/Files.hpp"
 #include "renderer/scene/Entity.hpp"
-
+#include "utils/Logger.hpp"
 
 Mesh::Mesh(const CreateInfo& createInfo) :
 	m_CreateInfo(createInfo)
@@ -81,7 +81,7 @@ std::shared_ptr<Mesh> Mesh::Create(const CreateInfo& createInfo)
 std::shared_ptr<Mesh> Mesh::Create(const Node& node)
 {
 	if (auto resource = Resources::Get()->Find<Mesh>(node)) {
-		std::cout << "Reusing old mesh" << std::endl;
+		NE_INFO("Reusing old mesh from {}", resource->m_CreateInfo.src);
 		return resource;
 	}
 
@@ -94,7 +94,7 @@ std::shared_ptr<Mesh> Mesh::Create(const Node& node)
 
 void Mesh::Load()
 {
-	std::cout << "Instantiated mesh from path: " << m_CreateInfo.src << std::endl;
+	NE_INFO("Instantiated mesh from {}", m_CreateInfo.src);
 
 	m_Vertex = VertexInput::Create(m_CreateInfo.attributes).get();
 

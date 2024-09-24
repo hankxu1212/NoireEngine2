@@ -10,7 +10,7 @@
 
 Renderer::Renderer()
 {
-	scene = new Scene("../scenes/examples/sg-Articulation.s72");
+	scene = new Scene("../scenes/examples/sg-Grouping.s72");
 
 	glm::quat q{ 1,0,0,0 };
 	glm::vec3 s{ 1,1,1 };

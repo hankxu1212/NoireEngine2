@@ -60,7 +60,7 @@ public:
 
 	inline const void* sceneUniform() const { return &m_SceneInfo; }
 
-	inline size_t sceneUniformSize() const { return sizeof(m_SceneInfo); }
+	inline size_t sceneUniformSize() const { return sizeof(SceneUniform); }
 
 	inline const std::vector<ObjectInstance>& objectInstances() const { return m_ObjectInstances; }
 
