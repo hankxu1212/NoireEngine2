@@ -71,7 +71,9 @@ Application::~Application()
 
 void Application::Run()
 {
+	float lastSecondTime = (float)Time::GetTime();
 	auto before = std::chrono::high_resolution_clock::now();
+
 	while (m_Running)
 	{
 		auto after = std::chrono::high_resolution_clock::now();
@@ -79,6 +81,17 @@ void Application::Run()
 		before = after;
 
 		Time::DeltaTime = std::min(dt, 0.1f); //lag if frame rate dips too low
+
+		m_FPS_Accumulator++;
+
+		// displays fps information
+		float currTime = (float)Time::GetTime();
+		if (currTime - lastSecondTime >= 1.0)
+		{
+			m_FPS = m_FPS_Accumulator;
+			lastSecondTime = currTime;
+			m_FPS_Accumulator = 0;
+		}
 
 		ExecuteMainThreadQueue();
 

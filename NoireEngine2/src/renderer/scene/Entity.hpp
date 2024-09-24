@@ -32,7 +32,7 @@ public:
 	}
 
 	template<typename... TArgs>
-	Entity(Scene* scene, const char* name, TArgs&... args) :
+	Entity(Scene* scene, const std::string& name, TArgs&... args) :
 		m_Scene(scene), m_Name(name), s_Transform(std::make_unique<Transform>(args...)) {
 	}
 
@@ -68,13 +68,9 @@ public:
 	T& AddComponent(Args&&... args)
 	{
 		m_Components.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-		
 		m_Components.back()->SetEntity(this);
-
 		T& newComponent = *dynamic_cast<T*>(m_Components.back().get());
-		
 		m_Scene->OnComponentAdded(*this, newComponent);
-
 		return newComponent;
 	}
 
@@ -117,7 +113,7 @@ private:
 	std::vector<std::unique_ptr<Component>>	m_Components;
 	Scene*									m_Scene = nullptr;
 
-	UUID m_Id;
-	std::string m_Name;
+	UUID									m_Id;
+	std::string								m_Name;
 };
 

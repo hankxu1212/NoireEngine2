@@ -89,8 +89,11 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\scene\SceneManager.cpp" />
     <ClCompile Include="src\backend\pipeline\ImGuiPipeline.cpp" />
     <ClCompile Include="src\editor\Editor.cpp" />
+    <ClCompile Include="src\editor\panels\SceneHierarchyPanel.cpp" />
+    <ClCompile Include="src\editor\widgets\EntityEditorWidget.cpp" />
     <ClCompile Include="src\renderer\AABB.cpp" />
     <ClCompile Include="src\renderer\materials\Material.cpp" />
     <ClCompile Include="src\renderer\vertices\PosNorTanTexVertex.cpp" />
@@ -209,9 +212,12 @@
     <ClCompile Include="vendor\imgui\misc\freetype\imgui_freetype.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\scene\SceneManager.hpp" />
     <ClInclude Include="src\backend\pipeline\ImGuiPipeline.hpp" />
     <ClInclude Include="src\editor\ImGuiExtension.hpp" />
     <ClInclude Include="src\editor\Editor.hpp" />
+    <ClInclude Include="src\editor\panels\SceneHierarchyPanel.h" />
+    <ClInclude Include="src\editor\widgets\EntityEditorWidget.h" />
     <ClInclude Include="src\renderer\AABB.hpp" />
     <ClInclude Include="src\renderer\materials\Material.hpp" />
     <ClInclude Include="src\renderer\vertices\PosNorTanTexVertex.hpp" />

@@ -219,9 +219,9 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 	if (LoadAsTransform(value, p, r, s))
 	{
 		if (!parent)
-			newEntity = scene->Instantiate(p, r, s);
+			newEntity = scene->Instantiate(nodeName, p, r, s);
 		else {
-			newEntity = parent->AddChild(p, r, s);
+			newEntity = parent->AddChild(nodeName, p, r, s);
 		}
 
 		assert(newEntity && "Entity should be non-null");
