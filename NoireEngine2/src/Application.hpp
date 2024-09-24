@@ -28,9 +28,13 @@ struct ApplicationCommandLineArgs
 struct ApplicationSpecification
 {
 	std::string Name = "Noire Engine Application";
-	std::string WorkingDirectory;
 	uint32_t width, height;
 	ApplicationCommandLineArgs CommandLineArgs;
+	
+	enum class Culling { None, Frustum } Culling;
+	std::string PhysicalDeviceName;
+	std::string CameraName;
+	std::string InitialScene;
 };
 
 class Application : Singleton

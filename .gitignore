@@ -7,3 +7,4 @@ src/bin/main.pdb
 
 .vs
 x64/
+*.obj
