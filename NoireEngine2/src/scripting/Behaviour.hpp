@@ -16,8 +16,6 @@ public:
 	virtual void Shutdown() {}
 	virtual void HandleEvent(Event& event) {}
 
-	virtual void Inspect() {}
-	virtual void Debug() {}
-
-	virtual const char* getClassName() const { return ""; }
+	virtual const char* getName() override { return "Behaviour"; }
+	virtual const char* getClassName() const { return "<None>"; }
 };

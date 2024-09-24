@@ -82,6 +82,8 @@ public:
 
 	inline const AABB& getAABB() const { return m_AABB; }
 
+	inline const CreateInfo& getInfo() const { return m_CreateInfo; }
+
 private:
 	Buffer							m_VertexBuffer;
 	uint32_t						numVertices;

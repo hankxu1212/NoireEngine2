@@ -17,6 +17,8 @@ public:
 
 	const char* getName() override { return "Mesh Renderer"; }
 
+	void Inspect() override;
+
 	Mesh* mesh = nullptr;
 	Material* material = nullptr;
 };

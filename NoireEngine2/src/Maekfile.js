@@ -76,6 +76,7 @@ const editor_objs = [
 	maek.CPP('editor/Editor.cpp'),
 	maek.CPP('editor/panels/SceneHierarchyPanel.cpp'),
 	maek.CPP('editor/widgets/EntityEditorWidget.cpp'),
+	maek.CPP('editor/ImGuiExtension.cpp'),
 ]
 
 const vulkan_objs = [

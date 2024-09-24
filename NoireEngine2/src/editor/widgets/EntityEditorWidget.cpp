@@ -80,6 +80,16 @@ void EntityEditorWidget::RenderEditor(Entity* e, ImGuiWindowFlags editor_window_
 				ImGui::Separator(); // --------------------------------------------------
 			}
 
+			// draw transform
+			if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) 
+			{
+				ImGui::Indent(30.f);
+				ImGui::PushID("##ComponentWidget");
+				e->transform()->Inspect();
+				ImGui::PopID();
+				ImGui::Unindent(30.f);
+			}
+
 			for (const auto& component : e->components())
 				ComponentWidget(e, component.get()); // <====================== render each component here
 

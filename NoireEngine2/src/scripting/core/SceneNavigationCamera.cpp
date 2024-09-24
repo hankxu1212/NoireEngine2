@@ -6,6 +6,7 @@
 #include "renderer/scene/Scene.hpp"
 
 #include "glm/gtx/string_cast.hpp"
+#include "editor/ImGuiExtension.hpp"
 
 namespace Core {
 	void SceneNavigationCamera::Awake()
@@ -95,18 +96,12 @@ namespace Core {
 
 	void SceneNavigationCamera::Inspect()
 	{
-		/*
-		ImGui::Text(getName());
+		static std::string name = "Script Name: " + std::string(getClassName());
+		ImGui::Text(name.c_str());
 		ImGuiExt::ColumnDragFloat("Fly Speed", "###FlySpeed", &moveSpeed, 0.05f, 0.0f, FLT_MAX, "%.1f", ImGuiSliderFlags_AlwaysClamp);
 		ImGuiExt::ColumnDragFloat("Zoom Speed", "###ZS", &zoomSpeed, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 		ImGuiExt::ColumnDragFloat("Orbital Rotation Speed", "###ORS", &anchoredRotationSensitivity, 0.1f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 		ImGuiExt::ColumnDragFloat("Orbital Move Speed", "###OMS", &anchoredMoveSensitivity, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-		*/
-	}
-
-	void SceneNavigationCamera::Debug()
-	{
-		Inspect();
 	}
 
 	bool SceneNavigationCamera::OnMouseScroll(MouseScrolledEvent& e)

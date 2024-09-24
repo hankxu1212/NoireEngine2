@@ -80,7 +80,7 @@ void SceneHierarchyPanel::DrawEntityNode(Entity* entity)
 	if (entityDeleted) {
 		//m_ActiveScene->DestroyEntity(entity);
 		if (m_SelectedEntity == entity)
-			m_SelectedEntity = {};
+			m_SelectedEntity = nullptr;
 	}
 
 	// recursivly render children

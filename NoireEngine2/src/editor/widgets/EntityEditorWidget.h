@@ -16,6 +16,7 @@ public:
 	void Show() { show = true; }
 
 	void RenderEditor(Entity* e, ImGuiWindowFlags editor_window_flags);
+
 private:
 	Entity* activeEntity = nullptr;
 	const uint8_t maxNameLength = MAX_NAME_LEN;

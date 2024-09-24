@@ -27,6 +27,9 @@ public:
     void SetScale(glm::vec3&);
 
 public:
+    void Inspect();
+
+public:
     glm::vec3 m_Position = Vec3::Zero;
     glm::quat m_Rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     glm::vec3 m_Scale = Vec3::One;

@@ -18,7 +18,7 @@ namespace Core
         void Start() override;
         void Update() override;
 
-        const char* getClassName() const override { return "Input"; }
+        const char* getClassName() const { return "Input"; }
 
         glm::vec2 GetMouseDelta() const;
     private:

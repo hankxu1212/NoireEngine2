@@ -25,9 +25,7 @@ namespace Core {
 
         void Inspect() override;
         
-        void Debug() override;
-
-        const char* getClassName() const override { return "SceneNavigationCamera"; }
+        const char* getClassName() const { return "SceneNavigationCamera"; }
 
     private:
         void HandleMovement();

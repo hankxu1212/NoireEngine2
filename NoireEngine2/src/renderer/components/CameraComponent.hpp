@@ -22,7 +22,9 @@ public:
 
 	Camera* camera() { return s_Camera.get(); }
 
-	virtual void Inspect() override;
+	void Inspect() override;
+
+	void Debug() override;
 
 	const char* getName() override { return "Camera"; }
 

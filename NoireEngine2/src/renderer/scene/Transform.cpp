@@ -1,6 +1,7 @@
 #include "Transform.hpp"
 
 #include "Entity.hpp"
+#include "editor/ImGuiExtension.hpp"
 
 Transform::Transform(const Transform& other) : 
     m_Position(other.m_Position), m_Rotation(other.m_Rotation), m_Scale(other.m_Scale), parent(other.parent) {
@@ -231,4 +232,15 @@ void Transform::RemoveParent()
 {
     auto parentWorld = parent->World();
     Apply(parentWorld);
+}
+
+void Transform::Inspect()
+{
+    static const char* labels[] = { "X", "Y", "Z" };
+
+    ImGuiExt::DrawVec3(m_Position, "Position", labels);
+    ImGui::Separator(); // --------------------------------------------------
+    ImGuiExt::DrawQuaternion(m_Rotation, "Rotation", labels);
+    ImGui::Separator(); // --------------------------------------------------
+    ImGuiExt::DrawVec3(m_Scale, "Scale", labels);
 }

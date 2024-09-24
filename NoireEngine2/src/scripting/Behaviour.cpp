@@ -2,6 +2,7 @@
 
 #include "renderer/scene/Scene.hpp"
 #include "ScriptingEngine.hpp"
+#include "imgui/imgui.h"
 
 template<> 
 void Scene::OnComponentAdded<Behaviour>(Entity& entity, Behaviour& component)

@@ -5,6 +5,7 @@
 #include "renderer/Camera.hpp"
 #include "renderer/components/CameraComponent.hpp"
 #include "renderer/object/Mesh.hpp"
+#include "imgui/imgui.h"
 
 #include <iostream>
 
@@ -39,6 +40,19 @@ void RendererComponent::Render(const glm::mat4& model)
 		mesh, // mesh pointer
 		material // material pointer
 	});
+}
+
+void RendererComponent::Inspect()
+{
+	ImGui::PushID("Mesh Inspect");
+	{
+		ImGui::Columns(2);
+		ImGui::Text("%s", "Mesh Name");
+		ImGui::NextColumn();
+		ImGui::Text(mesh->getInfo().name.c_str());
+		ImGui::Columns(1);
+	}
+	ImGui::PopID();
 }
 
 template<>

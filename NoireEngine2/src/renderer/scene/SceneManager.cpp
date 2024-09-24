@@ -10,7 +10,8 @@ SceneManager::SceneManager()
 	glm::vec3 s{ 1,1,1 };
 
 	glm::vec3 e1T{ 0,0,20 };
-	Entity* e1 = scene->Instantiate(e1T, q, s);
+	const std::string name = "Main Camera";
+	Entity* e1 = scene->Instantiate(name, e1T, q, s);
 	e1->AddComponent<CameraComponent>(-100);
 	e1->AddComponent<Core::SceneNavigationCamera>();
 

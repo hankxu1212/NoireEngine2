@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\editor\ImGuiExtension.cpp" />
     <ClCompile Include="src\renderer\scene\SceneManager.cpp" />
     <ClCompile Include="src\backend\pipeline\ImGuiPipeline.cpp" />
     <ClCompile Include="src\editor\Editor.cpp" />
