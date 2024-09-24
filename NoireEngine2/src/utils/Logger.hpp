@@ -3,7 +3,6 @@
 #include <string>
 #include <iostream>
 #include <format>
-#include <stacktrace>
 
 class Logger
 {
@@ -16,9 +15,19 @@ public:
         INFO(std::format(_Fmt, std::move(_Args)...));
     }
 
-    static void INFO(const std::string str, c_color color=GREEN)
+    template <class... _Types>
+    static void INFO(const std::format_string<_Types...> _Fmt, _Types&... _Args) {
+        INFO(std::format(_Fmt, std::move(_Args)...));
+    }
+
+    static void INFO(const std::string str)
     {
-        std::cout << "\033[" << NORMAL << ";" << color << "m" << "[Info] " << str << "\033[0m" << std::endl;
+        std::cout << "\033[" << NORMAL << ";" << GREEN << "m" << "[Info] " << str << "\033[0m" << std::endl;
+    }
+
+    template <class... _Types>
+    static void WARN(const std::format_string<_Types...> _Fmt, _Types&... _Args) {
+        WARN(std::format(_Fmt, std::move(_Args)...));
     }
 
     template <class... _Types>
@@ -29,6 +38,11 @@ public:
     static void WARN(const std::string str)
     {
         std::cout << "\033[" << ITALIC << ";" << YELLOW << "m" << "[Warning] " << str << "\033[0m" << std::endl;
+    }
+
+    template <class... _Types>
+    static void ERROR(const std::format_string<_Types...> _Fmt, _Types&... _Args) {
+        ERROR(std::format(_Fmt, std::move(_Args)...));
     }
 
     template <class... _Types>
@@ -51,3 +65,8 @@ public:
         std::cout << "\033[" << decoration << ";" << color << "m" << str << "\033[0m" << std::endl;
     }
 };
+
+#define NE_DEBUG(...)   Logger::DEBUG(__VA_ARGS__)
+#define NE_INFO(...)    Logger::INFO(__VA_ARGS__)
+#define NE_WARN(...)    Logger::WARN(__VA_ARGS__)
+#define NE_ERROR(...)   Logger::ERROR(__VA_ARGS__)

@@ -121,30 +121,29 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 
 	// add mesh/material nodes
 	{
-		const Scene::TValueUMap& meshMap = sceneMap[SceneNode::Mesh];
-
 		if (obj.find("mesh") == obj.end())
 			return nullptr; // no mesh!
 
 		const auto& meshStrOpt = obj.at("mesh").as_string();
 		if (!meshStrOpt)
 		{
-			std::cout << "Not a valid string format for mesh!\n";
+			NE_WARN("Not a valid string format for mesh!");
 			goto make_children; // not valid children array
 		}
 		const auto& meshName = meshStrOpt.value();
 		
 		// try to find mesh in scene map
+		const Scene::TValueUMap& meshMap = sceneMap[SceneNode::Mesh];
 		if (meshMap.find(meshName) == meshMap.end())
 		{
-			std::cout << "Did not find mesh with name: " << meshName << ". Skipping...\n";
+			NE_WARN("Did not find mesh with name: {}... skipping.", meshName);
 			goto make_children; // not valid children array
 		}
 		
 		const auto& meshObjOpt = meshMap.at(meshName).as_object();
 		if (!meshObjOpt)
 		{
-			std::cout << "Not a valid map format for mesh:" << meshName << ". Skipping...\n";
+			NE_WARN("Not a valid map format for mesh: {}... skipping.", meshName);
 			goto make_children; // not valid children map
 		}
 
@@ -156,9 +155,14 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 			Mesh::Deserialize(newEntity, meshObjMap, sceneMap);
 		}
 		catch (std::exception& e) {
-			std::cout << "Failed to make renderable mesh and material. with error: " << e.what() << std::endl;
+			NE_ERROR("Failed to make renderable mesh and material. with error: {}", e.what());
 			goto make_children;
 		}
+	}
+
+	// add camera nodes
+	{
+
 	}
 
 make_children: // recursively call on children
@@ -192,7 +196,7 @@ make_children: // recursively call on children
 
 void Scene::Deserialize(const std::string& path)
 {
-	Logger::INFO(std::format("Loading scene: {}", path), Logger::CYAN);
+	NE_INFO("Loading scene: {}", path);
 
 	TSceneMap sceneMap; // entire scene map
 
@@ -243,7 +247,7 @@ void Scene::Deserialize(const std::string& path)
 				}
 			}
 			catch (std::exception& e) {
-				Logger::WARN("Skipping this object due to an error: {}", e.what());
+				NE_WARN("Skipping this object due to an error: {}", e.what());
 				continue;
 			}
 		}
@@ -254,19 +258,7 @@ void Scene::Deserialize(const std::string& path)
 		}
 		else 
 		{
-			//// material pass
-			//if (sceneMap.find(SceneNode::Material) == sceneMap.end())
-			//	std::cout << "Warning: no materials found in the scene!\n";
-			//else 
-			//{
-			//	for (const auto& matObj : sceneMap.at(SceneNode::Material))
-			//	{
-			//		Material::Deserialize(matObj.second);
-			//	}
-			//}
-
-			// now we will start building the scene graph
-			// we start by traversing NODE objects first
+			// traverse all node objects
 			for (const auto& root : roots)
 			{
 				MakeNode(this, sceneMap, root, nullptr);
