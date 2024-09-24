@@ -17,7 +17,7 @@ Renderer::Renderer()
 
 	glm::vec3 e1T{ 0,0,20 };
 	Entity* e1 = scene->Instantiate(e1T, q, s);
-	e1->AddComponent<CameraComponent>();
+	e1->AddComponent<CameraComponent>(-100);
 	e1->AddComponent<Core::SceneNavigationCamera>();
 
 	Entity* e2 = scene->Instantiate();

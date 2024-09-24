@@ -46,7 +46,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Rendering and scene uniforms
 
-	void PushObjectInstances(const ObjectInstance&& instance);
+	void PushObjectInstances(ObjectInstance&& instance);
 
 	inline CameraComponent* mainCam() const;
 

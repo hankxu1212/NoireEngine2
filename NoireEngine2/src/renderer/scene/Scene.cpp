@@ -94,9 +94,105 @@ static bool LoadAsTransform(const sejp::value& val, glm::vec3& outPosition, glm:
 	}
 }
 
+static void MakeMesh(Entity* newEntity, const Scene::TValueMap& obj, const Scene::TSceneMap& sceneMap)
+{
+	if (obj.find("mesh") == obj.end())
+		return;
+
+	const auto& meshStrOpt = obj.at("mesh").as_string();
+	if (!meshStrOpt)
+	{
+		NE_WARN("Not a valid string format for mesh!");
+		return;
+	}
+	const auto& meshName = meshStrOpt.value();
+
+	// try to find mesh in scene map
+	const Scene::TValueUMap& meshMap = sceneMap.at(SceneNode::Mesh);
+	if (meshMap.find(meshName) == meshMap.end())
+	{
+		NE_WARN("Did not find mesh with name: {}... skipping.", meshName);
+		return;
+	}
+
+	const auto& meshObjOpt = meshMap.at(meshName).as_object();
+	if (!meshObjOpt)
+	{
+		NE_WARN("Not a valid map format for mesh: {}... skipping.", meshName);
+		return;
+	}
+	const auto& meshObjMap = meshObjOpt.value();
+
+	// yea im lazy, gonna wrap everything in one try catch instead...
+	try {
+		// also deserializes material
+		Mesh::Deserialize(newEntity, meshObjMap, sceneMap);
+	}
+	catch (std::exception& e) {
+		NE_ERROR("Failed to make renderable mesh and material. with error: {}", e.what());
+		return;
+	}
+}
+
+static void MakeCamera(Entity* newEntity, const Scene::TValueMap& obj, const Scene::TSceneMap& sceneMap)
+{
+	if (obj.find("camera") == obj.end())
+		return;
+
+	const auto& cameraStrOpt = obj.at("camera").as_string();
+	if (!cameraStrOpt)
+	{
+		NE_WARN("Not a valid string format for camera name!");
+		return;
+	}
+	const auto& cameraName = cameraStrOpt.value();
+
+	// try to find camera in scene map
+	const Scene::TValueUMap& cameraMap = sceneMap.at(SceneNode::Camera);
+	if (cameraMap.find(cameraName) == cameraMap.end())
+	{
+		NE_WARN("Did not find camera with name: {}... skipping.", cameraName);
+		return;
+	}
+
+	const auto& cameraObjOpt = cameraMap.at(cameraName).as_object();
+	if (!cameraObjOpt)
+	{
+		NE_WARN("Not a valid map format for camera: {}... skipping.", cameraName);
+		return;
+	}
+	const auto& cameraObjMap = cameraObjOpt.value();
+
+	// case on perspective/orthographic
+	if (cameraObjMap.find("perspective") != cameraObjMap.end())
+	{
+		const auto& perspectiveObjOpt = cameraObjMap.at("perspective").as_object();
+		if (!perspectiveObjOpt)
+		{
+			NE_WARN("Not a valid map format for camera: {}... skipping.", cameraName);
+			return;
+		}
+		const auto& perspectiveObj = perspectiveObjOpt.value();
+
+		auto get = [&perspectiveObj](const char* key) { return (float)perspectiveObj.at(key).as_float(); };
+		float aspect = get("aspect");
+		float fov = get("vfov");
+		float near = get("near");
+		float far = get("far");
+
+		newEntity->AddComponent<CameraComponent>(Camera::Scene, false, near, far, fov, aspect);
+	}
+	else
+	{
+		// TODO: handle camera orthographic
+		NE_WARN("Orthographic cameras are not yet supported");
+	}
+}
+
+
 static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::string& nodeName, Entity* parent)
 {
-	std::cout << "\n\n\nCreating entity";
+	NE_DEBUG("Creating entity", Logger::CYAN, Logger::BOLD);
 
 	const Scene::TValueUMap& nodeMap = sceneMap[SceneNode::Node];
 
@@ -118,67 +214,16 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 		else {
 			newEntity = parent->AddChild(p, r, s);
 		}
+
+		assert(newEntity && "Entity should be non-null");
 	}
 
 	const auto& obj = value.as_object().value();
 
-	// add mesh/material nodes
-	{
-		if (obj.find("mesh") == obj.end())
-			goto make_children;
+	MakeMesh(newEntity, obj, sceneMap);
+	MakeCamera(newEntity, obj, sceneMap);
 
-		const auto& meshStrOpt = obj.at("mesh").as_string();
-		if (!meshStrOpt)
-		{
-			NE_WARN("Not a valid string format for mesh!");
-			goto make_children; // not valid children array
-		}
-		const auto& meshName = meshStrOpt.value();
-		
-		// try to find mesh in scene map
-		const Scene::TValueUMap& meshMap = sceneMap[SceneNode::Mesh];
-		if (meshMap.find(meshName) == meshMap.end())
-		{
-			NE_WARN("Did not find mesh with name: {}... skipping.", meshName);
-			goto make_children; // not valid children array
-		}
-		
-		const auto& meshObjOpt = meshMap.at(meshName).as_object();
-		if (!meshObjOpt)
-		{
-			NE_WARN("Not a valid map format for mesh: {}... skipping.", meshName);
-			goto make_children; // not valid children map
-		}
-
-		const auto& meshObjMap = meshObjOpt.value();
-
-		// yea im lazy, gonna wrap everything in one try catch instead...
-		try {
-			// also deserializes material
-			Mesh::Deserialize(newEntity, meshObjMap, sceneMap);
-		}
-		catch (std::exception& e) {
-			NE_ERROR("Failed to make renderable mesh and material. with error: {}", e.what());
-			goto make_children;
-		}
-	}
-
-	// add camera nodes
-	{
-		//if (obj.find("mesh") == obj.end())
-		//	goto make_children;
-
-		//const std::string name = GET_STR("name");
-		//const auto& parameters = GET_MAP("perspective");
-		//auto get = [&parameters](const char* key) { return (float)parameters.at(key).as_float(); };
-		//float aspect = get("aspect");
-		//float fov = get("vfov");
-		//float near = get("near");
-		//float far = get("far");
-		//std::cout << aspect << " " << fov << " " << near << " " << far << std::endl;
-	}
-
-make_children: // recursively call on children
+	// recursively call on children
 	{
 		if (obj.find("children") == obj.end())
 			return newEntity; // no children!
@@ -197,11 +242,10 @@ make_children: // recursively call on children
 			if (!childOpt)
 			{
 				std::cout << "Not a valid string format for child!\n";
-				continue; // not valid children array
+				continue;
 			}
 
 			// At last, the recursive call!
-			assert(newEntity);
 			MakeNode(scene, sceneMap, childOpt.value(), newEntity);
 		}
 	}
@@ -237,12 +281,11 @@ void Scene::Deserialize(const std::string& path)
 
 			try {
 				SceneNode::Type type = SceneNode::ObjectType(GET_STR("type"));
-				std::string name = GET_STR("name");
 
 				// insert into scene map
 				if (sceneMap.find(type) == sceneMap.end())
 					sceneMap[type] = {};
-				sceneMap[type].insert({ name, elem });
+				sceneMap[type].insert({ GET_STR("name"), elem });
 
 				// add all node names to be used later
 				if (type == SceneNode::Scene)
@@ -282,11 +325,11 @@ void Scene::Deserialize(const std::string& path)
 		NE_INFO("Finished loading scene");
 	}
 	catch (std::exception& e) {
-		NE_ERROR("Failed to deserialize a scene at: {} with error {} ", std::move(path), e.what());
+		NE_ERROR("Failed to deserialize a scene at: {} \n with error {}", std::move(path), e.what());
 	}
 }
 
-void Scene::PushObjectInstances(const ObjectInstance&& instance)
+void Scene::PushObjectInstances(ObjectInstance&& instance)
 {
 	m_ObjectInstances.emplace_back(std::move(instance));
 }

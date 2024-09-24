@@ -15,7 +15,8 @@ public:
 
     Camera();
     Camera(const Camera& other) = default;
-    Camera(Type type_, bool orthographic_, float orthographicScale_, float np, float fp);
+    Camera(Type type_, bool orthographic_, float orthographicScale_, float np, float fp); // for creating orthographic cameras
+    Camera(Type type_, bool orthographic_, float np, float fp, float fov, float aspect); // for creating perspective cameras
     ~Camera() = default;
 
     /**
@@ -33,10 +34,7 @@ public:
 
     float nearClipPlane = 0.1f;
     float farClipPlane = 1000.0f;
-    float fieldOfView = 60.0f;
-
-    float screenWidth = -1;
-    float screenHeight = -1;
+    float fieldOfView = 1.05f; // around 60 
     float aspectRatio = -1;
 
     bool orthographic = false;

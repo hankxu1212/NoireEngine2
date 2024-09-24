@@ -55,11 +55,6 @@ public:
         std::cout << "\033[" << BOLD << ";" << RED << "m" << "[Error] " << str << "\033[0m" << std::endl;
     }
 
-    template <class... _Types>
-    static void DEBUG(const std::format_string<_Types...> _Fmt, _Types&&... _Args, c_color color, c_decoration decoration = c_decoration::NORMAL) {
-        DEBUG(std::format(_Fmt, std::move(_Args)...), color, decoration);
-    }
-
     static void DEBUG(const std::string str, c_color color, c_decoration decoration = c_decoration::NORMAL) 
     {
         std::cout << "\033[" << decoration << ";" << color << "m" << str << "\033[0m" << std::endl;

@@ -4,21 +4,26 @@
 
 Camera::Camera()
 {
-	screenWidth = (float)Window::Get()->m_Data.Width;
-	screenHeight = (float)Window::Get()->m_Data.Height;
-	aspectRatio = screenWidth / screenHeight;
+	aspectRatio = (float)Window::Get()->m_Data.Width / (float)Window::Get()->m_Data.Height;
 }
 
-Camera::Camera(Type type_, bool orthographic_, float orthographicScale_, float np, float fp)
-	: nearClipPlane(np), farClipPlane(fp), 
+Camera::Camera(Type type_, bool orthographic_, float orthographicScale_, float np, float fp) :
+	nearClipPlane(np), farClipPlane(fp), 
 	orthographic(orthographic_), orthographicScale(orthographicScale_),
 	type(type_) {
+}
+
+Camera::Camera(Type type_, bool orthographic_, float np, float fp, float fov, float aspect) :
+	nearClipPlane(np), farClipPlane(fp),
+	orthographic(orthographic_),
+	type(type_),
+	fieldOfView(fov),
+	aspectRatio(aspect) {
 }
 
 void Camera::Update(const Transform& t)
 {
 	viewMatrix = glm::lookAt(t.m_Position, t.m_Position - t.Forward(), t.Up());
-	aspectRatio = screenWidth / screenHeight;
 
 	if (orthographic) {
 		projectionMatrix = glm::ortho(
@@ -29,7 +34,7 @@ void Camera::Update(const Transform& t)
 			nearClipPlane, farClipPlane);
 	}
 	else
-		projectionMatrix = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearClipPlane, farClipPlane);
+		projectionMatrix = glm::perspective(fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
 
 	projectionMatrix[1][1] *= -1;
 
