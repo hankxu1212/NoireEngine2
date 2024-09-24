@@ -28,7 +28,5 @@ public:
 public:
 	std::unique_ptr<ObjectPipeline>			objectPipeline;
 	std::unique_ptr<ImGuiPipeline>			imguiPipeline;
-	
-	Scene* scene;
 };
 

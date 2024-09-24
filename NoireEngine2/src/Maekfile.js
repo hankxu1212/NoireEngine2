@@ -48,6 +48,7 @@ const renderer_objs = [
 	maek.CPP('renderer/object/ObjectInstance.cpp'),
 	maek.CPP('renderer/materials/Material.cpp'),
 	maek.CPP('renderer/AABB.cpp'),
+	maek.CPP('renderer/scene/SceneManager.cpp')
 ]
 
 const component_objs = [

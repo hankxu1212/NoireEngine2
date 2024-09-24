@@ -9,6 +9,10 @@ void CameraComponent::Update()
 	s_Camera->Update(*GetTransform());
 }
 
+void CameraComponent::Inspect()
+{
+}
+
 CameraComponent::CameraComponent(int priority_) :
 	priority(priority_)
 {

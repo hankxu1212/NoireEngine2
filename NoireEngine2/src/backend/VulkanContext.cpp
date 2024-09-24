@@ -165,6 +165,8 @@ void VulkanContext::CreatePipelineCache()
 
 void VulkanContext::RecreateSwapchain()
 {
+    WaitForCommands();
+
     auto wd = getSurface(0)->getWindow();
     uint32_t w, h;
     do {

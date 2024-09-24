@@ -16,6 +16,11 @@ public:
 	Transform* GetTransform();
 	Scene* GetScene();
 
+	virtual void Inspect() {};
+	virtual void Debug() { Inspect(); };
+
+	virtual const char* getName() { return "component"; }
+
 protected:
 	Entity* entity;
 };

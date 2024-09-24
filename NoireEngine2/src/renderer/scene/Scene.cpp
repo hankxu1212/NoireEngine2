@@ -46,6 +46,15 @@ void Scene::Update()
 
 	// update entities and components
 	Entity::root().Update();
+}
+
+void Scene::Render()
+{
+	if (mainCam() == nullptr)
+	{
+		std::cerr << "Did not find main camera!\n";
+		return;
+	}
 
 	// push all transforms to pipeline
 	m_MatrixStack.Clear();

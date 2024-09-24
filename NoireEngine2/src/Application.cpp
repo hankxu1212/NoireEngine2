@@ -37,6 +37,8 @@ Application::Application(const ApplicationSpecification& specification)
 
 	// all objects pushed here
 
+	// imgui context initialized here
+
 	// initializes window
 	Window::Get()->SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
 
@@ -94,11 +96,6 @@ void Application::Run()
 			UpdateStage(Module::UpdateStage::Post);
 
 			UpdateStage(Module::UpdateStage::Render);
-
-			//for (Layer* layer : m_LayerStack)
-			//{
-			//	layer->OnImGuiRender();
-			//}
 		}
 	}
 }

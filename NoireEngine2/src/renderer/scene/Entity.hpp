@@ -100,11 +100,12 @@ public:
 	void RenderPass(TransformMatrixStack& matrixStack);
 
 public:
-	Entity* parent()				{ return m_Parent; }
-	Transform* transform()			{ return s_Transform.get(); }
-	UUID& id()						{ return m_Id; }
-	std::string& name()				{ return m_Name; }
-	std::list<std::unique_ptr<Entity>>& children() { return m_Children; }
+	inline Entity* parent()												{ return m_Parent; }
+	inline Transform* transform()										{ return s_Transform.get(); }
+	inline UUID& id()													{ return m_Id; }
+	inline std::string& name()											{ return m_Name; }
+	inline std::list<std::unique_ptr<Entity>>& children()				{ return m_Children; }
+	const std::vector<std::unique_ptr<Component>>& components() const { return m_Components; }
 
 	void SetScene(Scene* newScene) { m_Scene = newScene; }
 	Scene* scene() { return m_Scene; }

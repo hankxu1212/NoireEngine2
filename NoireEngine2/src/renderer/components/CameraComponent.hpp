@@ -22,6 +22,10 @@ public:
 
 	Camera* camera() { return s_Camera.get(); }
 
+	virtual void Inspect() override;
+
+	const char* getName() override { return "Camera"; }
+
 private:
 	friend class Scene;
 	std::unique_ptr<Camera> s_Camera;
