@@ -21,5 +21,12 @@ public:
 
 	void Shutdown();
 
+	/**
+	 * Gets the current scene.
+	 * \return The current scene.
+	 */
+	inline Scene* getScene() const { return scene.get(); }
+
+private:
 	std::unique_ptr<Scene> scene; // the active scene
 };

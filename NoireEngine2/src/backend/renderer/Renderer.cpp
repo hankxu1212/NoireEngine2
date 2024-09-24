@@ -31,14 +31,14 @@ void Renderer::Cleanup()
 
 void Renderer::Update()
 {
-	objectPipeline->Update(SceneManager::Get()->scene.get());
-	imguiPipeline->Update(SceneManager::Get()->scene.get());
+	objectPipeline->Update(SceneManager::Get()->getScene());
+	imguiPipeline->Update(SceneManager::Get()->getScene());
 }
 
 void Renderer::Render(const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
-	objectPipeline->Render(SceneManager::Get()->scene.get(), commandBuffer, surfaceId);
-	imguiPipeline->Render(SceneManager::Get()->scene.get(), commandBuffer, surfaceId);
+	objectPipeline->Render(SceneManager::Get()->getScene(), commandBuffer, surfaceId);
+	imguiPipeline->Render(SceneManager::Get()->getScene(), commandBuffer, surfaceId);
 }
 
 void Renderer::Rebuild()
