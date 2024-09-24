@@ -4,6 +4,9 @@
 #include "Scene.hpp"
 #include "renderer/object/ObjectInstance.hpp"
 
+#include "glm/gtx/string_cast.hpp"
+#include "utils/Logger.hpp"
+
 #include <iostream>
 
 Entity::~Entity()
@@ -34,20 +37,22 @@ void Entity::Update()
 
 void Entity::RenderPass(TransformMatrixStack& matrixStack)
 {
-	//matrixStack.Multiply(s_Transform->Local());
-
-	for (auto& child : m_Children)
+	matrixStack.Push();
 	{
-		//matrixStack.Push();
-		child->RenderPass(matrixStack);
-		//matrixStack.Pop();
-	}
+		matrixStack.Multiply(std::move(s_Transform->Local()));
 
-	//glm::mat4 model = matrixStack.Peek();
+		// render children first
+		for (auto& child : m_Children)
+		{
+			child->RenderPass(matrixStack);
+		}
 
-	const glm::mat4 model = s_Transform->World();
-	for (auto& component : m_Components)
-	{
-		component->Render(model);
+		// render self
+		const glm::mat4& model = matrixStack.Peek();
+		for (auto& component : m_Components)
+		{
+			component->Render(model);
+		}
 	}
+	matrixStack.Pop();
 }
