@@ -15,6 +15,11 @@ layout(set=0,binding=0,std140) uniform World {
 
 layout(set=2,binding=0) uniform sampler2D TEXTURE;
 
+layout( push_constant ) uniform constants
+{
+	vec4 albedo;
+} MaterialPush;
+
 void main() {
 	vec3 n = normalize(normal);
 
@@ -22,5 +27,9 @@ void main() {
 	vec3 e = SKY_ENERGY * (0.5 * dot(n,SKY_DIRECTION) + 0.5)
 	       + SUN_ENERGY * max(0.0, dot(n,SUN_DIRECTION)) ;
 
-	outColor = vec4(texture(TEXTURE, texCoord).rgb, 1.0);
+	vec3 texColor = texture(TEXTURE, texCoord).rgb;
+	
+	vec3 color = vec3(MaterialPush.albedo) * texColor * e;
+
+	outColor = vec4(color, 1.0);
 }

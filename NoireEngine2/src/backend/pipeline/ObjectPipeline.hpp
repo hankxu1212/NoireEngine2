@@ -18,6 +18,12 @@ public:
 
 	virtual ~ObjectPipeline();
 
+	struct MaterialPush
+	{
+		struct { float x, y, z, padding_; } albedo;
+	};
+	static_assert(sizeof(MaterialPush) == 16);
+
 public:
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
@@ -35,6 +41,7 @@ private:
 	void PushSceneDrawInfo(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
 	void RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
+
 
 private:
 	VkDescriptorSetLayout set0_World = VK_NULL_HANDLE;

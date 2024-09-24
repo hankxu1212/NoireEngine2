@@ -3,6 +3,7 @@
 #include "math/Math.hpp"
 
 class Mesh;
+class Material;
 class CommandBuffer;
 
 struct ObjectInstance
@@ -19,6 +20,7 @@ struct ObjectInstance
 	uint32_t numVertices = 0;
 
 	Mesh* mesh;
+	Material* material;
 
 	bool BindMesh(const CommandBuffer& commandBuffer, uint32_t instanceID) const;
 

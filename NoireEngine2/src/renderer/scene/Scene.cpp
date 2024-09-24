@@ -7,6 +7,7 @@
 #include "core/resources/Files.hpp"
 #include "SceneNode.hpp"
 #include "utils/Enumerate.hpp"
+#include "utils/Logger.hpp"
 
 #include <iostream>
 #include <unordered_map>
@@ -118,7 +119,7 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 
 	const auto& obj = value.as_object().value();
 
-	// add mesh nodes
+	// add mesh/material nodes
 	{
 		const Scene::TValueUMap& meshMap = sceneMap[SceneNode::Mesh];
 
@@ -151,10 +152,11 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 
 		// yea im lazy, gonna wrap everything in one try catch instead...
 		try {
-			Mesh::Deserialize(newEntity, meshObjMap);
+			// also deserializes material
+			Mesh::Deserialize(newEntity, meshObjMap, sceneMap);
 		}
 		catch (std::exception& e) {
-			std::cout << "Failed to make mesh. with error: " << e.what() << std::endl;
+			std::cout << "Failed to make renderable mesh and material. with error: " << e.what() << std::endl;
 			goto make_children;
 		}
 	}
@@ -190,11 +192,11 @@ make_children: // recursively call on children
 
 void Scene::Deserialize(const std::string& path)
 {
-	std::cout << "Loading scene: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << path << std::endl;
+	Logger::INFO(std::format("Loading scene: {}", path), Logger::CYAN);
 
 	TSceneMap sceneMap; // entire scene map
 
-	std::vector<std::string> roots = {};
+	std::vector<std::string> roots;
 	bool foundScene = false;
 
 	try {
@@ -241,11 +243,10 @@ void Scene::Deserialize(const std::string& path)
 				}
 			}
 			catch (std::exception& e) {
-				std::cout << "Skipping this object due to an error: " << e.what() << std::endl;
+				Logger::WARN("Skipping this object due to an error: {}", e.what());
 				continue;
 			}
 		}
-
 
 		if (sceneMap.find(SceneNode::Node) == sceneMap.end()) 
 		{
@@ -253,6 +254,17 @@ void Scene::Deserialize(const std::string& path)
 		}
 		else 
 		{
+			//// material pass
+			//if (sceneMap.find(SceneNode::Material) == sceneMap.end())
+			//	std::cout << "Warning: no materials found in the scene!\n";
+			//else 
+			//{
+			//	for (const auto& matObj : sceneMap.at(SceneNode::Material))
+			//	{
+			//		Material::Deserialize(matObj.second);
+			//	}
+			//}
+
 			// now we will start building the scene graph
 			// we start by traversing NODE objects first
 			for (const auto& root : roots)
@@ -279,7 +291,7 @@ void Scene::Deserialize(const std::string& path)
 
 void Scene::PushObjectInstances(const ObjectInstance&& instance)
 {
-	m_ObjectInstances.push_back(instance);
+	m_ObjectInstances.emplace_back(std::move(instance));
 }
 
 CameraComponent* Scene::mainCam() const

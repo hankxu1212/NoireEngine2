@@ -8,9 +8,11 @@
 #include <iostream>
 
 RendererComponent::RendererComponent(Mesh* mesh_) :
-	mesh(mesh_)
-{
-	
+	mesh(mesh_) {
+}
+
+RendererComponent::RendererComponent(Mesh* mesh_, Material* material_) :
+	mesh(mesh_), material(material_) {
 }
 
 void RendererComponent::Update()
@@ -21,20 +23,16 @@ void RendererComponent::Render(const glm::mat4& model)
 {
 	Camera* cam = GetScene()->mainCam()->camera();
 
-	ObjectInstance instance
-	{
-		.m_TransformUniform
+	GetScene()->PushObjectInstances({
 		{
-			.viewMatrix = cam->getProjectionMatrix() * cam->getViewMatrix() * model,
-			.modelMatrix = model,
-			.modelMatrix_Normal = model,
-		},
-		.firstVertex = 0,
-		.numVertices = mesh->getVertexCount(),
-		.mesh = mesh
-	};
-
-	GetScene()->PushObjectInstances(std::move(instance));
+			cam->getProjectionMatrix() * cam->getViewMatrix() * model,
+			model,
+			model,
+		}, // transform uniform
+		0, mesh->getVertexCount(), //  first vertex, num vertices
+		mesh, // mesh pointer
+		material // material pointer
+	});
 }
 
 template<>

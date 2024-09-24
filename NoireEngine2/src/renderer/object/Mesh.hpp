@@ -15,6 +15,7 @@ public:
 		uint32_t count;
 		std::vector<VertexInput::Attribute> attributes;
 		std::string material;
+		std::string src;
 
 		CreateInfo() = default;
 
@@ -22,13 +23,15 @@ public:
 			const std::string& topology_,
 			uint32_t count_,
 			std::vector< VertexInput::Attribute>& attributes_,
-			const std::string& material_) 
+			const std::string& material_,
+			const std::string& src_) 
 		{
 			name.assign(name_);
 			topology.assign(topology_);
 			count = count_;
 			attributes = attributes_;
 			material.assign(material_);
+			src.assign(src_);
 		}
 		
 		CreateInfo(const CreateInfo& other)
@@ -38,6 +41,7 @@ public:
 			count = other.count;
 			attributes = other.attributes;
 			material.assign(other.material);
+			src.assign(other.src);
 		}
 	};
 
@@ -51,7 +55,7 @@ public:
 public:
 
 	static const CreateInfo Deserialize(const Scene::TValueMap& obj);
-	static void Deserialize(Entity* entity, const Scene::TValueMap& obj);
+	static void Deserialize(Entity* entity, const Scene::TValueMap& obj, const Scene::TSceneMap& sceneMap);
 
 	static std::shared_ptr<Mesh> Create(const CreateInfo& createInfo);
 	static std::shared_ptr<Mesh> Create(const Node& node);
@@ -62,8 +66,8 @@ public:
 	friend const Node& operator>>(const Node& node, Mesh& mesh);
 	friend Node& operator<<(Node& node, const Mesh& mesh);
 
-	friend const Node& operator>>(const Node& node, CreateInfo& mesh);
-	friend Node& operator<<(Node& node, const CreateInfo& mesh);
+	friend const Node& operator>>(const Node& node, CreateInfo& info);
+	friend Node& operator<<(Node& node, const CreateInfo& info);
 
 public:
 	virtual std::type_index getTypeIndex() const { return typeid(Mesh); }
@@ -72,11 +76,11 @@ public:
 
 	uint32_t getVertexCount() { return numVertices; }
 
-	std::shared_ptr<VertexInput>	getVertexInput() { return r_Vertex; }
+	VertexInput* getVertexInput() { return m_Vertex; }
 
 private:
 	Buffer							m_VertexBuffer;
 	uint32_t						numVertices;
-	std::shared_ptr<VertexInput>	r_Vertex;
+	VertexInput*					m_Vertex;
 	CreateInfo						m_CreateInfo;
 };

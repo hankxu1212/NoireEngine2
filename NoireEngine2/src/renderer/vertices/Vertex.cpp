@@ -27,7 +27,6 @@ static VkFormat vkStringToFormat(const std::string& formatStr)
 
 const Node& operator>>(const Node& node, VertexInput::Attribute& vertex)
 {
-	node["src"].Get(vertex.src);
 	node["offset"].Get(vertex.offset);
 	node["stride"].Get(vertex.stride);
 	node["format"].Get(vertex.format);
@@ -36,7 +35,6 @@ const Node& operator>>(const Node& node, VertexInput::Attribute& vertex)
 
 Node& operator<<(Node& node, const VertexInput::Attribute& vertex)
 {
-	node["src"].Set(vertex.src);
 	node["offset"].Set(vertex.offset);
 	node["stride"].Set(vertex.stride);
 	node["format"].Set(vertex.format);
@@ -72,7 +70,34 @@ bool VertexInput::operator!=(const VertexInput& rhs)
 	return !operator==(rhs);
 }
 
-void VertexInput::Initialize()
+VertexInput::VertexInput(const std::vector<Attribute>& attributes)
+{
+	m_NativeAttributes.assign(attributes.begin(), attributes.end());
+}
+
+std::shared_ptr<VertexInput> VertexInput::Create(const std::vector<Attribute>& attributes)
+{
+	VertexInput temp(attributes);
+	Node node;
+	node << temp;
+	return Create(node);
+}
+
+std::shared_ptr<VertexInput> VertexInput::Create(const Node& node)
+{
+	if (auto resource = Resources::Get()->Find<VertexInput>(node)) {
+		std::cout << "Reusing old mesh" << std::endl;
+		return resource;
+	}
+
+	auto result = std::make_shared<VertexInput>();
+	Resources::Get()->Add(node, std::dynamic_pointer_cast<Resource>(result));
+	node >> *result;
+	result->Load();
+	return result;
+}
+
+void VertexInput::Load()
 {
 	uint32_t i = 0;
 

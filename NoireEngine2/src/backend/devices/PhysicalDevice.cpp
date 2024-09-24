@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "backend/VulkanContext.hpp"
+#include "utils/Logger.hpp"
 
 static void LogVulkanDevice(const VkPhysicalDeviceProperties& physicalDeviceProperties, const std::vector<VkExtensionProperties>& extensionProperties) 
 {
@@ -54,7 +55,8 @@ static void LogVulkanDevice(const VkPhysicalDeviceProperties& physicalDeviceProp
         ss << extension.extensionName << ",\n";
 #endif
     ss << "\n";
-    std::cout << ss.str();
+
+    Logger::INFO(ss.str());
 }
 
 static int RateDeviceSuitability(VkPhysicalDevice device) {

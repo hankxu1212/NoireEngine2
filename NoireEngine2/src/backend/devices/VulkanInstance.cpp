@@ -36,14 +36,13 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 {
     switch (messageSeverity) {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-        std::prl(pCallbackData->pMessage, std::WHITE);
+        Logger::INFO(pCallbackData->pMessage);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-        std::prl(pCallbackData->pMessage, std::YELLOW);
+        Logger::WARN(pCallbackData->pMessage);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        std::prl(pCallbackData->pMessage, std::RED);
-        //std::cerr << "[vulkan] " << pCallbackData->pMessage << std::endl;
+        Logger::ERROR(pCallbackData->pMessage);
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
 #ifdef VK_VERBOSE_CALLBACK

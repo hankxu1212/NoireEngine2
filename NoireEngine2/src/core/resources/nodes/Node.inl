@@ -12,6 +12,7 @@
 #include "core/resources/Resource.hpp"
 #include "utils/Enumerate.hpp"
 #include "utils/String.hpp"
+#include "math/Math.hpp"
 
 template<typename T>
 T Node::Get() const {

@@ -25,7 +25,6 @@ const Mesh::CreateInfo Mesh::Deserialize(const Scene::TValueMap& obj)
 		const auto& attributeMap = attributesMap.at(key).as_object().value();
 		return VertexInput::Attribute
 		{
-			attributeMap.at("src").as_string().value(),
 			(uint32_t)attributeMap.at("offset").as_number().value(),
 			(uint32_t)attributeMap.at("stride").as_number().value(),
 			attributeMap.at("format").as_string().value(),
@@ -44,17 +43,31 @@ const Mesh::CreateInfo Mesh::Deserialize(const Scene::TValueMap& obj)
 		obj.at("topology").as_string().value(),
 		(uint32_t)obj.at("count").as_number().value(),
 		vertexAttributes,
-		obj.at("material").as_string().value()
+		obj.at("material").as_string().value(),
+		attributesMap.at("POSITION").as_object().value().at("src").as_string().value()
 	);
 }
 
-void Mesh::Deserialize(Entity* entity, const Scene::TValueMap& obj)
+void Mesh::Deserialize(Entity* entity, const Scene::TValueMap& obj, const Scene::TSceneMap& sceneMap)
 {
 	if (!entity)
 		throw std::runtime_error("Entity pointer is null while trying to load mesh from file.");
 
 	const Mesh::CreateInfo meshInfo = Mesh::Deserialize(obj);
-	entity->AddComponent<RendererComponent>(Mesh::Create(meshInfo).get());
+
+	// material
+	const auto& materialNodes = sceneMap.at(SceneNode::Material);
+	if (materialNodes.find(meshInfo.material) == materialNodes.end())
+		throw std::runtime_error(std::format("Could not find this material at {}", meshInfo.material));
+	
+	const auto& materialObjOpt = materialNodes.at(meshInfo.material).as_object();
+	if (!materialObjOpt)
+		throw std::runtime_error(std::format("Could not serialize this material at {}", meshInfo.material));
+
+	entity->AddComponent<RendererComponent>(
+		Mesh::Create(meshInfo).get(), 
+		Material::Deserialize(materialObjOpt.value())
+	);
 }
 
 std::shared_ptr<Mesh> Mesh::Create(const CreateInfo& createInfo)
@@ -81,13 +94,11 @@ std::shared_ptr<Mesh> Mesh::Create(const Node& node)
 
 void Mesh::Load()
 {
-	std::cout << "Instantiated mesh from path: " << m_CreateInfo.attributes[0].src << std::endl;
+	std::cout << "Instantiated mesh from path: " << m_CreateInfo.src << std::endl;
 
-	r_Vertex = std::make_shared<VertexInput>();
-	r_Vertex->m_NativeAttributes = m_CreateInfo.attributes; // copy by value
-	r_Vertex->Initialize();
+	m_Vertex = VertexInput::Create(m_CreateInfo.attributes).get();
 
-	const std::string fullPath = "../scenes/examples/" + m_CreateInfo.attributes[0].src;
+	const std::string fullPath = "../scenes/examples/" + m_CreateInfo.src;
 	std::vector<std::byte> bytes = Files::Read(fullPath);
 
 	m_VertexBuffer = Buffer(
@@ -121,6 +132,7 @@ const Node& operator>>(const Node& node, Mesh::CreateInfo& info)
 	node["count"].Get(info.count);
 	node["attributes"].Get(info.attributes);
 	node["material"].Get(info.material);
+	node["src"].Get(info.src);
 	return node;
 }
 
@@ -131,5 +143,6 @@ Node& operator<<(Node& node, const Mesh::CreateInfo& info)
 	node["count"].Set(info.count);
 	node["attributes"].Set(info.attributes);
 	node["material"].Set(info.material);
+	node["src"].Set(info.src);
 	return node;
 }

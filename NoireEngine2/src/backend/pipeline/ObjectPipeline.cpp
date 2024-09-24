@@ -6,7 +6,8 @@
 #include "backend/shader/VulkanShader.h"
 #include "math/Math.hpp"
 #include "core/Time.hpp"
-#include <renderer/object/Mesh.hpp>
+#include "renderer/object/Mesh.hpp"
+#include "renderer/materials/Material.hpp"
 #include "core/resources/Files.hpp"
 #include "renderer/scene/Scene.hpp"
 
@@ -157,12 +158,18 @@ void ObjectPipeline::CreateDescriptors()
 		set2_TEXTURE,
 	};
 
+	VkPushConstantRange range{
+		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+		.offset = 0,
+		.size = sizeof(MaterialPush),
+	};
+
 	VkPipelineLayoutCreateInfo create_info{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 		.setLayoutCount = uint32_t(layouts.size()),
 		.pSetLayouts = layouts.data(),
-		.pushConstantRangeCount = 0,
-		.pPushConstantRanges = nullptr,
+		.pushConstantRangeCount = 1,
+		.pPushConstantRanges = &range,
 	};
 
 	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout),
@@ -629,8 +636,6 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 	Mesh* previouslyBindedMesh = nullptr;
 	VertexInput* previouslyBindedVertex = nullptr;
 
-	int i = 0;
-
 	//std::cout << "Drawing: " << sceneObjectInstances.size() << std::endl;
 	for (ObjectInstance const& inst : sceneObjectInstances)
 	{
@@ -647,12 +652,11 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 			0, nullptr //dynamic offsets count, ptr
 		);
 
-		VertexInput* vertexInputPtr = inst.mesh->getVertexInput().get();
-		if (previouslyBindedVertex == nullptr || vertexInputPtr == nullptr
-			|| *vertexInputPtr != *previouslyBindedVertex) {
+		// bind dynamic vertex layout here
+		VertexInput* vertexInputPtr = inst.mesh->getVertexInput();
+		if (vertexInputPtr != previouslyBindedVertex) {
 			inst.BindVertexInput(commandBuffer);
 			previouslyBindedVertex = vertexInputPtr;
-			i++;
 		}
 
 		bool draw = true;
@@ -662,9 +666,11 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 		}
 		previouslyBindedMesh = inst.mesh;
 
-		if (draw)
+		if (draw) 
+		{
+			if (inst.material)
+				inst.material->Push(commandBuffer, m_PipelineLayout);
 			inst.Draw(commandBuffer, index);
+		}
 	}
-
-	std::cout << "Binded " << i << " times this frame\n";
 }

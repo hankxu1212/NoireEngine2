@@ -22,13 +22,6 @@ Renderer::Renderer()
 
 	Entity* e2 = scene->Instantiate();
 	e2->AddComponent<Core::Input>();
-
-	//glm::vec3 e4T{ 0,0,5 };
-	//scene->Instantiate(e4T, q, s);
-
-	//glm::vec3 e5T{ 0,2,0 };
-	//scene->Instantiate(e5T, q, s);
-	//e2->AddChild();
 }
 
 void Renderer::CreatePipelines()

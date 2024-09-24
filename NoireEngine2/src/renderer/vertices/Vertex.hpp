@@ -11,16 +11,14 @@ struct VertexInput : Resource
 {
 	struct Attribute
 	{
-		std::string			src;
 		uint32_t			offset = 0;
 		uint32_t			stride = 0;
 		std::string			format;
 
 		Attribute() = default;
 
-		Attribute(const std::string& src_, uint32_t offset_, uint32_t stride_, const std::string& format_)
+		Attribute(uint32_t offset_, uint32_t stride_, const std::string& format_)
 		{
-			src.assign(src_);
 			offset = offset_;
 			stride = stride_;
 			format.assign(format_);
@@ -28,7 +26,6 @@ struct VertexInput : Resource
 
 		Attribute(const Attribute& other) 
 		{
-			src.assign(other.src);
 			offset = other.offset;
 			stride = other.stride;
 			format.assign(other.format);
@@ -43,6 +40,12 @@ struct VertexInput : Resource
 		}
 	};
 
+	VertexInput() = default;
+	VertexInput(const std::vector<Attribute>& attributes);
+
+	static std::shared_ptr<VertexInput> Create(const std::vector<Attribute>& attributes);
+	static std::shared_ptr<VertexInput> Create(const Node& node);
+
 	friend const Node& operator>>(const Node& node, Attribute& vertex);
 	friend Node& operator<<(Node& node, const Attribute& vertex);
 
@@ -54,7 +57,7 @@ struct VertexInput : Resource
 
 	virtual std::type_index getTypeIndex() const { return typeid(VertexInput); }
 
-	void Initialize();
+	void Load();
 
 	void Bind(const CommandBuffer& commandBuffer);
 
