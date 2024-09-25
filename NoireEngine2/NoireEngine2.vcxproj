@@ -89,6 +89,9 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\animation\Keyframe.cpp" />
+    <ClCompile Include="src\renderer\animation\Animation.cpp" />
+    <ClCompile Include="src\renderer\animation\Animator.cpp" />
     <ClCompile Include="src\editor\ImGuiExtension.cpp" />
     <ClCompile Include="src\renderer\scene\SceneManager.cpp" />
     <ClCompile Include="src\backend\pipeline\ImGuiPipeline.cpp" />
@@ -213,6 +216,9 @@
     <ClCompile Include="vendor\imgui\misc\freetype\imgui_freetype.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\animation\Keyframe.hpp" />
+    <ClInclude Include="src\renderer\animation\Animation.hpp" />
+    <ClInclude Include="src\renderer\animation\Animator.hpp" />
     <ClInclude Include="src\renderer\scene\SceneManager.hpp" />
     <ClInclude Include="src\backend\pipeline\ImGuiPipeline.hpp" />
     <ClInclude Include="src\editor\ImGuiExtension.hpp" />

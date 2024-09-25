@@ -38,7 +38,7 @@ void RendererComponent::Render(const glm::mat4& model)
 	}
 
 	const Camera* renderCam = GetScene()->GetRenderCam()->camera();
-	GetScene()->PushObjectInstances({
+	GetScene()->PushObjectInstance({
 		{
 			renderCam->getProjectionMatrix() * renderCam->getViewMatrix() * model,
 			model,

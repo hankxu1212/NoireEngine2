@@ -51,10 +51,8 @@ void Scene::Render()
 	// push all transforms to pipeline
 	m_MatrixStack.Clear();
 	m_ObjectInstances.clear();
-
 	for (auto& child : Entity::root().children()) 
 	{
-		assert(m_MatrixStack.Size() == 0);
 		child->RenderPass(m_MatrixStack);
  	}
 }
@@ -327,7 +325,7 @@ void Scene::Deserialize(const std::string& path)
 	}
 }
 
-void Scene::PushObjectInstances(ObjectInstance&& instance)
+void Scene::PushObjectInstance(ObjectInstance&& instance)
 {
 	m_ObjectInstances.emplace_back(std::move(instance));
 }

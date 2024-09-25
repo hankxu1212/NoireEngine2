@@ -60,7 +60,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Rendering and scene uniforms
 
-	void PushObjectInstances(ObjectInstance&& instance);
+	void PushObjectInstance(ObjectInstance&& instance);
 
 	CameraComponent* GetRenderCam();
 
