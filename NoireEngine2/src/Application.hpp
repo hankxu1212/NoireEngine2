@@ -69,8 +69,8 @@ public:
 private:
 	void Run();
 
-	void RunUpdateThread();
-	void RunRenderThread();
+	void RunUpdate();
+	void RunRender();
 
 	void ExecuteMainThreadQueue();
 

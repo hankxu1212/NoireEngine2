@@ -77,7 +77,9 @@ public:
 	inline const VkSemaphore				getRenderSemaphore() { return m_PerSurfaceBuffers[0]->getRenderSemaphore(); }
 	inline const VkFence					getFence() { return m_PerSurfaceBuffers[0]->getFence(); }
 	inline const std::size_t				getCurrentFrame() { return m_PerSurfaceBuffers[0]->currentFrame; }
+	inline Buffer*							getIndirectBuffer() { return m_PerSurfaceBuffers[0]->getIndirectBuffer(); }
 	inline const std::uint32_t				getWorkspaceSize() const { return static_cast<uint32_t>(m_PerSurfaceBuffers.size()); }
+
 
 	inline static float CommandBufferSubmissionTime, RenderTime;
 
@@ -102,6 +104,11 @@ private:
 		inline VkSemaphore getRenderSemaphore() { return renderCompletesSemaphores[currentFrame]; }
 		// cpu fence for current frame
 		inline VkFence getFence() { return flightFences[currentFrame]; }
+
+		inline Buffer* getIndirectBuffer() { return drawIndirectBuffers[currentFrame].get(); }
+
+		// draw indirect buffers
+		std::vector<std::unique_ptr<Buffer>>			drawIndirectBuffers;
 	};
 
 	VkPipelineCache												m_PipelineCache = VK_NULL_HANDLE;
@@ -118,4 +125,5 @@ private:
 private:
 	void CreatePipelineCache();
 	void RecreateSwapchain();
+	void CleanPerSurfaceStructs();
 };

@@ -755,25 +755,37 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 		);
 	}
 
+	//bind texture descriptor set:
+	vkCmdBindDescriptorSets(
+		commandBuffer, //command buffer
+		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+		m_PipelineLayout, //pipeline layout
+		2, //second set
+		1, &texture_descriptors[0], //descriptor sets count, ptr
+		0, nullptr //dynamic offsets count, ptr
+	);
+
 	//draw all instances:
 	const std::vector<ObjectInstance>& sceneObjectInstances = scene->objectInstances();
 	Mesh* previouslyBindedMesh = nullptr;
 	VertexInput* previouslyBindedVertex = nullptr;
 
-	ObjectPipeline::ObjectsDrawn = sceneObjectInstances.size();
+	ObjectsDrawn = sceneObjectInstances.size();
+
+	VkDrawIndirectCommand* drawCommands = (VkDrawIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
+
+	//encode the draw data of each object into the indirect draw buffer
+	for (auto i = 0; i < ObjectsDrawn; i++)
+	{
+		drawCommands[i].vertexCount = sceneObjectInstances[i].numVertices;
+		drawCommands[i].instanceCount = 1;
+		drawCommands[i].firstVertex = 0;
+		drawCommands[i].firstInstance = i; //used to access object matrix in the shader
+	}
+
 	for (ObjectInstance const& inst : sceneObjectInstances)
 	{
 		uint32_t index = uint32_t(&inst - &sceneObjectInstances[0]);
-
-		//bind texture descriptor set:
-		vkCmdBindDescriptorSets(
-			commandBuffer, //command buffer
-			VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-			m_PipelineLayout, //pipeline layout
-			2, //second set
-			1, &texture_descriptors[0], //descriptor sets count, ptr
-			0, nullptr //dynamic offsets count, ptr
-		);
 
 		// bind dynamic vertex layout here
 		VertexInput* vertexInputPtr = inst.mesh->getVertexInput();
@@ -786,14 +798,20 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 		if (inst.mesh != previouslyBindedMesh) 
 		{
 			draw = inst.BindMesh(commandBuffer, index);
+			previouslyBindedMesh = inst.mesh;
 		}
-		previouslyBindedMesh = inst.mesh;
 
 		if (draw) 
 		{
 			if (inst.material)
 				inst.material->Push(commandBuffer, m_PipelineLayout);
-			inst.Draw(commandBuffer, index);
+			//inst.Draw(commandBuffer, index);
+
+			VkDeviceSize indirect_offset = index * sizeof(VkDrawIndirectCommand);
+			uint32_t draw_stride = sizeof(VkDrawIndirectCommand);
+
+			//execute the draw command buffer on each section as defined by the array of draws
+			vkCmdDrawIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), indirect_offset, 1, draw_stride);
 		}
 	}
 }

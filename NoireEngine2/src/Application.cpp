@@ -99,16 +99,14 @@ void Application::Run()
 
 		Timer timer;
 		{
-			RunUpdateThread();
+			RunUpdate();
 		}
 		if (StatsDirty)
 			ApplicationUpdateTime = timer.GetElapsed(true);
 
 		if (!m_Minimized) 
 		{
-			{
-				RunRenderThread();
-			}
+			RunRender();
 			if (StatsDirty)
 				ApplicationRenderTime = timer.GetElapsed(false);
 		}
@@ -116,7 +114,7 @@ void Application::Run()
 	}
 }
 
-void Application::RunUpdateThread()
+void Application::RunUpdate()
 {
 	UpdateStage(Module::UpdateStage::Pre);
 
@@ -130,7 +128,7 @@ void Application::RunUpdateThread()
 	UpdateStage(Module::UpdateStage::Post);
 }
 
-void Application::RunRenderThread()
+void Application::RunRender()
 {
 	UpdateStage(Module::UpdateStage::Render);
 }

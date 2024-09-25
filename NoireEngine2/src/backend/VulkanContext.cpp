@@ -24,15 +24,7 @@ VulkanContext::~VulkanContext()
     vkDestroyPipelineCache(*s_LogicalDevice, m_PipelineCache, nullptr);
     m_CommandPools.clear();
 
-    for (auto& perSurfaceBuffer : m_PerSurfaceBuffers) {
-        for (std::size_t i = 0; i < perSurfaceBuffer->flightFences.size(); i++) {
-            vkDestroyFence(*s_LogicalDevice, perSurfaceBuffer->flightFences[i], nullptr);
-            vkDestroySemaphore(*s_LogicalDevice, perSurfaceBuffer->presentCompletesSemaphores[i], nullptr);
-            vkDestroySemaphore(*s_LogicalDevice, perSurfaceBuffer->renderCompletesSemaphores[i], nullptr);
-        }
-
-        perSurfaceBuffer->commandBuffers.clear();
-    }
+    CleanPerSurfaceStructs();
 
     s_Renderer->Cleanup();
 
@@ -182,13 +174,7 @@ void VulkanContext::RecreateSwapchain()
     } while (!w || !h);
     auto extent = VkExtent2D{ w, h };
 
-    for (const auto& [id, perSurfaceBuffer] : Enumerate(m_PerSurfaceBuffers)) {
-        for (std::size_t i = 0; i < perSurfaceBuffer->flightFences.size(); i++) {
-            vkDestroyFence(*s_LogicalDevice, perSurfaceBuffer->flightFences[i], nullptr);
-            vkDestroySemaphore(*s_LogicalDevice, perSurfaceBuffer->presentCompletesSemaphores[i], nullptr);
-            vkDestroySemaphore(*s_LogicalDevice, perSurfaceBuffer->renderCompletesSemaphores[i], nullptr);
-        }
-    }
+    CleanPerSurfaceStructs();
 
     m_Swapchains.resize(m_Surfaces.size());
     m_PerSurfaceBuffers.resize(m_Surfaces.size());
@@ -200,11 +186,13 @@ void VulkanContext::RecreateSwapchain()
         
         auto& perSurfaceBuffer = m_PerSurfaceBuffers[id];
 
+        // resize everything
         uint32_t img_cnt = m_Swapchains[id]->getImageCount();
         perSurfaceBuffer->presentCompletesSemaphores.resize(img_cnt);
         perSurfaceBuffer->renderCompletesSemaphores.resize(img_cnt);
         perSurfaceBuffer->flightFences.resize(img_cnt);
         perSurfaceBuffer->commandBuffers.resize(img_cnt);
+        perSurfaceBuffer->drawIndirectBuffers.resize(img_cnt);
 
         VkSemaphoreCreateInfo semaphoreCreateInfo = {};
         semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -224,9 +212,34 @@ void VulkanContext::RecreateSwapchain()
                 "[vulkan] Error creating semaphores");
 
             perSurfaceBuffer->commandBuffers[i] = std::make_unique<CommandBuffer>(false);
+
+            perSurfaceBuffer->drawIndirectBuffers[i] = std::make_unique<Buffer>(
+                500 * sizeof(VkDrawIndexedIndirectCommand),
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                Buffer::Mapped
+            );
         }
+
         std::cout << "Resized surface " << id << " to " << img_cnt << std::endl;
     }
 
     s_Renderer->Rebuild();
+}
+
+void VulkanContext::CleanPerSurfaceStructs()
+{
+    for (const auto& [id, perSurfaceBuffer] : Enumerate(m_PerSurfaceBuffers))
+    {
+        for (std::size_t i = 0; i < perSurfaceBuffer->flightFences.size(); i++)
+        {
+            perSurfaceBuffer->drawIndirectBuffers[i]->Destroy();
+
+            vkDestroyFence(*s_LogicalDevice, perSurfaceBuffer->flightFences[i], nullptr);
+            vkDestroySemaphore(*s_LogicalDevice, perSurfaceBuffer->presentCompletesSemaphores[i], nullptr);
+            vkDestroySemaphore(*s_LogicalDevice, perSurfaceBuffer->renderCompletesSemaphores[i], nullptr);
+
+            perSurfaceBuffer->commandBuffers.clear();
+        }
+    }
 }
