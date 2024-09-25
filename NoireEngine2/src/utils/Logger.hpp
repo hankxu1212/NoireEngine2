@@ -53,6 +53,7 @@ public:
     static void ERROR(const std::string str)
     {
         std::cout << "\033[" << BOLD << ";" << RED << "m" << "[Error] " << str << "\033[0m" << std::endl;
+        abort();
     }
 
     static void DEBUG(const std::string str, c_color color, c_decoration decoration = c_decoration::NORMAL) 

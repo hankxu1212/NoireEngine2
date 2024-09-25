@@ -10,8 +10,10 @@
 class SceneManager : public Module::Registrar<SceneManager>
 {
 	inline static const bool Registered = Register(UpdateStage::Pre, DestroyStage::Normal, Requires<VulkanContext>());
+
 public:
 	SceneManager();
+
 	~SceneManager();
 
 	/**

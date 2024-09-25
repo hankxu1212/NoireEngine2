@@ -331,7 +331,7 @@ void Scene::Deserialize(const std::string& path)
 		NE_INFO("Finished loading scene");
 	}
 	catch (std::exception& e) {
-		NE_ERROR("Failed to deserialize a scene at: {} \n with error {}", std::move(path), e.what());
+		NE_ERROR("Failed to deserialize a scene with path: [{}]. Error: {}", std::move(path), e.what());
 	}
 }
 

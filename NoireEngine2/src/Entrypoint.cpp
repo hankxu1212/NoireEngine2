@@ -49,6 +49,12 @@ static void Parse(ApplicationCommandLineArgs args, ApplicationSpecification& spe
             argi++;
             spec.CameraName = std::string(args[argi]);
         }
+        else if (strcmp(args[argi], "--scene") == 0)
+        {
+            if (argi + 1 >= args.Count) throw std::runtime_error("--scene requires one parameter: scene name");
+            argi++;
+            spec.InitialScene = std::string(args[argi]);
+        }
          else {
              throw std::runtime_error("Unrecognized argument '" + std::string(args[argi]) + "'.");
         }
