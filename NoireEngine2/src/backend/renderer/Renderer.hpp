@@ -25,6 +25,7 @@ public:
 
 	bool enabled = true;
 
+	inline static float ObjectRenderTime, UIRenderTime;
 public:
 	std::unique_ptr<ObjectPipeline>			objectPipeline;
 	std::unique_ptr<ImGuiPipeline>			imguiPipeline;

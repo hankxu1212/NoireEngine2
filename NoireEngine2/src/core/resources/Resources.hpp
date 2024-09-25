@@ -1,9 +1,7 @@
 #pragma once
 
-#include "utils/ThreadPool.hpp"
 #include "Resource.hpp"
 #include "nodes/Node.hpp"
-#include "core/Timer.hpp"
 #include "core/resources/Module.hpp"
 
 /**
@@ -43,13 +41,6 @@ public:
 
 	void Remove(const std::shared_ptr<Resource>& resource);
 
-	/**
-		* Gets the resource loader thread pool.
-		* @return The resource loader thread pool.
-		*/
-	ThreadPool& GetThreadPool() { return threadPool; }
-
 private:
 	std::unordered_map<std::type_index, std::map<Node, std::shared_ptr<Resource>>> resources;
-	ThreadPool threadPool;
 };

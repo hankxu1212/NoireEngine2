@@ -9,6 +9,7 @@
 #include "scripting/ScriptingEngine.hpp"
 #include "core/resources/Resources.hpp"
 #include "editor/Editor.hpp"
+#include "core/Timer.hpp"
 
 Application* Application::s_Instance = nullptr;
 float Time::DeltaTime;
@@ -91,26 +92,47 @@ void Application::Run()
 			m_FPS = m_FPS_Accumulator;
 			lastSecondTime = currTime;
 			m_FPS_Accumulator = 0;
+			StatsDirty = true;
 		}
 
 		ExecuteMainThreadQueue();
 
-		if (!m_Minimized)
+		Timer timer;
 		{
-			UpdateStage(Module::UpdateStage::Pre);
-
-			UpdateStage(Module::UpdateStage::Normal);
-
-			for (Layer* layer : m_LayerStack)
-			{
-				layer->OnUpdate();
-			}
-
-			UpdateStage(Module::UpdateStage::Post);
-
-			UpdateStage(Module::UpdateStage::Render);
+			RunUpdateThread();
 		}
+		if (StatsDirty)
+			ApplicationUpdateTime = timer.GetElapsed(true);
+
+		if (!m_Minimized) 
+		{
+			{
+				RunRenderThread();
+			}
+			if (StatsDirty)
+				ApplicationRenderTime = timer.GetElapsed(false);
+		}
+		StatsDirty = false;
 	}
+}
+
+void Application::RunUpdateThread()
+{
+	UpdateStage(Module::UpdateStage::Pre);
+
+	UpdateStage(Module::UpdateStage::Normal);
+
+	for (Layer* layer : m_LayerStack)
+	{
+		layer->OnUpdate();
+	}
+
+	UpdateStage(Module::UpdateStage::Post);
+}
+
+void Application::RunRenderThread()
+{
+	UpdateStage(Module::UpdateStage::Render);
 }
 
 void Application::ExecuteMainThreadQueue()
@@ -136,6 +158,7 @@ void Application::SubmitToMainThread(const std::function<void()>& function)
 void Application::OnEvent(Event& e)
 {
 	e.Dispatch<WindowCloseEvent>(NE_BIND_EVENT_FN(Application::OnWindowClose));
+	e.Dispatch<WindowIconfyEvent>(NE_BIND_EVENT_FN(Application::OnWindowIconfy));
 	e.Dispatch<WindowResizeEvent>(NE_BIND_EVENT_FN(Application::OnWindowResize));
 
 	for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
@@ -152,12 +175,19 @@ bool Application::OnWindowClose(WindowCloseEvent& e)
 	return true;
 }
 
+bool Application::OnWindowIconfy(WindowIconfyEvent& e)
+{
+	std::cout << e.m_Minimized;
+	m_Minimized = e.m_Minimized;
+	return true;
+}
+
 bool Application::OnWindowResize(WindowResizeEvent& e)
 {
 	if (e.m_Width == 0 || e.m_Height == 0)
 	{
 		m_Minimized = true;
-		return false;
+		return true;
 	}
 
 	VulkanContext::Get()->OnWindowResize(e.m_Width, e.m_Height);

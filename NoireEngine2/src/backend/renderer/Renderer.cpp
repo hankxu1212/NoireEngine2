@@ -1,8 +1,10 @@
 #include "Renderer.hpp"
 
 #include <memory>
+#include "core/Timer.hpp"
 #include "renderer/scene/SceneManager.hpp"
 #include "backend/VulkanContext.hpp"
+#include "utils/Logger.hpp"
 
 Renderer::Renderer()
 {
@@ -37,8 +39,17 @@ void Renderer::Update()
 
 void Renderer::Render(const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
-	objectPipeline->Render(SceneManager::Get()->getScene(), commandBuffer, surfaceId);
-	imguiPipeline->Render(SceneManager::Get()->getScene(), commandBuffer, surfaceId);
+	Timer timer;
+	{
+		objectPipeline->Render(SceneManager::Get()->getScene(), commandBuffer, surfaceId);
+	}
+	if (Application::StatsDirty)
+		ObjectRenderTime = timer.GetElapsed(true);
+	{
+		imguiPipeline->Render(SceneManager::Get()->getScene(), commandBuffer, surfaceId);
+	}
+	if (Application::StatsDirty)
+		UIRenderTime = timer.GetElapsed(true);
 }
 
 void Renderer::Rebuild()

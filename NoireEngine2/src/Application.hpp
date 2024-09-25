@@ -60,13 +60,22 @@ public:
 	static const ApplicationSpecification& GetSpecification() { return s_Instance->m_Specification; }
 	static const uint16_t GetFPS() { return s_Instance->m_FPS; }
 	static const LayerStack& GetLayerStack() { return s_Instance->m_LayerStack; }
+	static bool IsMinimized() { return s_Instance->m_Minimized; }
+
+
+	inline static float ApplicationUpdateTime, ApplicationRenderTime;
+	inline static bool StatsDirty = true;
 
 private:
 	void Run();
 
+	void RunUpdateThread();
+	void RunRenderThread();
+
 	void ExecuteMainThreadQueue();
 
 	bool OnWindowClose(WindowCloseEvent& e);
+	bool OnWindowIconfy(WindowIconfyEvent& e);
 	bool OnWindowResize(WindowResizeEvent& e);
 
 	void CreateModule(Module::RegistryMap::const_iterator it);
@@ -90,6 +99,7 @@ private:
 
 	std::vector<std::function<void()>>	m_MainThreadQueue;
 	std::mutex							m_MainThreadQueueMutex;
+
 
 private:
 	friend int ::main(int argc, char** argv);

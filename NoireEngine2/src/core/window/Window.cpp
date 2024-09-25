@@ -114,6 +114,13 @@ Window::Window()
 				data.EventCallback(event);
 			});
 
+		glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* window, int iconfied)
+			{
+				WindowIconfyEvent event(iconfied);
+				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+				data.EventCallback(event);
+			});
+
 		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);

@@ -29,6 +29,25 @@ public:
 	EVENT_CLASS_CATEGORY(EventCategoryApplication)
 };
 
+class WindowIconfyEvent : public Event
+{
+public:
+	WindowIconfyEvent(bool minimized)
+		: m_Minimized(minimized) {}
+
+	bool m_Minimized;
+	// TODO: move this to _DEBUG and avoid using stringstream for allocation!
+	std::string ToString() const override
+	{
+		std::stringstream ss;
+		ss << "WindowIconfyEvent: " << m_Minimized;
+		return ss.str();
+	}
+
+	EVENT_CLASS_TYPE(WindowIconfy)
+	EVENT_CLASS_CATEGORY(EventCategoryApplication)
+};
+
 class WindowCloseEvent : public Event
 {
 public:

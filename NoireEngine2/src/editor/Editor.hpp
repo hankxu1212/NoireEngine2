@@ -60,7 +60,7 @@ private:
 	void ShowAssetBrowser();
 
 	void ShowGizmos();
-	void ShowSettings();
+	void ShowStats();
 
 //private:
 //	bool OnKeyPressed(KeyPressedEvent& e);
@@ -72,6 +72,7 @@ private:
 
 	EditorInfo		m_EditorInfo;
 	bool			open = true;
+	bool			statsOnly = false;
 	int				m_GizmoType = -1;
 };
 

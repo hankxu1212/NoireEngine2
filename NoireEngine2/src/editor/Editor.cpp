@@ -41,6 +41,11 @@ void Editor::Display()
     if (!open)
         return;
 
+    if (statsOnly) 
+    {
+        ShowStats();
+        return;
+    }
     SetupDockspace();
     ShowMainMenuBar();
     //if (m_EditorInfo.show_imgui_demo)       ImGui::ShowDemoWindow();
@@ -48,7 +53,7 @@ void Editor::Display()
     //if (m_EditorInfo.show_scene_view)       ShowSceneView();
     //if (m_EditorInfo.show_game_view)        ShowGameView();
     //if (m_EditorInfo.show_asset_browser)    ShowAssetBrowser();
-    if (m_EditorInfo.show_settings)         ShowSettings();
+    if (m_EditorInfo.show_settings)         ShowStats();
 }
 
 void Editor::ShowMainMenuBar()
@@ -216,7 +221,7 @@ void Editor::ShowAssetBrowser() {
     ImGui::End();
 }
 
-void Editor::ShowSettings()
+void Editor::ShowStats()
 {
     ImGuiWindowFlags window_flags = m_EditorInfo.window_flags
         | ImGuiWindowFlags_NoDecoration
@@ -256,8 +261,10 @@ void Editor::ShowSettings()
         ImGui::Separator(); // -----------------------------------------------------
 
         // specified physical device
-        if (Application::GetSpecification().PhysicalDeviceName)
+        if (Application::GetSpecification().PhysicalDeviceName) {
             ImGui::Text("Specified Physical Device: %s", Application::GetSpecification().PhysicalDeviceName.value().c_str());
+            ImGui::Separator(); // -----------------------------------------------------
+        }
 
         // culling mode
         static auto cullMode = Application::GetSpecification().Culling;
@@ -265,9 +272,11 @@ void Editor::ShowSettings()
             ImGui::Text("Culling Mode: none");
         else if (cullMode == ApplicationSpecification::Culling::Frustum)
             ImGui::Text("Culling Mode: frustum");
+        ImGui::Separator(); // -----------------------------------------------------
 
         // num objects drawn
         ImGui::Text("Number of Objects Drawn: %I64u", ObjectPipeline::ObjectsDrawn);
+        ImGui::Separator(); // -----------------------------------------------------
 
         // camera mode
         static const char* items[]{ "Scene","User","Debug" };
@@ -276,6 +285,29 @@ void Editor::ShowSettings()
         {
             SceneManager::Get()->SetCameraMode((Scene::CameraMode)Selecteditem);
         }
+        ImGui::Separator(); // -----------------------------------------------------
+
+        // enable UI
+        ImGui::Columns(2);
+        ImGui::Text("%s", "Stats Only UI");
+        ImGui::NextColumn();
+        ImGui::Checkbox("##STATSONLYUI", &statsOnly);
+        ImGui::Columns(1);
+        ImGui::Separator(); // -----------------------------------------------------
+
+        // rendering stats
+        // TODO: num threads
+        ImGui::Text("Rendering Information");
+        ImGui::Separator(); // -----------------------------------------------------
+        ImGui::BulletText("Application Update Time: %.3fms", Application::ApplicationUpdateTime);
+        ImGui::BulletText("Application Render Time: %.3fms", Application::ApplicationRenderTime);
+        ImGui::Indent(20);
+            ImGui::BulletText("Command Buffer Submission Time: %.3fms", VulkanContext::CommandBufferSubmissionTime);
+            ImGui::BulletText("Vulkan Render Time: %.3fms", VulkanContext::RenderTime);
+            ImGui::Indent(20);
+                ImGui::BulletText("Object Render Time: %.3fms", Renderer::ObjectRenderTime);
+                ImGui::BulletText("UI Render Time: %.3fms", Renderer::UIRenderTime);
+        ImGui::Unindent(40);
 
         if (ImGui::BeginPopupContextWindow())
         {

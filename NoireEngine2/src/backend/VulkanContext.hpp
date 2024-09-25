@@ -79,6 +79,8 @@ public:
 	inline const std::size_t				getCurrentFrame() { return m_PerSurfaceBuffers[0]->currentFrame; }
 	inline const std::uint32_t				getWorkspaceSize() const { return static_cast<uint32_t>(m_PerSurfaceBuffers.size()); }
 
+	inline static float CommandBufferSubmissionTime, RenderTime;
+
 private:
 	std::unique_ptr<VulkanInstance>				s_VulkanInstance;
 	std::unique_ptr<PhysicalDevice>				s_PhysicalDevice;
@@ -111,6 +113,7 @@ private:
 	std::vector<std::unique_ptr<SwapChain>>						m_Swapchains;
 
 	std::unique_ptr<Renderer>									s_Renderer;
+
 
 private:
 	void CreatePipelineCache();

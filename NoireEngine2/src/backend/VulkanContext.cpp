@@ -5,6 +5,7 @@
 
 #include "utils/Enumerate.hpp"
 #include "utils/Logger.hpp"
+#include "core/Timer.hpp"
 
 VulkanContext::VulkanContext() :
     s_VulkanInstance(std::make_unique<VulkanInstance>()),
@@ -65,8 +66,12 @@ void VulkanContext::Update()
         
         commandBuffer->Begin();
 
-        s_Renderer->Render(*commandBuffer, static_cast<uint32_t>(surfaceId));
-        
+        Timer timer; 
+        {
+            s_Renderer->Render(*commandBuffer, static_cast<uint32_t>(surfaceId));
+        }
+        if (Application::StatsDirty)
+            RenderTime = timer.GetElapsed(true);
         // submit the command buffer
         {
             commandBuffer->End();
@@ -82,6 +87,8 @@ void VulkanContext::Update()
                 VK_CHECK(presentResult, "[vulkan] Failed to present swap chain image!");
             }
         }
+        if (Application::StatsDirty)
+            CommandBufferSubmissionTime = timer.GetElapsed(false);
 
         perSurfaceBuffer->currentFrame = (perSurfaceBuffer->currentFrame + 1) % swapchain->getImageCount();
     }
