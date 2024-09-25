@@ -4,6 +4,7 @@
 
 #include "backend/VulkanContext.hpp"
 #include "utils/Logger.hpp"
+#include "utils/Enumerate.hpp"
 
 static void LogVulkanDevice(const VkPhysicalDeviceProperties& physicalDeviceProperties, const std::vector<VkExtensionProperties>& extensionProperties) 
 {
@@ -118,6 +119,32 @@ PhysicalDevice::PhysicalDevice(const VulkanInstance& m_Instance) :
 
     for (const auto& device : gpus)
         candidates.insert({ RateDeviceSuitability(device), device });
+
+    // find specified physical device, if any
+    auto& specifiedDeviceOpt = Application::Get().GetSpecification().PhysicalDeviceName;
+    if (specifiedDeviceOpt) 
+    {
+        bool found = false;
+        std::string availableDeviceNames;
+        for (const auto& candidate : candidates) 
+        {
+            VkPhysicalDevice device = candidate.second;
+            vkGetPhysicalDeviceProperties(device, &m_Properties);
+            if (specifiedDeviceOpt.value() != std::string(m_Properties.deviceName)) {
+                availableDeviceNames += std::string(m_Properties.deviceName) + ' ';
+                continue;
+            }
+
+            found = true;
+            vkGetPhysicalDeviceProperties(device, &m_Properties);
+            vkGetPhysicalDeviceFeatures(device, &m_Features);
+            m_MsaaSamples = GetMaxUsableSampleCount();
+            break;
+        }
+        if (!found)
+            throw std::runtime_error("Could not find the specified device with name " + 
+                specifiedDeviceOpt.value() + "... Available ones are: " + availableDeviceNames);
+    }
 
     // Check if the best candidate is suitable at all
     if (candidates.rbegin()->first > 0) {

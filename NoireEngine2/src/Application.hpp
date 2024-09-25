@@ -32,9 +32,9 @@ struct ApplicationSpecification
 	ApplicationCommandLineArgs CommandLineArgs;
 	
 	enum class Culling { None, Frustum } Culling;
-	std::string PhysicalDeviceName;
-	std::string CameraName;
-	std::string InitialScene;
+	std::optional<std::string> PhysicalDeviceName = std::nullopt;
+	std::optional<std::string> CameraName = std::nullopt;
+	std::optional<std::string> InitialScene = std::nullopt;
 };
 
 class Application : Singleton
