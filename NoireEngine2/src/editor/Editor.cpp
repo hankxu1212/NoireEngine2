@@ -3,6 +3,7 @@
 #include "Application.hpp"
 #include "imgui/imgui.h"
 #include "renderer/scene/SceneManager.hpp"
+#include "backend/pipeline/ObjectPipeline.hpp"
 
 Editor* Editor::g_Editor = nullptr;
 
@@ -265,6 +266,17 @@ void Editor::ShowSettings()
         else if (cullMode == ApplicationSpecification::Culling::Frustum)
             ImGui::Text("Culling Mode: frustum");
 
+        // num objects drawn
+        ImGui::Text("Number of Objects Drawn: %I64u", ObjectPipeline::ObjectsDrawn);
+
+        // camera mode
+        static const char* items[]{ "Scene","User","Debug" };
+        static int Selecteditem = 0;
+        if (ImGui::Combo("Camera Mode", &Selecteditem, items, IM_ARRAYSIZE(items)))
+        {
+            SceneManager::Get()->SetCameraMode((Scene::CameraMode)Selecteditem);
+        }
+
         if (ImGui::BeginPopupContextWindow())
         {
             if (ImGui::MenuItem("Custom", NULL, location == -1)) location = -1;
@@ -276,13 +288,6 @@ void Editor::ShowSettings()
             ImGui::Separator(); // -----------------------------------------------------
             if (&m_EditorInfo.show_settings && ImGui::MenuItem("Close")) m_EditorInfo.show_settings = false;
             ImGui::EndPopup();
-        }
-
-        static const char* items[]{ "Scene","User","Debug" };
-        static int Selecteditem = 0;
-        if (ImGui::Combo("Camera Mode", &Selecteditem, items, IM_ARRAYSIZE(items)))
-        {
-            SceneManager::Get()->SetCameraMode((Scene::CameraMode)Selecteditem);
         }
     }
     ImGui::End();

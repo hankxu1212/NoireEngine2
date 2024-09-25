@@ -28,13 +28,14 @@ void RendererComponent::Render(const glm::mat4& model)
 	static auto cullMode = Application::GetSpecification().Culling;
 
 	// frustum culling
-	//if (cullMode == ApplicationSpecification::Culling::Frustum) 
-	//{
-	//	const Camera* cullCam = GetScene()->GetCullCam()->camera();
-	//	assert(cullCam && "No active culling camera");
-	//	if (!cullCam->getViewFrustum().CubeInFrustum(mesh->getAABB().min, mesh->getAABB().max))
-	//		return;
-	//}
+	if (cullMode == ApplicationSpecification::Culling::Frustum) 
+	{
+		const Camera* cullCam = GetScene()->GetCullingCam()->camera();
+
+		assert(cullCam && "No active culling camera");
+		if (!cullCam->getViewFrustum().CubeInFrustum(mesh->getAABB().min, mesh->getAABB().max))
+			return;
+	}
 
 	const Camera* renderCam = GetScene()->GetRenderCam()->camera();
 	GetScene()->PushObjectInstances({

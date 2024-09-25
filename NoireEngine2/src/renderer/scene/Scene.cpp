@@ -13,14 +13,11 @@
 #include <functional>
 #include <algorithm>
 
-Scene::Scene()
-{
-}
-
 Scene::Scene(const std::string& path)
 {
 	Deserialize(path);
 	UpdateWorldUniform();
+	InstantiateCoreScripts();
 }
 
 Scene::~Scene()
@@ -34,6 +31,8 @@ void Scene::Unload()
 
 void Scene::Update()
 {
+	sceneCamDirty = true; // prompt update again
+
 	// TODO: update lightings
 	//UpdateWorldUniform();
 
@@ -334,7 +333,7 @@ void Scene::PushObjectInstances(ObjectInstance&& instance)
 }
 
 // rendering will be on debug cam, unless it is in scene mode
-CameraComponent* Scene::GetRenderCam() const
+CameraComponent* Scene::GetRenderCam()
 {
 	if (SceneManager::Get()->getCameraMode() == CameraMode::Scene)
 		return sceneCam();
@@ -342,8 +341,7 @@ CameraComponent* Scene::GetRenderCam() const
 		return debugCam();
 }
 
-// culling will be on scene cam, unless it is in user mode
-inline CameraComponent* Scene::GetCullCam() const
+CameraComponent* Scene::GetCullingCam()
 {
 	if (SceneManager::Get()->getCameraMode() == CameraMode::User)
 		return debugCam();
@@ -351,8 +349,15 @@ inline CameraComponent* Scene::GetCullCam() const
 		return sceneCam();
 }
 
-CameraComponent* Scene::sceneCam() const
+// culling will be on scene cam, unless it is in user mode
+
+CameraComponent* Scene::sceneCam()
 {
+	static CameraComponent* SceneCamera = nullptr;
+
+	if (!sceneCamDirty)
+		return SceneCamera;
+
 	if (m_SceneCameras.empty())
 		return nullptr;
 
@@ -366,7 +371,10 @@ CameraComponent* Scene::sceneCam() const
 		}
 	}
 
-	return leastCam;
+	SceneCamera = leastCam;
+	sceneCamDirty = false;
+
+	return SceneCamera;
 }
 
 inline CameraComponent* Scene::debugCam() const
@@ -391,4 +399,18 @@ void Scene::UpdateWorldUniform()
 	m_SceneInfo.SUN_ENERGY.r = 1.0f;
 	m_SceneInfo.SUN_ENERGY.g = 1.0f;
 	m_SceneInfo.SUN_ENERGY.b = 0.9f;
+}
+
+void Scene::InstantiateCoreScripts()
+{
+	Entity* eCam = Instantiate("Core::Debug Camera", glm::vec3(0, 0, 10), glm::quat(1, 0, 0, 0));
+	eCam->AddComponent<Core::SceneNavigationCamera>();
+	eCam->AddComponent<CameraComponent>(Camera::Type::Debug);
+
+	// setup debug camera and camera script
+	m_DebugCamera = eCam->GetComponent<CameraComponent>();
+	m_UserNavigationCamera = eCam->GetComponent<Core::SceneNavigationCamera>();
+
+	Entity* eInput = Instantiate("Core::Input");
+	eInput->AddComponent<Core::Input>();
 }

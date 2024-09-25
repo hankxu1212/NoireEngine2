@@ -22,6 +22,8 @@ static uint32_t frag_code[] =
 #include "spv/shaders/objects.frag.inl"
 ;
 
+size_t ObjectPipeline::ObjectsDrawn = 0;
+
 ObjectPipeline::ObjectPipeline()
 {
 
@@ -758,7 +760,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 	Mesh* previouslyBindedMesh = nullptr;
 	VertexInput* previouslyBindedVertex = nullptr;
 
-	//std::cout << "Drawing: " << sceneObjectInstances.size() << std::endl;
+	ObjectPipeline::ObjectsDrawn = sceneObjectInstances.size();
 	for (ObjectInstance const& inst : sceneObjectInstances)
 	{
 		uint32_t index = uint32_t(&inst - &sceneObjectInstances[0]);

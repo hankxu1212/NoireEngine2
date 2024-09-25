@@ -13,6 +13,10 @@
 
 #include "renderer/components/renderer_components/RendererComponent.hpp"
 
+#define ADD_CHILD 		m_Children.emplace_back(std::make_unique<Entity>(m_Scene, args...));\
+						m_Children.back()->SetParent(this);\
+						return m_Children.back().get();\
+
 class TransformMatrixStack;
 
 class Entity
@@ -36,21 +40,19 @@ public:
 		m_Scene(scene), m_Name(name), s_Transform(std::make_unique<Transform>(args...)) {
 	}
 
+	template<typename... TArgs>
+	Entity(Scene* scene, const char* name, TArgs&... args) :
+		m_Scene(scene), m_Name(name), s_Transform(std::make_unique<Transform>(args...)) {
+	}
+
 	~Entity();
 
 public:
-	/**
-	 * Add a child to an entity.
-	 * 
-	 * \param ...args parameters to construct the new entity
-	 * \return a pointer to the newly created entity
-	 */
+
 	template<typename... TArgs>
 	Entity* AddChild(TArgs&... args)
 	{
-		m_Children.emplace_back(std::make_unique<Entity>(m_Scene, args...));
-		m_Children.back()->SetParent(this);
-		return m_Children.back().get();
+		ADD_CHILD
 	}
 
 	// Variation of AddChild where it takes in a scene to overwrite current scene.
@@ -58,9 +60,7 @@ public:
 	Entity* AddChild(Scene* scene, TArgs&... args)
 	{
 		m_Scene = scene;
-		m_Children.emplace_back(std::make_unique<Entity>(scene, args...));
-		m_Children.back()->SetParent(this);
-		return m_Children.back().get();
+		ADD_CHILD
 	}
 
 	// Adds a component to an entity

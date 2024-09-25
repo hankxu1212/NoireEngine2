@@ -4,8 +4,6 @@
 #include "panels/SceneHierarchyPanel.h"
 #include "imgui/imgui.h"
 
-//#include "panels/ContentBrowserPanel.h"
-
 class Editor : public Layer
 {
 	static Editor* g_Editor;

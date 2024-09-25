@@ -37,7 +37,6 @@ public:
 	};
 
 public:
-	Scene();
 	Scene(const std::string& path);
 	~Scene();
 
@@ -55,16 +54,19 @@ public:
 	template<typename... TArgs>
 	Entity* Instantiate(TArgs&... args) { return Entity::root().AddChild(this, args...); }
 
+	template<typename... TArgs>
+	Entity* Instantiate(TArgs&&... args) { return Entity::root().AddChild(this, args...); }
+
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Rendering and scene uniforms
 
 	void PushObjectInstances(ObjectInstance&& instance);
 
-	inline CameraComponent* GetRenderCam() const;
+	CameraComponent* GetRenderCam();
 
-	inline CameraComponent* GetCullCam() const;
+	CameraComponent* GetCullingCam();
 
-	inline CameraComponent* sceneCam() const;
+	inline CameraComponent* sceneCam();
 	
 	inline CameraComponent* debugCam() const;
 
@@ -91,6 +93,7 @@ public: // event functions. Do not create function definitions!
 
 private:
 	void UpdateWorldUniform();
+	void InstantiateCoreScripts();
 
 private:
 	friend class SceneManager;
@@ -98,6 +101,7 @@ private:
 	// a list of cameras, will be sorted everyframe ordered by their priority
 	// in scene/debug mode, the scene will choose the smallest priority as the rendering/culling camera
 	std::vector<CameraComponent*> m_SceneCameras;
+	bool sceneCamDirty = true;
 
 	// in user mode, the scene will render everything through the debug camera
 	CameraComponent* m_DebugCamera = nullptr;

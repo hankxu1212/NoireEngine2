@@ -24,6 +24,10 @@ Transform::Transform(glm::vec3 t, glm::quat q, glm::vec3 s) :
     m_Position(t), m_Rotation(q), m_Scale(s) {
 }
 
+Transform::Transform(glm::vec3 t, glm::quat q) :
+    m_Position(t), m_Rotation(q) {
+}
+
 void Transform::SetPosition(glm::vec3 newPosition)
 {
     m_Position.x = newPosition.x;

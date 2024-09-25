@@ -76,7 +76,7 @@ void EntityEditorWidget::RenderEditor(Entity* e, ImGuiWindowFlags editor_window_
 		{
 			if (debugMode)
 			{
-				ImGui::Text("Entity Handle: %d", (uint32_t)e->id());
+				ImGui::Text("Entity GUID: %I64u", e->id());
 				ImGui::Separator(); // --------------------------------------------------
 			}
 
