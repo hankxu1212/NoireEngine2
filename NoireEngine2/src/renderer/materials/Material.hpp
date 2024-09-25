@@ -39,6 +39,7 @@ public:
 
 	static Material* Deserialize(const Scene::TValueMap& obj);
 
+	static std::shared_ptr<Material> CreateDefault();
 	static std::shared_ptr<Material> Create(const CreateInfo& createInfo);
 	static std::shared_ptr<Material> Create(const Node& node);
 

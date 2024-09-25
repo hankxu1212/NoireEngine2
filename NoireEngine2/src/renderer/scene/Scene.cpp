@@ -15,6 +15,9 @@
 
 Scene::Scene(const std::string& path)
 {
+	if (!Files::Exists(Files::Path(path)))
+		NE_ERROR("Path " + path + " does not exist.");
+
 	Deserialize(path);
 	UpdateWorldUniform();
 	InstantiateCoreScripts();
@@ -122,9 +125,8 @@ static void MakeMesh(Entity* newEntity, const Scene::TValueMap& obj, const Scene
 	}
 	const auto& meshObjMap = meshObjOpt.value();
 
-	// yea im lazy, gonna wrap everything in one try catch instead...
+	// deserialize mesh and material here
 	try {
-		// also deserializes material
 		Mesh::Deserialize(newEntity, meshObjMap, sceneMap);
 	}
 	catch (std::exception& e) {

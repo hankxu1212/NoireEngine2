@@ -7,6 +7,7 @@
 #include "renderer/scene/Entity.hpp"
 #include "utils/Logger.hpp"
 #include "renderer/materials/Material.hpp"
+#include "core/Core.hpp"
 
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
@@ -43,12 +44,18 @@ const Mesh::CreateInfo Mesh::Deserialize(const Scene::TValueMap& obj)
 		GET_ATTRIBUTE("TEXCOORD")
 	};
 
+	std::string materialStr;
+	if (obj.find("material") == obj.end() || !obj.at("material").as_string())
+		materialStr = NE_NULL_STR;
+	else
+		materialStr = obj.at("material").as_string().value();
+
 	return CreateInfo (
 		obj.at("name").as_string().value(),
 		obj.at("topology").as_string().value(),
 		(uint32_t)obj.at("count").as_number().value(),
 		vertexAttributes,
-		obj.at("material").as_string().value(),
+		materialStr,
 		attributesMap.at("POSITION").as_object().value().at("src").as_string().value()
 	);
 }
@@ -61,18 +68,25 @@ void Mesh::Deserialize(Entity* entity, const Scene::TValueMap& obj, const Scene:
 	const Mesh::CreateInfo meshInfo = Mesh::Deserialize(obj);
 
 	// material
-	const auto& materialNodes = sceneMap.at(SceneNode::Material);
-	if (materialNodes.find(meshInfo.material) == materialNodes.end())
-		throw std::runtime_error(std::format("Could not find this material at {}", meshInfo.material));
-	
-	const auto& materialObjOpt = materialNodes.at(meshInfo.material).as_object();
-	if (!materialObjOpt)
-		throw std::runtime_error(std::format("Could not serialize this material at {}", meshInfo.material));
+	Material* mat = nullptr;
+	if (meshInfo.material == NE_NULL_STR) 
+	{
+		mat = Material::CreateDefault().get();
+		NE_INFO("No material found on this mesh, using default lambertian...");
+	}
+	else {
+		const auto& materialNodes = sceneMap.at(SceneNode::Material);
+		if (materialNodes.find(meshInfo.material) == materialNodes.end())
+			throw std::runtime_error(std::format("Could not find this material at {}", meshInfo.material));
 
-	entity->AddComponent<RendererComponent>(
-		Mesh::Create(meshInfo).get(), 
-		Material::Deserialize(materialObjOpt.value())
-	);
+		const auto& materialObjOpt = materialNodes.at(meshInfo.material).as_object();
+		if (!materialObjOpt)
+			throw std::runtime_error(std::format("Could not serialize this material at {}", meshInfo.material));
+
+		mat = Material::Deserialize(materialObjOpt.value());
+	}
+
+	entity->AddComponent<RendererComponent>(Mesh::Create(meshInfo).get(), mat);
 }
 
 std::shared_ptr<Mesh> Mesh::Create(const CreateInfo& createInfo)

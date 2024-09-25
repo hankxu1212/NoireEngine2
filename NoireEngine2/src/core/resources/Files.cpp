@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -82,4 +83,9 @@ std::string Files::Path(const char* suffix)
 {
 	const std::string& strPath = suffix;
 	return Path(strPath);
+}
+
+bool Files::Exists(const std::string& path)
+{
+	return std::filesystem::exists(path);
 }

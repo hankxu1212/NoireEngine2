@@ -46,6 +46,15 @@ Material* Material::Deserialize(const Scene::TValueMap& obj)
 	}
 }
 
+std::shared_ptr<Material> Material::CreateDefault()
+{
+	CreateInfo info;
+	info.name = "Default Lambertian";
+	info.albedo = glm::vec3(1);
+
+	return Create(info);
+}
+
 std::shared_ptr<Material> Material::Create(const CreateInfo& createInfo)
 {
 	Material temp(createInfo);
