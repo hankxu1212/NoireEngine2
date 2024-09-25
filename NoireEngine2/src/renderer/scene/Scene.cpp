@@ -1,18 +1,17 @@
-#include "Scene.hpp"
-
-#include "renderer/Camera.hpp"
 #include "renderer/components/Components.hpp"
 #include "core/Time.hpp"
 #include "Entity.hpp"
 #include "core/resources/Files.hpp"
-#include "SceneNode.hpp"
 #include "utils/Enumerate.hpp"
 #include "utils/Logger.hpp"
+#include "SceneManager.hpp"
+#include "renderer/object/Mesh.hpp"
 
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
+#include <algorithm>
 
 Scene::Scene()
 {
@@ -35,12 +34,6 @@ void Scene::Unload()
 
 void Scene::Update()
 {
-	if (mainCam() == nullptr)
-	{
-		std::cerr << "Did not find main camera!\n";
-		return;
-	}
-
 	// TODO: update lightings
 	//UpdateWorldUniform();
 
@@ -50,9 +43,9 @@ void Scene::Update()
 
 void Scene::Render()
 {
-	if (mainCam() == nullptr)
+	if (GetRenderCam() == nullptr)
 	{
-		std::cerr << "Did not find main camera!\n";
+		NE_ERROR("Render camera is null");
 		return;
 	}
 
@@ -340,12 +333,45 @@ void Scene::PushObjectInstances(ObjectInstance&& instance)
 	m_ObjectInstances.emplace_back(std::move(instance));
 }
 
-CameraComponent* Scene::mainCam() const
+// rendering will be on debug cam, unless it is in scene mode
+CameraComponent* Scene::GetRenderCam() const
 {
-	if (m_Cameras.empty())
+	if (SceneManager::Get()->getCameraMode() == CameraMode::Scene)
+		return sceneCam();
+	else
+		return debugCam();
+}
+
+// culling will be on scene cam, unless it is in user mode
+inline CameraComponent* Scene::GetCullCam() const
+{
+	if (SceneManager::Get()->getCameraMode() == CameraMode::User)
+		return debugCam();
+	else
+		return sceneCam();
+}
+
+CameraComponent* Scene::sceneCam() const
+{
+	if (m_SceneCameras.empty())
 		return nullptr;
 
-	return m_Cameras.begin()->second;
+	CameraComponent* leastCam = nullptr;
+	int leastPrio = 10000;
+	for (CameraComponent* cam : m_SceneCameras)
+	{
+		if (cam->priority < leastPrio) {
+			leastCam = cam;
+			leastPrio = cam->priority;
+		}
+	}
+
+	return leastCam;
+}
+
+inline CameraComponent* Scene::debugCam() const
+{
+	return m_DebugCamera;
 }
 
 void Scene::UpdateWorldUniform()

@@ -79,10 +79,10 @@ public:
 	{
 		for (const auto& component : m_Components)
 		{
-			T* c = (T*)component.get();
-			if (c == nullptr)
+			if (dynamic_cast<T*>(component.get()))
+				return (T*)component.get();
+			else
 				continue;
-			return c;
 		}
 		return nullptr;
 	}

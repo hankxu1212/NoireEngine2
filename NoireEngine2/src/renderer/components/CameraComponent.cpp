@@ -3,6 +3,7 @@
 #include "renderer/scene/Scene.hpp"
 #include "utils/Logger.hpp"
 #include "imgui/imgui.h"
+#include "renderer/scene/Entity.hpp"
 
 #include <iostream>
 
@@ -99,13 +100,25 @@ CameraComponent::CameraComponent(int priority_) :
 template<>
 void Scene::OnComponentAdded<CameraComponent>(Entity& entity, CameraComponent& component)
 {
-	NE_DEBUG(std::format("Creating new camera instance with priority {}", component.priority), Logger::YELLOW, Logger::BOLD);
-	m_Cameras.insert(component.makeKey());
+	if (component.s_Camera->getType() == Camera::Type::Debug)
+		return;
+
+	NE_DEBUG(std::format("Creating new camera rendering instance with priority {}", component.priority), Logger::YELLOW, Logger::BOLD);
+	m_SceneCameras.emplace_back(&component);
 }
 
 template<>
 void Scene::OnComponentRemoved<CameraComponent>(Entity& entity, CameraComponent& component)
 {
+	if (component.s_Camera->getType() == Camera::Type::Debug)
+		return;
+
 	NE_DEBUG(std::format("Removing camera instance with priority {}", component.priority), Logger::YELLOW);
-	m_Cameras.erase(m_Cameras.find(component.makeKey()));
+
+	m_SceneCameras.erase(
+		std::remove_if(m_SceneCameras.begin(), m_SceneCameras.end(), [&component](CameraComponent* cam) { 
+			return cam->entity->id() == component.entity->id(); 
+		}), 
+		m_SceneCameras.end()
+	);
 }

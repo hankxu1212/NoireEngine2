@@ -11,8 +11,12 @@
 #include <set>
 
 class Entity;
-class CameraComponent;
 class Transform;
+class CameraComponent;
+
+namespace Core {
+	class SceneNavigationCamera;
+}
 
 class Scene : Singleton
 {
@@ -25,6 +29,12 @@ public:
 
 	// Maps from object type to serialized object maps
 	using TSceneMap = std::unordered_map<SceneNode::Type, TValueUMap>;
+
+	enum class CameraMode {
+		Scene = 0, // all: sceneCam
+		User = 1, // all: debugCam
+		Debug = 2 // rendering: sceneCam, cull: sceneCam, move: debugCam
+	};
 
 public:
 	Scene();
@@ -50,7 +60,13 @@ public:
 
 	void PushObjectInstances(ObjectInstance&& instance);
 
-	inline CameraComponent* mainCam() const;
+	inline CameraComponent* GetRenderCam() const;
+
+	inline CameraComponent* GetCullCam() const;
+
+	inline CameraComponent* sceneCam() const;
+	
+	inline CameraComponent* debugCam() const;
 
 	struct SceneUniform {
 		struct { float x, y, z, padding_; } SKY_DIRECTION;
@@ -77,8 +93,16 @@ private:
 	void UpdateWorldUniform();
 
 private:
-	// a list of cameras with their priority as min heap key
-	std::set<std::pair<int, CameraComponent*>> m_Cameras;
+	friend class SceneManager;
+
+	// a list of cameras, will be sorted everyframe ordered by their priority
+	// in scene/debug mode, the scene will choose the smallest priority as the rendering/culling camera
+	std::vector<CameraComponent*> m_SceneCameras;
+
+	// in user mode, the scene will render everything through the debug camera
+	CameraComponent* m_DebugCamera = nullptr;
+	Core::SceneNavigationCamera* m_UserNavigationCamera = nullptr;
+
 	TransformMatrixStack m_MatrixStack;
 
 	//types for descriptors:

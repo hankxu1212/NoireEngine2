@@ -80,7 +80,7 @@ static void GLFWErrorCallback(int error, const char* description)
 
 Window::Window()
 {
-	const ApplicationSpecification& props = Application::Get().GetSpecification();
+	const ApplicationSpecification& props = Application::GetSpecification();
 
 	m_Data.Title = props.Name;
 	m_Data.Width = props.width;

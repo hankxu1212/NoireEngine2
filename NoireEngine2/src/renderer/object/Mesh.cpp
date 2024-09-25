@@ -6,6 +6,8 @@
 #include "core/resources/Files.hpp"
 #include "renderer/scene/Entity.hpp"
 #include "utils/Logger.hpp"
+#include "renderer/materials/Material.hpp"
+
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "glm/gtx/extended_min_max.hpp"

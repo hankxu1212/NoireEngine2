@@ -1,9 +1,10 @@
 #include "Component.hpp"
+#include "utils/Logger.hpp"
 #include <iostream>
 
 #include "renderer/scene/Entity.hpp"
 
-#define CHECK_ENTITY 	if (!entity) { std::cerr << "Entity is null!"; return nullptr; }
+#define CHECK_ENTITY 	if (!entity) { NE_WARN("Entity is null!"); return nullptr; }
 
 void Component::SetEntity(Entity* thisEntity)
 {

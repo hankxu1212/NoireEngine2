@@ -2,6 +2,7 @@
 
 #include "Application.hpp"
 #include "imgui/imgui.h"
+#include "renderer/scene/SceneManager.hpp"
 
 Editor* Editor::g_Editor = nullptr;
 
@@ -249,9 +250,21 @@ void Editor::ShowSettings()
     ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
     if (ImGui::Begin("Settings Overlay", &m_EditorInfo.show_settings, window_flags))
     {
-        ImGui::Text("Settings");
-        ImGui::Separator(); // -----------------------------------------------------
+        // fps
         ImGui::Text("FPS: %d", Application::GetFPS());
+        ImGui::Separator(); // -----------------------------------------------------
+
+        // specified physical device
+        if (Application::GetSpecification().PhysicalDeviceName)
+            ImGui::Text("Specified Physical Device: %s", Application::GetSpecification().PhysicalDeviceName.value().c_str());
+
+        // culling mode
+        static auto cullMode = Application::GetSpecification().Culling;
+        if (cullMode == ApplicationSpecification::Culling::None)
+            ImGui::Text("Culling Mode: none");
+        else if (cullMode == ApplicationSpecification::Culling::Frustum)
+            ImGui::Text("Culling Mode: frustum");
+
         if (ImGui::BeginPopupContextWindow())
         {
             if (ImGui::MenuItem("Custom", NULL, location == -1)) location = -1;
@@ -263,6 +276,13 @@ void Editor::ShowSettings()
             ImGui::Separator(); // -----------------------------------------------------
             if (&m_EditorInfo.show_settings && ImGui::MenuItem("Close")) m_EditorInfo.show_settings = false;
             ImGui::EndPopup();
+        }
+
+        static const char* items[]{ "Scene","User","Debug" };
+        static int Selecteditem = 0;
+        if (ImGui::Combo("Camera Mode", &Selecteditem, items, IM_ARRAYSIZE(items)))
+        {
+            SceneManager::Get()->SetCameraMode((Scene::CameraMode)Selecteditem);
         }
     }
     ImGui::End();

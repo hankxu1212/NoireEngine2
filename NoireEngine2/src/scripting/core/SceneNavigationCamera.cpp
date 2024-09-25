@@ -11,13 +11,11 @@
 namespace Core {
 	void SceneNavigationCamera::Awake()
 	{
-
+		enabled = false;
 	}
 
 	void SceneNavigationCamera::Start()
 	{
-		std::cout << "Start camera script" << std::endl;
-
 		transform = GetTransform();
 		nativeCamera = entity->GetComponent<CameraComponent>()->camera();
 
@@ -28,12 +26,14 @@ namespace Core {
 
 	void SceneNavigationCamera::Update()
 	{
+		if (!enabled)
+			return;
+
 		HandleMovement();
 	}
 
 	void SceneNavigationCamera::Shutdown()
 	{
-		std::cout << "Shutdown Camera Script" << std::endl;
 	}
 
 	void SceneNavigationCamera::HandleMovement()
@@ -91,6 +91,9 @@ namespace Core {
 
 	void SceneNavigationCamera::HandleEvent(Event& e)
 	{
+		if (!enabled)
+			return;
+
 		e.Dispatch<MouseScrolledEvent>(NE_BIND_EVENT_FN(SceneNavigationCamera::OnMouseScroll));
 	}
 

@@ -18,8 +18,6 @@ public:
 public:
 	void Update() override;
 
-	std::pair<int, CameraComponent*> makeKey() { return std::make_pair(priority, this); }
-
 	Camera* camera() { return s_Camera.get(); }
 
 	void Inspect() override;

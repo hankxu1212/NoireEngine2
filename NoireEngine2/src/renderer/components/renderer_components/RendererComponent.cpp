@@ -1,12 +1,12 @@
 #include "RendererComponent.hpp"
 
-#include "renderer/object/ObjectInstance.hpp"
 #include "renderer/scene/Scene.hpp"
-#include "renderer/Camera.hpp"
 #include "renderer/components/CameraComponent.hpp"
 #include "renderer/object/Mesh.hpp"
-#include "imgui/imgui.h"
+#include "renderer/materials/Material.hpp"
+#include "Application.hpp"
 
+#include "imgui/imgui.h"
 #include <iostream>
 
 RendererComponent::RendererComponent(Mesh* mesh_) :
@@ -23,16 +23,23 @@ void RendererComponent::Update()
 
 void RendererComponent::Render(const glm::mat4& model)
 {
-	Camera* cam = GetScene()->mainCam()->camera();
 	mesh->Update(model);
 
-	// frustum culling
-	if (!cam->getViewFrustum().CubeInFrustum(mesh->getAABB().min, mesh->getAABB().max))
-		return;
+	static auto cullMode = Application::GetSpecification().Culling;
 
+	// frustum culling
+	//if (cullMode == ApplicationSpecification::Culling::Frustum) 
+	//{
+	//	const Camera* cullCam = GetScene()->GetCullCam()->camera();
+	//	assert(cullCam && "No active culling camera");
+	//	if (!cullCam->getViewFrustum().CubeInFrustum(mesh->getAABB().min, mesh->getAABB().max))
+	//		return;
+	//}
+
+	const Camera* renderCam = GetScene()->GetRenderCam()->camera();
 	GetScene()->PushObjectInstances({
 		{
-			cam->getProjectionMatrix() * cam->getViewMatrix() * model,
+			renderCam->getProjectionMatrix() * renderCam->getViewMatrix() * model,
 			model,
 			model,
 		}, // transform uniform

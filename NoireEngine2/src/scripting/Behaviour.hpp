@@ -2,6 +2,8 @@
 
 #include "renderer/components/Component.hpp"
 #include "core/events/Event.hpp"
+#include "utils/Logger.hpp"
+#include "core/Time.hpp"
 
 /**
  * A script attached to in game entities (Monobehavior basically)
@@ -18,4 +20,6 @@ public:
 
 	virtual const char* getName() override { return "Behaviour"; }
 	virtual const char* getClassName() const { return "<None>"; }
+
+	bool enabled;
 };

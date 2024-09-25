@@ -7,10 +7,16 @@ Camera::Camera()
 	aspectRatio = (float)Window::Get()->m_Data.Width / (float)Window::Get()->m_Data.Height;
 }
 
+Camera::Camera(Type type_) :
+	type(type_) {
+	aspectRatio = (float)Window::Get()->m_Data.Width / (float)Window::Get()->m_Data.Height;
+}
+
 Camera::Camera(Type type_, bool orthographic_, float orthographicScale_, float np, float fp) :
 	nearClipPlane(np), farClipPlane(fp), 
 	orthographic(orthographic_), orthographicScale(orthographicScale_),
 	type(type_) {
+	aspectRatio = (float)Window::Get()->m_Data.Width / (float)Window::Get()->m_Data.Height;
 }
 
 Camera::Camera(Type type_, bool orthographic_, float np, float fp, float fov, float aspect) :
@@ -39,8 +45,6 @@ void Camera::Update(const Transform& t)
 	projectionMatrix[1][1] *= -1;
 
 	frustum.Update(viewMatrix, projectionMatrix);
-
-	position = t.WorldLocation();
 }
 
 const char* Camera::getTypeStr() const
@@ -49,14 +53,12 @@ const char* Camera::getTypeStr() const
 	{
 	case Type::Scene:
 		return "Scene";
-	case Type::Preview:
-		return "Preview";
-	case Type::Reflection:
-		return "Reflection";
 	case Type::Game:
 		return "Game";
-	case Type::Light:
-		return "Light";
+	case Type::Debug:
+		return "Debug";
+	case Type::Other:
+		return "Other";
 	default:
 		return "ERROR: <NO TYPE FOUND>";
 	}

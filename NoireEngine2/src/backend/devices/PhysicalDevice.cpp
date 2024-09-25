@@ -121,7 +121,7 @@ PhysicalDevice::PhysicalDevice(const VulkanInstance& m_Instance) :
         candidates.insert({ RateDeviceSuitability(device), device });
 
     // find specified physical device, if any
-    auto& specifiedDeviceOpt = Application::Get().GetSpecification().PhysicalDeviceName;
+    auto& specifiedDeviceOpt = Application::GetSpecification().PhysicalDeviceName;
     if (specifiedDeviceOpt) 
     {
         bool found = false;

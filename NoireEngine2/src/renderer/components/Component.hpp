@@ -21,6 +21,5 @@ public:
 
 	virtual const char* getName() { return "component"; }
 
-protected:
 	Entity* entity;
 };

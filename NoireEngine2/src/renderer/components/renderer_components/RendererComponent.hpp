@@ -2,8 +2,8 @@
 
 #include "renderer/components/Component.hpp"
 
-#include "renderer/object/Mesh.hpp"
-#include "renderer/materials/Material.hpp"
+class Mesh;
+class Material;
 
 class RendererComponent : public Component
 {
