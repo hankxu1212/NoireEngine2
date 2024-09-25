@@ -1,0 +1,426 @@
+["s72-v2",
+{
+	"type":"MESH",
+	"name":"Cube.003",
+	"topology":"TRIANGLE_LIST",
+	"count":7524,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.003.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.003.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.003.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.003.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.001",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.003"
+},
+{
+	"type":"MESH",
+	"name":"Cube.006",
+	"topology":"TRIANGLE_LIST",
+	"count":104112,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.006.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.006.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.006.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.006.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Pillar No Destruction.001",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.006"
+},
+{
+	"type":"MESH",
+	"name":"Cube.010",
+	"topology":"TRIANGLE_LIST",
+	"count":5316,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.010.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.010.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.010.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.010.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.002",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.010"
+},
+{
+	"type":"MESH",
+	"name":"Cube.004",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.004.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.004.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.004.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.004.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.013",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.004"
+},
+{
+	"type":"MESH",
+	"name":"Cube.002",
+	"topology":"TRIANGLE_LIST",
+	"count":144,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.002.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.002.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.002.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.002.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.014",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.002"
+},
+{
+	"type":"MESH",
+	"name":"Cube.012",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.012.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.012.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.012.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.012.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.003",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.012"
+},
+{
+	"type":"MESH",
+	"name":"Cube.013",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.013.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.013.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.013.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.013.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.004",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.013"
+},
+{
+	"type":"MESH",
+	"name":"Cube.014",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.014.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.014.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.014.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.014.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.005",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.014"
+},
+{
+	"type":"MESH",
+	"name":"Cube.015",
+	"topology":"TRIANGLE_LIST",
+	"count":144,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.015.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.015.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.015.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.015.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.006",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.015"
+},
+{
+	"type":"MESH",
+	"name":"Cube.016",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.016.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.016.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.016.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.016.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.007",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.016"
+},
+{
+	"type":"MESH",
+	"name":"Cube.017",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.017.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.017.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.017.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.017.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.008",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.017"
+},
+{
+	"type":"MESH",
+	"name":"Cube.018",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.018.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.018.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.018.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.018.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.009",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.018"
+},
+{
+	"type":"MESH",
+	"name":"Cube.034",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.034.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.034.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.034.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.034.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.011",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.034"
+},
+{
+	"type":"MESH",
+	"name":"Cube.019",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.019.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.019.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.019.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.019.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.012",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.019"
+},
+{
+	"type":"MESH",
+	"name":"Cube.020",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.020.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.020.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.020.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.020.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.015",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.020"
+},
+{
+	"type":"MESH",
+	"name":"Cube.022",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.022.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.022.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.022.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.022.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.017",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.022"
+},
+{
+	"type":"MESH",
+	"name":"Cube.023",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.023.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.023.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.023.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.023.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.018",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.023"
+},
+{
+	"type":"MESH",
+	"name":"Cube.029",
+	"topology":"TRIANGLE_LIST",
+	"count":144,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Cube.029.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Cube.029.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Cube.029.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Cube.029.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.020",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Cube.029"
+},
+{
+	"type":"MESH",
+	"name":"Curve.004",
+	"topology":"TRIANGLE_LIST",
+	"count":107790,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Curve.004.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Curve.004.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Curve.004.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Curve.004.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Curve",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Curve.004"
+},
+{
+	"type":"MESH",
+	"name":"Wall.010",
+	"topology":"TRIANGLE_LIST",
+	"count":1398840,
+	"attributes":{
+		"POSITION":{ "src":"crossroads.Wall.010.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"crossroads.Wall.010.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"crossroads.Wall.010.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"crossroads.Wall.010.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Wall.003",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"mesh":"Wall.010"
+},
+{
+
+	"type":"CAMERA",
+	"name":"Camera",
+	"perspective":{
+		"aspect":1.77778,
+		"vfov":0.394791,
+		"near":0.1,
+		"far":1000
+	}
+},
+{
+	"type":"NODE",
+	"name":"Camera",
+	"translation":[53.9183,57.5749,47.3694],
+	"rotation":[0.181177,0.452971,0.810494,0.324178],
+	"scale":[1,1,1],
+	"camera":"Camera"
+},
+{
+	"type":"SCENE",
+	"name":"F:\\gameDev\\Engines\\NoireEngine2\\NoireEngine2\\src\\scenes\\examples\\sources\\crossroads.blend",
+	"roots":["Cube.001", "Pillar No Destruction.001", "Cube.002", "Cube.013", "Cube.014", "Cube.003", "Cube.004", "Cube.005", "Cube.006", "Cube.007", "Cube.008", "Cube.009", "Cube.011", "Cube.012", "Cube.015", "Cube.017", "Cube.018", "Cube.020", "Curve", "Wall.003", "Camera"]
+}
+]

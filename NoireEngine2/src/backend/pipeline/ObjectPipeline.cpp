@@ -1,6 +1,8 @@
 #include "ObjectPipeline.hpp"
 
 #include <array>
+#include <algorithm>
+#include <execution>
 
 #include "backend/VulkanContext.hpp"
 #include "backend/shader/VulkanShader.h"
@@ -768,11 +770,22 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 	//draw all instances:
 	const std::vector<ObjectInstance>& sceneObjectInstances = scene->objectInstances();
 	ObjectsDrawn = sceneObjectInstances.size();
-
 	std::vector<IndirectBatch> draws = CompactDraws(sceneObjectInstances);
 
 	//encode the draw data of each object into the indirect draw buffer
 	VkDrawIndirectCommand* drawCommands = (VkDrawIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
+	
+	// here is the parallel version, maybe good to benchmark on large objects drawn
+	//std::for_each(std::execution::par_unseq, sceneObjectInstances.begin(), sceneObjectInstances.end(),
+	//	[&](const ObjectInstance& inst) {
+	//		uint32_t i = uint32_t(&inst - &sceneObjectInstances[0]);
+	//		drawCommands[i].vertexCount = inst.mesh->getVertexCount();
+	//		drawCommands[i].instanceCount = 1;
+	//		drawCommands[i].firstVertex = 0;
+	//		drawCommands[i].firstInstance = i;
+	//	}
+	//);
+
 	for (auto i = 0; i < ObjectsDrawn; i++)
 	{
 		drawCommands[i].vertexCount = sceneObjectInstances[i].mesh->getVertexCount();
@@ -805,36 +818,18 @@ std::vector<ObjectPipeline::IndirectBatch> ObjectPipeline::CompactDraws(const st
 {
 	std::vector<IndirectBatch> draws;
 
-	IndirectBatch firstDraw;
-	firstDraw.mesh = objects[0].mesh;
-	firstDraw.material = objects[0].material;
-	firstDraw.first = 0;
-	firstDraw.count = 1;
+	draws.emplace_back(objects[0].mesh, objects[0].material, 0, 1);
 
-	draws.push_back(firstDraw);
-
-	for (int i = 0; i < objects.size(); i++)
+	for (uint32_t i = 0; i < objects.size(); i++)
 	{
 		//compare the mesh and material with the end of the vector of draws
 		bool sameMesh = objects[i].mesh == draws.back().mesh;
 		bool sameMaterial = objects[i].material == draws.back().material;
 
 		if (sameMesh && sameMaterial)
-		{
-			//all matches, add count
 			draws.back().count++;
-		}
 		else
-		{
-			//add new draw
-			IndirectBatch newDraw;
-			newDraw.mesh = objects[i].mesh;
-			newDraw.material = objects[i].material;
-			newDraw.first = i;
-			newDraw.count = 1;
-
-			draws.push_back(newDraw);
-		}
+			draws.emplace_back(objects[i].mesh, objects[i].material, i, 1);
 	}
 	return draws;
 }

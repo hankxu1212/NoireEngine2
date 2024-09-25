@@ -60,6 +60,11 @@ public:
     {
         std::cout << "\033[" << decoration << ";" << color << "m" << str << "\033[0m" << std::endl;
     }
+
+    template <class... _Types>
+    static void NULLIFY(_Types...Args) {
+
+    }
 };
 
 #define NE_DEBUG(...)   Logger::DEBUG(__VA_ARGS__)

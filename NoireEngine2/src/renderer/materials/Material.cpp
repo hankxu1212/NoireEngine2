@@ -7,7 +7,7 @@
 
 Material::Material(const CreateInfo& createInfo) :
 	m_CreateInfo(createInfo), m_Albedo(createInfo.albedo) {
-	Logger::INFO("Created material with albedo {} ", glm::to_string(m_Albedo));
+	NE_INFO("Created material with albedo {} ", glm::to_string(m_Albedo));
 }
 
 void Material::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout)
@@ -66,7 +66,7 @@ std::shared_ptr<Material> Material::Create(const CreateInfo& createInfo)
 std::shared_ptr<Material> Material::Create(const Node& node)
 {
 	if (auto resource = Resources::Get()->Find<Material>(node)) {
-		std::cout << "Reusing old material: " << resource->m_CreateInfo.name << " " << std::endl;
+		NE_INFO("Reusing old material: {}", resource->m_CreateInfo.name);
 		return resource;
 	}
 

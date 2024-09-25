@@ -37,7 +37,7 @@ public:
     float nearClipPlane = 0.1f;
     float farClipPlane = 1000.0f;
     float fieldOfView = 1.05f; // around 60 
-    float aspectRatio = (float)1980/1020;
+    float aspectRatio = 1980.0f/1020.0f;
 
     bool orthographic = false;
     float orthographicScale = 5;
