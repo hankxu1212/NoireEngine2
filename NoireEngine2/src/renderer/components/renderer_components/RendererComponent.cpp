@@ -44,7 +44,7 @@ void RendererComponent::Render(const glm::mat4& model)
 			model,
 			model,
 		}, // transform uniform
-		0, mesh->getVertexCount(), //  first vertex, num vertices
+		0, //  first vertex
 		mesh, // mesh pointer
 		material // material pointer
 	});

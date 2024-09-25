@@ -767,54 +767,78 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 
 	//draw all instances:
 	const std::vector<ObjectInstance>& sceneObjectInstances = scene->objectInstances();
-	Mesh* previouslyBindedMesh = nullptr;
-	VertexInput* previouslyBindedVertex = nullptr;
-
 	ObjectsDrawn = sceneObjectInstances.size();
 
-	VkDrawIndirectCommand* drawCommands = (VkDrawIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
+	std::vector<IndirectBatch> draws = CompactDraws(sceneObjectInstances);
 
 	//encode the draw data of each object into the indirect draw buffer
+	VkDrawIndirectCommand* drawCommands = (VkDrawIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
 	for (auto i = 0; i < ObjectsDrawn; i++)
 	{
-		drawCommands[i].vertexCount = sceneObjectInstances[i].numVertices;
+		drawCommands[i].vertexCount = sceneObjectInstances[i].mesh->getVertexCount();
 		drawCommands[i].instanceCount = 1;
 		drawCommands[i].firstVertex = 0;
-		drawCommands[i].firstInstance = i; //used to access object matrix in the shader
+		drawCommands[i].firstInstance = i;
 	}
 
-	for (ObjectInstance const& inst : sceneObjectInstances)
+	VertexInput* previouslyBindedVertex = nullptr;
+	for (IndirectBatch& draw : draws)
 	{
-		uint32_t index = uint32_t(&inst - &sceneObjectInstances[0]);
-
-		// bind dynamic vertex layout here
-		VertexInput* vertexInputPtr = inst.mesh->getVertexInput();
+		VertexInput* vertexInputPtr = draw.mesh->getVertexInput();
 		if (vertexInputPtr != previouslyBindedVertex) {
-			inst.BindVertexInput(commandBuffer);
+			vertexInputPtr->Bind(commandBuffer);
 			previouslyBindedVertex = vertexInputPtr;
 		}
 
-		bool draw = true;
-		if (inst.mesh != previouslyBindedMesh) 
-		{
-			draw = inst.BindMesh(commandBuffer, index);
-			previouslyBindedMesh = inst.mesh;
-		}
+		draw.mesh->Bind(commandBuffer);
+		draw.material->Push(commandBuffer, m_PipelineLayout);
 
-		if (draw) 
-		{
-			if (inst.material)
-				inst.material->Push(commandBuffer, m_PipelineLayout);
-			//inst.Draw(commandBuffer, index);
+		VkDeviceSize indirect_offset = draw.first * sizeof(VkDrawIndirectCommand);
+		uint32_t draw_stride = sizeof(VkDrawIndirectCommand);
 
-			VkDeviceSize indirect_offset = index * sizeof(VkDrawIndirectCommand);
-			uint32_t draw_stride = sizeof(VkDrawIndirectCommand);
-
-			//execute the draw command buffer on each section as defined by the array of draws
-			vkCmdDrawIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), indirect_offset, 1, draw_stride);
-		}
+		//execute the draw command buffer on each section as defined by the array of draws
+		vkCmdDrawIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), indirect_offset, draw.count, draw_stride);
 	}
 }
+
+std::vector<ObjectPipeline::IndirectBatch> ObjectPipeline::CompactDraws(const std::vector<ObjectInstance>& objects)
+{
+	std::vector<IndirectBatch> draws;
+
+	IndirectBatch firstDraw;
+	firstDraw.mesh = objects[0].mesh;
+	firstDraw.material = objects[0].material;
+	firstDraw.first = 0;
+	firstDraw.count = 1;
+
+	draws.push_back(firstDraw);
+
+	for (int i = 0; i < objects.size(); i++)
+	{
+		//compare the mesh and material with the end of the vector of draws
+		bool sameMesh = objects[i].mesh == draws.back().mesh;
+		bool sameMaterial = objects[i].material == draws.back().material;
+
+		if (sameMesh && sameMaterial)
+		{
+			//all matches, add count
+			draws.back().count++;
+		}
+		else
+		{
+			//add new draw
+			IndirectBatch newDraw;
+			newDraw.mesh = objects[i].mesh;
+			newDraw.material = objects[i].material;
+			newDraw.first = i;
+			newDraw.count = 1;
+
+			draws.push_back(newDraw);
+		}
+	}
+	return draws;
+}
+
 
 void ObjectPipeline::DestroyFrameBuffers()
 {

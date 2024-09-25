@@ -155,6 +155,13 @@ void Mesh::Update(const glm::mat4& model)
 	m_AABB.Update(model);
 }
 
+void Mesh::Bind(const CommandBuffer& commandBuffer)
+{
+	std::array< VkBuffer, 1 > vertex_buffers{ m_VertexBuffer.getBuffer() };
+	std::array< VkDeviceSize, 1 > offsets{ 0 };
+	vkCmdBindVertexBuffers(commandBuffer, 0, uint32_t(vertex_buffers.size()), vertex_buffers.data(), offsets.data());
+}
+
 const Node& operator>>(const Node& node, Mesh& mesh) {
 	node["numVertices"].Get(mesh.numVertices);
 	node["createInfo"].Get(mesh.m_CreateInfo);

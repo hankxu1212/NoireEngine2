@@ -30,4 +30,3 @@ protected:
 	VkPipelineLayout			m_PipelineLayout = VK_NULL_HANDLE;
 	VkPipeline					m_Pipeline = VK_NULL_HANDLE;
 };
-

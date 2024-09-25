@@ -1,6 +1,7 @@
 #include <optional>
 
 #include "backend/VulkanContext.hpp"
+#include "utils/Logger.hpp"
 
 const std::vector<const char*> LogicalDevice::DeviceExtensions = { 
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -125,13 +126,13 @@ void LogicalDevice::CreateLogicalDevice()
 			enabledFeatures.wideLines = VK_TRUE;
 	}
 	else {
-		std::cout << "Selected GPU does not support wireframe pipelines!";
+		NE_WARN("Selected GPU does not support wireframe pipelines!");
 	}
 
 	if (physicalDeviceFeatures.samplerAnisotropy)
 		enabledFeatures.samplerAnisotropy = VK_TRUE;
 	else
-		std::cout << "Selected GPU does not support sampler anisotropy!";
+		NE_WARN("Selected GPU does not support sampler anisotropy!");
 
 	if (physicalDeviceFeatures.textureCompressionBC)
 		enabledFeatures.textureCompressionBC = VK_TRUE;
@@ -143,22 +144,22 @@ void LogicalDevice::CreateLogicalDevice()
 	if (physicalDeviceFeatures.vertexPipelineStoresAndAtomics)
 		enabledFeatures.vertexPipelineStoresAndAtomics = VK_TRUE;
 	else
-		std::cout << "Selected GPU does not support vertex pipeline stores and atomics!";
+		NE_WARN("Selected GPU does not support vertex pipeline stores and atomics!");
 
 	if (physicalDeviceFeatures.fragmentStoresAndAtomics)
 		enabledFeatures.fragmentStoresAndAtomics = VK_TRUE;
 	else
-		std::cout << "Selected GPU does not support fragment stores and atomics!";
+		NE_WARN("Selected GPU does not support fragment stores and atomics!");
 
 	if (physicalDeviceFeatures.shaderStorageImageExtendedFormats)
 		enabledFeatures.shaderStorageImageExtendedFormats = VK_TRUE;
 	else
-		std::cout << "Selected GPU does not support shader storage extended formats!";
+		NE_WARN("Selected GPU does not support shader storage extended formats!");
 
 	if (physicalDeviceFeatures.shaderStorageImageWriteWithoutFormat)
 		enabledFeatures.shaderStorageImageWriteWithoutFormat = VK_TRUE;
 	else
-		std::cout << "Selected GPU does not support shader storage write without format!";
+		NE_WARN("Selected GPU does not support shader storage write without format!");
 
 	//enabledFeatures.shaderClipDistance = VK_TRUE;
 	//enabledFeatures.shaderCullDistance = VK_TRUE;
@@ -166,17 +167,22 @@ void LogicalDevice::CreateLogicalDevice()
 	if (physicalDeviceFeatures.geometryShader)
 		enabledFeatures.geometryShader = VK_TRUE;
 	else
-		std::cout << "Selected GPU does not support geometry shaders!";
+		NE_WARN("Selected GPU does not support geometry shaders!");
 
 	if (physicalDeviceFeatures.tessellationShader)
 		enabledFeatures.tessellationShader = VK_TRUE;
 	else
-		std::cout << "Selected GPU does not support tessellation shaders!";
+		NE_WARN("Selected GPU does not support tessellation shaders!");
 
 	if (physicalDeviceFeatures.multiViewport)
 		enabledFeatures.multiViewport = VK_TRUE;
 	else
-		std::cout << "Selected GPU does not support multi viewports!";
+		NE_WARN("Selected GPU does not support multi viewports!");
+
+	if (physicalDeviceFeatures.multiDrawIndirect)
+		enabledFeatures.multiDrawIndirect = VK_TRUE;
+	else
+		NE_WARN("Selected GPU does not support multi draw indirect!");
 		
 	VkDeviceCreateInfo deviceCreateInfo = {};
 

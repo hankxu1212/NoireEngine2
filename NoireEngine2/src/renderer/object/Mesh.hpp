@@ -84,6 +84,8 @@ public:
 
 	inline const CreateInfo& getInfo() const { return m_CreateInfo; }
 
+	void Bind(const CommandBuffer& commandBuffer);
+
 private:
 	Buffer							m_VertexBuffer;
 	uint32_t						numVertices;

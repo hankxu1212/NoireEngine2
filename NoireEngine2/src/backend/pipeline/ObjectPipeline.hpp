@@ -81,5 +81,16 @@ private:
 	VkRenderPass							m_Renderpass = VK_NULL_HANDLE;
 	std::unique_ptr<ImageDepth>				s_SwapchainDepthImage;
 	std::vector<VkFramebuffer>				m_Framebuffers;
+
+	// for draw indirect
+	struct IndirectBatch
+	{
+		Mesh* mesh;
+		Material* material;
+		uint32_t first;
+		uint32_t count;
+	};
+
+	std::vector<IndirectBatch> CompactDraws(const std::vector<ObjectInstance>& objects);
 };
 

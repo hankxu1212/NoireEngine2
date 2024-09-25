@@ -17,15 +17,7 @@ struct ObjectInstance
 	static_assert(sizeof(TransformUniform) == 64 * 3, "Transform Uniform is the expected size.");
 
 	uint32_t firstVertex = 0;
-	uint32_t numVertices = 0;
 
 	Mesh* mesh;
 	Material* material;
-
-	bool BindMesh(const CommandBuffer& commandBuffer, uint32_t instanceID) const;
-
-	void BindVertexInput(const CommandBuffer& commandBuffer) const;
-
-	void Draw(const CommandBuffer& commandBuffer, uint32_t instanceID) const;
 };
-
