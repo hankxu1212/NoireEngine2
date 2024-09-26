@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<!-- saved from url=(0069)http://graphics.cs.cmu.edu/courses/15-472-f24/A1/report-template.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>15-472-s24: A1 - Scene Graph</title>
+<style>
+/* feel free to style your report in a fancier way! */
+
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;700&Anonymous+Pro&display=swap');
+
+html {
+	background:#505055;
+}
+
+body {
+	font-family: 'Quicksand', sans-serif;
+	color:#000;
+	background:#eeeee8;
+	font-size:15px;
+	margin: 1em auto 50vh auto;
+	padding: 1em 2em 1em 2em;
+	max-width:45em;
+	border-radius:4px;
+	box-shadow:0 0 10px #0008;
+}
+
+h1 { font-size: 20px; font-weight: 700; }
+h2 { font-size: 16px; font-weight: 700; }
+h3 { font-size: 16px; font-weight: 400; }
+h4 { font-size: 14px; font-weight: 400; }
+
+h1, h2, h3, h4 {
+	margin: 15px 0 0 -10px;
+}
+
+p {
+	margin: 5px 0 0 0;
+}
+
+.subtitle {
+	display:block;
+	font-size:16px;
+	font-weight:400;
+}
+
+.placeholder {
+	color:#800;
+	font-style:italic;
+}
+
+kbd {
+	display:inline-block;
+	background:#ccc;
+	color:#444;
+	font-style:normal;
+	font-weight:700;
+	border-radius:8px;
+	padding:1px 6px;
+	margin:1px;
+	border:1.5px solid #aaa;
+}
+
+code {
+	font-family: 'Anonymous Pro', monospace;
+	background: #222;
+	color:#fff;
+	border-radius:4px;
+	padding:2px 4px;
+	margin:1px;
+}
+
+code var {
+	color:#ef5;
+	font-style:italic;
+}
+
+.atag {
+	font-family: 'Calistoga', serif;
+	font-size:90%;
+	color:#000;
+	background:#b00;
+
+	display:inline-block;
+	padding:1px 4px;
+	border-radius: 4px;
+	line-height:120%;
+}
+.atag:before {
+	content:'»';
+}
+.atag.extra {
+	background:#b08;
+}
+.atag.creative {
+	/* thanks, shout.horse! */
+	background:linear-gradient(0.4turn, #ffe680, #916f6f);
+}
+
+</style>
+</head>
+<body>
+<h1>A1: Scene Viewer
+<span class="subtitle">by <span class="placeholder">Hank Xu (ninghuax)</span></span>
+</h1>
+
+<!-- of course, delete these placeholder notes in your report: -->
+
+<p class="placeholder">
+Noire Engine 2 is a rewrite of the engine I built in the past, Noire Engine. <br>
+You can view the complete Github Repo here: 
+<a href="https://github.com/hankxu1212/NoireEngine2"> Noire Engine 2 </a><br>
+
+You can view a rendering architecture diagram here:
+<a href="https://www.figma.com/board/kyVT0H3ePpaXCdgdA20iIq/Noire-Engine-2-Rendering-Architecture?node-id=0-1&t=lMJv94Yt6xFWsMkT-1"> Rendering Architecture </a><br>
+
+The scene graph is an ECS. Entities hold the transform, and scene is updated through updating a Matrix Stack to reduce matrix multiplications.
+</p>
+
+<h2>My Animation <span class="atag creative">A1-create</span></h2>
+
+<p class="placeholder">
+Describe your animation and include a screen recording showing it running in real-time:
+</p>
+
+<video>
+<!--
+  you can use the 'video' element to show your code running
+  Learn more at:
+    https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video
+-->
+</video>
+
+<p class="placeholder">
+Describe how you created your animation.
+</p>
+
+<h2>Using the Scene Viewer</h2>
+
+<p class="placeholder">My Scene Viewer provides a useful UI. Sadly, the functionality of the UI is mostly
+	for display at this moment. You can, however, change a various number of parameters for each component.
+</p>
+
+<h3>Command-line Arguments</h3>
+
+<p class="placeholder">
+Document the command-line arguments that can be used to control your viewer.
+Include both the command-line arguments required by the assignment statement and any additional arguments you decided to add.
+</p>
+
+<ul>
+<li class="placeholder"><code>--scene <var>scene.s72</var></code> -- required -- load scene from <code><var>scene.s72</var></code></li>
+<li class="placeholder">...</li>
+</ul>
+
+<h3>Controls</h3>
+The Engine implements a orbital debug camera like Blender. You can change the parameters of the orbital camera 
+including move and orbital speed by finding the <strong>Core::Debug Camera</strong> object in the hierarchy.
+
+<h2>My Code</h2>
+
+<h3>Loading scenes, Mesh data <span class="atag">A1-load</span></h3> 
+
+<p class="placeholder">
+	Resource: core/resources/Resource
+	<ul>
+		<li>
+			This is a class for maintaining resources in the engine. Resources have deleted move and copy instructors. Resources are maintained in the Resources class by their type index.
+		</li>
+	</ul>
+	Mesh: renderer/object/Mesh
+	<ul>
+		<li>
+			Mesh is a resource. A Mesh is identified by Mesh::CreateInfo, a pattern seen across other resources in the engine.
+		</li>
+		<li>
+			Meshes are instantiated with their Mesh::CreateInfo, which is deserialized from the scene .s72 file.
+		</li>
+		<li>
+			Mesh::CreateInfo contains VertexInput attributes, which are also Resources in the Engine. Duplicate VertexInputs and Meshes are NEVER re-instantiated after the first time. This is another recurring pattern in Noire Engine
+		</li>
+		<li>
+			Meshes hold vertex buffers and index buffers.
+		</li>
+		<li>
+			Meshes hold AABB for frustum culling.
+		</li>
+		<li>
+			<span class="atag extra">A1x-fast</span>
+			Meshes are transformed into indexed meshes with <code>void TransformToIndexedMesh(Vertex* vertices, uint32_t count);</code>
+		</li>
+	</ul>
+</p>
+
+<h3>Drawing the scene. <span class="atag">A1-show</span></h3>
+
+<p class="placeholder"></p>
+	Object Pipeline: backend/pipeline/ObjectPipeline
+	<ul>
+		<li>
+			This is a very similar class to the tutorial code. This holds transform buffers and manages indirect draw calls.
+		</li>
+		<li>
+			<span class="atag extra">A1x-fast</span>
+			Noire Engine 2 draws index meshes indirectly. See <code>void RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);</code>
+		</li>
+		<li>
+			You should refer to the rendering diagram (see beginning section) for more of how the engine draws.
+		</li>
+	</ul>
+	Scene: renderer/scene/Scene<br>
+	Entity: renderer/scene/Entity<br>
+	Components: renderer/components/*<br>
+	<ul>
+		<li>
+			The Scene manages the scene hierarchy and all the entities. During the Update pass, the scene recursivly updates all entities. 
+		</li>
+		<li>
+			The <code>SceneManager</code> manages the active scene. This class is still kinda underdeveloped (sadge).
+		</li>
+		<li>
+			The Scene manages a list of <code>ObjectInstances</code>, and during the Rendering pass, the <code>RenderingComponent</code> pushes a ObjectInstance into the Scene.
+			The Vulkan Context/Renderer then draws from this list, and indirectly draws the meshes with a list of <code>VkDrawIndexedIndirectCommand</code>s.
+		</li>
+		<li>
+			The Scene manages a vector of cameras <code>m_SceneCameras</code>. The Rendering camera is the one with the <strong>least</strong> priority. The Camera vector is set dirty on frame begin and only ever sorted and queried once within a frame.
+		</li>
+	</ul>
+</p>
+
+<p class="placeholder">
+	<img src="SceneExample.png" width="600" height="350">
+</p>
+
+<h3>Handling interactive camera and debug camera movement. <span class="atag">A1-show</span></h3>
+
+<p class="placeholder">
+	CameraComponent: renderer/components/CameraComponent<br>
+	Camera: renderer/Camera<br>
+	<ul>
+		<li>
+			The CameraComponent is a component on an Entity. The <code>Camera::Update</code> is invoked during the Application Update pass, in which the <code>Frustum</code> and the Perspective/View matrices are updated. 
+		</li>
+	</ul>
+	ScriptingEngine: scripting/ScriptingEngine<br>
+	SceneNavigationCamera: scripting/core/SceneNavigationCamera<br>
+	Module: core/resources/Module<br>
+	<ul>
+		<li>
+			The Scripting Engine is a <code>Module</code> in the Engine. Modules have designated Update and Destroy stages in the Application, 
+			and provide convinient singleton <code>::Get()</code> methods.
+		</li>
+	</ul>
+</p>
+<p class="placeholder">
+Include a screen recording of you moving the camera in a scene.
+</p>
+
+<h3>Frustum culling <span class="atag">A1-cull</span></h3>
+
+<p class="placeholder">
+Meshes have AABB, and the frustum tests if the AABB is within the frustum each frame.
+For each plane of the frustum, calculate the distance from the cube's center to the plane.
+Check if this distance is greater than the cube's radius in the direction opposite to the plane's normal. If all distances satisfy this condition for all frustum planes, then the cube is inside the frustum.
+</p>
+<p class="placeholder">
+Include a screenshot or recording showing that culling is working (e.g., by using a debug camera to show that meshes outside the user camera's view aren't being drawn).
+</p>
+
+<h3>Animating the scene <span class="atag">A1-move</span></h3>
+
+<p class="placeholder">
+	Animator, Animation, KeyFrame: renderer/animation*<br>
+	<ul>
+		<li>
+			The Animator is a Component on an Entity. Animators have active Animations, and Animations have a vector of KeyFrames.
+		</li>
+		<li>
+			Animations have Channels stored in a <code>Bitset</code>. However, this feature is not yet flushed out.
+		</li>
+		<li>
+			Animations are updated in the <code>Animate()</code> function in the Animator. Animations are fixed to 30FPS, but you can change this in Animator <code>#define FRAMES_PERIOD</code>
+		</li>
+		<li>
+			Elapsed time is managed in Time class in <code>core/Time</code> as well as many variables in the Animator class.
+		</li>
+	</ul>
+</p>
+
+<p class="placeholder">
+Include a screen recording showing an animation being played back by your viewer.
+</p>
+
+<h3>Handling headless mode <span class="atag">A1-hide</span></h3>
+
+<p class="placeholder">
+Sadly, this is not implemented.
+</p>
+
+<h3>Performance improvements <span class="atag extra">A1x-fast</span></h3>
+<p class="placeholder">
+I used Indexed meshes and Draw indirect to move more stuff to the GPU.
+</p>
+
+<p class="placeholder">
+NOTE: you will demonstrate your performance improvements in the next section.
+</p>
+
+<h2>Performance Tests</h2>
+
+<p class="placeholder">
+This section demonstrates that you have tested your code, including finding its limits.
+</p>
+
+<p class="placeholder">
+	CPU: <br>
+	GPU: NVIDIA 3070 Ti <br>
+	Memory: <br>
+	OS Version: Windows 11 <br>
+</p>
+
+<h3>Culling</h3>
+<p class="placeholder">
+Demonstrate a scene / camera angle where your culling code improves performance; and demonstrate one where it does not improve performance.
+(If you developed more than one culling method, demonstrate the performance gain/loss from each of them in this section.)
+</p>
+
+<p class="placeholder">
+Use charts to summarize performance and graphs to show overall performance.
+Include screenshots of test scenes.
+</p>
+
+<h3>Bottlenecks</h3>
+<p class="placeholder">
+Demonstrate your code bottlenecking on scene traversal (CPU), vertex processing/assembly (GPU), and fragment processing/write-back (GPU).
+</p>
+
+
+<p class="placeholder">
+Use graphs to demonstrate sensitivity to test scene complexity.
+Include screenshots of test scenes.
+</p>
+
+<!-- For example:
+<h4>CPU Bottleneck</h4>
+<p class="placeholder">
+The scenes <a href="#">traversal-*.s72</a> causes my viewer to bottleneck on scene traversal.
+This plot shows the ...
+</p>
+-->
+
+<h3>Performance Improvements</h3>
+
+<p class="placeholder">
+For any other performance improvements you attempted, include comparisons showing them working (or not working).
+Include screenshots of any test scenes and graphs or charts showing performance differences.
+</p>
+
+<h2>Feedback</h2>
+<p class="placeholder">
+This is the end of the structured report. Feel free to add feedback about A1 to this section.
+</p>
+
+
+
+</body></html>
