@@ -60,6 +60,8 @@ void Scene::Render()
  	}
 }
 
+static std::unordered_map<std::string, Entity*> nameToEntityMap;
+
 static bool LoadAsTransform(const sejp::value& val, glm::vec3& outPosition, glm::quat& outRotation, glm::vec3& outScale)
 {
 	try {
@@ -190,6 +192,31 @@ static void MakeCamera(Entity* newEntity, const Scene::TValueMap& obj, const Sce
 	}
 }
 
+static void MakeAnimation(const Scene::TSceneMap& sceneMap)
+{
+	if (sceneMap.find(SceneNode::Driver) == sceneMap.end())
+		return; // no animation objects
+
+	for (const auto& nameValuePair : sceneMap.at(SceneNode::Driver))
+	{
+		const auto& driverObjOpt = nameValuePair.second.as_object();
+		if (!driverObjOpt) {
+			NE_WARN("Could not read driver object as map.");
+			continue;
+		}
+
+		const auto& nodeName = driverObjOpt.value().at("node").as_string().value();
+		if (nameToEntityMap.find(nodeName) == nameToEntityMap.end()) {
+			NE_WARN("No entity named" + nodeName + "exists.");
+			continue;
+		}
+
+		Entity* entity = nameToEntityMap.at(nodeName);
+		entity->AddComponent<Animator>();
+	}
+}
+
+
 static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::string& nodeName, Entity* parent)
 {
 	NE_DEBUG("Creating entity", Logger::CYAN, Logger::BOLD);
@@ -219,6 +246,8 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 		assert(newEntity && "Entity should be non-null");
 	}
 
+	nameToEntityMap[nodeName] = newEntity;
+
 	const auto& obj = value.as_object().value();
 
 	MakeMesh(newEntity, obj, sceneMap);
@@ -232,7 +261,7 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 		const auto& childrenArrOpt = obj.at("children").as_array();
 		if (!childrenArrOpt)
 		{
-			std::cout << "Not a valid array format for children!\n";
+			NE_WARN("Not a valid array format for children!");
 			return newEntity; // not valid children array
 		}
 
@@ -242,7 +271,7 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 			const auto& childOpt = childValue.as_string();
 			if (!childOpt)
 			{
-				std::cout << "Not a valid string format for child!\n";
+				NE_WARN("Not a valid string format for child!");
 				continue;
 			}
 
@@ -318,6 +347,8 @@ void Scene::Deserialize(const std::string& path)
 			{
 				MakeNode(this, sceneMap, root, nullptr);
 			}
+
+			MakeAnimation(sceneMap);
 		}
 
 		NE_INFO("Finished loading scene");

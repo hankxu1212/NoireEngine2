@@ -25,7 +25,7 @@ public:
 	};
 	static_assert(sizeof(MaterialPush) == 16);
 
-	static size_t ObjectsDrawn;
+	inline static size_t ObjectsDrawn, VerticesDrawn, NumDrawCalls;
 
 public:
 	void CreateRenderPass() override;

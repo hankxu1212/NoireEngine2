@@ -58,7 +58,7 @@ public:
 
     static void DEBUG(const std::string str, c_color color, c_decoration decoration = c_decoration::NORMAL) 
     {
-        std::cout << "\033[" << decoration << ";" << color << "m" << str << "\033[0m" << std::endl;
+        std::cout << "\033[" << decoration << ";" << color << "m" << "[Debug] " << str << "\033[0m" << std::endl;
     }
 
     template <class... _Types>

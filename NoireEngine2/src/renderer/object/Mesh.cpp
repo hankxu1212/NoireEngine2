@@ -8,6 +8,7 @@
 #include "utils/Logger.hpp"
 #include "renderer/materials/Material.hpp"
 #include "core/Core.hpp"
+#include "core/Timer.hpp"
 
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
@@ -64,7 +65,7 @@ const Mesh::CreateInfo Mesh::Deserialize(const Scene::TValueMap& obj)
 void Mesh::Deserialize(Entity* entity, const Scene::TValueMap& obj, const Scene::TSceneMap& sceneMap)
 {
 	if (!entity)
-		throw std::runtime_error("Entity pointer is null while trying to load mesh from file.");
+		NE_ERROR("Entity pointer is null while trying to load mesh from file.");
 
 	const Mesh::CreateInfo meshInfo = Mesh::Deserialize(obj);
 
@@ -78,11 +79,11 @@ void Mesh::Deserialize(Entity* entity, const Scene::TValueMap& obj, const Scene:
 	else {
 		const auto& materialNodes = sceneMap.at(SceneNode::Material);
 		if (materialNodes.find(meshInfo.material) == materialNodes.end())
-			throw std::runtime_error(std::format("Could not find this material at {}", meshInfo.material));
+			NE_ERROR("Could not find this material at {}", meshInfo.material);
 
 		const auto& materialObjOpt = materialNodes.at(meshInfo.material).as_object();
 		if (!materialObjOpt)
-			throw std::runtime_error(std::format("Could not serialize this material at {}", meshInfo.material));
+			NE_ERROR("Could not serialize this material at {}", meshInfo.material);
 
 		mat = Material::Deserialize(materialObjOpt.value());
 	}
@@ -127,11 +128,8 @@ void Mesh::Load()
 	// ASSUMING: POSITION, NORMAL, TANGENT, TEXCOORD  (PosNorTanTexVertex)
 	// ASSUMING: every stride is the same, and come from the same src
 	// TODO: add more possible vertex configurations
-	std::vector<Vertex> vertices; // could try some weird reinterpret cast here
-	vertices.resize(m_CreateInfo.count);
-	memcpy(vertices.data(), bytes.data(), 48 * m_CreateInfo.count);
-
-	TransformToIndexedMesh(vertices);
+	Vertex* vertices = (Vertex*)bytes.data();
+	TransformToIndexedMesh(vertices, m_CreateInfo.count);
 }
 
 void Mesh::CreateAABB(const std::vector<Vertex>& vertices)
@@ -146,14 +144,22 @@ void Mesh::CreateAABB(const std::vector<Vertex>& vertices)
 	}
 }
 
-void Mesh::TransformToIndexedMesh(const std::vector<Vertex>& vertices)
+void Mesh::TransformToIndexedMesh(Vertex* vertices, uint32_t count)
 {
-	std::unordered_map<Vertex, uint32_t> vertexToIndexMap;
-	std::vector<uint32_t> indices;
-	std::vector<Vertex> uniqueVertices;
+	Timer timer;
 
-	for (const Vertex& vertex : vertices) 
+	std::unordered_map<Vertex, uint32_t> vertexToIndexMap;
+	
+	std::vector<uint32_t> indices;
+	indices.reserve(m_CreateInfo.count);
+
+	std::vector<Vertex> uniqueVertices;
+	uniqueVertices.reserve(m_CreateInfo.count / 3);
+
+	for (uint32_t i = 0; i < count; ++i)
 	{
+		Vertex& vertex = *&vertices[i];
+
 		if (vertexToIndexMap.find(vertex) != vertexToIndexMap.end()) {
 			indices.emplace_back(vertexToIndexMap[vertex]);
 		}
@@ -172,6 +178,8 @@ void Mesh::TransformToIndexedMesh(const std::vector<Vertex>& vertices)
 	CreateAABB(uniqueVertices);
 	CreateVertexBuffer(uniqueVertices);
 	CreateIndexBuffer(indices);
+
+	NE_INFO("Loading as indexed mesh took {}ms", timer.GetElapsed(true));
 }
 
 void Mesh::CreateVertexBuffer(std::vector<Vertex>& vertices)
@@ -182,7 +190,6 @@ void Mesh::CreateVertexBuffer(std::vector<Vertex>& vertices)
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 	);
 
-	//copy data to buffer:
 	Buffer::TransferToBuffer(vertices.data(), vertices.size() * 48, m_VertexBuffer.getBuffer());
 }
 

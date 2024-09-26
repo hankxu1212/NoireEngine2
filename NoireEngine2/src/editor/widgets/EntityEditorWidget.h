@@ -3,7 +3,7 @@
 #include "imgui/imgui.h"
 #include "renderer/scene/Entity.hpp"
 
-#define MAX_NAME_LEN 25
+#define MAX_NAME_LEN 40
 
 class EntityEditorWidget {
 public:

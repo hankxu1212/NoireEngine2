@@ -95,7 +95,7 @@ public:
 private:
 	void CreateAABB(const std::vector<Vertex>& vertices);
 
-	void TransformToIndexedMesh(const std::vector<Vertex>& vertices);
+	void TransformToIndexedMesh(Vertex* vertices, uint32_t count);
 
 	void CreateVertexBuffer(std::vector<Vertex>& vertices);
 	void CreateIndexBuffer(std::vector<uint32_t> indices);

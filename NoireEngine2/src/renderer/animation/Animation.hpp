@@ -2,11 +2,14 @@
 
 #include <vector>
 #include <string>
-#include "Keyframe.hpp"
 #include <bitset>
 
-struct Animation
+#include "Keyframe.hpp"
+#include "core/resources/Resource.hpp"
+
+class Animation : public Resource
 {
+public:
 	std::vector<Keyframe> keyframes;
 	std::string name;
 	float duration;
@@ -18,5 +21,7 @@ struct Animation
 	};
 
 	std::bitset<2> channels;
+
+	std::type_index getTypeIndex() const { return typeid(Resource); }
 };
 

@@ -7,6 +7,8 @@
 #include "utils/Logger.hpp"
 #include "core/Timer.hpp"
 
+#define MAX_DRAW_COMMANDS 250
+
 VulkanContext::VulkanContext() :
     s_VulkanInstance(std::make_unique<VulkanInstance>()),
     s_PhysicalDevice(std::make_unique<PhysicalDevice>(*s_VulkanInstance)),
@@ -215,14 +217,12 @@ void VulkanContext::RecreateSwapchain()
             perSurfaceBuffer->commandBuffers[i] = std::make_unique<CommandBuffer>(false);
 
             perSurfaceBuffer->drawIndirectBuffers[i] = std::make_unique<Buffer>(
-                500 * sizeof(VkDrawIndexedIndirectCommand),
+                MAX_DRAW_COMMANDS * sizeof(VkDrawIndexedIndirectCommand),
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                 Buffer::Mapped
             );
         }
-
-        std::cout << "Resized surface " << id << " to " << img_cnt << std::endl;
     }
 
     s_Renderer->Rebuild();

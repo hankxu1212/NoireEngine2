@@ -7,10 +7,6 @@
 #include <vulkan/vk_enum_string_helper.h>
 #include "glm/gtx/string_cast.hpp"
 
-#ifdef NE_DEBUG
-#define IMGUI_VULKAN_DEBUG_REPORT
-#endif
-
 static void imgui_vk_check(VkResult err)
 {
     if (err == VK_SUCCESS)
@@ -203,7 +199,6 @@ void ImGuiPipeline::CreateRenderPass()
 
 void ImGuiPipeline::Rebuild()
 {
-    std::cout << "Rebuilt renderer and frame buffers\n";
     if (s_SwapchainDepthImage != nullptr && s_SwapchainDepthImage->getImage() != VK_NULL_HANDLE) {
         DestroyFrameBuffers();
     }

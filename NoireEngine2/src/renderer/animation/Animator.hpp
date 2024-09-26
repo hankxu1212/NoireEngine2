@@ -1,11 +1,17 @@
 #pragma once
 
+#include <memory>
+
 #include "renderer/components/Component.hpp"
 #include "Animation.hpp"
 
 class Animator : public Component
 {
 public:
+
+    Animator() = default;
+    Animator(std::shared_ptr<Animation> animation);
+
     void Update() override;
 
     void Start();
@@ -18,7 +24,8 @@ public:
 
     // Function to animate based on current time
     void Animate();
-    Animation animation;
+
+    std::shared_ptr<Animation> m_Animation;
 
 private:
     float currentTime = 0;

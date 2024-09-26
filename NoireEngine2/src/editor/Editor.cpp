@@ -275,7 +275,9 @@ void Editor::ShowStats()
         ImGui::Separator(); // -----------------------------------------------------
 
         // num objects drawn
-        ImGui::Text("Number of Objects Drawn: %I64u", ObjectPipeline::ObjectsDrawn);
+        ImGui::Text("Objects Drawn: %I64u", ObjectPipeline::ObjectsDrawn);
+        ImGui::Text("Vertices Drawn: %I64u", ObjectPipeline::VerticesDrawn);
+        ImGui::Text("Indirect Indexed Draw Calls: %I64u", ObjectPipeline::NumDrawCalls);
         ImGui::Separator(); // -----------------------------------------------------
 
         // camera mode
@@ -302,7 +304,7 @@ void Editor::ShowStats()
         ImGui::BulletText("Application Update Time: %.3fms", Application::ApplicationUpdateTime);
         ImGui::BulletText("Application Render Time: %.3fms", Application::ApplicationRenderTime);
         ImGui::Indent(20);
-            ImGui::BulletText("Swapchain Wait Time: %.3fms", VulkanContext::WaitForSwapchainTime);
+            ImGui::BulletText("Present Time: %.3fms", VulkanContext::WaitForSwapchainTime);
             ImGui::BulletText("Draw Call Time: %.3fms", VulkanContext::RenderTime);
             ImGui::Indent(20);
                 ImGui::BulletText("Object Render Time: %.3fms", Renderer::ObjectRenderTime);

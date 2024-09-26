@@ -13,10 +13,7 @@ struct PosNorTanTexVertex
 	glm::vec2 texCoord;
 
 	bool operator==(const PosNorTanTexVertex& other) const {
-		return position == other.position &&
-			normal == other.normal &&
-            tangent == other.tangent &&
-			texCoord == other.texCoord;
+        return memcmp(this, &other, 48) == 0;
 	}
 };
 

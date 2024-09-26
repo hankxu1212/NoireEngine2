@@ -12,6 +12,7 @@
 #include "renderer/materials/Material.hpp"
 #include "core/resources/Files.hpp"
 #include "renderer/scene/Scene.hpp"
+#include "utils/Logger.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
@@ -23,8 +24,6 @@ static uint32_t vert_code[] =
 static uint32_t frag_code[] =
 #include "spv/shaders/objects.frag.inl"
 ;
-
-size_t ObjectPipeline::ObjectsDrawn = 0;
 
 ObjectPipeline::ObjectPipeline()
 {
@@ -404,7 +403,6 @@ void ObjectPipeline::CreateDescriptorPool()
 
 void ObjectPipeline::Rebuild()
 {
-	std::cout << "Rebuilt renderer and frame buffers\n";
 	if (s_SwapchainDepthImage != nullptr && s_SwapchainDepthImage->getImage() != VK_NULL_HANDLE) {
 		DestroyFrameBuffers();
 	}
@@ -771,6 +769,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 	const std::vector<ObjectInstance>& sceneObjectInstances = scene->objectInstances();
 	ObjectsDrawn = sceneObjectInstances.size();
 	std::vector<IndirectBatch> draws = CompactDraws(sceneObjectInstances);
+	NumDrawCalls = draws.size();
 
 	//encode the draw data of each object into the indirect draw buffer
 	VkDrawIndexedIndirectCommand* drawCommands = (VkDrawIndexedIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
@@ -786,6 +785,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 	//	}
 	//);
 
+	VerticesDrawn = 0;
 	for (auto i = 0; i < ObjectsDrawn; i++)
 	{
 		drawCommands[i].indexCount = sceneObjectInstances[i].mesh->getIndexCount();
@@ -793,6 +793,8 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 		drawCommands[i].firstIndex = 0;
 		drawCommands[i].vertexOffset = 0;
 		drawCommands[i].firstInstance = i;
+
+		VerticesDrawn += sceneObjectInstances[i].mesh->getVertexCount();
 	}
 
 	VertexInput* previouslyBindedVertex = nullptr;
