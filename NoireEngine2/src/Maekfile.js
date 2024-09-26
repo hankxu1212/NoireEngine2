@@ -19,7 +19,6 @@ custom_flags_and_rules();
 
 // c++
 const core_objs = [
-	maek.CPP('core/Time.cpp'),
 	maek.CPP('Entrypoint.cpp'),
 	maek.CPP('Application.cpp'),
 	maek.CPP('core/layers/LayerStack.cpp'),

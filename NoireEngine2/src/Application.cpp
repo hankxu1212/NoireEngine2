@@ -12,7 +12,6 @@
 #include "core/Timer.hpp"
 
 Application* Application::s_Instance = nullptr;
-float Time::DeltaTime;
 
 Application::Application(const ApplicationSpecification& specification)
 	: m_Specification(specification)
@@ -82,6 +81,7 @@ void Application::Run()
 		before = after;
 
 		Time::DeltaTime = std::min(dt, 0.1f); //lag if frame rate dips too low
+		Time::Now += Time::DeltaTime;
 
 		m_FPS_Accumulator++;
 

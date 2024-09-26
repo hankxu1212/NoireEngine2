@@ -5,14 +5,15 @@
 #include <bitset>
 
 #include "Keyframe.hpp"
-#include "core/resources/Resource.hpp"
+#include "core/resources/Resources.hpp"
+#include "renderer/scene/Scene.hpp"
 
 class Animation : public Resource
 {
 public:
-	std::vector<Keyframe> keyframes;
-	std::string name;
-	float duration;
+	Animation() = default;
+	Animation(const std::string& name, const std::string& filename);
+
 
 	enum class Channel {
 		Position = 0b00, 
@@ -20,8 +21,28 @@ public:
 		Scale = 0b10
 	};
 
-	std::bitset<2> channels;
+	enum class Interpolation {
+		Lerp, Slerp, Constant
+	};
+
+	static std::shared_ptr<Animation> Create(const std::string& name, const std::string& filename);
+	static std::shared_ptr<Animation> Create(const Node& node);
+
+	void Load();
+	void Load(const Scene::TValueMap& obj);
+
+	friend const Node& operator>>(const Node& node, Animation& anim);
+	friend Node& operator<<(Node& node, const Animation& anim);
 
 	std::type_index getTypeIndex() const { return typeid(Resource); }
+
+	std::string				m_Name;
+	std::string				m_Filename;
+	Interpolation			m_InterpolationMode = Interpolation::Slerp;
+	std::bitset<3>			m_Channels;
+
+	std::vector<Keyframe> keyframes;
+	float duration;
 };
+
 

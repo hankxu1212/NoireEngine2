@@ -22,15 +22,16 @@ public:
 
     void Inspect() override;
 
-    // Function to animate based on current time
     void Animate();
 
     std::shared_ptr<Animation> m_Animation;
 
+    const char* getName() override { return "Animator"; }
+
 private:
-    float currentTime = 0;
-    uint32_t currentKeyframe = 0;
-    float m_PlaybackSpeed;
-    bool isAnimating = true;
+    float               m_CurrentTime = 0;
+    uint32_t            m_CurrentKeyframe = 0;
+    float               m_PlaybackSpeed = 1;
+    bool                m_IsAnimating = true;
 };
 

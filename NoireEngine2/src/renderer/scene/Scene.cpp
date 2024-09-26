@@ -211,8 +211,13 @@ static void MakeAnimation(const Scene::TSceneMap& sceneMap)
 			continue;
 		}
 
+		const auto& animName = driverObjOpt.value().at("name").as_string().value();
+
+		std::shared_ptr<Animation> anim = Animation::Create(animName, animName);
+		anim->Load(driverObjOpt.value());
+
 		Entity* entity = nameToEntityMap.at(nodeName);
-		entity->AddComponent<Animator>();
+		entity->AddComponent<Animator>(anim);
 	}
 }
 

@@ -2,6 +2,8 @@
 #include "utils/Logger.hpp"
 #include "core/Time.hpp"
 #include "renderer/scene/Scene.hpp"
+#include "imgui/imgui.h"
+#include "core/Core.hpp"
 
 Animator::Animator(std::shared_ptr<Animation> animation) :
     m_Animation(animation)
@@ -10,8 +12,8 @@ Animator::Animator(std::shared_ptr<Animation> animation) :
 
 void Animator::Update()
 {
-    //if (isAnimating)
-    //    Animate();
+    if (m_IsAnimating)
+        Animate();
 }
 
 void Animator::Start()
@@ -21,49 +23,84 @@ void Animator::Start()
         NE_ERROR("Error: At least two keyframes are required for m_Animation->");
         return;
     }
-    isAnimating = true;
+    m_IsAnimating = true;
 }
 
 void Animator::Restart()
 {
-    currentTime = 0;
-    currentKeyframe = 0;
+    m_CurrentTime = 0;
+    m_CurrentKeyframe = 0;
 }
 
 void Animator::Stop()
 {
-    isAnimating = false;
+    m_IsAnimating = false;
 }
 
 void Animator::Inspect()
 {
+    ImGui::PushID("Animator Inspect");
+    {
+        ImGui::Columns(2);
+        ImGui::Text("Animation Name");
+        ImGui::NextColumn();
+        if (m_Animation)
+            ImGui::Text(m_Animation->m_Name.c_str());
+        else
+            ImGui::Text(NE_NULL_STR);
+        ImGui::Columns(1);
+
+        ImGui::Columns(2);
+        ImGui::Text("Start");
+        ImGui::NextColumn();
+        if (ImGui::Button("##Start", { 20, 20 }))
+            Start();
+        ImGui::Columns(1);
+
+        ImGui::Columns(2);
+        ImGui::Text("Restart");
+        ImGui::NextColumn();
+        if (ImGui::Button("##Restart", {20, 20}))
+            Restart();
+        ImGui::Columns(1);
+
+        ImGui::Columns(2);
+        ImGui::Text("Stop");
+        ImGui::NextColumn();
+        if (ImGui::Button("##Stop", { 20, 20 }))
+            Stop();
+        ImGui::Columns(1);
+    }
+    ImGui::PopID();
 }
 
 void Animator::Animate()
 {
-    currentTime += Time::DeltaTime;
+    m_CurrentTime += Time::DeltaTime * m_PlaybackSpeed;
+    if (m_CurrentTime > m_Animation->duration)
+        m_CurrentTime -= m_Animation->duration;
 
-    if (m_Animation->channels.test((int)Animation::Channel::Position)) {
+    if (m_Animation->m_Channels.test((uint8_t)Animation::Channel::Position)) {
         GetTransform()->SetPosition(
-            Keyframe::InterpolatePosition(currentTime, m_Animation->keyframes[currentKeyframe], m_Animation->keyframes[currentKeyframe + 1])
+            Keyframe::InterpolatePosition(m_CurrentTime, m_Animation->keyframes[m_CurrentKeyframe], m_Animation->keyframes[m_CurrentKeyframe + 1])
         );
     }
 
-    if (m_Animation->channels.test((int)Animation::Channel::Rotation)) {
+    if (m_Animation->m_Channels.test((uint8_t)Animation::Channel::Rotation)) {
         GetTransform()->SetRotation(
-            Keyframe::InterpolateRotation(currentTime, m_Animation->keyframes[currentKeyframe], m_Animation->keyframes[currentKeyframe + 1])
+            Keyframe::InterpolateRotation(m_CurrentTime, m_Animation->keyframes[m_CurrentKeyframe], m_Animation->keyframes[m_CurrentKeyframe + 1])
         );
     }
 
-    if (m_Animation->channels.test((int)Animation::Channel::Scale)) {
+    if (m_Animation->m_Channels.test((uint8_t)Animation::Channel::Scale)) {
         GetTransform()->SetScale(
-            Keyframe::InterpolateScale(currentTime, m_Animation->keyframes[currentKeyframe], m_Animation->keyframes[currentKeyframe + 1])
+            Keyframe::InterpolateScale(m_CurrentTime, m_Animation->keyframes[m_CurrentKeyframe], m_Animation->keyframes[m_CurrentKeyframe + 1])
         );
     }
 
-    float nextTime = m_Animation->keyframes[currentKeyframe + 1].timestamp;
-    if (currentTime > nextTime)
-        currentKeyframe++;
+    float nextTime = m_Animation->keyframes[m_CurrentKeyframe + 1].timestamp;
+    if (m_CurrentTime > nextTime)
+        m_CurrentKeyframe++;
 }
 
 template<>

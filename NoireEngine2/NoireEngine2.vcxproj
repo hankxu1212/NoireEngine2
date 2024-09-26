@@ -132,7 +132,6 @@
     <ClCompile Include="src\core\resources\nodes\NodeConstView.cpp" />
     <ClCompile Include="src\core\resources\nodes\NodeView.cpp" />
     <ClCompile Include="src\core\resources\Resources.cpp" />
-    <ClCompile Include="src\core\Time.cpp" />
     <ClCompile Include="src\backend\VulkanContext.cpp" />
     <ClCompile Include="src\core\window\Window.cpp" />
     <ClCompile Include="src\backend\devices\VulkanInstance.cpp" />
