@@ -773,7 +773,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 	std::vector<IndirectBatch> draws = CompactDraws(sceneObjectInstances);
 
 	//encode the draw data of each object into the indirect draw buffer
-	VkDrawIndirectCommand* drawCommands = (VkDrawIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
+	VkDrawIndexedIndirectCommand* drawCommands = (VkDrawIndexedIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
 	
 	// here is the parallel version, maybe good to benchmark on large objects drawn
 	//std::for_each(std::execution::par_unseq, sceneObjectInstances.begin(), sceneObjectInstances.end(),
@@ -788,9 +788,10 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 
 	for (auto i = 0; i < ObjectsDrawn; i++)
 	{
-		drawCommands[i].vertexCount = sceneObjectInstances[i].mesh->getVertexCount();
+		drawCommands[i].indexCount = sceneObjectInstances[i].mesh->getIndexCount();
 		drawCommands[i].instanceCount = 1;
-		drawCommands[i].firstVertex = 0;
+		drawCommands[i].firstIndex = 0;
+		drawCommands[i].vertexOffset = 0;
 		drawCommands[i].firstInstance = i;
 	}
 
@@ -806,11 +807,11 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 		draw.mesh->Bind(commandBuffer);
 		draw.material->Push(commandBuffer, m_PipelineLayout);
 
-		VkDeviceSize indirect_offset = draw.first * sizeof(VkDrawIndirectCommand);
-		uint32_t draw_stride = sizeof(VkDrawIndirectCommand);
+		VkDeviceSize indirect_offset = draw.first * sizeof(VkDrawIndexedIndirectCommand);
+		uint32_t draw_stride = sizeof(VkDrawIndexedIndirectCommand);
 
 		//execute the draw command buffer on each section as defined by the array of draws
-		vkCmdDrawIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), indirect_offset, draw.count, draw_stride);
+		vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), indirect_offset, draw.count, draw_stride);
 	}
 }
 

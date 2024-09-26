@@ -21,6 +21,7 @@ Mesh::Mesh(const CreateInfo& createInfo) :
 Mesh::~Mesh()
 {
 	m_VertexBuffer.Destroy();
+	m_IndexBuffer.Destroy();
 }
 
 const Mesh::CreateInfo Mesh::Deserialize(const Scene::TValueMap& obj)
@@ -115,39 +116,85 @@ void Mesh::Load()
 {
 	NE_INFO("Instantiated mesh from {}", m_CreateInfo.src);
 
+	// create vertex input
 	m_Vertex = VertexInput::Create(m_CreateInfo.attributes).get();
 
+	// load all bytes from binary
 	const std::string fullPath = "../scenes/examples/" + m_CreateInfo.src;
 	std::vector<std::byte> bytes = Files::Read(fullPath);
 
+	// extract vertex information
+	// ASSUMING: POSITION, NORMAL, TANGENT, TEXCOORD  (PosNorTanTexVertex)
+	// ASSUMING: every stride is the same, and come from the same src
+	// TODO: add more possible vertex configurations
+	std::vector<Vertex> vertices; // could try some weird reinterpret cast here
+	vertices.resize(m_CreateInfo.count);
+	memcpy(vertices.data(), bytes.data(), 48 * m_CreateInfo.count);
+
+	TransformToIndexedMesh(vertices);
+}
+
+void Mesh::CreateAABB(const std::vector<Vertex>& vertices)
+{
+	m_AABB.min = glm::vec3(std::numeric_limits<float>::infinity());
+	m_AABB.max = -glm::vec3(std::numeric_limits<float>::infinity());
+
+	for (uint32_t i = 0; i < vertices.size(); ++i)
+	{
+		m_AABB.min = glm::min(m_AABB.min, vertices[i].position);
+		m_AABB.max = glm::max(m_AABB.max, vertices[i].position);
+	}
+}
+
+void Mesh::TransformToIndexedMesh(const std::vector<Vertex>& vertices)
+{
+	std::unordered_map<Vertex, uint32_t> vertexToIndexMap;
+	std::vector<uint32_t> indices;
+	std::vector<Vertex> uniqueVertices;
+
+	for (const Vertex& vertex : vertices) 
+	{
+		if (vertexToIndexMap.find(vertex) != vertexToIndexMap.end()) {
+			indices.emplace_back(vertexToIndexMap[vertex]);
+		}
+		else
+		{
+			uniqueVertices.push_back(vertex);
+			uint32_t newIndex = static_cast<uint32_t>(uniqueVertices.size()) - 1;
+			indices.push_back(newIndex);
+			vertexToIndexMap[vertex] = newIndex;
+		}
+	}
+
+	numVertices = (uint32_t)uniqueVertices.size();
+	numIndices = (uint32_t)indices.size();
+
+	CreateAABB(uniqueVertices);
+	CreateVertexBuffer(uniqueVertices);
+	CreateIndexBuffer(indices);
+}
+
+void Mesh::CreateVertexBuffer(std::vector<Vertex>& vertices)
+{
 	m_VertexBuffer = Buffer(
-		bytes.size(),
+		vertices.size() * 48,
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 	);
 
 	//copy data to buffer:
-	Buffer::TransferToBuffer(bytes.data(), bytes.size(), m_VertexBuffer.getBuffer());
+	Buffer::TransferToBuffer(vertices.data(), vertices.size() * 48, m_VertexBuffer.getBuffer());
+}
 
-	numVertices = (uint32_t)bytes.size() / m_CreateInfo.attributes[0].stride;
-	assert(numVertices * m_CreateInfo.attributes[0].stride == bytes.size());
+void Mesh::CreateIndexBuffer(std::vector<uint32_t> indices)
+{
+	m_IndexBuffer = Buffer(
+		indices.size() * 4,
+		VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+	);
 
-	uint32_t positionSize = sizeof(glm::vec3);
-
-	// extract vertices and create AABB
-	m_AABB.min = glm::vec3(std::numeric_limits<float>::infinity());
-	m_AABB.max = -glm::vec3(std::numeric_limits<float>::infinity());
-
-	for (uint32_t i = 0; i < numVertices; ++i)
-	{
-		glm::vec3 position;
-		memcpy(glm::value_ptr(position), bytes.data() + i * m_CreateInfo.attributes[0].stride, positionSize);
-		
-		m_AABB.min = glm::min(m_AABB.min, position);
-		m_AABB.max = glm::max(m_AABB.max, position);
-	}
-
-	NE_INFO("Created AABB: min: {}, max: {}", glm::to_string(m_AABB.min), glm::to_string(m_AABB.min));
+	Buffer::TransferToBuffer(indices.data(), indices.size() * 4, m_IndexBuffer.getBuffer());
 }
 
 void Mesh::Update(const glm::mat4& model)
@@ -159,7 +206,9 @@ void Mesh::Bind(const CommandBuffer& commandBuffer)
 {
 	std::array< VkBuffer, 1 > vertex_buffers{ m_VertexBuffer.getBuffer() };
 	std::array< VkDeviceSize, 1 > offsets{ 0 };
-	vkCmdBindVertexBuffers(commandBuffer, 0, uint32_t(vertex_buffers.size()), vertex_buffers.data(), offsets.data());
+	vkCmdBindVertexBuffers(commandBuffer, 0,1, vertex_buffers.data(), offsets.data());
+
+	vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 }
 
 const Node& operator>>(const Node& node, Mesh& mesh) {

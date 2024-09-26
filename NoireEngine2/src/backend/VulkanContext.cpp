@@ -37,6 +37,8 @@ void VulkanContext::Update()
 
     for (auto [surfaceId, swapchain] : Enumerate(m_Swapchains))
     {
+        Timer timer;
+
         auto& perSurfaceBuffer = m_PerSurfaceBuffers[surfaceId];
 
         VkResult acquireResult = swapchain->AcquireNextImage(
@@ -50,20 +52,18 @@ void VulkanContext::Update()
         }
 
         if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR) {
-            std::cerr << "[vulkan] Acquiring swapchain image resulted in " <<  string_VkResult(acquireResult) << std::endl;
+            std::cerr << "[vulkan] Acquiring swapchain image resulted in " << string_VkResult(acquireResult) << std::endl;
             return;
         }
 
         std::unique_ptr<CommandBuffer>& commandBuffer = perSurfaceBuffer->commandBuffers[swapchain->getActiveImageIndex()];
-        
+
         commandBuffer->Begin();
 
-        Timer timer; 
-        {
-            s_Renderer->Render(*commandBuffer, static_cast<uint32_t>(surfaceId));
-        }
         if (Application::StatsDirty)
-            RenderTime = timer.GetElapsed(true);
+            WaitForSwapchainTime = timer.GetElapsed(true);
+
+        s_Renderer->Render(*commandBuffer, static_cast<uint32_t>(surfaceId));
         // submit the command buffer
         {
             commandBuffer->End();
@@ -79,8 +79,9 @@ void VulkanContext::Update()
                 VK_CHECK(presentResult, "[vulkan] Failed to present swap chain image!");
             }
         }
+
         if (Application::StatsDirty)
-            CommandBufferSubmissionTime = timer.GetElapsed(false);
+            RenderTime = timer.GetElapsed(false);
 
         perSurfaceBuffer->currentFrame = (perSurfaceBuffer->currentFrame + 1) % swapchain->getImageCount();
     }

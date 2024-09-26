@@ -302,8 +302,8 @@ void Editor::ShowStats()
         ImGui::BulletText("Application Update Time: %.3fms", Application::ApplicationUpdateTime);
         ImGui::BulletText("Application Render Time: %.3fms", Application::ApplicationRenderTime);
         ImGui::Indent(20);
-            ImGui::BulletText("Command Buffer Submission Time: %.3fms", VulkanContext::CommandBufferSubmissionTime);
-            ImGui::BulletText("Vulkan Render Time: %.3fms", VulkanContext::RenderTime);
+            ImGui::BulletText("Swapchain Wait Time: %.3fms", VulkanContext::WaitForSwapchainTime);
+            ImGui::BulletText("Draw Call Time: %.3fms", VulkanContext::RenderTime);
             ImGui::Indent(20);
                 ImGui::BulletText("Object Render Time: %.3fms", Renderer::ObjectRenderTime);
                 ImGui::BulletText("UI Render Time: %.3fms", Renderer::UIRenderTime);

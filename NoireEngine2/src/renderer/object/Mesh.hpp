@@ -46,6 +46,8 @@ public:
 		}
 	};
 
+	using Vertex = PosNorTanTexVertex;
+
 public:
 	Mesh() = default;
 
@@ -74,9 +76,13 @@ public:
 
 	virtual std::type_index getTypeIndex() const { return typeid(Mesh); }
 
-	inline const Buffer& vertexBuffer() const { return m_VertexBuffer; }
+	inline const Buffer& getVertexBuffer() const { return m_VertexBuffer; }
+	
+	inline const Buffer& getIndexBuffer() const { return m_VertexBuffer; }
 
 	inline uint32_t getVertexCount() const { return numVertices; }
+
+	inline uint32_t getIndexCount() const { return numIndices; }
 
 	inline VertexInput* getVertexInput() { return m_Vertex; }
 
@@ -87,8 +93,18 @@ public:
 	void Bind(const CommandBuffer& commandBuffer);
 
 private:
+	void CreateAABB(const std::vector<Vertex>& vertices);
+
+	void TransformToIndexedMesh(const std::vector<Vertex>& vertices);
+
+	void CreateVertexBuffer(std::vector<Vertex>& vertices);
+	void CreateIndexBuffer(std::vector<uint32_t> indices);
+
+private:
 	Buffer							m_VertexBuffer;
+	Buffer							m_IndexBuffer;
 	uint32_t						numVertices;
+	uint32_t						numIndices;
 	VertexInput*					m_Vertex;
 	CreateInfo						m_CreateInfo;
 	AABB							m_AABB;

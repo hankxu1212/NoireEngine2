@@ -81,7 +81,7 @@ public:
 	inline const std::uint32_t				getWorkspaceSize() const { return static_cast<uint32_t>(m_PerSurfaceBuffers.size()); }
 
 
-	inline static float CommandBufferSubmissionTime, RenderTime;
+	inline static float WaitForSwapchainTime, RenderTime;
 
 private:
 	std::unique_ptr<VulkanInstance>				s_VulkanInstance;

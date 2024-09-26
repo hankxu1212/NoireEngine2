@@ -49,7 +49,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer, uint32_t surfaceId)
 		imguiPipeline->Render(SceneManager::Get()->getScene(), commandBuffer, surfaceId);
 	}
 	if (Application::StatsDirty)
-		UIRenderTime = timer.GetElapsed(true);
+		UIRenderTime = timer.GetElapsed(false);
 }
 
 void Renderer::Rebuild()

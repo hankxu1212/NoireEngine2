@@ -7,6 +7,8 @@
 #include "core/resources/Resources.hpp"
 #include "backend/commands/CommandBuffer.hpp"
 
+#include "PosNorTanTexVertex.hpp"
+
 struct VertexInput : Resource
 {
 	struct Attribute
@@ -65,4 +67,3 @@ struct VertexInput : Resource
 	std::vector<VkVertexInputBindingDescription2EXT>	m_Binding;
 	std::vector<VkVertexInputAttributeDescription2EXT>  m_VulkanAttributes;
 };
-

@@ -34,8 +34,6 @@ const core_objs = [
 ];
 
 const renderer_objs = [
-	maek.CPP('renderer/vertices/PosNorTexVertex.cpp'),
-	maek.CPP('renderer/vertices/PosNorTanTexVertex.cpp'),
 	maek.CPP('renderer/vertices/Vertex.cpp'),
 	maek.CPP('renderer/Frustum.cpp'),
 	maek.CPP('renderer/Camera.cpp'),
