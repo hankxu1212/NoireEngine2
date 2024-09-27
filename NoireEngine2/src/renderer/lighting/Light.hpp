@@ -9,49 +9,34 @@
 
 #include <variant>
 
-//struct DirectionalLight {
-//	alignas(16) glm::vec3 color;
-//	alignas(16) glm::vec3 direction;
-//	alignas(16) glm::vec4 intensities;
-//	alignas(16) glm::vec4 shadowParams;
-//	alignas(16) glm::vec4 softShadows;
-//};
-////static_assert(sizeof(DirectionalLight) == 16 * 5);
-//
-//struct PointLight {
-//	alignas(16) glm::vec3 color;
-//	alignas(16) glm::vec3 position;
-//	alignas(16) glm::vec3 attenuation;
-//	alignas(16) glm::vec4 intensities;
-//	alignas(16) glm::vec4 shadowParams;
-//	alignas(16) glm::vec4 softShadows;
-//};
-////static_assert(sizeof(PointLight) == 16 * 6);
-
-struct LightUniform {
-	alignas(16) uint32_t type;
-	alignas(16) glm::vec3 color;
-	alignas(16) glm::vec3 position;
-	alignas(16) glm::vec3 direction;
-	alignas(16) glm::vec2 cutoffs;
-	alignas(16) glm::vec3 attenuation;
-	alignas(16) glm::vec4 intensities;
-	alignas(16) glm::vec4 shadowParams;
-	alignas(16) glm::vec4 softShadows;
+struct alignas(16) LightUniform {
+	struct { float x, y, z, padding_; } color = { 1,1,1,0 };
+	struct { float x, y, z, padding_; } position;
+	struct { float x, y, z, padding_; } direction;
+	float intensity = 1;
+	uint32_t type = 0 /*Directional*/;
 };
-static_assert(sizeof(LightUniform) == 16 * 9);
+static_assert(sizeof(LightUniform) == 16 * 4);
 
 class Light : public Component
 {
 public:
-	enum Type { Directional, Point, Spot, };
+	enum class Type { Directional = 0, Point = 1, Spot = 2, };
+
+	Light(Type type);
+
+	Light(Type type, Color3 color, float intensity);
 
 public:
-	Type type = Directional;
+	Type type = Type::Directional;
 
 	void Update() override;
 
+	void Inspect() override;
+
 	_NODISCARD LightUniform& GetLightUniform() { return m_LightUniform; }
+
+	const char* getName() override { return "Light"; }
 
 private:
 	LightUniform m_LightUniform;

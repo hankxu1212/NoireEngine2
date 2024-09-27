@@ -5,6 +5,7 @@
 #include "renderer/object/ObjectInstance.hpp"
 #include "utils/sejp/sejp.hpp"
 #include "SceneNode.hpp"
+#include "renderer/lighting/Light.hpp"
 
 #include <filesystem>
 #include <unordered_map>
@@ -13,7 +14,8 @@
 class Entity;
 class Transform;
 class CameraComponent;
-class Light;
+
+#define MAX_NUM_TOTAL_LIGHTS 20
 
 namespace Core {
 	class SceneNavigationCamera;
@@ -72,16 +74,13 @@ public:
 	inline CameraComponent* debugCam() const;
 
 	struct SceneUniform {
-		struct { float x, y, z, padding_; } SKY_DIRECTION;
-		struct { float r, g, b, padding_; } SKY_ENERGY;
-		struct { float x, y, z, padding_; } SUN_DIRECTION;
-		struct { float r, g, b, padding_; } SUN_ENERGY;
+		LightUniform lights[MAX_NUM_TOTAL_LIGHTS];
+		uint32_t numLights;
 	};
-	static_assert(sizeof(SceneUniform) == 16 * 4, "World is the expected size.");
 
-	inline const void* sceneUniform() const { return &m_SceneInfo; }
+	inline const void* getSceneUniformPtr() const { return &m_SceneInfo; }
 
-	inline size_t sceneUniformSize() const { return sizeof(SceneUniform); }
+	inline size_t getSceneUniformSize() const { return sizeof(SceneUniform); }
 
 	inline const std::vector<ObjectInstance>& getObjectInstances() const { return m_ObjectInstances; }
 
@@ -95,8 +94,8 @@ public: // event functions. Do not create function definitions!
 	void OnComponentRemoved(Entity&, T&);
 
 private:
-	void UpdateWorldUniform();
 	void InstantiateCoreScripts();
+	void UpdateSceneInfo();
 
 private:
 	friend class SceneManager;

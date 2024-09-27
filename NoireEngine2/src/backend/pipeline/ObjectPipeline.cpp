@@ -631,7 +631,7 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 	//upload world info:
 	{ 
 		//host-side copy into World_src:
-		memcpy(workspace.World_src.data(), scene->sceneUniform(), scene->sceneUniformSize());
+		memcpy(workspace.World_src.data(), scene->getSceneUniformPtr(), scene->getSceneUniformSize());
 
 		//add device-side copy from World_src -> World:
 		assert(workspace.World_src.getSize() == workspace.World.getSize());

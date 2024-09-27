@@ -21,8 +21,9 @@ Scene::Scene(const std::string& path)
 		NE_ERROR("Path " + path + " does not exist.");
 
 	Deserialize(path);
-	UpdateWorldUniform();
 	InstantiateCoreScripts();
+
+	m_SceneInfo.numLights = 1;
 }
 
 Scene::~Scene()
@@ -38,11 +39,10 @@ void Scene::Update()
 {
 	sceneCamDirty = true; // prompt update again
 
-	// TODO: update lightings
-	//UpdateWorldUniform();
-
 	// update entities and components
 	Entity::root().Update();
+
+	UpdateSceneInfo();
 }
 
 void Scene::Render()
@@ -419,25 +419,6 @@ inline CameraComponent* Scene::debugCam() const
 	return m_DebugCamera;
 }
 
-void Scene::UpdateWorldUniform()
-{
-	m_SceneInfo.SKY_DIRECTION.x = 0.0f;
-	m_SceneInfo.SKY_DIRECTION.y = 0.0f;
-	m_SceneInfo.SKY_DIRECTION.z = 1.0f;
-
-	m_SceneInfo.SKY_ENERGY.r = 0.1f;
-	m_SceneInfo.SKY_ENERGY.g = 0.1f;
-	m_SceneInfo.SKY_ENERGY.b = 0.2f;
-
-	m_SceneInfo.SUN_DIRECTION.x = 6.0f / 23.0f;
-	m_SceneInfo.SUN_DIRECTION.y = 13.0f / 23.0f;
-	m_SceneInfo.SUN_DIRECTION.z = 18.0f / 23.0f;
-
-	m_SceneInfo.SUN_ENERGY.r = 1.0f;
-	m_SceneInfo.SUN_ENERGY.g = 1.0f;
-	m_SceneInfo.SUN_ENERGY.b = 0.9f;
-}
-
 void Scene::InstantiateCoreScripts()
 {
 	Entity* eCam = Instantiate("Core::Debug Camera", glm::vec3(0, 0, 10), glm::quat(1, 0, 0, 0));
@@ -456,4 +437,19 @@ void Scene::InstantiateCoreScripts()
 		Entity* autoCam = Instantiate("Auto-Instantiated Rendering Camera", glm::vec3(0, 0, 10), glm::quat(1, 0, 0, 0));
 		autoCam->AddComponent<CameraComponent>();
 	}
+
+	Entity* testLight = Instantiate("Testing: Light");
+	testLight->AddComponent<Light>(Light::Type::Directional, Color3::Aqua, 1.0f);
+}
+
+void Scene::UpdateSceneInfo()
+{
+	int i = 0;
+	for (Light* light : m_SceneLights)
+	{
+		memcpy(&m_SceneInfo.lights[i], &light->GetLightUniform(), sizeof(LightUniform));
+		m_SceneInfo.lights[i] = light->GetLightUniform();
+		i++;
+	}
+	m_SceneInfo.numLights = i;
 }

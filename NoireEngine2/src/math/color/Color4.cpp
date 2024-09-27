@@ -18,6 +18,13 @@ const Color4 Color4::Blue(0x0000FF);
 const Color4 Color4::Purple(0x800080);
 const Color4 Color4::Fuchsia(0xFF00FF);	
 	
+Color4::Color4(const Color3& color3)
+{
+	r = color3[0];
+	g = color3[1];
+	b = color3[2];
+}
+
 constexpr bool Color4::operator==(const Color4& rhs) const {
 	return r == rhs.r && g == rhs.g && b == rhs.b && a == rhs.a;
 }

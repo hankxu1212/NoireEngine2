@@ -6,10 +6,13 @@
 #include <iomanip>
 
 #include "math/Math.hpp"
+#include "Color3.hpp"
 
 class Color4 {
 public:
 	Color4() = default;
+
+	Color4(const Color3& color3);
 
 	/**
 		* Constructor for Color.
@@ -25,6 +28,7 @@ public:
 	{
 		return glm::vec3(r, g, b);
 	}
+
 
 	/**
 		* Constructor for Color.
