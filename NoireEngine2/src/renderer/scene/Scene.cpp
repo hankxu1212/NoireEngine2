@@ -53,7 +53,6 @@ void Scene::Render()
 		return;
 	}
 
-	Timer timer;
 	// push all transforms to pipeline
 	m_MatrixStack.Clear();
 	m_ObjectInstances.clear();
@@ -61,7 +60,6 @@ void Scene::Render()
 	{
 		child->RenderPass(m_MatrixStack);
  	}
-	std::cout << timer.GetElapsed(false) << '\n';
 }
 
 static std::unordered_map<std::string, Entity*> nameToEntityMap;

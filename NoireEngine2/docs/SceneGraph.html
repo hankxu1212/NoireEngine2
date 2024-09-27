@@ -98,301 +98,311 @@ code var {
 
 </style>
 </head>
-<body>
-<h1>A1: Scene Viewer
-<span class="subtitle">by <span class="placeholder">Hank Xu (ninghuax)</span></span>
-</h1>
+                <body>
+                    <h1>
+                        A1: Scene Viewer
+                        <span class="subtitle">by <span class="placeholder">Hank Xu (ninghuax)</span></span>
+                    </h1>
 
-<!-- of course, delete these placeholder notes in your report: -->
+                    <!-- of course, delete these placeholder notes in your report: -->
 
-<p class="placeholder">
-Noire Engine 2 is a rewrite of the engine I built in the past, Noire Engine. <br>
-You can view the complete Github Repo here: 
-<a href="https://github.com/hankxu1212/NoireEngine2"> Noire Engine 2 </a><br>
+                    <p class="placeholder">
+                        Noire Engine 2 is a rewrite of the engine I built in the past, Noire Engine. <br>
+                        You can view the complete Github Repo here:
+                        <a href="https://github.com/hankxu1212/NoireEngine2"> Noire Engine 2 </a><br>
 
-You can view a rendering architecture diagram here:
-<a href="https://www.figma.com/board/kyVT0H3ePpaXCdgdA20iIq/Noire-Engine-2-Rendering-Architecture?node-id=0-1&t=lMJv94Yt6xFWsMkT-1"> Rendering Architecture </a><br>
+                        You can view a rendering architecture diagram here:
+                        <a href="https://www.figma.com/board/kyVT0H3ePpaXCdgdA20iIq/Noire-Engine-2-Rendering-Architecture?node-id=0-1&t=lMJv94Yt6xFWsMkT-1"> Rendering Architecture </a><br>
 
-The scene graph is an ECS. Entities hold the transform, and scene is updated through updating a Matrix Stack to reduce matrix multiplications.
-</p>
+                        The scene graph is a tree-structured ECS. Entities hold the transform, and scene is updated through updating a Matrix Stack to reduce matrix multiplications.
+                    </p>
 
-<h2>My Animation <span class="atag creative">A1-create</span></h2>
+                    <h2>My Animation <span class="atag creative">A1-create</span></h2>
 
-<p class="placeholder">
-Describe your animation and include a screen recording showing it running in real-time:
-</p>
+                    <p class="placeholder">
+                        Describe your animation and include a screen recording showing it running in real-time:
+                    </p>
 
-<p class="placeholder">
-Describe how you created your animation.
-</p>
+                    <p class="placeholder">
+                        Describe how you created your animation.
+                    </p>
 
-<h2>Using the Scene Viewer</h2>
+                    <h2>Using the Scene Viewer</h2>
 
-<p class="placeholder">My Scene Viewer provides a useful UI. Sadly, the functionality of the UI is mostly
-	for display at this moment. You can, however, change a various number of parameters for each component.
-</p>
+                    <p class="placeholder">
+                        My Scene Viewer provides a useful UI. Sadly, the functionality of the UI is mostly
+                        for display at this moment. You can, however, change a various number of parameters for each component.
+                    </p>
 
-<h3>Command-line Arguments</h3>
+                    <h3>Command-line Arguments </h3> 
+                    <ul>
+                        <li class="placeholder"><code>--scene <var>scene.s72</var></code> --required load scene from <code><var>scene.s72</var></code>IMPORTANT: please use relative path to the binary executable</li>
+                        <li class="placeholder">
+                            <code>--physical-device <var>"Your-Physical-Device-Name"</var></code> -- use the specified physical device. If not found, will prompt with any found ones. If not specified, will rank available physical devices by some metrics.
+                            See <code>PhysicalDevice::RateDeviceSuitability(...)</code>
+                            <br />
+                            <strong>
+                                Note: Noire Engine 2 REQUIRES the physical/logical device to have the following extensions
+                            </strong><br />
+                            VK_KHR_SWAPCHAIN_EXTENSION_NAME, <br />
+                            VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,<br />
+                            VK_EXT_VERTEX_INPUT_DYNAMIC_STATE_EXTENSION_NAME<br />
+                            If any of these extensions are not found, program will abort.
+<li class="placeholder"><code>--camera <var>Your-Camera</var></code> -- load using a specified camera. If not specified, will try to use the camera in the scene with least priority. If no camera is in the loaded scene, the engine will instantiate a rendering camera for you. You can change camera priority in the UI</li>
+                        <li class="placeholder"><code>--drawing-size <var>w h</var></code>specifies the window size. If not specified, will use 1980x1020</li>
+                        <li class="placeholder"><code>--culling <var>(none|frustum)</var></code>specifies the culling mode. If not specified, will use frustum culling by default.</li>
+                    </ul>
 
-<p class="placeholder">
-Document the command-line arguments that can be used to control your viewer.
-Include both the command-line arguments required by the assignment statement and any additional arguments you decided to add.
-</p>
+                    <h3>Controls</h3>
+                    The Engine implements an almost-identical, but obviously inferior orbital debug camera like Blender. You can change the parameters of the orbital camera
+                    including move and orbital speed by finding the <strong>Core::Debug Camera</strong> object in the hierarchy.
 
-<ul>
-<li class="placeholder"><code>--scene <var>scene.s72</var></code> -- required -- load scene from <code><var>scene.s72</var></code></li>
-<li class="placeholder">...</li>
-</ul>
+                    <h2>My Code</h2>
 
-<h3>Controls</h3>
-The Engine implements a orbital debug camera like Blender. You can change the parameters of the orbital camera 
-including move and orbital speed by finding the <strong>Core::Debug Camera</strong> object in the hierarchy.
+                    <h3>Loading scenes, Mesh data <span class="atag">A1-load</span></h3>
 
-<h2>My Code</h2>
+                    <p class="placeholder">
+                        Resource: core/resources/Resource
+                        <ul>
+                            <li>
+                                This is a class for maintaining resources in the engine. Resources have deleted move and copy instructors. Resources are maintained in the Resources class by their type index.
+                            </li>
+                        </ul>
+                        Mesh: renderer/object/Mesh
+                        <ul>
+                            <li>
+                                Mesh is a resource. A Mesh is identified by Mesh::CreateInfo, a pattern seen across other resources in the engine.
+                            </li>
+                            <li>
+                                Meshes are instantiated with their Mesh::CreateInfo, which is deserialized from the scene .s72 file.
+                            </li>
+                            <li>
+                                Mesh::CreateInfo contains VertexInput attributes, which are also Resources in the Engine. Duplicate VertexInputs and Meshes are NEVER re-instantiated after the first time. This is another recurring pattern in Noire Engine
+                            </li>
+                            <li>
+                                Meshes hold vertex buffers and index buffers.
+                            </li>
+                            <li>
+                                Meshes hold AABB for frustum culling.
+                            </li>
+                            <li>
+                                <span class="atag extra">A1x-fast</span>
+                                Meshes are transformed into indexed meshes with <code>void TransformToIndexedMesh(Vertex* vertices, uint32_t count);</code>
+                            </li>
+                            <li>
+                                <span class="atag extra">A1x-fast</span>
+                                Meshes may use different vertex input streams (VertexInput class), and I used dynamic vertex binding <code>vkCmdSetVertexInputEXT</code>, <code>VertexInput::Bind(...)</code>
+                                so that different meshes with different vertex inputs can be binded on the same pipeline. This way we avoid the need for multiple pipelines.
+                            </li>
+                        </ul>
+                    </p>
 
-<h3>Loading scenes, Mesh data <span class="atag">A1-load</span></h3> 
+                    <h3>Drawing the scene. <span class="atag">A1-show</span></h3>
+                    
+                    <p class="placeholder"></p>
+                    Object Pipeline: backend/pipeline/ObjectPipeline
+                    <ul>
+                        <li>
+                            This is a very similar class to the tutorial code. This holds transform buffers and manages draw calls.
+                        </li>
+                        <li>
+                            <span class="atag extra">A1x-fast</span>
+                            Noire Engine 2 draws index meshes <strong>indirectly</strong>. See <code>void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);</code>
+                        </li>
+                        <li>
+                            You should refer to the rendering diagram (see beginning section) for more of how the engine draws.
+                        </li>
+                    </ul>
+                    VulkanContext: backend/VulkanContext
+                    <ul>
+                        <li>
+                            This class manages the Vulkan instance, logical/physical devices, and the drawing framework.
+                        </li>
+                        <li>
+                            It manages swapchains and sends command buffers to the <code>Renderer</code>, where the Renderer delegates work to smaller pipelines.
+                        </li>
+                        <li>
+                            All the pipelines use the same Command Buffer, let me know if this is a good idea!
+                        </li>
+                    </ul>
+                    Scene: renderer/scene/Scene<br>
+                    Entity: renderer/scene/Entity<br>
+                    Components: renderer/components/*<br>
+                    <ul>
+                        <li>
+                            The Scene is a single tree with roots of the scene being children of a dummy <code>Entity::root()</code> node.
+                        </li>
+                        <li>
+                            The Scene manages the scene hierarchy and all the entities. During the Update pass, the scene recursivly updates all entities.
+                        </li>
+                        <li>
+                            The <code>SceneManager</code> manages the active scene. This class is still kinda underdeveloped (sadge).
+                        </li>
+                        <li>
+                            The Scene manages a list of <code>ObjectInstances</code>, and during the Rendering pass, the <code>RenderingComponent</code> pushes a ObjectInstance into the Scene.
+                            The Vulkan Context/Renderer then draws from this list, and indirectly draws the meshes with a list of <code>VkDrawIndexedIndirectCommand</code>s.
+                        </li>
+                        <li>
+                            The Scene manages a vector of cameras <code>m_SceneCameras</code>. The Rendering camera is the one with the <strong>least</strong> priority. The Camera vector is set dirty on frame begin and only ever sorted and queried once within a frame.
+                        </li>
+                    </ul>
+                    </p>
 
-<p class="placeholder">
-	Resource: core/resources/Resource
-	<ul>
-		<li>
-			This is a class for maintaining resources in the engine. Resources have deleted move and copy instructors. Resources are maintained in the Resources class by their type index.
-		</li>
-	</ul>
-	Mesh: renderer/object/Mesh
-	<ul>
-		<li>
-			Mesh is a resource. A Mesh is identified by Mesh::CreateInfo, a pattern seen across other resources in the engine.
-		</li>
-		<li>
-			Meshes are instantiated with their Mesh::CreateInfo, which is deserialized from the scene .s72 file.
-		</li>
-		<li>
-			Mesh::CreateInfo contains VertexInput attributes, which are also Resources in the Engine. Duplicate VertexInputs and Meshes are NEVER re-instantiated after the first time. This is another recurring pattern in Noire Engine
-		</li>
-		<li>
-			Meshes hold vertex buffers and index buffers.
-		</li>
-		<li>
-			Meshes hold AABB for frustum culling.
-		</li>
-		<li>
-			<span class="atag extra">A1x-fast</span>
-			Meshes are transformed into indexed meshes with <code>void TransformToIndexedMesh(Vertex* vertices, uint32_t count);</code>
-		</li>
-		<li>
-			<span class="atag extra">A1x-fast</span>
-			Meshes may use different vertex input streams (VertexInput class), and I used dynamic vertex binding <code>vkCmdSetVertexInputEXT</code>, <code>VertexInput::Bind(...)</code>
-			so that different meshes with different vertex inputs can be binded on the same pipeline. This way we avoid the need for multiple pipelines.
-		</li>
-	</ul>
-</p>
+                    <p class="placeholder">
+                        <img src="SceneExample.png" width="600" height="350">
+                    </p>
 
-<h3>Drawing the scene. <span class="atag">A1-show</span></h3>
+                    <h3>Handling interactive camera and debug camera movement. <span class="atag">A1-show</span></h3>
 
-<p class="placeholder"></p>
-	Object Pipeline: backend/pipeline/ObjectPipeline
-	<ul>
-		<li>
-			This is a very similar class to the tutorial code. This holds transform buffers and manages draw calls.
-		</li>
-		<li>
-			<span class="atag extra">A1x-fast</span>
-			Noire Engine 2 draws index meshes <strong>indirectly</strong>. See <code>void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);</code>
-		</li>
-		<li>
-			You should refer to the rendering diagram (see beginning section) for more of how the engine draws.
-		</li>
-	</ul>
-	VulkanContext: backend/VulkanContext
-	<ul>
-		<li>
-			This class manages the Vulkan instance, logical/physical devices, and the drawing framework.
-		</li>
-		<li>
-			It manages swapchains and sends command buffers to the <code>Renderer</code>, where the Renderer delegates work to smaller pipelines.
-		</li>
-		<li>
-			All the pipelines use the same Command Buffer, let me know if this is a good idea!
-		</li>
-	</ul>
-	Scene: renderer/scene/Scene<br>
-	Entity: renderer/scene/Entity<br>
-	Components: renderer/components/*<br>
-	<ul>
-		<li>
-			The Scene manages the scene hierarchy and all the entities. During the Update pass, the scene recursivly updates all entities. 
-		</li>
-		<li>
-			The <code>SceneManager</code> manages the active scene. This class is still kinda underdeveloped (sadge).
-		</li>
-		<li>
-			The Scene manages a list of <code>ObjectInstances</code>, and during the Rendering pass, the <code>RenderingComponent</code> pushes a ObjectInstance into the Scene.
-			The Vulkan Context/Renderer then draws from this list, and indirectly draws the meshes with a list of <code>VkDrawIndexedIndirectCommand</code>s.
-		</li>
-		<li>
-			The Scene manages a vector of cameras <code>m_SceneCameras</code>. The Rendering camera is the one with the <strong>least</strong> priority. The Camera vector is set dirty on frame begin and only ever sorted and queried once within a frame.
-		</li>
-	</ul>
-</p>
+                    <p class="placeholder">
+                        CameraComponent: renderer/components/CameraComponent<br>
+                        Camera: renderer/Camera<br>
+                        <ul>
+                            <li>
+                                The CameraComponent is a component on an Entity. The <code>Camera::Update</code> is invoked during the Application Update pass, in which the <code>Frustum</code> and the Perspective/View matrices are updated.
+                            </li>
+                        </ul>
+                        ScriptingEngine: scripting/ScriptingEngine<br>
+                        SceneNavigationCamera: scripting/core/SceneNavigationCamera<br>
+                        Module: core/resources/Module<br>
+                        <ul>
+                            <li>
+                                The Scripting Engine is a <code>Module</code> in the Engine. Modules have designated Update and Destroy stages in the Application,
+                                and provide convinient singleton <code>::Get()</code> methods.
+                            </li>
+                        </ul>
+                    </p>
+                    <p class="placeholder">
+                        See <a href="https://drive.google.com/file/d/15AZretafqOhK0lZwwk21XcwqioZ37Zyi/view?usp=drive_link">Camera Movement</a> recording.
+                    </p>
 
-<p class="placeholder">
-	<img src="SceneExample.png" width="600" height="350">
-</p>
+                    <h3>Frustum culling <span class="atag">A1-cull</span></h3>
 
-<h3>Handling interactive camera and debug camera movement. <span class="atag">A1-show</span></h3>
+                    <p class="placeholder">
+                        Meshes have AABB, and the frustum tests if the AABB is within the frustum each frame.
+                        For each plane of the frustum, calculate the distance from the cube's center to the plane.
+                        Check if this distance is greater than the cube's radius in the direction opposite to the plane's normal. If all distances satisfy this condition for all frustum planes, then the cube is inside the frustum.
+                    </p>
+                    <p class="placeholder">
+                        See <a href="https://drive.google.com/file/d/1sb_O9fM5Z_tayz0W9ggjd2pvJU0KktH4/view?usp=drive_link">Culling working</a> recording.
+                    </p>
 
-<p class="placeholder">
-	CameraComponent: renderer/components/CameraComponent<br>
-	Camera: renderer/Camera<br>
-	<ul>
-		<li>
-			The CameraComponent is a component on an Entity. The <code>Camera::Update</code> is invoked during the Application Update pass, in which the <code>Frustum</code> and the Perspective/View matrices are updated. 
-		</li>
-	</ul>
-	ScriptingEngine: scripting/ScriptingEngine<br>
-	SceneNavigationCamera: scripting/core/SceneNavigationCamera<br>
-	Module: core/resources/Module<br>
-	<ul>
-		<li>
-			The Scripting Engine is a <code>Module</code> in the Engine. Modules have designated Update and Destroy stages in the Application, 
-			and provide convinient singleton <code>::Get()</code> methods.
-		</li>
-	</ul>
-</p>
-<p class="placeholder">
-See <a href="https://drive.google.com/file/d/15AZretafqOhK0lZwwk21XcwqioZ37Zyi/view?usp=drive_link">Camera Movement</a> recording.
-</p>
+                    <h3>Animating the scene <span class="atag">A1-move</span></h3>
 
-<h3>Frustum culling <span class="atag">A1-cull</span></h3>
+                    <p class="placeholder">
+                        Animator, Animation, KeyFrame: renderer/animation*<br>
+                        <ul>
+                            <li>
+                                The Animator is a Component on an Entity. Animators have active Animations, and Animations have a vector of KeyFrames.
+                            </li>
+                            <li>
+                                Animations have Channels stored in a <code>Bitset</code>. However, this feature is not yet flushed out.
+                            </li>
+                            <li>
+                                Animations are updated in the <code>Animate()</code> function in the Animator. Animations are fixed to 30FPS, but you can change this in Animator <code>#define FRAMES_PERIOD</code>
+                            </li>
+                            <li>
+                                Elapsed time is managed in Time class in <code>core/Time</code> as well as many variables in the Animator class.
+                            </li>
+                        </ul>
+                    </p>
 
-<p class="placeholder">
-Meshes have AABB, and the frustum tests if the AABB is within the frustum each frame.
-For each plane of the frustum, calculate the distance from the cube's center to the plane.
-Check if this distance is greater than the cube's radius in the direction opposite to the plane's normal. If all distances satisfy this condition for all frustum planes, then the cube is inside the frustum.
-</p>
-<p class="placeholder">
-See <a href="https://drive.google.com/file/d/1sb_O9fM5Z_tayz0W9ggjd2pvJU0KktH4/view?usp=drive_link">Culling working</a> recording.
-</p>
+                    <p class="placeholder">
+                        See <a href="https://drive.google.com/file/d/1ynO_epImGDwuNPipOvwijtLeL9t0MAyD/view?usp=drive_link">Animation of Rotations</a> recording.
+                    </p>
 
-<h3>Animating the scene <span class="atag">A1-move</span></h3>
+                    <h3>Handling headless mode <span class="atag">A1-hide</span></h3>
 
-<p class="placeholder">
-	Animator, Animation, KeyFrame: renderer/animation*<br>
-	<ul>
-		<li>
-			The Animator is a Component on an Entity. Animators have active Animations, and Animations have a vector of KeyFrames.
-		</li>
-		<li>
-			Animations have Channels stored in a <code>Bitset</code>. However, this feature is not yet flushed out.
-		</li>
-		<li>
-			Animations are updated in the <code>Animate()</code> function in the Animator. Animations are fixed to 30FPS, but you can change this in Animator <code>#define FRAMES_PERIOD</code>
-		</li>
-		<li>
-			Elapsed time is managed in Time class in <code>core/Time</code> as well as many variables in the Animator class.
-		</li>
-	</ul>
-</p>
+                    <p class="placeholder">
+                        Sadly, this is not implemented.
+                    </p>
 
-<p class="placeholder">
-See <a href="https://drive.google.com/file/d/1ynO_epImGDwuNPipOvwijtLeL9t0MAyD/view?usp=drive_link">Animation of Rotations</a> recording.
-</p>
+                    <h3>Performance improvements <span class="atag extra">A1x-fast</span></h3>
+                    <p class="placeholder">
+                        1. Transformed vertex streams into indexed meshes <br />
+                        2. Used draw indirect to move draw call commands to the GPU <br />
+                        3. Used dynamic vertex binding to reduce number of pipelines and pipeline binds. <br />
+                    </p>
 
-<h3>Handling headless mode <span class="atag">A1-hide</span></h3>
+                    <h2>Performance Tests</h2>
 
-<p class="placeholder">
-Sadly, this is not implemented.
-</p>
+                    <p class="placeholder">
+                        This section demonstrates that you have tested your code, including finding its limits.
+                    </p>
 
-<h3>Performance improvements <span class="atag extra">A1x-fast</span></h3>
-<p class="placeholder">
-1. Transformed vertex streams into indexed meshes <br />
-2. Used draw indirect to move draw call commands to the GPU <br />
-3. Used dynamic vertex binding to reduce number of pipelines and pipeline binds. <br />
-</p>
+                    <p class="placeholder">
+                        CPU: Intel 07-12700K 3.60 GHz<br>
+                        GPU: NVIDIA GeForce RTX 3070 Ti <br>
+                        Memory: 32.0GB DDR5<br>
+                        OS Version: Windows 11 <br>
+                        Benchmark Monitor Resolution: 1920x1080<br />
+                    </p>
 
-<h2>Performance Tests</h2>
+                    <h3>Culling</h3>
+                    <p class="placeholder">
+                        Improves performance: see video <a href="https://drive.google.com/file/d/1sb_O9fM5Z_tayz0W9ggjd2pvJU0KktH4/view?usp=drive_link">Culling</a> and
+                        <a href="https://drive.google.com/file/d/1JEHqvNvZZk0xtt2bqm2QRBDcZzf_5n85/view?usp=drive_link">No Culling</a>
 
-<p class="placeholder">
-This section demonstrates that you have tested your code, including finding its limits.
-</p>
+                        In this scene, 576 game objects are drawn with 2ms. With culling, we improve rendering speed by 7x (0.3ms). <br /><br />
 
-<p class="placeholder">
-	CPU: Intel 07-12700K 3.60 GHz<br>
-	GPU: NVIDIA GeForce RTX 3070 Ti <br>
-	Memory: 32.0GB DDR5<br>
-	OS Version: Windows 11 <br>
-	Benchmark Monitor Resolution: 1920x1080<br />
-</p>
+                        I couldn't find a scene where culling does not improve the performance. Not sure what you guys are looking for for this part.
 
-<h3>Culling</h3>
-<p class="placeholder">
-Improves performance: see video <a href="https://drive.google.com/file/d/1sb_O9fM5Z_tayz0W9ggjd2pvJU0KktH4/view?usp=drive_link">Culling</a> and
-	<a href="https://drive.google.com/file/d/1JEHqvNvZZk0xtt2bqm2QRBDcZzf_5n85/view?usp=drive_link">No Culling</a>
+                    </p>
 
-	In this scene, 576 game objects are drawn with 2ms. With culling, we improve rendering speed by 7x (0.3ms). <br /><br />
+                    <h3>Bottlenecks</h3>
+                    <p class="placeholder">
+                        Demonstrate your code bottlenecking on scene traversal (CPU), vertex processing/assembly (GPU), and fragment processing/write-back (GPU).
 
-I couldn't find a scene where culling does not improve the performance. Not sure what you guys want out of this part but any scene where most of the objects in the frustum, doing the culling would actually dercease performance
-	(extra computing costs); any scene where most objects are outside of the performance would be considererd ideal for culling.
-
-</p>
-
-<h3>Bottlenecks</h3>
-<p class="placeholder">
-Demonstrate your code bottlenecking on scene traversal (CPU), vertex processing/assembly (GPU), and fragment processing/write-back (GPU).
-
-	<ul>
-		<li>
-			Scene bottlenecking on Scene Traversal: See <a href="https://drive.google.com/file/d/1sb_O9fM5Z_tayz0W9ggjd2pvJU0KktH4/view?usp=drive_link">Culling</a> video for rendering 500+ game objects
-			<br />
-		</li>
-		<li>
-			More Scene bottle-necking:
-			<p class="placeholder">
-				<img src="Sphereflakes.png" width="600" height="350">
-			</p>
-			I was able to run sphereflakes with 5-7 FPS. This is most definitly one of more painful scenes to draw but I'm proud to say it was better than Blender 4.1. <br />
-			If you want to run this scene, please go to <code>backend/VulkanContext.cpp</code> and change MAX_DRAW_COMMANDS to around 1000000. Yes, 6 zeros. I haven't implemented resizing the indirect buffer so this is a bit painful. <br /><br />
-			Upon examination, you can see that in comparing to scene traversal (29ms), object render time takes a lot longer and is indeed the bottleneck (147ms).<br />
-			However, I was able to reduce the 29ms to 17ms by caching the model matrix and the camera matrix with some dirty flags. 
-		</li>
-		<li>
-			Scene bottlenecking on vertex processing: See <p class="placeholder">
-				<img src="moneky.png" width="600" height="350">
-			</p>
-			This scene draws ~84M vertices, running at 117fps. Stats show 9ms present time, and most of this is due to vertex processing.
-			<p class="placeholder">
-				<img src="verticesLoad.png" width="600" height="350">
-			</p>
-			Testing of vertex load of this scene using <strong>subdivisions</strong> shows a strong linear relationship between render delay and num vertices.
-			Here are some more screenshots of the testing process...
-			<p class="placeholder">
-				<img src="MKlow.png" width="300" height="175">
-			</p>
-			<p class="placeholder">
-				<img src="MKmid.png" width="300" height="175">
-			</p>
-		</li>
-		<li>
-			I did not have a good example of a bottleneck on the fragment side, mainly since the fragment shader I used for lighting is really simple. I'd hope to benchmark this on more complicated lighting models in the future.
-		</li>
-	</ul>
-</p>
-
-
-<h3>Performance Improvements</h3>
-
-<p class="placeholder">
-Indexed vs non-indexed mesh: Saw less memory usage, but little boost in rendering time.<br />
-Draw Indirect vs Draw: Saw a 10% boost in rendering time
-</p>
-
-<h2>Feedback</h2>
-<p class="placeholder">
-This is the end of the structured report. Feel free to add feedback about A1 to this section.
-</p>
-
+                        <ul>
+                            <li>
+                                Scene bottlenecking on Scene Traversal: See <a href="https://drive.google.com/file/d/1sb_O9fM5Z_tayz0W9ggjd2pvJU0KktH4/view?usp=drive_link">Culling</a> video for rendering 500+ game objects
+                                <br />
+                            </li>
+                            <li>
+                                More Scene bottle-necking:
+                                <p class="placeholder">
+                                    <img src="Sphereflakes.png" width="600" height="350">
+                                </p>
+                                - I was able to run <code>sphereflakes.s72</code> with 5-7 FPS. This is most definitly one of more painful scenes to draw but I'm proud to say it performed better than Blender 4.1. <br />
+                                - If you want to run this scene, please go to <code>backend/VulkanContext.cpp</code> and change MAX_DRAW_COMMANDS to around 1000000. Yes, 6 zeros. I haven't implemented resizing the indirect buffer so this is a bit painful. <br /><br />
+                                - Upon examination, you can see that in comparing to scene traversal (29ms), object render time takes a lot longer and is indeed the bottleneck (147ms).<br />
+                                - However, I was able to reduce the 29ms to 17ms by caching the model matrix and the camera matrix with some dirty flags. See <a href="https://github.com/hankxu1212/NoireEngine2/commit/1369a1c8c118c9be4db7ef29747eeb6d4fee9623">this commit</a> for details.<br /><br />
+                                - Scene objects and rendering time does seem to obey the same pattern as the vertex loads (linearly increases rendering time as objects add on).<br /><br />
+                            </li>
+                            <li>
+                                Scene bottlenecking on vertex processing: See <p class="placeholder">
+                                    <img src="moneky.png" width="600" height="350">
+                                </p>
+                                This scene draws ~84M vertices, running at 117fps. Stats show 9ms present time, and most of this is due to vertex processing.
+                                <p class="placeholder">
+                                    <img src="verticesLoad.png" width="600" height="350">
+                                </p>
+                                Testing of vertex load of this scene using <strong>subdivisions</strong> shows a strong linear relationship between render delay and num vertices.
+                                Here are some more screenshots of the testing process...
+                                <p class="placeholder">
+                                    <img src="MKlow.png" width="300" height="175">
+                                </p>
+                                <p class="placeholder">
+                                    <img src="MKmid.png" width="300" height="175">
+                                </p>
+                            </li>
+                            <li>
+                                I did not have a good example of a bottleneck on the fragment side, mainly since the fragment shader I used for lighting is really simple. I'd hope to benchmark this on more complicated lighting models in the future.
+                            </li>
+                        </ul>
+                    </p>
 
 
-</body></html>
+                    <h3>Performance Improvements</h3>
+
+                    <p class="placeholder">
+                        Indexed vs non-indexed mesh: Saw less memory usage, but little boost in rendering time.<br />
+                        Draw Indirect vs Draw: Saw a 10% boost in rendering time<br />
+                        Caching transforms local matrices: 29ms to 17ms on the CPU Update side, but obviously more memory usage (40 bytes per transform)<br />
+                    </p>
+
+                    <h2>Feedback</h2>
+                    Headless seems like a lot of extra work for A1, which is already a ton of work. <br />
+                    I think we should focus on easier tasks such as indexing the mesh (not sure why thats A1x), indirect draw calls, and entity-component-systems.
+
+                </body></html>

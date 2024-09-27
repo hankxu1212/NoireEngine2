@@ -8,6 +8,7 @@
 #include "backend/shader/VulkanShader.h"
 #include "math/Math.hpp"
 #include "core/Time.hpp"
+#include "core/Timer.hpp"
 #include "renderer/object/Mesh.hpp"
 #include "renderer/materials/Material.hpp"
 #include "core/resources/Files.hpp"
@@ -755,7 +756,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 		);
 	}
 
-	//bind texture descriptor set:
+	//bind texture descriptor set: (temporary, dont look)
 	vkCmdBindDescriptorSets(
 		commandBuffer, //command buffer
 		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
@@ -773,17 +774,6 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 
 	//encode the draw data of each object into the indirect draw buffer
 	VkDrawIndexedIndirectCommand* drawCommands = (VkDrawIndexedIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
-	
-	// here is the parallel version, maybe good to benchmark on large objects drawn
-	//std::for_each(std::execution::par_unseq, sceneObjectInstances.begin(), sceneObjectInstances.end(),
-	//	[&](const ObjectInstance& inst) {
-	//		uint32_t i = uint32_t(&inst - &sceneObjectInstances[0]);
-	//		drawCommands[i].vertexCount = inst.mesh->getVertexCount();
-	//		drawCommands[i].instanceCount = 1;
-	//		drawCommands[i].firstVertex = 0;
-	//		drawCommands[i].firstInstance = i;
-	//	}
-	//);
 
 	VerticesDrawn = 0;
 	for (auto i = 0; i < ObjectsDrawn; i++)
@@ -809,11 +799,10 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 		draw.mesh->Bind(commandBuffer);
 		draw.material->Push(commandBuffer, m_PipelineLayout);
 
-		VkDeviceSize indirect_offset = draw.first * sizeof(VkDrawIndexedIndirectCommand);
-		uint32_t draw_stride = sizeof(VkDrawIndexedIndirectCommand);
+		VkDeviceSize offset = draw.first * sizeof(VkDrawIndexedIndirectCommand);
+		uint32_t stride = sizeof(VkDrawIndexedIndirectCommand);
 
-		//execute the draw command buffer on each section as defined by the array of draws
-		vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), indirect_offset, draw.count, draw_stride);
+		vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
 	}
 }
 
