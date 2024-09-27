@@ -20,6 +20,13 @@ public:
 		return elasped;
 	}
 
+	float GetElapsedSeconds(bool reset)
+	{
+		float elasped = float(std::chrono::duration<double>(TIME_NOW - start).count());
+		if (reset) Reset();
+		return elasped;
+	}
+
 	void Reset()
 	{
 		start = TIME_NOW;

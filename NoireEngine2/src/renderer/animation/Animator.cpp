@@ -8,15 +8,18 @@
 Animator::Animator(std::shared_ptr<Animation> animation) :
     m_Animation(animation)
 {
+    m_FrameTimer.Reset();
 }
 
 void Animator::Update()
 {
-    if (m_IsAnimating)
-        Animate();
+    if (!m_IsAnimating || m_FrameTimer.GetElapsedSeconds(false) < 1.0f / MAX_FRAMES_PER_SECOND)
+        return;
+
+    Animate();
 }
 
-void Animator::Start()
+void Animator::Play()
 {
     size_t numKeyframes = m_Animation->keyframes.size();
     if (numKeyframes < 2) {
@@ -24,12 +27,14 @@ void Animator::Start()
         return;
     }
     m_IsAnimating = true;
+    m_FrameTimer.Reset();
 }
 
 void Animator::Restart()
 {
     m_CurrentTime = 0;
     m_CurrentKeyframe = 0;
+    m_FrameTimer.Reset();
 }
 
 void Animator::Stop()
@@ -51,10 +56,10 @@ void Animator::Inspect()
         ImGui::Columns(1);
 
         ImGui::Columns(2);
-        ImGui::Text("Start");
+        ImGui::Text("Play");
         ImGui::NextColumn();
-        if (ImGui::Button("##Start", { 20, 20 }))
-            Start();
+        if (ImGui::Button("##Play", { 20, 20 }))
+            Play();
         ImGui::Columns(1);
 
         ImGui::Columns(2);
@@ -76,31 +81,35 @@ void Animator::Inspect()
 
 void Animator::Animate()
 {
-    m_CurrentTime += Time::DeltaTime * m_PlaybackSpeed;
-    if (m_CurrentTime > m_Animation->duration)
-        m_CurrentTime -= m_Animation->duration;
+    uint32_t nextFrame = (m_CurrentKeyframe + 1) % m_Animation->keyframes.size();
 
     if (m_Animation->m_Channels.test((uint8_t)Animation::Channel::Position)) {
         GetTransform()->SetPosition(
-            Keyframe::InterpolatePosition(m_CurrentTime, m_Animation->keyframes[m_CurrentKeyframe], m_Animation->keyframes[m_CurrentKeyframe + 1])
+            Keyframe::InterpolatePosition(m_CurrentTime, m_Animation->keyframes[m_CurrentKeyframe], m_Animation->keyframes[nextFrame])
         );
     }
 
     if (m_Animation->m_Channels.test((uint8_t)Animation::Channel::Rotation)) {
         GetTransform()->SetRotation(
-            Keyframe::InterpolateRotation(m_CurrentTime, m_Animation->keyframes[m_CurrentKeyframe], m_Animation->keyframes[m_CurrentKeyframe + 1])
+            Keyframe::InterpolateRotation(m_CurrentTime, m_Animation->keyframes[m_CurrentKeyframe], m_Animation->keyframes[nextFrame])
         );
     }
 
     if (m_Animation->m_Channels.test((uint8_t)Animation::Channel::Scale)) {
         GetTransform()->SetScale(
-            Keyframe::InterpolateScale(m_CurrentTime, m_Animation->keyframes[m_CurrentKeyframe], m_Animation->keyframes[m_CurrentKeyframe + 1])
+            Keyframe::InterpolateScale(m_CurrentTime, m_Animation->keyframes[m_CurrentKeyframe], m_Animation->keyframes[nextFrame])
         );
     }
 
-    float nextTime = m_Animation->keyframes[m_CurrentKeyframe + 1].timestamp;
-    if (m_CurrentTime > nextTime)
-        m_CurrentKeyframe++;
+    m_CurrentTime += m_FrameTimer.GetElapsedSeconds(true) * m_PlaybackSpeed;
+
+    if (nextFrame == 0)
+        Restart();
+    else {
+        float nextTime = m_Animation->keyframes[nextFrame].timestamp;
+        if (m_CurrentTime >= nextTime)
+            m_CurrentKeyframe = nextFrame;
+    }
 }
 
 template<>

@@ -298,7 +298,6 @@ void Editor::ShowStats()
         ImGui::Separator(); // -----------------------------------------------------
 
         // rendering stats
-        // TODO: num threads
         ImGui::Text("Rendering Information");
         ImGui::Separator(); // -----------------------------------------------------
         ImGui::BulletText("Application Update Time: %.3fms", Application::ApplicationUpdateTime);

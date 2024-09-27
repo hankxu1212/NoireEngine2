@@ -5,6 +5,7 @@
 Animation::Animation(const std::string& name, const std::string& filename) :
 	m_Name(name), m_Filename(filename)
 {
+	m_Channels.reset();
 }
 
 std::shared_ptr<Animation> Animation::Create(const std::string& name, const std::string& filename)
@@ -18,7 +19,7 @@ std::shared_ptr<Animation> Animation::Create(const std::string& name, const std:
 std::shared_ptr<Animation> Animation::Create(const Node& node)
 {
 	if (auto resource = Resources::Get()->Find<Animation>(node)) {
-		NE_INFO("Reusing old mesh from {}", resource->m_Filename);
+		NE_INFO("Reusing old animation from {}", resource->m_Filename);
 		return resource;
 	}
 
@@ -110,6 +111,7 @@ void Animation::Load(const Scene::TValueMap& obj)
 				v.z = values[i * 3 + 2].as_float();
 
 				Keyframe kf;
+				kf.timestamp = ts;
 				kf.scale = v;
 
 				keyframes.emplace_back(kf);

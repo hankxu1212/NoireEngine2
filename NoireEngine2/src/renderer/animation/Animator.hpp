@@ -4,6 +4,9 @@
 
 #include "renderer/components/Component.hpp"
 #include "Animation.hpp"
+#include "core/Timer.hpp"
+
+#define MAX_FRAMES_PER_SECOND 30
 
 class Animator : public Component
 {
@@ -14,7 +17,7 @@ public:
 
     void Update() override;
 
-    void Start();
+    void Play();
 
     void Restart();
 
@@ -33,5 +36,6 @@ private:
     uint32_t            m_CurrentKeyframe = 0;
     float               m_PlaybackSpeed = 1;
     bool                m_IsAnimating = true;
+    Timer               m_FrameTimer;
 };
 

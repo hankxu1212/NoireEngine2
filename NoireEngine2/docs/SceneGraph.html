@@ -118,13 +118,12 @@ code var {
                     </p>
 
                     <h2>My Animation <span class="atag creative">A1-create</span></h2>
+                    
+                    <a href="https://drive.google.com/file/d/1p5KioYhHoTjcW1vTjBAX4Tkvjf1CHNCM/view?usp=drive_link">Custom animation ccene</a>
 
                     <p class="placeholder">
-                        Describe your animation and include a screen recording showing it running in real-time:
-                    </p>
-
-                    <p class="placeholder">
-                        Describe how you created your animation.
+                        I took a bunch of objects, slapped on a few simple lit lambertian, and animated each of the transform channels.
+                        Kinda abstract.
                     </p>
 
                     <h2>Using the Scene Viewer</h2>
@@ -290,7 +289,7 @@ code var {
                     <h3>Animating the scene <span class="atag">A1-move</span></h3>
 
                     <p class="placeholder">
-                        Animator, Animation, KeyFrame: renderer/animation*<br>
+                        Animator, Animation, KeyFrame: renderer/animation/*<br>
                         <ul>
                             <li>
                                 The Animator is a Component on an Entity. Animators have active Animations, and Animations have a vector of KeyFrames.
@@ -299,7 +298,7 @@ code var {
                                 Animations have Channels stored in a <code>Bitset</code>. However, this feature is not yet flushed out.
                             </li>
                             <li>
-                                Animations are updated in the <code>Animate()</code> function in the Animator. Animations are fixed to 30FPS, but you can change this in Animator <code>#define FRAMES_PERIOD</code>
+                                Animations are updated in the <code>Animate()</code> function in the Animator. Animations are fixed to 30FPS, but you can change this in Animator <code>#define MAX_FRAMES_PER_SECOND</code>
                             </li>
                             <li>
                                 Elapsed time is managed in Time class in <code>core/Time</code> as well as many variables in the Animator class.
@@ -397,12 +396,12 @@ code var {
 
                     <p class="placeholder">
                         Indexed vs non-indexed mesh: Saw less memory usage, but little boost in rendering time.<br />
-                        Draw Indirect vs Draw: Saw a 10% boost in rendering time<br />
-                        Caching transforms local matrices: 29ms to 17ms on the CPU Update side, but obviously more memory usage (40 bytes per transform)<br />
+                        Draw Indirect vs Draw: Saw a 10% reduction in rendering time (faster)<br />
+                        Caching transforms local matrices: 29ms to 17ms on the Update side, but obviously more memory usage (40 bytes per transform)<br />
                     </p>
 
                     <h2>Feedback</h2>
-                    Headless seems like a lot of extra work for A1, which is already a ton of work. <br />
-                    I think we should focus on easier tasks such as indexing the mesh (not sure why thats A1x), indirect draw calls, and entity-component-systems.
+                    Headless seems like a lot of extra work for A1, I'm still struggling to understand how this is used in practice. (Maybe film rendering?) <br />
+                    I think indexing the mesh should not be A1x.
 
                 </body></html>

@@ -11,7 +11,7 @@ SceneManager::SceneManager()
 	if (Application::Get().GetSpecification().InitialScene)
 		scene = std::make_unique<Scene>(Application::GetSpecification().InitialScene.value());
 	else
-		scene = std::make_unique<Scene>("../scenes/examples/sphereflake.s72");
+		scene = std::make_unique<Scene>("../scenes/examples/bounce.s72");
 }
 
 SceneManager::~SceneManager()

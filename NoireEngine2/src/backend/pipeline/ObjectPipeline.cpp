@@ -451,7 +451,7 @@ void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 	VkExtent2D swapChainExtent = VulkanContext::Get()->getSwapChain()->getExtent();
 
 	static std::array< VkClearValue, 2 > clear_values{
-		VkClearValue{.color{.float32{1.0f, 0.5f, 0.5f, 1.0f} } },
+		VkClearValue{.color{.float32{0.2f, 0.2f, 0.2f, 0.2f} } },
 		VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
 	};
 
