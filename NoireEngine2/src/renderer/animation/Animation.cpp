@@ -80,8 +80,41 @@ void Animation::Load(const Scene::TValueMap& obj)
 				keyframes.emplace_back(ts, rot);
 			}
 		}
-		// TODO: implement other channels
+		if (m_Channels.test((uint8_t)Channel::Position))
+		{
+			for (uint32_t i = 0; i < times.size(); ++i)
+			{
+				float ts = times[i].as_float();
 
+				duration = std::max(duration, ts);
+
+				glm::vec3 v;
+				v.x = values[i * 3].as_float();
+				v.y = values[i * 3 + 1].as_float();
+				v.z = values[i * 3 + 2].as_float();
+
+				keyframes.emplace_back(ts, v);
+			}
+		}
+		if (m_Channels.test((uint8_t)Channel::Scale))
+		{
+			for (uint32_t i = 0; i < times.size(); ++i)
+			{
+				float ts = times[i].as_float();
+
+				duration = std::max(duration, ts);
+
+				glm::vec3 v;
+				v.x = values[i * 3].as_float();
+				v.y = values[i * 3 + 1].as_float();
+				v.z = values[i * 3 + 2].as_float();
+
+				Keyframe kf;
+				kf.scale = v;
+
+				keyframes.emplace_back(kf);
+			}
+		}
 	}
 	catch (std::exception & e) {
 		NE_WARN("Could not load animation file {} ", e.what());

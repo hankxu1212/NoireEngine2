@@ -823,7 +823,7 @@ std::vector<ObjectPipeline::IndirectBatch> ObjectPipeline::CompactDraws(const st
 
 	draws.emplace_back(objects[0].mesh, objects[0].material, 0, 1);
 
-	for (uint32_t i = 0; i < objects.size(); i++)
+	for (uint32_t i = 1; i < objects.size(); i++)
 	{
 		//compare the mesh and material with the end of the vector of draws
 		bool sameMesh = objects[i].mesh == draws.back().mesh;

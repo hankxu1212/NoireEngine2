@@ -13,7 +13,7 @@ struct PosNorTanTexVertex
 	glm::vec2 texCoord;
 
 	bool operator==(const PosNorTanTexVertex& other) const {
-        return memcmp(this, &other, 48) == 0;
+        return memcmp(this, &other, sizeof(PosNorTanTexVertex)) == 0;
 	}
 };
 
