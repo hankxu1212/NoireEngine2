@@ -45,6 +45,8 @@ void Camera::Update(const Transform& t)
 	projectionMatrix[1][1] *= -1;
 
 	frustum.Update(viewMatrix, projectionMatrix);
+
+	worldToClip = projectionMatrix * viewMatrix;
 }
 
 const char* Camera::getTypeStr() const

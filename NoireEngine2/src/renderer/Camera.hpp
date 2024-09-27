@@ -28,11 +28,13 @@ public:
 
     inline const glm::mat4& getViewMatrix() const { return viewMatrix; }
     inline const glm::mat4& getProjectionMatrix() const { return projectionMatrix; }
+    inline const glm::mat4& getWorldToClipMatrix() const { return worldToClip; }
+
     inline glm::mat4& GetProjectionMatrixUnsafe() { return projectionMatrix; } // allows function to modify the projection matrix. use with care!
+    
     inline const Frustum& getViewFrustum() const { return frustum; }
     inline Type getType() const { return type; }
     const char* getTypeStr() const;
-
 
     float nearClipPlane = 0.1f;
     float farClipPlane = 1000.0f;
@@ -51,4 +53,5 @@ private:
     Frustum frustum;
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
+    glm::mat4 worldToClip; // proj * view
 };

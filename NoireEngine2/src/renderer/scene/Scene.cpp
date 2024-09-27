@@ -13,6 +13,8 @@
 #include <functional>
 #include <algorithm>
 
+#include "core/Timer.hpp"
+
 Scene::Scene(const std::string& path)
 {
 	if (!Files::Exists(Files::Path(path)))
@@ -51,6 +53,7 @@ void Scene::Render()
 		return;
 	}
 
+	Timer timer;
 	// push all transforms to pipeline
 	m_MatrixStack.Clear();
 	m_ObjectInstances.clear();
@@ -58,6 +61,7 @@ void Scene::Render()
 	{
 		child->RenderPass(m_MatrixStack);
  	}
+	std::cout << timer.GetElapsed(false) << '\n';
 }
 
 static std::unordered_map<std::string, Entity*> nameToEntityMap;
@@ -220,7 +224,6 @@ static void MakeAnimation(const Scene::TSceneMap& sceneMap)
 		entity->AddComponent<Animator>(anim);
 	}
 }
-
 
 static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::string& nodeName, Entity* parent)
 {

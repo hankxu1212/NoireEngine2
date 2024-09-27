@@ -39,19 +39,19 @@ void Entity::RenderPass(TransformMatrixStack& matrixStack)
 {
 	matrixStack.Push();
 	{
-		matrixStack.Multiply(std::move(s_Transform->Local()));
-
-		// render children first
-		for (auto& child : m_Children)
-		{
-			child->RenderPass(matrixStack);
-		}
+		matrixStack.Multiply(std::move(s_Transform->LocalDirty()));
 
 		// render self
 		const glm::mat4& model = matrixStack.Peek();
 		for (auto& component : m_Components)
 		{
 			component->Render(model);
+		}
+
+		// render children first
+		for (auto& child : m_Children)
+		{
+			child->RenderPass(matrixStack);
 		}
 	}
 	matrixStack.Pop();

@@ -353,8 +353,9 @@ Demonstrate your code bottlenecking on scene traversal (CPU), vertex processing/
 				<img src="Sphereflakes.png" width="600" height="350">
 			</p>
 			I was able to run sphereflakes with 5-7 FPS. This is most definitly one of more painful scenes to draw but I'm proud to say it was better than Blender 4.1. <br />
-			If you want to run this scene, please go to <code>backend/VulkanContext.cpp</code> and change MAX_DRAW_COMMANDS to around 1000000. Yes, 6 zeros. I haven't implemented resizing the indirect buffer so this is a bit painful. <br />
-			Upon examination, you can see that in comparing to scene traversal (29ms), object render time takes a lot longer and is indeed the bottleneck (147ms).
+			If you want to run this scene, please go to <code>backend/VulkanContext.cpp</code> and change MAX_DRAW_COMMANDS to around 1000000. Yes, 6 zeros. I haven't implemented resizing the indirect buffer so this is a bit painful. <br /><br />
+			Upon examination, you can see that in comparing to scene traversal (29ms), object render time takes a lot longer and is indeed the bottleneck (147ms).<br />
+			However, I was able to reduce the 29ms to 17ms by caching the model matrix and the camera matrix with some dirty flags. 
 		</li>
 		<li>
 			Scene bottlenecking on vertex processing: See <p class="placeholder">

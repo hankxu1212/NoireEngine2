@@ -38,6 +38,7 @@ public:
 
     // the local transformation matrix
     glm::mat4 Local() const;
+    glm::mat4 LocalDirty();
 
     // the local operations
     glm::mat4 LocalInverse() const;
@@ -99,4 +100,5 @@ private:
     void RemoveParent();
 
     bool isDirty = true;
+    glm::mat4 localMat;
 };

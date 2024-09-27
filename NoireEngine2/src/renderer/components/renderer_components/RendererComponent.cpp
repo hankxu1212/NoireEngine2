@@ -40,7 +40,7 @@ void RendererComponent::Render(const glm::mat4& model)
 	const Camera* renderCam = GetScene()->GetRenderCam()->camera();
 	GetScene()->PushObjectInstance({
 		{
-			renderCam->getProjectionMatrix() * renderCam->getViewMatrix() * model,
+			renderCam->getWorldToClipMatrix() * model,
 			model,
 			model,
 		}, // transform uniform

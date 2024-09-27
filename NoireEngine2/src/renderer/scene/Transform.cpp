@@ -91,6 +91,15 @@ glm::mat4 Transform::Local() const {
     return glm::translate(Mat4::Identity, m_Position) * glm::mat4_cast(m_Rotation) * glm::scale(Mat4::Identity, m_Scale);
 }
 
+glm::mat4 Transform::LocalDirty()
+{
+    if (isDirty) {
+        localMat = Local();
+        isDirty = false;
+    }
+    return localMat;
+}
+
 glm::mat4 Transform::LocalInverse() const {
     return glm::scale(Mat4::Identity, 1.0f / m_Scale) * glm::mat4_cast(glm::inverse(m_Rotation)) * glm::translate(Mat4::Identity, -m_Position);
 }

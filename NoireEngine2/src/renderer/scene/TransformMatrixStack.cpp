@@ -25,12 +25,7 @@ void TransformMatrixStack::Push()
 
 void TransformMatrixStack::Pop()
 {
-	if (stack.empty())
-	{
-		std::cerr << "Stack is empty!";
-		return;
-	}
-
+	assert(!stack.empty() && "Stack is empty");
 	currentMatrix = stack.back();
 	stack.pop_back();
 }
