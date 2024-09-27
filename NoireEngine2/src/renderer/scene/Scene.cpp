@@ -449,4 +449,10 @@ void Scene::InstantiateCoreScripts()
 
 	Entity* eInput = Instantiate("Core::Input");
 	eInput->AddComponent<Core::Input>();
+
+	// if no camera found, add a rendering camera
+	if (m_SceneCameras.empty()) {
+		Entity* autoCam = Instantiate("Auto-Instantiated Rendering Camera", glm::vec3(0, 0, 10), glm::quat(1, 0, 0, 0));
+		autoCam->AddComponent<CameraComponent>();
+	}
 }

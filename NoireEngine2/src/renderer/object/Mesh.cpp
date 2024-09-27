@@ -219,13 +219,11 @@ void Mesh::Bind(const CommandBuffer& commandBuffer)
 }
 
 const Node& operator>>(const Node& node, Mesh& mesh) {
-	node["numVertices"].Get(mesh.numVertices);
 	node["createInfo"].Get(mesh.m_CreateInfo);
 	return node;
 }
 
 Node& operator<<(Node& node, const Mesh& mesh) {
-	node["numVertices"].Set(mesh.numVertices);
 	node["createInfo"].Set(mesh.m_CreateInfo);
 	return node;
 }

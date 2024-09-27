@@ -7,7 +7,7 @@
 #include "utils/Logger.hpp"
 #include "core/Timer.hpp"
 
-#define MAX_DRAW_COMMANDS 250
+#define MAX_DRAW_COMMANDS 1000
 
 VulkanContext::VulkanContext() :
     s_VulkanInstance(std::make_unique<VulkanInstance>()),
