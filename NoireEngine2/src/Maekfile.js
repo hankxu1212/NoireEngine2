@@ -49,6 +49,7 @@ const renderer_objs = [
 	maek.CPP('renderer/animation/Animation.cpp'),
 	maek.CPP('renderer/animation/Animator.cpp'),
 	maek.CPP('renderer/animation/Keyframe.cpp'),
+	maek.CPP('renderer/lighting/Light.cpp')
 ]
 
 const component_objs = [

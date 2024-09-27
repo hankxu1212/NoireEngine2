@@ -498,7 +498,6 @@ void ObjectPipeline::Update(const Scene* scene)
 void ObjectPipeline::PrepareWorkspace()
 {
 	workspaces.resize(VulkanContext::Get()->getWorkspaceSize());
-	std::cout << "Created workspace of size " << workspaces.size() << '\n';
 
 	assert(workspaces.size() > 0);
 	
@@ -636,15 +635,10 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 
 		//add device-side copy from World_src -> World:
 		assert(workspace.World_src.getSize() == workspace.World.getSize());
-		Buffer::CopyBuffer(
-			commandBuffer.getCommandBuffer(),
-			workspace.World_src.getBuffer(),
-			workspace.World.getBuffer(),
-			workspace.World_src.getSize()
-		);
+		Buffer::CopyBuffer(commandBuffer, workspace.World_src.getBuffer(), workspace.World.getBuffer(), workspace.World_src.getSize());
 	}
 
-	const std::vector<ObjectInstance>& sceneObjectInstances = scene->objectInstances();
+	const std::vector<ObjectInstance>& sceneObjectInstances = scene->getObjectInstances();
 
 	//upload object transforms and allocate needed bytes
 	if (!sceneObjectInstances.empty()) 
@@ -767,7 +761,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 	);
 
 	//draw all instances:
-	const std::vector<ObjectInstance>& sceneObjectInstances = scene->objectInstances();
+	const std::vector<ObjectInstance>& sceneObjectInstances = scene->getObjectInstances();
 	ObjectsDrawn = sceneObjectInstances.size();
 	std::vector<IndirectBatch> draws = CompactDraws(sceneObjectInstances);
 	NumDrawCalls = draws.size();

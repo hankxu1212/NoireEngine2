@@ -13,6 +13,7 @@
 class Entity;
 class Transform;
 class CameraComponent;
+class Light;
 
 namespace Core {
 	class SceneNavigationCamera;
@@ -82,7 +83,9 @@ public:
 
 	inline size_t sceneUniformSize() const { return sizeof(SceneUniform); }
 
-	inline const std::vector<ObjectInstance>& objectInstances() const { return m_ObjectInstances; }
+	inline const std::vector<ObjectInstance>& getObjectInstances() const { return m_ObjectInstances; }
+
+	inline const std::vector<Light*>& getLightInstances() const { return m_SceneLights; }
 
 public: // event functions. Do not create function definitions!
 	template<typename T>
@@ -113,4 +116,7 @@ private:
 	SceneUniform m_SceneInfo;
 
 	std::vector<ObjectInstance> m_ObjectInstances;
+
+	// a list of lights
+	std::vector<Light*> m_SceneLights;
 };
