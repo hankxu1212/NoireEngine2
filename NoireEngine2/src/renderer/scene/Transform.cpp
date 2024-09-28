@@ -251,9 +251,13 @@ void Transform::Inspect()
 {
     static const char* labels[] = { "X", "Y", "Z" };
 
-    ImGuiExt::DrawVec3(m_Position, "Position", labels);
+    bool valueChanged = false;
+    valueChanged |= ImGuiExt::DrawVec3(m_Position, "Position", labels);
     ImGui::Separator(); // --------------------------------------------------
-    ImGuiExt::DrawQuaternion(m_Rotation, "Rotation", labels);
+    valueChanged |= ImGuiExt::DrawQuaternion(m_Rotation, "Rotation", labels);
     ImGui::Separator(); // --------------------------------------------------
-    ImGuiExt::DrawVec3(m_Scale, "Scale", labels);
+    valueChanged |= ImGuiExt::DrawVec3(m_Scale, "Scale", labels);
+
+    if (valueChanged)
+        isDirty = true;
 }

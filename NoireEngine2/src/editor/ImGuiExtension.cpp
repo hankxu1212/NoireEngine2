@@ -52,9 +52,12 @@ bool ImGuiExt::DrawVec3(glm::vec3& v, const char* name, const char** labels, flo
 	return DrawVec3(v.x, v.y, v.z, name, labels, columnWidth, sensitivity);
 }
 
-void ImGuiExt::DrawQuaternion(glm::quat& q, const char* name, const char** labels, float columnWidth, float sensitivity)
+bool ImGuiExt::DrawQuaternion(glm::quat& q, const char* name, const char** labels, float columnWidth, float sensitivity)
 {
 	auto vec3Representation = glm::degrees(glm::eulerAngles(q));
-	if (DrawVec3(vec3Representation, name, labels, columnWidth, sensitivity))
+	if (DrawVec3(vec3Representation, name, labels, columnWidth, sensitivity)) {
 		q = glm::quat(glm::radians(vec3Representation));
+		return true;
+	}
+	return false;
 }

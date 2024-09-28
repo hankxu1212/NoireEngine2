@@ -31,7 +31,7 @@ void Light::Inspect()
 		ImGui::Columns(2);
 		ImGui::Text("%s", "Intensity");
 		ImGui::NextColumn();
-		ImGui::DragFloat("###Intensities", &m_LightUniform.intensity, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+		ImGui::DragFloat("###Intensitie", &m_LightUniform.intensity, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 		ImGui::Columns(1);
 	}
 	ImGui::PopID();

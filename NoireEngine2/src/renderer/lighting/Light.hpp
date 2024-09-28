@@ -9,14 +9,18 @@
 
 #include <variant>
 
-struct alignas(16) LightUniform {
+struct alignas(16) LightUniform 
+{
 	struct { float x, y, z, padding_; } color = { 1,1,1,0 };
 	struct { float x, y, z, padding_; } position;
 	struct { float x, y, z, padding_; } direction;
+	struct { float x, y, z, padding_; } attenuation = { 1,1,1,0 };
+	float innerCutoff = 20;
+	float outerCutoff = 30;
 	float intensity = 1;
 	uint32_t type = 0 /*Directional*/;
 };
-static_assert(sizeof(LightUniform) == 16 * 4);
+static_assert(sizeof(LightUniform) == 16 * 5);
 
 class Light : public Component
 {

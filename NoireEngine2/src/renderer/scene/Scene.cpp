@@ -439,7 +439,13 @@ void Scene::InstantiateCoreScripts()
 	}
 
 	Entity* testLight = Instantiate("Testing: Light");
-	testLight->AddComponent<Light>(Light::Type::Directional, Color3::Aqua, 1.0f);
+	testLight->AddComponent<Light>(Light::Type::Directional, Color3::White, 1.0f);
+
+	Entity* testPointLight = Instantiate("Testing: Point Light", glm::vec3(1,1,0));
+	testPointLight->AddComponent<Light>(Light::Type::Point, Color3::Red, 2.0f);
+
+	Entity* testSpotLight = Instantiate("Testing: Spot Light", glm::vec3(-4, -4, 0));
+	testSpotLight->AddComponent<Light>(Light::Type::Spot, Color3::Aqua, 2.0f);
 }
 
 void Scene::UpdateSceneInfo()
@@ -448,7 +454,6 @@ void Scene::UpdateSceneInfo()
 	for (Light* light : m_SceneLights)
 	{
 		memcpy(&m_SceneInfo.lights[i], &light->GetLightUniform(), sizeof(LightUniform));
-		m_SceneInfo.lights[i] = light->GetLightUniform();
 		i++;
 	}
 	m_SceneInfo.numLights = i;

@@ -2,9 +2,11 @@
 
 #define MAX_NUM_TOTAL_LIGHTS 20
 
-layout(location=0) in vec3 position;
-layout(location=1) in vec3 normal;
-layout(location=2) in vec2 texCoord;
+#define saturate(x) clamp(x, 0.0, 1.0)
+
+layout(location=0) in vec3 inPosition;
+layout(location=1) in vec3 inNormal;
+layout(location=2) in vec2 inTexCoord;
 
 layout(location=0) out vec4 outColor;
 
@@ -12,6 +14,9 @@ struct Light {
     vec4 color;
     vec4 position;
     vec4 direction;
+	vec4 attenuation;
+	float innerCutoff;
+	float outerCutoff;
     float intensity;
 	int type;
 };
@@ -35,7 +40,7 @@ float gamma = 2.2f;
 vec3 CalcLight(int i, int type);
 
 void main() {
-	n = normalize(normal);
+	n = normalize(inNormal);
 
 	//hemisphere sky + directional sun:
 	vec3 lightsSum = vec3(0);
@@ -46,7 +51,7 @@ void main() {
 
 	// lightsSum = CalcLight(0, lights[0].type);
 
-	vec3 texColor = texture(TEXTURE, texCoord).rgb;
+	vec3 texColor = texture(TEXTURE, inTexCoord).rgb;
 
 	vec3 color = vec3(material.albedo) * texColor * lightsSum;
 
@@ -64,12 +69,35 @@ vec3 DirLight(int i)
 
 vec3 PointLight(int i)
 {
-	return vec3(0);
+	Light light = scene.lights[i];
+    vec3 lightDir = normalize(vec3(light.position) - inPosition);
+	
+	float cosTheta = saturate(dot(n, lightDir));
+
+	float D = distance(vec3(light.position), inPosition); // distance to light
+    float attenuation = 1.0 / (light.attenuation.x + light.attenuation.y * D + light.attenuation.z * (D * D));
+
+	return cosTheta * light.intensity * attenuation * vec3(light.color);
 }
 
 vec3 SpotLight(int i)
 {
-	return vec3(0);
+	Light light = scene.lights[i];
+    vec3 lightDir = normalize(vec3(light.position) - inPosition);
+
+	float cosTheta = saturate(dot(n, lightDir));
+
+	float D = distance(vec3(light.position), inPosition); // distance to light
+    float attenuation = 1.0 / (light.attenuation.x + light.attenuation.y * D + light.attenuation.z * (D * D)); 
+
+    // spotlight intensity
+    float theta = dot(lightDir, vec3(normalize(light.direction)));
+    float inner = cos(radians(light.innerCutoff));
+    float outer = cos(radians(light.outerCutoff));
+    float epsilon = saturate(inner - outer);
+    float intensity = clamp((theta - outer) / epsilon, 0.0, 1.0);
+
+	return cosTheta * light.intensity * attenuation * intensity * vec3(light.color);
 }
 
 vec3 CalcLight(int i, int type)

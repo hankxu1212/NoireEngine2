@@ -65,7 +65,7 @@ public:
 	}
 	*/
 
-	static void DrawQuaternion(glm::quat& q, const char* name, const char** labels, float columnWidth = 100, float sensitivity = 0.1f);
+	static bool DrawQuaternion(glm::quat& q, const char* name, const char** labels, float columnWidth = 100, float sensitivity = 0.1f);
 
 	template<typename ...Args>
 	static void ColumnDragFloat(const char* text, Args... args) {
