@@ -94,7 +94,8 @@ const vulkan_objs = [
 	maek.CPP('backend/buffers/Buffer.cpp'),
 	maek.CPP('backend/renderpass/Swapchain.cpp'),
 	maek.CPP('backend/renderer/Renderer.cpp'),
-	maek.CPP('backend/shader/VulkanShader.cpp')
+	maek.CPP('backend/shader/VulkanShader.cpp'),
+	maek.CPP('backend/descriptor/DescriptorAllocator.cpp')
 ]
 
 const objects_shaders = [

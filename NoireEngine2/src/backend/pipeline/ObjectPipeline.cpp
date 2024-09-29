@@ -28,21 +28,11 @@ static uint32_t frag_code[] =
 
 ObjectPipeline::ObjectPipeline()
 {
-
 }
 
 ObjectPipeline::~ObjectPipeline()
 {
 	VkDevice device = VulkanContext::GetDevice();
-
-	if (texture_descriptor_pool) 
-	{
-		vkDestroyDescriptorPool(device, texture_descriptor_pool, nullptr);
-		texture_descriptor_pool = nullptr;
-
-		//this also frees the descriptor sets allocated from the pool:
-		texture_descriptors.clear();
-	}
 
 	textures.clear();
 
@@ -55,11 +45,7 @@ ObjectPipeline::~ObjectPipeline()
 	}
 	workspaces.clear();
 
-	if (m_DescriptorPool) {
-		vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
-		m_DescriptorPool = nullptr;
-		//(this also frees the descriptor sets allocated from the pool)
-	}
+	m_DescriptorAllocator.Cleanup();
 
 	if (m_PipelineLayout != VK_NULL_HANDLE) {
 		vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
@@ -377,31 +363,6 @@ void ObjectPipeline::CreateDescriptors()
 		"[Vulkan] Create pipeline layout failed.");
 }
 
-void ObjectPipeline::CreateDescriptorPool()
-{
-	uint32_t numWorkspace = VulkanContext::Get()->getWorkspaceSize(); //for easier-to-read counting
-
-	//we only need uniform buffer descriptors for the moment:
-	std::array< VkDescriptorPoolSize, 1> pool_sizes{
-		VkDescriptorPoolSize{
-			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			.descriptorCount = 2 * numWorkspace, //one descriptor per set, one set per workspace
-		},
-	};
-
-	VkDescriptorPoolCreateInfo create_info
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.flags = 0, //because CREATE_FREE_DESCRIPTOR_SET_BIT isn't included, *can't* free individual descriptors allocated from this pool
-		.maxSets = 3 * numWorkspace, //two sets per workspace
-		.poolSizeCount = uint32_t(pool_sizes.size()),
-		.pPoolSizes = pool_sizes.data(),
-	};
-
-	VulkanContext::VK_CHECK(vkCreateDescriptorPool(VulkanContext::GetDevice(), &create_info, nullptr, &m_DescriptorPool),
-		"[Vulkan] Create descriptor pool failed");
-}
-
 void ObjectPipeline::Rebuild()
 {
 	if (s_SwapchainDepthImage != nullptr && s_SwapchainDepthImage->getImage() != VK_NULL_HANDLE) {
@@ -439,7 +400,6 @@ void ObjectPipeline::Rebuild()
 void ObjectPipeline::CreatePipeline()
 {
 	CreateDescriptors();
-	CreateDescriptorPool();
 	CreatePipelineLayouts();
 	PrepareWorkspace();
 }
@@ -515,29 +475,8 @@ void ObjectPipeline::PrepareWorkspace()
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
 
-		{ //allocate descriptor set for World descriptor
-			VkDescriptorSetAllocateInfo alloc_info{
-				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-				.descriptorPool = m_DescriptorPool,
-				.descriptorSetCount = 1,
-				.pSetLayouts = &set0_World,
-			};
-
-			VulkanContext::VK_CHECK(vkAllocateDescriptorSets(VulkanContext::GetDevice(), &alloc_info, &workspace.World_descriptors),
-				"[vulkan] create descriptor set failed");
-		}
-
-		{ //allocate descriptor set for Transforms descriptor
-			VkDescriptorSetAllocateInfo alloc_info{
-				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-				.descriptorPool = m_DescriptorPool,
-				.descriptorSetCount = 1,
-				.pSetLayouts = &set1_Transforms,
-			};
-
-			VulkanContext::VK_CHECK(vkAllocateDescriptorSets(VulkanContext::GetDevice(), &alloc_info, &workspace.Transforms_descriptors),
-				"[vulkan] create descriptor set failed");
-		}
+		assert(m_DescriptorAllocator.Allocate(&workspace.World_descriptors, set0_World));
+		assert(m_DescriptorAllocator.Allocate(&workspace.Transforms_descriptors, set1_Transforms));
 
 		{ 
 			VkDescriptorBufferInfo World_info
@@ -573,42 +512,10 @@ void ObjectPipeline::PrepareWorkspace()
 	textures.resize(1);
 	textures[0] = std::make_shared<Image2D>(Files::Path("../textures/default_gray.png"));
 
-	{ // create the texture descriptor pool
-		uint32_t per_texture = uint32_t(textures.size()); //for easier-to-read counting
-		assert(per_texture == 1);
-		std::array< VkDescriptorPoolSize, 1> pool_sizes{
-			VkDescriptorPoolSize{
-				.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				.descriptorCount = 1 * 1 * per_texture, //one descriptor per set, one set per texture
-			},
-		};
-
-		VkDescriptorPoolCreateInfo create_info{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-			.flags = 0, //because CREATE_FREE_DESCRIPTOR_SET_BIT isn't included, *can't* free individual descriptors allocated from this pool
-			.maxSets = 1 * per_texture, //one set per texture
-			.poolSizeCount = uint32_t(pool_sizes.size()),
-			.pPoolSizes = pool_sizes.data(),
-		};
-
-		VulkanContext::VK_CHECK(
-			vkCreateDescriptorPool(VulkanContext::GetDevice(), &create_info, nullptr, &texture_descriptor_pool),
-			"[vulkan] Allocating descriptor pool failed");
-	}
-
 	{ //allocate and write the texture descriptor sets
-		//allocate the descriptors (using the same alloc_info):
-		VkDescriptorSetAllocateInfo alloc_info{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-			.descriptorPool = texture_descriptor_pool,
-			.descriptorSetCount = 1,
-			.pSetLayouts = &set2_TEXTURE,
-		};
 		texture_descriptors.assign(1, VK_NULL_HANDLE);
 		for (VkDescriptorSet& descriptor_set : texture_descriptors) {
-			VulkanContext::VK_CHECK(
-				vkAllocateDescriptorSets(VulkanContext::GetDevice(), &alloc_info, &descriptor_set),
-				"[vulkan] Allocating descriptor set failed");
+			m_DescriptorAllocator.Allocate(&descriptor_set, set2_TEXTURE);
 		}
 
 		//write descriptors for textures:

@@ -4,10 +4,10 @@
 #include "backend/buffers/Buffer.hpp"
 #include "backend/images/Image2D.hpp"
 #include "renderer/object/ObjectInstance.hpp"
+#include "backend/images/ImageDepth.hpp"
+#include "backend/descriptor/DescriptorAllocator.hpp"
 
 #include <type_traits>
-#include "backend/images/ImageDepth.hpp"
-
 #include "glm/glm.hpp"
 
 class Renderer;
@@ -43,8 +43,6 @@ private:
 
 	void CreateDescriptors();
 	
-	void CreateDescriptorPool();
-	
 	void PrepareWorkspace();
 
 	void PushSceneDrawInfo(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
@@ -57,7 +55,6 @@ private:
 	VkDescriptorSetLayout set0_World = VK_NULL_HANDLE;
 	VkDescriptorSetLayout set1_Transforms = VK_NULL_HANDLE;
 	VkDescriptorSetLayout set2_TEXTURE = VK_NULL_HANDLE;
-	VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
 
 	struct Workspace
 	{
@@ -74,9 +71,10 @@ private:
 	std::vector<Workspace> workspaces;
 
 	// texture
-	VkDescriptorPool texture_descriptor_pool = VK_NULL_HANDLE;
 	std::vector< VkDescriptorSet > texture_descriptors; //allocated from texture_descriptor
 	std::vector<std::shared_ptr<Image2D>> textures;
+
+	DescriptorAllocator						m_DescriptorAllocator;
 
 	VkRenderPass							m_Renderpass = VK_NULL_HANDLE;
 	std::unique_ptr<ImageDepth>				s_SwapchainDepthImage;
