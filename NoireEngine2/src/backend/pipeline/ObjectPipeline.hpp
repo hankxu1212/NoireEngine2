@@ -5,7 +5,7 @@
 #include "backend/images/Image2D.hpp"
 #include "renderer/object/ObjectInstance.hpp"
 #include "backend/images/ImageDepth.hpp"
-#include "backend/descriptor/DescriptorAllocator.hpp"
+#include "backend/descriptor/DescriptorBuilder.hpp"
 
 #include <type_traits>
 #include "glm/glm.hpp"
@@ -43,18 +43,11 @@ private:
 
 	void CreateDescriptors();
 	
-	void PrepareWorkspace();
-
 	void PushSceneDrawInfo(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
 	void RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
 	void DestroyFrameBuffers();
-
-private:
-	VkDescriptorSetLayout set0_World = VK_NULL_HANDLE;
-	VkDescriptorSetLayout set1_Transforms = VK_NULL_HANDLE;
-	VkDescriptorSetLayout set2_TEXTURE = VK_NULL_HANDLE;
 
 	struct Workspace
 	{
@@ -68,6 +61,14 @@ private:
 		Buffer Transforms; //device-local
 		VkDescriptorSet Transforms_descriptors; //references Transforms
 	};
+
+	VkDescriptorBufferInfo CreateTransformStorageBuffer(Workspace& workspace, size_t new_bytes);
+
+private:
+	VkDescriptorSetLayout set0_World = VK_NULL_HANDLE;
+	VkDescriptorSetLayout set1_Transforms = VK_NULL_HANDLE;
+	VkDescriptorSetLayout set2_TEXTURE = VK_NULL_HANDLE;
+
 	std::vector<Workspace> workspaces;
 
 	// texture
@@ -75,6 +76,7 @@ private:
 	std::vector<std::shared_ptr<Image2D>> textures;
 
 	DescriptorAllocator						m_DescriptorAllocator;
+	DescriptorLayoutCache					m_DescriptorLayoutCache;
 
 	VkRenderPass							m_Renderpass = VK_NULL_HANDLE;
 	std::unique_ptr<ImageDepth>				s_SwapchainDepthImage;

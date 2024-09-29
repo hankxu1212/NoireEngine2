@@ -90,6 +90,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\backend\descriptor\DescriptorAllocator.cpp" />
+    <ClCompile Include="src\backend\descriptor\DescriptorBuilder.cpp" />
+    <ClCompile Include="src\backend\descriptor\DescriptorLayoutCache.cpp" />
     <ClCompile Include="src\renderer\animation\Keyframe.cpp" />
     <ClCompile Include="src\renderer\animation\Animation.cpp" />
     <ClCompile Include="src\renderer\animation\Animator.cpp" />
@@ -215,6 +217,8 @@
     <ClCompile Include="vendor\imgui\misc\freetype\imgui_freetype.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\descriptor\DescriptorBuilder.hpp" />
+    <ClInclude Include="src\backend\descriptor\DescriptorLayoutCache.hpp" />
     <ClInclude Include="src\backend\descriptor\DescriptorAllocator.hpp" />
     <ClInclude Include="src\renderer\animation\Keyframe.hpp" />
     <ClInclude Include="src\renderer\animation\Animation.hpp" />

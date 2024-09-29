@@ -39,7 +39,6 @@ public:
 
 	const VkWriteDescriptorSet& getWriteDescriptorSet() const { return m_WriteDescriptorSet; }
 
-private:
 	VkWriteDescriptorSet						m_WriteDescriptorSet;
 	std::unique_ptr<VkDescriptorImageInfo>		s_ImageInfo;
 	std::unique_ptr<VkDescriptorBufferInfo>		s_BufferInfo;

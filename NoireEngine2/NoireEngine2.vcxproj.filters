@@ -387,6 +387,12 @@
     <ClCompile Include="src\backend\descriptor\DescriptorAllocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\backend\descriptor\DescriptorLayoutCache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\descriptor\DescriptorBuilder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h">
@@ -801,6 +807,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\backend\descriptor\DescriptorAllocator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\descriptor\DescriptorLayoutCache.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\descriptor\DescriptorBuilder.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

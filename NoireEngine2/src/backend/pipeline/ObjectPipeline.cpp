@@ -279,64 +279,59 @@ void ObjectPipeline::CreatePipelineLayouts()
 
 void ObjectPipeline::CreateDescriptors()
 {
-	{ //the set0_World layout holds world info in a uniform buffer used in the fragment shader:
-		std::array< VkDescriptorSetLayoutBinding, 1 > bindings{
-			VkDescriptorSetLayoutBinding{
-				.binding = 0,
-				.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				.descriptorCount = 1,
-				.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
-			},
+	workspaces.resize(VulkanContext::Get()->getWorkspaceSize());
+
+	// create world and transform descriptor
+	for (Workspace& workspace : workspaces)
+	{
+		workspace.World_src = Buffer(
+			sizeof(Scene::SceneUniform),
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			Buffer::Mapped
+		);
+		workspace.World = Buffer(
+			sizeof(Scene::SceneUniform),
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
+
+		VkDescriptorBufferInfo World_info
+		{
+			.buffer = workspace.World.getBuffer(),
+			.offset = 0,
+			.range = workspace.World.getSize(),
 		};
 
-		VkDescriptorSetLayoutCreateInfo create_info{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.bindingCount = uint32_t(bindings.size()),
-			.pBindings = bindings.data(),
-		};
+		DescriptorBuilder builder;
+		builder.Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.Build(workspace.World_descriptors, set0_World);
 
-		VulkanContext::VK_CHECK(vkCreateDescriptorSetLayout(VulkanContext::GetDevice(), &create_info, nullptr, &set0_World),
-			"[vulkan] Create descriptor set layout failed");
+		VkDescriptorBufferInfo Transforms_info = CreateTransformStorageBuffer(workspace, 4096);
+		DescriptorBuilder builder2;
+		builder2.Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+			.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.Build(workspace.Transforms_descriptors, set1_Transforms);
 	}
 
-	{ //the set1_Transforms layout holds an array of Transform structures in a storage buffer used in the vertex shader:
-		std::array< VkDescriptorSetLayoutBinding, 1 > bindings{
-			VkDescriptorSetLayoutBinding{
-				.binding = 0,
-				.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-				.descriptorCount = 1,
-				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
-			},
+	// create texture descriptor
+	textures.resize(1);
+	textures[0] = std::make_shared<Image2D>(Files::Path("../textures/default_gray.png"));
+	texture_descriptors.resize(1);
+	for (auto& tex : textures)
+	{
+		VkDescriptorImageInfo texInfo
+		{
+			.sampler = tex->getSampler(),
+			.imageView = tex->getView(),
+			.imageLayout = tex->getLayout(),
 		};
 
-		VkDescriptorSetLayoutCreateInfo create_info{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.bindingCount = uint32_t(bindings.size()),
-			.pBindings = bindings.data(),
-		};
-
-		VulkanContext::VK_CHECK(vkCreateDescriptorSetLayout(VulkanContext::GetDevice(), &create_info, nullptr, &set1_Transforms),
-			"[vulkan] Create descriptor set layout failed");
-	}
-
-	{ //the set2_TEXTURE layout has a single descriptor for a sampler2D used in the fragment shader:
-		std::array< VkDescriptorSetLayoutBinding, 1 > bindings{
-			VkDescriptorSetLayoutBinding{
-				.binding = 0,
-				.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				.descriptorCount = 1,
-				.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
-			},
-		};
-
-		VkDescriptorSetLayoutCreateInfo create_info{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.bindingCount = uint32_t(bindings.size()),
-			.pBindings = bindings.data(),
-		};
-
-		VulkanContext::VK_CHECK(vkCreateDescriptorSetLayout(VulkanContext::GetDevice(), &create_info, nullptr, &set2_TEXTURE),
-			"[vulkan] Create descriptor set layout failed");
+		DescriptorBuilder builder;
+		builder.Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+			.BindImage(0, &texInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.Build(texture_descriptors[0], set2_TEXTURE);
 	}
 
 	std::array< VkDescriptorSetLayout, 3 > layouts{
@@ -401,7 +396,6 @@ void ObjectPipeline::CreatePipeline()
 {
 	CreateDescriptors();
 	CreatePipelineLayouts();
-	PrepareWorkspace();
 }
 
 void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
@@ -455,82 +449,6 @@ void ObjectPipeline::Update(const Scene* scene)
 
 }
 
-void ObjectPipeline::PrepareWorkspace()
-{
-	workspaces.resize(VulkanContext::Get()->getWorkspaceSize());
-
-	assert(workspaces.size() > 0);
-	
-	for (Workspace& workspace : workspaces) 
-	{
-		workspace.World_src = Buffer(
-			sizeof(Scene::SceneUniform),
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			Buffer::Mapped
-		);
-		workspace.World = Buffer(
-			sizeof(Scene::SceneUniform),
-			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-		);
-
-		assert(m_DescriptorAllocator.Allocate(&workspace.World_descriptors, set0_World));
-		assert(m_DescriptorAllocator.Allocate(&workspace.Transforms_descriptors, set1_Transforms));
-
-		{ 
-			VkDescriptorBufferInfo World_info
-			{
-				.buffer = workspace.World.getBuffer(),
-				.offset = 0,
-				.range = workspace.World.getSize(),
-			};
-
-			std::array< VkWriteDescriptorSet, 1 > writes
-			{
-				VkWriteDescriptorSet{
-					.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-					.dstSet = workspace.World_descriptors,
-					.dstBinding = 0,
-					.dstArrayElement = 0,
-					.descriptorCount = 1,
-					.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-					.pBufferInfo = &World_info,
-				},
-			};
-
-			vkUpdateDescriptorSets(
-				VulkanContext::GetDevice(), //device
-				uint32_t(writes.size()), //descriptorWriteCount
-				writes.data(), //pDescriptorWrites
-				0, //descriptorCopyCount
-				nullptr //pDescriptorCopies
-			);
-		}
-	}
-
-	textures.resize(1);
-	textures[0] = std::make_shared<Image2D>(Files::Path("../textures/default_gray.png"));
-
-	{ //allocate and write the texture descriptor sets
-		texture_descriptors.assign(1, VK_NULL_HANDLE);
-		for (VkDescriptorSet& descriptor_set : texture_descriptors) {
-			m_DescriptorAllocator.Allocate(&descriptor_set, set2_TEXTURE);
-		}
-
-		//write descriptors for textures:
-		std::vector< VkWriteDescriptorSet > writes(textures.size());
-
-		for (auto const& image : textures) {
-			size_t i = &image - &textures[0];
-			writes[i] = image->getWriteDescriptor(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER).getWriteDescriptorSet();
-			writes[i].dstSet = texture_descriptors[i];
-		}
-
-		vkUpdateDescriptorSets(VulkanContext::GetDevice(), uint32_t(writes.size()), writes.data(), 0, nullptr);
-	}
-}
-
 void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
 	Workspace& workspace = workspaces[surfaceId];
@@ -560,44 +478,13 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 			workspace.Transforms_src.Destroy();
 			workspace.Transforms.Destroy();
 
-			workspace.Transforms_src = Buffer(
-				new_bytes,
-				VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //host-visible memory, coherent (no special sync needed)
-				Buffer::Mapped //get a pointer to the memory
-			);
-			workspace.Transforms = Buffer(
-				new_bytes,
-				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //going to use as storage buffer, also going to have GPU into this memory
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT //GPU-local memory
-			);
-
 			//update the descriptor set:
-			VkDescriptorBufferInfo Transforms_info{
-				.buffer = workspace.Transforms.getBuffer(),
-				.offset = 0,
-				.range = workspace.Transforms.getSize(),
-			};
+			VkDescriptorBufferInfo Transforms_info = CreateTransformStorageBuffer(workspace, new_bytes);
 
-			std::array< VkWriteDescriptorSet, 1 > writes{
-				VkWriteDescriptorSet{
-					.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-					.dstSet = workspace.Transforms_descriptors,
-					.dstBinding = 0,
-					.dstArrayElement = 0,
-					.descriptorCount = 1,
-					.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-					.pBufferInfo = &Transforms_info,
-				},
-			};
-
-			vkUpdateDescriptorSets(
-				VulkanContext::GetDevice(),
-				uint32_t(writes.size()), writes.data(), //descriptorWrites count, data
-				0, nullptr //descriptorCopies count, data
-			);
-
-			std::cout << "Re-allocated object transforms buffers to " << new_bytes << " bytes." << std::endl;
+			DescriptorBuilder builder;
+			builder.Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+				.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+				.Write(workspace.Transforms_descriptors);
 		}
 
 		assert(workspace.Transforms_src.getSize() == workspace.Transforms.getSize());
@@ -634,6 +521,29 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 			);
 		}
 	}
+}
+
+VkDescriptorBufferInfo ObjectPipeline::CreateTransformStorageBuffer(Workspace& workspace, size_t new_bytes)
+{
+	workspace.Transforms_src = Buffer(
+		new_bytes,
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //host-visible memory, coherent (no special sync needed)
+		Buffer::Mapped //get a pointer to the memory
+	);
+	workspace.Transforms = Buffer(
+		new_bytes,
+		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //going to use as storage buffer, also going to have GPU into this memory
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT //GPU-local memory
+	);
+	//update the descriptor set:
+	VkDescriptorBufferInfo Transforms_info{
+		.buffer = workspace.Transforms.getBuffer(),
+		.offset = 0,
+		.range = workspace.Transforms.getSize(),
+	};
+	std::cout << "Re-allocated object transforms buffers to " << new_bytes << " bytes." << std::endl;
+	return Transforms_info;
 }
 
 //draw with the objects pipeline:
