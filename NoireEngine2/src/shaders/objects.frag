@@ -1,6 +1,7 @@
 #version 450
 
 #define MAX_NUM_TOTAL_LIGHTS 20
+#define MAX_LIGHTS_PER_OBJ 8
 
 #define saturate(x) clamp(x, 0.0, 1.0)
 
@@ -14,10 +15,11 @@ struct Light {
     vec4 color;
     vec4 position;
     vec4 direction;
-	vec4 attenuation;
-	float innerCutoff;
-	float outerCutoff;
-    float intensity;
+	float radius;
+	float limit;
+	float intensity;
+	float fov;
+	float blend;
 	int type;
 };
 
@@ -44,12 +46,10 @@ void main() {
 
 	//hemisphere sky + directional sun:
 	vec3 lightsSum = vec3(0);
-	for (int i=0;i<scene.numLights;++i)
+	for (int i = 0; i < min(MAX_LIGHTS_PER_OBJ, scene.numLights); ++i)
 	{
 		lightsSum += CalcLight(i, scene.lights[i].type);
 	}
-
-	// lightsSum = CalcLight(0, lights[0].type);
 
 	vec3 texColor = texture(TEXTURE, inTexCoord).rgb;
 
@@ -70,12 +70,17 @@ vec3 DirLight(int i)
 vec3 PointLight(int i)
 {
 	Light light = scene.lights[i];
-    vec3 lightDir = normalize(vec3(light.position) - inPosition);
+
+	float D = distance(vec3(light.position), inPosition); // distance to light
+    
+	vec3 lightDir = normalize(vec3(light.position) - inPosition);
 	
 	float cosTheta = saturate(dot(n, lightDir));
 
-	float D = distance(vec3(light.position), inPosition); // distance to light
-    float attenuation = 1.0 / (light.attenuation.x + light.attenuation.y * D + light.attenuation.z * (D * D));
+	float d_over_radius = (D / light.limit);
+	float d_over_radius_4 = d_over_radius * d_over_radius * d_over_radius * d_over_radius;
+	float saturated = saturate(1 - d_over_radius_4);
+	float attenuation = saturated * saturated / (D * D + 1);
 
 	return cosTheta * light.intensity * attenuation * vec3(light.color);
 }
@@ -83,21 +88,27 @@ vec3 PointLight(int i)
 vec3 SpotLight(int i)
 {
 	Light light = scene.lights[i];
+
+	float D = distance(vec3(light.position), inPosition); // distance to light
+
     vec3 lightDir = normalize(vec3(light.position) - inPosition);
 
 	float cosTheta = saturate(dot(n, lightDir));
 
-	float D = distance(vec3(light.position), inPosition); // distance to light
-    float attenuation = 1.0 / (light.attenuation.x + light.attenuation.y * D + light.attenuation.z * (D * D)); 
-
     // spotlight intensity
     float theta = dot(lightDir, vec3(normalize(light.direction)));
-    float inner = cos(radians(light.innerCutoff));
-    float outer = cos(radians(light.outerCutoff));
-    float epsilon = saturate(inner - outer);
-    float intensity = clamp((theta - outer) / epsilon, 0.0, 1.0);
+    float inner = cos(light.fov * (1 - light.blend) / 2);
+    float outer = cos(light.fov / 2);
+	float epsilon = saturate(inner - outer);
+	float intensity = clamp((theta - outer) / epsilon, 0.0, 1.0);
 
-	return cosTheta * light.intensity * attenuation * intensity * vec3(light.color);
+	// not sure if this is the right way to attune limit
+	float d_over_radius = (D / light.limit);
+	float d_over_radius_4 = d_over_radius * d_over_radius * d_over_radius * d_over_radius;
+	float saturated = saturate(1 - d_over_radius_4);
+	float attenuation = saturated * saturated / (D * D + 1);
+
+	return cosTheta * light.intensity * intensity * attenuation * vec3(light.color);
 }
 
 vec3 CalcLight(int i, int type)

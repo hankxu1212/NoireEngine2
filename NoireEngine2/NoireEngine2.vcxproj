@@ -353,6 +353,7 @@
     <ClInclude Include="vendor\imgui\misc\single_file\imgui_single_file.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="C:\Users\HX\Downloads\env-cube.b72" />
     <None Include="src\core\resources\nodes\Node.inl" />
     <None Include="src\core\resources\nodes\NodeConstView.inl" />
     <None Include="src\core\resources\nodes\NodeView.inl" />

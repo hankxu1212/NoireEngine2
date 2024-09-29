@@ -11,8 +11,6 @@
 #include "renderer/components/Components.hpp"
 #include "Scene.hpp"
 
-#include "renderer/components/renderer_components/RendererComponent.hpp"
-
 #define ADD_CHILD 		m_Children.emplace_back(std::make_unique<Entity>(m_Scene, args...));\
 						m_Children.back()->SetParent(this);\
 						return m_Children.back().get();\

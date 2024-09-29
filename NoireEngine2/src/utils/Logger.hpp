@@ -67,11 +67,11 @@ public:
     }
 };
 
-#define NE_DEBUG(...)   Logger::NULLIFY(__VA_ARGS__)
-#define NE_INFO(...)    Logger::NULLIFY(__VA_ARGS__)
-#define NE_WARN(...)    Logger::NULLIFY(__VA_ARGS__)
+//#define NE_DEBUG(...)   Logger::NULLIFY(__VA_ARGS__)
+//#define NE_INFO(...)    Logger::NULLIFY(__VA_ARGS__)
+//#define NE_WARN(...)    Logger::NULLIFY(__VA_ARGS__)
 
-//#define NE_DEBUG(...)   Logger::DEBUG(__VA_ARGS__)
-//#define NE_INFO(...)    Logger::INFO(__VA_ARGS__)
-//#define NE_WARN(...)    Logger::WARN(__VA_ARGS__)
+#define NE_DEBUG(...)   Logger::DEBUG(__VA_ARGS__)
+#define NE_INFO(...)    Logger::INFO(__VA_ARGS__)
+#define NE_WARN(...)    Logger::WARN(__VA_ARGS__)
 #define NE_ERROR(...)   Logger::ERROR(__VA_ARGS__)

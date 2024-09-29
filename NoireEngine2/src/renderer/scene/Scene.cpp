@@ -194,6 +194,78 @@ static void MakeCamera(Entity* newEntity, const Scene::TValueMap& obj, const Sce
 	}
 }
 
+static void MakeLight(Entity* newEntity, const Scene::TValueMap& obj, const Scene::TSceneMap& sceneMap)
+{
+	if (obj.find("light") == obj.end())
+		return;
+
+	const auto& lightStrOpt = obj.at("light").as_string();
+	if (!lightStrOpt)
+	{
+		NE_WARN("Not a valid string format for light name!");
+		return;
+	}
+	const auto& lightName = lightStrOpt.value();
+
+	// try to find camera in scene map
+	const Scene::TValueUMap& lightMap = sceneMap.at(SceneNode::Light);
+	if (lightMap.find(lightName) == lightMap.end())
+	{
+		NE_WARN("Did not find light with name: {}... skipping.", lightName);
+		return;
+	}
+
+	const auto& lightObjOpt = lightMap.at(lightName).as_object();
+	if (!lightObjOpt)
+	{
+		NE_WARN("Not a valid map format for light: {}... skipping.", lightName);
+		return;
+	}
+	const auto& lightObjMap = lightObjOpt.value();
+
+	const auto& tintArr = lightObjMap.at("tint").as_array().value();
+	Color3 color(tintArr[0].as_float(), tintArr[1].as_float(), tintArr[2].as_float());
+
+	if (lightObjMap.find("sun") != lightObjMap.end())
+	{
+		const auto& lightObj = lightObjMap.at("sun").as_object().value();
+		float strength = lightObj.at("strength").as_float();
+		newEntity->AddComponent<Light>(Light::Type::Directional, color, strength);
+		
+		float angle = lightObj.at("angle").as_float();
+		newEntity->transform()->SetRotation(glm::quat(glm::vec3(std::sin(angle), std::cos(angle), 0)));
+	}
+	else if (lightObjMap.find("sphere") != lightObjMap.end())
+	{
+		const auto& lightObj = lightObjMap.at("sphere").as_object().value();
+		float radius = lightObj.at("radius").as_float();
+		float power = lightObj.at("power").as_float();
+
+		if (lightObj.find("limit") == lightObj.end())
+			newEntity->AddComponent<Light>(Light::Type::Point, color, power, radius);
+		else {
+			float limit = lightObj.at("limit").as_float();
+			newEntity->AddComponent<Light>(Light::Type::Point, color, power, radius, limit);
+		}
+	}
+	else if (lightObjMap.find("spot") != lightObjMap.end())
+	{
+		const auto& lightObj = lightObjMap.at("spot").as_object().value();
+
+		float power = lightObj.at("power").as_float();
+		float fov = lightObj.at("fov").as_float();
+		float radius = lightObj.at("radius").as_float();
+		float blend = lightObj.at("blend").as_float();
+
+		if (lightObj.find("limit") == lightObj.end())
+			newEntity->AddComponent<Light>(Light::Type::Spot, color, power, radius, fov, blend);
+		else {
+			float limit = lightObj.at("limit").as_float();
+			newEntity->AddComponent<Light>(Light::Type::Spot, color, power, radius, fov, blend, limit);
+		}
+	}
+}
+
 static void MakeAnimation(const Scene::TSceneMap& sceneMap)
 {
 	if (sceneMap.find(SceneNode::Driver) == sceneMap.end())
@@ -258,6 +330,7 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 
 	MakeMesh(newEntity, obj, sceneMap);
 	MakeCamera(newEntity, obj, sceneMap);
+	MakeLight(newEntity, obj, sceneMap);
 
 	// recursively call on children
 	{
@@ -438,14 +511,8 @@ void Scene::InstantiateCoreScripts()
 		autoCam->AddComponent<CameraComponent>();
 	}
 
-	Entity* testLight = Instantiate("Testing: Light");
-	testLight->AddComponent<Light>(Light::Type::Directional, Color3::White, 1.0f);
-
-	Entity* testPointLight = Instantiate("Testing: Point Light", glm::vec3(1,1,0));
-	testPointLight->AddComponent<Light>(Light::Type::Point, Color3::Red, 2.0f);
-
-	Entity* testSpotLight = Instantiate("Testing: Spot Light", glm::vec3(-4, -4, 0));
-	testSpotLight->AddComponent<Light>(Light::Type::Spot, Color3::Aqua, 2.0f);
+	Entity* testPointLight = Instantiate("Testing: Point Light", glm::vec3(0, 0, 3));
+	testPointLight->AddComponent<Light>(Light::Type::Point, Color3::Red, 10.0f, 5.0f);
 }
 
 void Scene::UpdateSceneInfo()
