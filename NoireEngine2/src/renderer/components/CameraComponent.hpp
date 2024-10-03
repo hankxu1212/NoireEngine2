@@ -26,8 +26,8 @@ public:
 
 	const char* getName() override { return "Camera"; }
 
+	int priority = 0;
 private:
 	friend class Scene;
 	std::unique_ptr<Camera> s_Camera;
-	int priority = 0;
 };

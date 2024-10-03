@@ -33,6 +33,8 @@ public:
 	// Maps from object type to serialized object maps
 	using TSceneMap = std::unordered_map<SceneNode::Type, TValueUMap>;
 
+	using TFoundInfo = std::pair<const std::optional<Scene::TValueMap>, const std::string&>;
+
 	enum class CameraMode {
 		Scene = 0, // all: sceneCam
 		User = 1, // all: debugCam

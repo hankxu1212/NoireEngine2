@@ -35,6 +35,10 @@ namespace sejp {
 		std::optional< std::vector< value > > const &as_array() const;
 		std::optional< std::map< std::string, value > > const &as_object() const;
 		
+		// serializes it as a vector, throws runtime error on error
+		const glm::vec4 as_vec4() const;
+		const glm::vec3 as_vec3() const;
+		
 		float as_float() const;
 	};
 

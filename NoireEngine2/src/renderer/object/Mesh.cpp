@@ -78,10 +78,11 @@ void Mesh::Deserialize(Entity* entity, const Scene::TValueMap& obj, const Scene:
 	}
 	else {
 		const auto& materialNodes = sceneMap.at(SceneNode::Material);
-		if (materialNodes.find(meshInfo.material) == materialNodes.end())
+		auto matIt = materialNodes.find(meshInfo.material);
+		if (matIt == materialNodes.end())
 			NE_ERROR("Could not find this material at {}", meshInfo.material);
 
-		const auto& materialObjOpt = materialNodes.at(meshInfo.material).as_object();
+		const auto& materialObjOpt = matIt->second.as_object();
 		if (!materialObjOpt)
 			NE_ERROR("Could not serialize this material at {}", meshInfo.material);
 

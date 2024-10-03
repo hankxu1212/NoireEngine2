@@ -361,6 +361,26 @@ std::optional< std::map< std::string, value > > const &value::as_object() const 
 	}
 }
 
+const glm::vec4 value::as_vec4() const
+{
+	const auto& arr = as_array().value();
+	if (arr.size() != 4) throw std::runtime_error("Array size is not compatible with vec4. Found size: " + arr.size());
+	glm::vec4 ret;
+	for (int i = 0; i < 4; i++)
+		ret[i] = arr[i].as_float();
+	return ret;
+}
+
+const glm::vec3 value::as_vec3() const
+{
+	const auto& arr = as_array().value();
+	if (arr.size() != 3) throw std::runtime_error("Array size is not compatible with vec3. Found size: " + arr.size());
+	glm::vec3 ret;
+	for (int i = 0; i < 3; i++)
+		ret[i] = arr[i].as_float();
+	return ret;
+}
+
 float value::as_float() const
 {
 	return (float)as_number().value();

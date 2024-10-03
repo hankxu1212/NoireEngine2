@@ -24,24 +24,18 @@ Material* Material::Deserialize(const Scene::TValueMap& obj)
 {
 	try {
 		const auto& attributesMap = obj.at("lambertian").as_object().value();
-		if (attributesMap.find("albedo") == attributesMap.end())
+		auto attributeIt = attributesMap.find("albedo");
+		if (attributeIt == attributesMap.end())
 			throw std::runtime_error("Did not find albedo field in this material, aborting!");
-
-		const auto& albedoArrOpt = attributesMap.at("albedo").as_array();
-		assert(albedoArrOpt && "Material's albedo field cannot be read as array... aborting.");
-		assert(albedoArrOpt.value().size() == 3 && "Material's albedo field must have size 3");
-		const auto& albedo = albedoArrOpt.value();
 
 		CreateInfo createInfo;
 		createInfo.name = obj.at("name").as_string().value();
-		createInfo.albedo.x = albedo[0].as_float();
-		createInfo.albedo.y = albedo[1].as_float();
-		createInfo.albedo.z = albedo[2].as_float();
+		createInfo.albedo = attributeIt->second.as_vec3();
 
 		return Create(createInfo).get();
 	}
 	catch (std::exception& e) {
-		std::cout << "Failed to deserialize value as Material: " << e.what() << std::endl;
+		NE_WARN("Failed to deserialize value as Material: {}", e.what());
 		return nullptr;
 	}
 }

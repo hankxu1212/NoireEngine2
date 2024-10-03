@@ -839,7 +839,6 @@
     <None Include="src\scenes\s72\viewer\s72-viewer.html" />
     <None Include="vendor\imgui\examples\example_glfw_wgpu\web\index.html" />
     <None Include="vendor\imgui\examples\libs\emscripten\shell_minimal.html" />
-    <None Include="C:\Users\HX\Downloads\env-cube.b72" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

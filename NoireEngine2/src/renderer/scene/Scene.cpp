@@ -64,74 +64,80 @@ void Scene::Render()
 
 static std::unordered_map<std::string, Entity*> nameToEntityMap;
 
-static bool LoadAsTransform(const sejp::value& val, glm::vec3& outPosition, glm::quat& outRotation, glm::vec3& outScale)
+static void LoadTransform(const Scene::TValueMap& obj, glm::vec3& outPosition, glm::quat& outRotation, glm::vec3& outScale)
 {
-	try {
-		const auto& obj = val.as_object().value();
-
-		const auto& translation = obj.at("translation").as_array().value();
-		assert(translation.size() == 3);
-
-		const auto& rotation = obj.at("rotation").as_array().value();
-		assert(rotation.size() == 4);
-
-		const auto& scale = obj.at("scale").as_array().value();
-		assert(scale.size() == 3);
-
-		outPosition.x = translation[0].as_float();
-		outPosition.y = translation[1].as_float();
-		outPosition.z = translation[2].as_float();
-
-		outRotation.x = rotation[0].as_float();
-		outRotation.y = rotation[1].as_float();
-		outRotation.z = rotation[2].as_float();
-		outRotation.w = rotation[3].as_float();
-
-		outScale.x = scale[0].as_float();
-		outScale.y = scale[1].as_float();
-		outScale.z = scale[2].as_float();
-
-		return true;
+	auto translationIt = obj.find("translation");
+	if (translationIt != obj.end())
+	{
+		try {
+			outPosition = translationIt->second.as_vec3();
+		}
+		catch (std::exception& e) {
+			NE_WARN("Translation is corrupted {}", e.what());
+		}
 	}
-	catch (std::exception& e) {
-		std::cout << "Failed to deserialize value as Transform: " << e.what() << std::endl;
 
-		return false;
+	auto rotationIt = obj.find("rotation");
+	if (rotationIt != obj.end())
+	{
+		try {
+			auto q = rotationIt->second.as_vec4();
+			outRotation = glm::quat(q[3], q[0], q[1], q[2]);
+		}
+		catch (std::exception& e) {
+			NE_WARN("Rotation is corrupted {}", e.what());
+		}
 	}
+
+	auto scaleIt = obj.find("scale");
+	if (scaleIt != obj.end())
+	{
+		try {
+			outScale = scaleIt->second.as_vec3();
+		}
+		catch (std::exception& e) {
+			NE_WARN("Scale is corrupted {}", e.what());
+		}
+	}
+}
+
+static Scene::TFoundInfo Find(const char* key, SceneNode::Type type, const Scene::TValueMap& obj, const Scene::TSceneMap& sceneMap)
+{
+	static Scene::TFoundInfo NONE = { std::nullopt, "" };
+
+	auto it = obj.find(key);
+	if (it == obj.end())
+		return NONE;
+
+	const auto& strOpt = it->second.as_string();
+	if (!strOpt)
+	{
+		NE_WARN("Not a valid string format for {}!", key);
+		return NONE;
+	}
+	const auto& name = strOpt.value();
+
+	const Scene::TValueUMap& map = sceneMap.at(type);
+	auto objIt = map.find(name);
+	if (objIt == map.end())
+	{
+		NE_WARN("Did not find {} with name: {}... skipping.", key, name);
+		return NONE;
+	}
+
+	return std::make_pair(objIt->second.as_object(), name);
 }
 
 static void MakeMesh(Entity* newEntity, const Scene::TValueMap& obj, const Scene::TSceneMap& sceneMap)
 {
-	if (obj.find("mesh") == obj.end())
+	const auto& opt = Find("mesh", SceneNode::Mesh, obj, sceneMap);
+	if (!opt.first)
 		return;
-
-	const auto& meshStrOpt = obj.at("mesh").as_string();
-	if (!meshStrOpt)
-	{
-		NE_WARN("Not a valid string format for mesh!");
-		return;
-	}
-	const auto& meshName = meshStrOpt.value();
-
-	// try to find mesh in scene map
-	const Scene::TValueUMap& meshMap = sceneMap.at(SceneNode::Mesh);
-	if (meshMap.find(meshName) == meshMap.end())
-	{
-		NE_WARN("Did not find mesh with name: {}... skipping.", meshName);
-		return;
-	}
-
-	const auto& meshObjOpt = meshMap.at(meshName).as_object();
-	if (!meshObjOpt)
-	{
-		NE_WARN("Not a valid map format for mesh: {}... skipping.", meshName);
-		return;
-	}
-	const auto& meshObjMap = meshObjOpt.value();
+	const auto& dict = opt.first.value();
 
 	// deserialize mesh and material here
 	try {
-		Mesh::Deserialize(newEntity, meshObjMap, sceneMap);
+		Mesh::Deserialize(newEntity, dict, sceneMap);
 	}
 	catch (std::exception& e) {
 		NE_ERROR("Failed to make renderable mesh and material. with error: {}", e.what());
@@ -141,40 +147,18 @@ static void MakeMesh(Entity* newEntity, const Scene::TValueMap& obj, const Scene
 
 static void MakeCamera(Entity* newEntity, const Scene::TValueMap& obj, const Scene::TSceneMap& sceneMap)
 {
-	if (obj.find("camera") == obj.end())
+	const auto& opt = Find("camera", SceneNode::Camera, obj, sceneMap);
+	if (!opt.first)
 		return;
-
-	const auto& cameraStrOpt = obj.at("camera").as_string();
-	if (!cameraStrOpt)
-	{
-		NE_WARN("Not a valid string format for camera name!");
-		return;
-	}
-	const auto& cameraName = cameraStrOpt.value();
-
-	// try to find camera in scene map
-	const Scene::TValueUMap& cameraMap = sceneMap.at(SceneNode::Camera);
-	if (cameraMap.find(cameraName) == cameraMap.end())
-	{
-		NE_WARN("Did not find camera with name: {}... skipping.", cameraName);
-		return;
-	}
-
-	const auto& cameraObjOpt = cameraMap.at(cameraName).as_object();
-	if (!cameraObjOpt)
-	{
-		NE_WARN("Not a valid map format for camera: {}... skipping.", cameraName);
-		return;
-	}
-	const auto& cameraObjMap = cameraObjOpt.value();
+	const auto& dict = opt.first.value();
 
 	// case on perspective/orthographic
-	if (cameraObjMap.find("perspective") != cameraObjMap.end())
+	if (dict.find("perspective") != dict.end())
 	{
-		const auto& perspectiveObjOpt = cameraObjMap.at("perspective").as_object();
+		const auto& perspectiveObjOpt = dict.at("perspective").as_object();
 		if (!perspectiveObjOpt)
 		{
-			NE_WARN("Not a valid map format for camera: {}... skipping.", cameraName);
+			NE_WARN("Not a valid map format for camera: {}... skipping.", opt.second);
 			return;
 		}
 		const auto& perspectiveObj = perspectiveObjOpt.value();
@@ -186,6 +170,12 @@ static void MakeCamera(Entity* newEntity, const Scene::TValueMap& obj, const Sce
 		float far = get("far");
 
 		newEntity->AddComponent<CameraComponent>(Camera::Scene, false, near, far, fov, aspect);
+
+		int priority = 0;
+		if (Application::GetSpecification().CameraName == opt.second)
+			priority = -1000;
+
+		newEntity->GetComponent<CameraComponent>()->priority = priority;
 	}
 	else
 	{
@@ -196,48 +186,26 @@ static void MakeCamera(Entity* newEntity, const Scene::TValueMap& obj, const Sce
 
 static void MakeLight(Entity* newEntity, const Scene::TValueMap& obj, const Scene::TSceneMap& sceneMap)
 {
-	if (obj.find("light") == obj.end())
+	const auto& opt = Find("light", SceneNode::Light, obj, sceneMap);
+	if (!opt.first)
 		return;
+	const auto& dict = opt.first.value();
 
-	const auto& lightStrOpt = obj.at("light").as_string();
-	if (!lightStrOpt)
-	{
-		NE_WARN("Not a valid string format for light name!");
-		return;
-	}
-	const auto& lightName = lightStrOpt.value();
-
-	// try to find camera in scene map
-	const Scene::TValueUMap& lightMap = sceneMap.at(SceneNode::Light);
-	if (lightMap.find(lightName) == lightMap.end())
-	{
-		NE_WARN("Did not find light with name: {}... skipping.", lightName);
-		return;
-	}
-
-	const auto& lightObjOpt = lightMap.at(lightName).as_object();
-	if (!lightObjOpt)
-	{
-		NE_WARN("Not a valid map format for light: {}... skipping.", lightName);
-		return;
-	}
-	const auto& lightObjMap = lightObjOpt.value();
-
-	const auto& tintArr = lightObjMap.at("tint").as_array().value();
+	const auto& tintArr = dict.at("tint").as_array().value();
 	Color3 color(tintArr[0].as_float(), tintArr[1].as_float(), tintArr[2].as_float());
 
-	if (lightObjMap.find("sun") != lightObjMap.end())
+	if (dict.find("sun") != dict.end())
 	{
-		const auto& lightObj = lightObjMap.at("sun").as_object().value();
+		const auto& lightObj = dict.at("sun").as_object().value();
 		float strength = lightObj.at("strength").as_float();
 		newEntity->AddComponent<Light>(Light::Type::Directional, color, strength);
 		
 		float angle = lightObj.at("angle").as_float();
 		newEntity->transform()->SetRotation(glm::quat(glm::vec3(std::sin(angle), std::cos(angle), 0)));
 	}
-	else if (lightObjMap.find("sphere") != lightObjMap.end())
+	else if (dict.find("sphere") != dict.end())
 	{
-		const auto& lightObj = lightObjMap.at("sphere").as_object().value();
+		const auto& lightObj = dict.at("sphere").as_object().value();
 		float radius = lightObj.at("radius").as_float();
 		float power = lightObj.at("power").as_float();
 
@@ -248,9 +216,9 @@ static void MakeLight(Entity* newEntity, const Scene::TValueMap& obj, const Scen
 			newEntity->AddComponent<Light>(Light::Type::Point, color, power, radius, limit);
 		}
 	}
-	else if (lightObjMap.find("spot") != lightObjMap.end())
+	else if (dict.find("spot") != dict.end())
 	{
-		const auto& lightObj = lightObjMap.at("spot").as_object().value();
+		const auto& lightObj = dict.at("spot").as_object().value();
 
 		float power = lightObj.at("power").as_float();
 		float fov = lightObj.at("fov").as_float();
@@ -301,32 +269,26 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 
 	const Scene::TValueUMap& nodeMap = sceneMap[SceneNode::Node];
 
-	if (nodeMap.find(nodeName) == nodeMap.end())
+	auto nodeIt = nodeMap.find(nodeName);
+	if (nodeIt == nodeMap.end())
 	{
-		std::cout << "Did not find this node with name: " << nodeName << std::endl;
+		NE_WARN("Did not find this node with name: {}", nodeName);
 		return nullptr;
 	}
-	const auto& value = nodeMap.at(nodeName);
+	const auto& obj = nodeIt->second.as_object().value();
 
 	Entity* newEntity = nullptr;
 
 	// make transform
-	glm::vec3 p, s;
-	glm::quat r;
-	if (LoadAsTransform(value, p, r, s))
-	{
-		if (!parent)
-			newEntity = scene->Instantiate(nodeName, p, r, s);
-		else {
-			newEntity = parent->AddChild(nodeName, p, r, s);
-		}
-
-		assert(newEntity && "Entity should be non-null");
-	}
+	glm::vec3 p(0), s(1);
+	glm::quat r(1,0,0,0);
+	LoadTransform(obj, p, r, s);
+	if (!parent)
+		newEntity = scene->Instantiate(nodeName, p, r, s);
+	else
+		newEntity = parent->AddChild(nodeName, p, r, s);
 
 	nameToEntityMap[nodeName] = newEntity;
-
-	const auto& obj = value.as_object().value();
 
 	MakeMesh(newEntity, obj, sceneMap);
 	MakeCamera(newEntity, obj, sceneMap);
@@ -334,10 +296,11 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 
 	// recursively call on children
 	{
-		if (obj.find("children") == obj.end())
+		auto childrenIt = obj.find("children");
+		if (childrenIt == obj.end())
 			return newEntity; // no children!
 
-		const auto& childrenArrOpt = obj.at("children").as_array();
+		const auto& childrenArrOpt = childrenIt->second.as_array();
 		if (!childrenArrOpt)
 		{
 			NE_WARN("Not a valid array format for children!");
@@ -451,6 +414,7 @@ CameraComponent* Scene::GetRenderCam()
 		return debugCam();
 }
 
+// culling will be on scene cam, unless it is in user mode
 CameraComponent* Scene::GetCullingCam()
 {
 	if (SceneManager::Get()->getCameraMode() == CameraMode::User)
@@ -458,8 +422,6 @@ CameraComponent* Scene::GetCullingCam()
 	else
 		return sceneCam();
 }
-
-// culling will be on scene cam, unless it is in user mode
 
 CameraComponent* Scene::sceneCam()
 {
@@ -510,9 +472,6 @@ void Scene::InstantiateCoreScripts()
 		Entity* autoCam = Instantiate("Auto-Instantiated Rendering Camera", glm::vec3(0, 0, 10), glm::quat(1, 0, 0, 0));
 		autoCam->AddComponent<CameraComponent>();
 	}
-
-	Entity* testPointLight = Instantiate("Testing: Point Light", glm::vec3(0, 0, 3));
-	testPointLight->AddComponent<Light>(Light::Type::Point, Color3::Red, 10.0f, 5.0f);
 }
 
 void Scene::UpdateSceneInfo()
