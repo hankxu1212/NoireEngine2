@@ -89,8 +89,10 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.cpp" />
+    <ClCompile Include="src\backend\pipeline\material_pipeline\MaterialPipeline.cpp" />
     <ClCompile Include="src\renderer\materials\EnvironmentMaterial.cpp" />
-    <ClCompile Include="src\renderer\materials\GlassMaterial.cpp" />
+    <ClCompile Include="src\renderer\materials\MirrorMaterial.cpp" />
     <ClCompile Include="src\renderer\materials\LambertianMaterial.cpp" />
     <ClCompile Include="src\renderer\materials\PBRMaterial.cpp" />
     <ClCompile Include="src\backend\descriptor\DescriptorAllocator.cpp" />
@@ -221,8 +223,10 @@
     <ClCompile Include="vendor\imgui\misc\freetype\imgui_freetype.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.hpp" />
+    <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipeline.hpp" />
     <ClInclude Include="src\renderer\materials\EnvironmentMaterial.hpp" />
-    <ClInclude Include="src\renderer\materials\GlassMaterial.hpp" />
+    <ClInclude Include="src\renderer\materials\MirrorMaterial.hpp" />
     <ClInclude Include="src\renderer\materials\LambertianMaterial.hpp" />
     <ClInclude Include="src\renderer\materials\PBRMaterial.hpp" />
     <ClInclude Include="src\backend\descriptor\DescriptorBuilder.hpp" />

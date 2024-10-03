@@ -6,8 +6,19 @@
 #include "backend/commands/CommandBuffer.hpp"
 #include "renderer/scene/Scene.hpp"
 
+class MaterialPipeline;
+
 class Material : public Resource
 {
+public:
+	enum class Workflow
+	{
+		Lambertian = 0,
+		PBR = 1,
+		Environment = 2,
+		Mirror = 3
+	};
+
 public:
 	struct CreateInfo
 	{
@@ -52,5 +63,6 @@ public:
 private:
 	CreateInfo						m_CreateInfo;
 	glm::vec3						m_Albedo;
+	MaterialPipeline*				p_MaterialPipeline;
 };
 

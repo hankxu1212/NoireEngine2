@@ -551,6 +551,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 {
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
 
+	// this is binded for every material pipeline
 	Workspace& workspace = workspaces[surfaceId];
 	{ //bind Transforms descriptor set:
 		std::array< VkDescriptorSet, 2 > descriptor_sets{
@@ -567,6 +568,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 		);
 	}
 
+	// this is binded per-material pipeline
 	//bind texture descriptor set: (temporary, dont look)
 	vkCmdBindDescriptorSets(
 		commandBuffer, //command buffer
@@ -577,7 +579,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 		0, nullptr //dynamic offsets count, ptr
 	);
 
-	//draw all instances:
+	//draw all instances in relation to a certain material:
 	const std::vector<ObjectInstance>& sceneObjectInstances = scene->getObjectInstances();
 	ObjectsDrawn = sceneObjectInstances.size();
 	std::vector<IndirectBatch> draws = CompactDraws(sceneObjectInstances);

@@ -6,6 +6,7 @@
 #include "renderer/object/ObjectInstance.hpp"
 #include "backend/images/ImageDepth.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
+#include "backend/pipeline/material_pipeline/MaterialPipeline.hpp"
 
 #include <type_traits>
 #include "glm/glm.hpp"
@@ -13,6 +14,9 @@
 class Renderer;
 class MeshRenderInstance;
 
+/**
+ * Manages all the material pipelines and the main geometry render pass.
+ */
 class ObjectPipeline : public VulkanPipeline
 {
 public:
@@ -65,6 +69,8 @@ private:
 	VkDescriptorBufferInfo CreateTransformStorageBuffer(Workspace& workspace, size_t new_bytes);
 
 private:
+	friend class LambertianMaterialPipeline;
+
 	VkDescriptorSetLayout set0_World = VK_NULL_HANDLE;
 	VkDescriptorSetLayout set1_Transforms = VK_NULL_HANDLE;
 	VkDescriptorSetLayout set2_TEXTURE = VK_NULL_HANDLE;
@@ -92,5 +98,9 @@ private:
 	};
 
 	std::vector<IndirectBatch> CompactDraws(const std::vector<ObjectInstance>& objects);
+
+private: // material pipelines
+	std::vector<std::unique_ptr<MaterialPipeline>> m_MaterialPipelines;
+
 };
 

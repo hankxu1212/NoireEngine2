@@ -402,7 +402,13 @@
     <ClCompile Include="src\renderer\materials\PBRMaterial.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\materials\GlassMaterial.cpp">
+    <ClCompile Include="src\renderer\materials\MirrorMaterial.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\pipeline\material_pipeline\MaterialPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -836,7 +842,13 @@
     <ClInclude Include="src\renderer\materials\PBRMaterial.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\materials\GlassMaterial.hpp">
+    <ClInclude Include="src\renderer\materials\MirrorMaterial.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
