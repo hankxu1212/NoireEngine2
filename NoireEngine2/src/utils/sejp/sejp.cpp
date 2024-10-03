@@ -381,6 +381,11 @@ const glm::vec3 value::as_vec3() const
 	return ret;
 }
 
+uint32_t value::as_uint32t() const
+{
+	return static_cast<uint32_t>(as_number().value());
+}
+
 float value::as_float() const
 {
 	return (float)as_number().value();

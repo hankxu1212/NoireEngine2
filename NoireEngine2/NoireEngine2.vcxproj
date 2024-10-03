@@ -89,6 +89,10 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\materials\EnvironmentMaterial.cpp" />
+    <ClCompile Include="src\renderer\materials\GlassMaterial.cpp" />
+    <ClCompile Include="src\renderer\materials\LambertianMaterial.cpp" />
+    <ClCompile Include="src\renderer\materials\PBRMaterial.cpp" />
     <ClCompile Include="src\backend\descriptor\DescriptorAllocator.cpp" />
     <ClCompile Include="src\backend\descriptor\DescriptorBuilder.cpp" />
     <ClCompile Include="src\backend\descriptor\DescriptorLayoutCache.cpp" />
@@ -217,6 +221,10 @@
     <ClCompile Include="vendor\imgui\misc\freetype\imgui_freetype.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\materials\EnvironmentMaterial.hpp" />
+    <ClInclude Include="src\renderer\materials\GlassMaterial.hpp" />
+    <ClInclude Include="src\renderer\materials\LambertianMaterial.hpp" />
+    <ClInclude Include="src\renderer\materials\PBRMaterial.hpp" />
     <ClInclude Include="src\backend\descriptor\DescriptorBuilder.hpp" />
     <ClInclude Include="src\backend\descriptor\DescriptorLayoutCache.hpp" />
     <ClInclude Include="src\backend\descriptor\DescriptorAllocator.hpp" />

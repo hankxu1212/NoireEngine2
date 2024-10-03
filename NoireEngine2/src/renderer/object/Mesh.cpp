@@ -33,8 +33,8 @@ const Mesh::CreateInfo Mesh::Deserialize(const Scene::TValueMap& obj)
 		const auto& attributeMap = attributesMap.at(key).as_object().value();
 		return VertexInput::Attribute
 		{
-			(uint32_t)attributeMap.at("offset").as_number().value(),
-			(uint32_t)attributeMap.at("stride").as_number().value(),
+			attributeMap.at("offset").as_uint32t(),
+			attributeMap.at("stride").as_uint32t(),
 			attributeMap.at("format").as_string().value(),
 		};
 	};
@@ -47,15 +47,16 @@ const Mesh::CreateInfo Mesh::Deserialize(const Scene::TValueMap& obj)
 	};
 
 	std::string materialStr;
-	if (obj.find("material") == obj.end() || !obj.at("material").as_string())
+	auto matIt = obj.find("material");
+	if (matIt == obj.end() || !matIt->second.as_string())
 		materialStr = NE_NULL_STR;
 	else
-		materialStr = obj.at("material").as_string().value();
+		materialStr = matIt->second.as_string().value();
 
 	return CreateInfo (
 		obj.at("name").as_string().value(),
 		obj.at("topology").as_string().value(),
-		(uint32_t)obj.at("count").as_number().value(),
+		obj.at("count").as_uint32t(),
 		vertexAttributes,
 		materialStr,
 		attributesMap.at("POSITION").as_object().value().at("src").as_string().value()
