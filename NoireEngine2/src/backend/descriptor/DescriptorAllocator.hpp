@@ -26,7 +26,7 @@ public:
 
 	void ResetPools();
 
-	bool Allocate(VkDescriptorSet* set, VkDescriptorSetLayout layout);
+	bool Allocate(VkDescriptorSet* set, VkDescriptorSetLayout layout, const void* pNext=nullptr);
 
 	void Cleanup();
 

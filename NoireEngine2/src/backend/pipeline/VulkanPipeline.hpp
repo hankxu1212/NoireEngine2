@@ -25,8 +25,4 @@ public:
 	virtual void Update(const Scene* scene) {}
 
 	virtual void Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId) {}
-
-//protected:
-	//VkPipelineLayout			m_PipelineLayout = VK_NULL_HANDLE;
-	//VkPipeline					m_Pipeline = VK_NULL_HANDLE;
 };

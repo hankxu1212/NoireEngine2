@@ -38,37 +38,34 @@ DescriptorBuilder& DescriptorBuilder::BindBuffer(uint32_t binding, VkDescriptorB
 	return *this;
 }
 
-DescriptorBuilder& DescriptorBuilder::BindImage(uint32_t binding, VkDescriptorImageInfo* imageInfo, VkDescriptorType type, VkShaderStageFlags stageFlags)
+DescriptorBuilder& DescriptorBuilder::BindImage(uint32_t binding, VkDescriptorImageInfo* imageInfo, 
+	VkDescriptorType type, VkShaderStageFlags stageFlags, uint32_t descriptorCount)
 {
-	VkDescriptorSetLayoutBinding newBinding{};
+	bindings.emplace_back( VkDescriptorSetLayoutBinding {
+		.binding = binding,
+		.descriptorType = type,
+		.descriptorCount = descriptorCount,
+		.stageFlags = stageFlags,
+		.pImmutableSamplers = nullptr,
+	});
 
-	newBinding.descriptorCount = 1;
-	newBinding.descriptorType = type;
-	newBinding.pImmutableSamplers = nullptr;
-	newBinding.stageFlags = stageFlags;
-	newBinding.binding = binding;
+	writes.emplace_back( VkWriteDescriptorSet {
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.pNext = nullptr,
+		.dstBinding = binding,
+		.descriptorCount = descriptorCount,
+		.descriptorType = type,
+		.pImageInfo = imageInfo,
+	});
 
-	bindings.push_back(newBinding);
-
-	//create the descriptor write
-	VkWriteDescriptorSet newWrite{};
-	newWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	newWrite.pNext = nullptr;
-
-	newWrite.descriptorCount = 1;
-	newWrite.descriptorType = type;
-	newWrite.pImageInfo = imageInfo;
-	newWrite.dstBinding = binding;
-
-	writes.push_back(newWrite);
 	return *this;
 }
 
-bool DescriptorBuilder::Build(VkDescriptorSet& set, VkDescriptorSetLayout& layout) {
-	BuildLayout(layout);
+bool DescriptorBuilder::Build(VkDescriptorSet& set, VkDescriptorSetLayout& layout, const void* pNextLayout, VkDescriptorSetLayoutCreateFlags flags, const void* pNextAlloc) {
+	BuildLayout(layout, pNextLayout, flags);
 
 	//allocate descriptor
-	bool success = alloc->Allocate(&set, layout);
+	bool success = alloc->Allocate(&set, layout, pNextAlloc);
 	if (!success) { return false; };
 
 	//write descriptor
@@ -77,14 +74,16 @@ bool DescriptorBuilder::Build(VkDescriptorSet& set, VkDescriptorSetLayout& layou
 	return true;
 }
 
-void DescriptorBuilder::BuildLayout(VkDescriptorSetLayout& layout)
+void DescriptorBuilder::BuildLayout(VkDescriptorSetLayout& layout, const void* pNext, VkDescriptorSetLayoutCreateFlags flags)
 {
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.pNext = nullptr;
-
-	layoutInfo.pBindings = bindings.data();
-	layoutInfo.bindingCount = (uint32_t)bindings.size();
+	VkDescriptorSetLayoutCreateInfo layoutInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.pNext = pNext,
+		.flags = flags,
+		.bindingCount = (uint32_t)bindings.size(),
+		.pBindings = bindings.data(),
+	};
 
 	layout = cache->CreateDescriptorLayout(&layoutInfo);
 }

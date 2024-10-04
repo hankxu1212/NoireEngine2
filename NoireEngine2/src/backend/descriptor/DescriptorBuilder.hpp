@@ -14,10 +14,10 @@ public:
 	static DescriptorBuilder Start(DescriptorLayoutCache* layoutCache, DescriptorAllocator* allocator);
 
 	DescriptorBuilder& BindBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo, VkDescriptorType type, VkShaderStageFlags stageFlags);
-	DescriptorBuilder& BindImage(uint32_t binding, VkDescriptorImageInfo* imageInfo, VkDescriptorType type, VkShaderStageFlags stageFlags);
+	DescriptorBuilder& BindImage(uint32_t binding, VkDescriptorImageInfo* imageInfo, VkDescriptorType type, VkShaderStageFlags stageFlags, uint32_t descriptorCount=1);
 
-	bool Build(VkDescriptorSet& set, VkDescriptorSetLayout& layout);
-	void BuildLayout(VkDescriptorSetLayout& layout);
+	bool Build(VkDescriptorSet& set, VkDescriptorSetLayout& layout, const void* pNext = nullptr, VkDescriptorSetLayoutCreateFlags flags=0, const void* pNextAlloc = nullptr);
+	void BuildLayout(VkDescriptorSetLayout& layout, const void* pNext=nullptr, VkDescriptorSetLayoutCreateFlags flags = 0);
 	void Write(VkDescriptorSet& set);
 
 private:

@@ -16,7 +16,7 @@ void Material::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelin
 {
 	LambertianMaterial::MaterialPush push{
 		.albedo = { m_Albedo.x, m_Albedo.y, m_Albedo.z, 0 },
-		.index = 0
+		.materialIndex = 0
 	};
 
 	vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,

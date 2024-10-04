@@ -22,8 +22,9 @@
 
 ObjectPipeline::ObjectPipeline()
 {
-	textures.resize(1);
+	textures.resize(2);
 	textures[0] = std::make_shared<Image2D>(Files::Path("../textures/default_gray.png"));
+	textures[1] = std::make_shared<Image2D>(Files::Path("../textures/statue.jpg"));
 }
 
 ObjectPipeline::~ObjectPipeline()
@@ -184,50 +185,16 @@ void ObjectPipeline::CreateDescriptors()
 	}
 
 	{
-		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding
-		{
-			.binding = 0,
-			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-			.descriptorCount = uint32_t(textures.size()),
-			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.pImmutableSamplers = nullptr
-		};
-
-		// Descriptor set layout
-		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings = {
-			// [POI] Binding 1 contains a texture array that is dynamically non-uniform sampled from in the fragment shader:
-			//	outFragColor = texture(textures[nonuniformEXT(inTexIndex)], inUV);
-			descriptorSetLayoutBinding
-		};
-
 		// [POI] The fragment shader will be using an unsized array of samplers, which has to be marked with the VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT
-		VkDescriptorSetLayoutBindingFlagsCreateInfoEXT setLayoutBindingFlags{};
-		setLayoutBindingFlags.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
-		setLayoutBindingFlags.bindingCount = 1;
-		// Binding 1 are the fragment shader images, which use indexing
 		std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
-			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT
+			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
 		};
-		setLayoutBindingFlags.pBindingFlags = descriptorBindingFlags.data();
+		VkDescriptorSetLayoutBindingFlagsCreateInfoEXT setLayoutBindingFlags{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT,
+			.bindingCount = 1,
+			.pBindingFlags = descriptorBindingFlags.data()
+		};
 
-		// layout create info
-		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCI{};
-		descriptorSetLayoutCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		descriptorSetLayoutCI.pNext = nullptr;
-		descriptorSetLayoutCI.pBindings = setLayoutBindings.data();
-		descriptorSetLayoutCI.bindingCount = (uint32_t)setLayoutBindings.size();
-
-#if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
-		// SRS - increase the per-stage descriptor samplers limit on macOS (maxPerStageDescriptorUpdateAfterBindSamplers > maxPerStageDescriptorSamplers)
-		descriptorSetLayoutCI.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
-#endif
-		descriptorSetLayoutCI.pNext = &setLayoutBindingFlags;
-		VulkanContext::VK_CHECK(
-			vkCreateDescriptorSetLayout(VulkanContext::GetDevice(), &descriptorSetLayoutCI, nullptr, &set2_TexturesLayout),
-			"Create descriptor set layout failed.");
-
-		// [POI] Descriptor sets
-		// We need to provide the descriptor counts for bindings with variable counts using a new structure
 		std::vector<uint32_t> variableDesciptorCounts = {
 			static_cast<uint32_t>(textures.size())
 		};
@@ -237,55 +204,28 @@ void ObjectPipeline::CreateDescriptors()
 		variableDescriptorCountAllocInfo.descriptorSetCount = static_cast<uint32_t>(variableDesciptorCounts.size());
 		variableDescriptorCountAllocInfo.pDescriptorCounts = variableDesciptorCounts.data();
 
-		VkDescriptorSetAllocateInfo allocInfo = {};
-		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.pNext = nullptr;
-		allocInfo.pSetLayouts = &set2_TexturesLayout;
-		allocInfo.descriptorPool = m_DescriptorAllocator.GrabPool();
-		allocInfo.descriptorSetCount = 1;
-		allocInfo.pNext = &variableDescriptorCountAllocInfo;
-
-		VulkanContext::VK_CHECK(vkAllocateDescriptorSets(VulkanContext::GetDevice(), &allocInfo, &set2_Textures), "Create descriptor set failed");
-
-		std::array<VkWriteDescriptorSet, 1> writeDescriptorSets;
-
-		// Image descriptors for the texture array
+		// build set2: descriptor set for textures
 		std::vector<VkDescriptorImageInfo> textureDescriptors(textures.size());
-		for (size_t i = 0; i < textures.size(); i++) 
+		for (uint32_t i = 0; i < textures.size(); ++i)
 		{
-			textureDescriptors[i].imageLayout = textures[i]->getLayout();
-			textureDescriptors[i].sampler = textures[i]->getSampler();
-			textureDescriptors[i].imageView = textures[i]->getView();
+			auto& tex = textures[i];
+			textureDescriptors[i].sampler = tex->getSampler();
+			textureDescriptors[i].imageView = tex->getView();
+			textureDescriptors[i].imageLayout = tex->getLayout();
 		}
 
-		// [POI] Second and final descriptor is a texture array
-		// Unlike an array texture, these are adressed like typical arrays
-		writeDescriptorSets[0] = {};
-		writeDescriptorSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		writeDescriptorSets[0].dstBinding = 0;
-		writeDescriptorSets[0].dstArrayElement = 0;
-		writeDescriptorSets[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		writeDescriptorSets[0].descriptorCount = static_cast<uint32_t>(textures.size());
-		writeDescriptorSets[0].pBufferInfo = 0;
-		writeDescriptorSets[0].dstSet = set2_Textures;
-		writeDescriptorSets[0].pImageInfo = textureDescriptors.data();
-
-		vkUpdateDescriptorSets(VulkanContext::GetDevice(), static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, nullptr);
+		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+			.BindImage(0, textureDescriptors.data(), 
+				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<uint32_t>(textures.size()))
+			.Build(set2_Textures, set2_TexturesLayout, &setLayoutBindingFlags,
+#if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
+			// SRS - increase the per-stage descriptor samplers limit on macOS (maxPerStageDescriptorUpdateAfterBindSamplers > maxPerStageDescriptorSamplers)
+			VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
+#else
+			0
+#endif
+			, &variableDescriptorCountAllocInfo);
 	}
-	// create texture descriptor
-	//DescriptorBuilder builder = DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator);
-	//for (uint32_t i = 0; i < textures.size(); ++i)
-	//{
-	//	auto& tex = textures[i];
-	//	VkDescriptorImageInfo texInfo
-	//	{
-	//		.sampler = tex->getSampler(),
-	//		.imageView = tex->getView(),
-	//		.imageLayout = tex->getLayout(),
-	//	};
-	//	builder.BindImage(i, &texInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
-	//}
-	//builder.Build(set2_Textures, set2_TexturesLayout);
 }
 
 void ObjectPipeline::Rebuild()
@@ -545,7 +485,6 @@ std::vector<ObjectPipeline::IndirectBatch> ObjectPipeline::CompactDraws(const st
 	}
 	return draws;
 }
-
 
 void ObjectPipeline::DestroyFrameBuffers()
 {

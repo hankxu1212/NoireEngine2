@@ -62,7 +62,7 @@ VkDescriptorPool DescriptorAllocator::GrabPool()
 	}
 }
 
-bool DescriptorAllocator::Allocate(VkDescriptorSet* set, VkDescriptorSetLayout layout)
+bool DescriptorAllocator::Allocate(VkDescriptorSet* set, VkDescriptorSetLayout layout, const void* pNext)
 {
 	//initialize the currentPool handle if it's null
 	if (currentPool == VK_NULL_HANDLE) {
@@ -73,7 +73,7 @@ bool DescriptorAllocator::Allocate(VkDescriptorSet* set, VkDescriptorSetLayout l
 
 	VkDescriptorSetAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.pNext = nullptr;
+	allocInfo.pNext = pNext;
 
 	allocInfo.pSetLayouts = &layout;
 	allocInfo.descriptorPool = currentPool;

@@ -25,7 +25,7 @@ public:
 	struct MaterialPush
 	{
 		struct { float x, y, z, padding_; } albedo;
-		int index;
+		int materialIndex;
 	};
 	static_assert(sizeof(MaterialPush) == 16 + 4);
 };
