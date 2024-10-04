@@ -30,8 +30,9 @@ public:
 
 	void Cleanup();
 
-private:
 	VkDescriptorPool GrabPool();
+
+private:
 
 	VkDescriptorPool currentPool{ VK_NULL_HANDLE };
 	PoolSizes descriptorSizes;

@@ -7,11 +7,11 @@
 #include "backend/VulkanContext.hpp"
 
 static uint32_t vert_code[] =
-#include "spv/shaders/objects.vert.inl"
+#include "spv/shaders/lambertian.vert.inl"
 ;
 
 static uint32_t frag_code[] =
-#include "spv/shaders/objects.frag.inl"
+#include "spv/shaders/lambertian.frag.inl"
 ;
 
 LambertianMaterialPipeline::LambertianMaterialPipeline(ObjectPipeline* objectPipeline) :
@@ -20,6 +20,57 @@ LambertianMaterialPipeline::LambertianMaterialPipeline(ObjectPipeline* objectPip
 }
 
 void LambertianMaterialPipeline::Create()
+{
+	CreatePipelineLayout();
+	CreateGraphicsPipeline();
+}
+
+void LambertianMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer, Material* materialInstance)
+{
+	//LambertianMaterial* lambertianMaterialInstance = dynamic_cast<LambertianMaterial*>(materialInstance);
+	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[0]; // TODO: pass in surface id
+	std::array< VkDescriptorSet, 3 > descriptor_sets{
+		workspace.set0_World,
+		workspace.set1_Transforms,
+		p_ObjectPipeline->set2_Textures
+	};
+	vkCmdBindDescriptorSets(
+		commandBuffer, //command buffer
+		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+		m_PipelineLayout, //pipeline layout
+		0, //first set
+		uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+		0, nullptr //dynamic offsets count, ptr
+	);
+}
+
+void LambertianMaterialPipeline::CreatePipelineLayout()
+{
+	std::array< VkDescriptorSetLayout, 3 > layouts{
+		p_ObjectPipeline->set0_WorldLayout,
+		p_ObjectPipeline->set1_TransformsLayout,
+		p_ObjectPipeline->set2_TexturesLayout,
+	};
+
+	VkPushConstantRange range{
+		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+		.offset = 0,
+		.size = sizeof(LambertianMaterial::MaterialPush),
+	};
+
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+		.setLayoutCount = uint32_t(layouts.size()),
+		.pSetLayouts = layouts.data(),
+		.pushConstantRangeCount = 1,
+		.pPushConstantRanges = &range,
+	};
+
+	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout),
+		"[Vulkan] Create pipeline layout failed.");
+}
+
+void LambertianMaterialPipeline::CreateGraphicsPipeline()
 {
 	VulkanShader vertModule(vert_code, VulkanShader::ShaderStage::Vertex);
 	VulkanShader fragModule(frag_code, VulkanShader::ShaderStage::Frag);
@@ -111,12 +162,11 @@ void LambertianMaterialPipeline::Create()
 		.blendConstants{0.0f, 0.0f, 0.0f, 0.0f},
 	};
 
-	//all of the above structures get bundled together into one very large create_info:
 	VkGraphicsPipelineCreateInfo create_info{
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		.stageCount = uint32_t(stages.size()),
 		.pStages = stages.data(),
-		.pVertexInputState = /*&VertexInput::array_input_state*/VK_NULL_HANDLE,
+		.pVertexInputState = VK_NULL_HANDLE,
 		.pInputAssemblyState = &input_assembly_state,
 		.pViewportState = &viewport_state,
 		.pRasterizationState = &rasterization_state,
@@ -132,35 +182,5 @@ void LambertianMaterialPipeline::Create()
 	VulkanContext::VK_CHECK(
 		vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &create_info, nullptr, &m_Pipeline),
 		"[Vulkan] Create pipeline failed");
-}
 
-void LambertianMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer, Material* materialInstance)
-{
-	//LambertianMaterial* lambertianMaterialInstance = dynamic_cast<LambertianMaterial*>(materialInstance);
-	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[0]; // TODO: pass in surface id
-	{ //bind Transforms descriptor set:
-		std::array< VkDescriptorSet, 2 > descriptor_sets{
-			workspace.World_descriptors, //0: World
-			workspace.Transforms_descriptors, //1: Transforms
-		};
-		vkCmdBindDescriptorSets(
-			commandBuffer, //command buffer
-			VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-			m_PipelineLayout, //pipeline layout
-			0, //first set
-			uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
-			0, nullptr //dynamic offsets count, ptr
-		);
-	}
-
-	// this is binded per-material pipeline
-	//bind texture descriptor set: (temporary, dont look)
-	vkCmdBindDescriptorSets(
-		commandBuffer, //command buffer
-		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-		m_PipelineLayout, //pipeline layout
-		2, //second set
-		1, &p_ObjectPipeline->G_GLOBAL_TEXTURE_SET[0], //descriptor sets count, ptr
-		0, nullptr //dynamic offsets count, ptr
-	);
 }

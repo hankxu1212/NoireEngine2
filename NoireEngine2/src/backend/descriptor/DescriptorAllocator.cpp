@@ -18,6 +18,12 @@ static VkDescriptorPool CreatePool(VkDevice device, const DescriptorAllocator::P
 	pool_info.pPoolSizes = sizes.data();
 
 	VkDescriptorPool descriptorPool;
+
+#if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
+	// SRS - increase the per-stage descriptor samplers limit on macOS (maxPerStageDescriptorUpdateAfterBindSamplers > maxPerStageDescriptorSamplers)
+	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+#endif
+
 	vkCreateDescriptorPool(device, &pool_info, nullptr, &descriptorPool);
 
 	return descriptorPool;

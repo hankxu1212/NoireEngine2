@@ -376,14 +376,14 @@
     <None Include="src\core\resources\nodes\NodeView.inl" />
     <None Include="src\Maekfile.js" />
     <None Include="src\scenes\s72\viewer\s72-viewer.html" />
+    <None Include="src\shaders\lambertian.frag" />
+    <None Include="src\shaders\lambertian.vert" />
     <None Include="tutorial\background.frag" />
     <None Include="tutorial\background.vert" />
     <None Include="tutorial\lines.frag" />
     <None Include="tutorial\lines.vert" />
     <None Include="tutorial\maek-cache.json" />
     <None Include="tutorial\Maekfile.js" />
-    <None Include="src\shaders\objects.frag" />
-    <None Include="src\shaders\objects.vert" />
     <None Include="tutorial\README.md" />
     <None Include="vendor\imgui\examples\example_glfw_wgpu\web\index.html" />
     <None Include="vendor\imgui\examples\libs\emscripten\shell_minimal.html" />

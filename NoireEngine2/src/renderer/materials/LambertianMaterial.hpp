@@ -21,4 +21,11 @@ public:
 			name(other.name), albedo(other.albedo), texturePath(other.texturePath) {
 		}
 	};
+
+	struct MaterialPush
+	{
+		struct { float x, y, z, padding_; } albedo;
+		int index;
+	};
+	static_assert(sizeof(MaterialPush) == 16 + 4);
 };

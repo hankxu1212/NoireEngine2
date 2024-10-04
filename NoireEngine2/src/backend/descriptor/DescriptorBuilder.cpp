@@ -64,7 +64,6 @@ DescriptorBuilder& DescriptorBuilder::BindImage(uint32_t binding, VkDescriptorIm
 	return *this;
 }
 
-
 bool DescriptorBuilder::Build(VkDescriptorSet& set, VkDescriptorSetLayout& layout) {
 	BuildLayout(layout);
 

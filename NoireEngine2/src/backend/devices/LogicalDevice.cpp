@@ -6,7 +6,8 @@
 const std::vector<const char*> LogicalDevice::DeviceExtensions = { 
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 	VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
-	VK_EXT_VERTEX_INPUT_DYNAMIC_STATE_EXTENSION_NAME // dynamic vertex binding
+	VK_EXT_VERTEX_INPUT_DYNAMIC_STATE_EXTENSION_NAME, // dynamic vertex binding
+	VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME // descriptor indexing
 };
 
 LogicalDevice::LogicalDevice(const VulkanInstance& instance, const PhysicalDevice& physicalDevice) :
@@ -194,13 +195,31 @@ void LogicalDevice::CreateLogicalDevice()
 	
 	deviceCreateInfo.pNext = &dynamicVertexInputExt;
 
+	// enable descriptor indexing feature ext
+	VkPhysicalDeviceDescriptorIndexingFeaturesEXT physicalDeviceDescriptorIndexingFeatures
+	{
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT,
+		.shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
+		.descriptorBindingVariableDescriptorCount = VK_TRUE,
+		.runtimeDescriptorArray = VK_TRUE,
+	};
+
+	dynamicVertexInputExt.pNext = &physicalDeviceDescriptorIndexingFeatures;
+
+#if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
+	// SRS - on macOS set environment variable to configure MoltenVK for using Metal argument buffers (needed for descriptor indexing)
+	//     - MoltenVK supports Metal argument buffers on macOS, iOS possible in future (see https://github.com/KhronosGroup/MoltenVK/issues/1651)
+	setenv("MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS", "1", 1);
+#endif
+
 	// add synchronization feature
 #ifdef VK_VERSION_1_3
 	VkPhysicalDeviceSynchronization2Features sync2Ext{
 		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
 		.synchronization2 = true
 	};
-	dynamicVertexInputExt.pNext = &sync2Ext;
+
+	physicalDeviceDescriptorIndexingFeatures.pNext = &sync2Ext;
 #endif
 
 	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

@@ -11,6 +11,11 @@ public:
 	void Create() override;
 	void BindDescriptors(const CommandBuffer& commandBuffer, Material* materialInstance) override;
 
+private:
+	
+	void CreatePipelineLayout();
+	void CreateGraphicsPipeline();
+
 	glm::vec3						m_Albedo;
 	std::shared_ptr<Image2D>		m_AlbedoMap;
 

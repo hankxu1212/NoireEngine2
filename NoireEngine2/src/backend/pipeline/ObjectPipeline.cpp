@@ -20,26 +20,17 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
 
-static uint32_t vert_code[] =
-#include "spv/shaders/objects.vert.inl"
-;
-
-static uint32_t frag_code[] =
-#include "spv/shaders/objects.frag.inl"
-;
-
 ObjectPipeline::ObjectPipeline()
 {
-	G_TEXTURES.resize(1);
-	G_TEXTURES[0] = std::make_shared<Image2D>(Files::Path("../textures/default_gray.png"));
-	G_GLOBAL_TEXTURE_SET.resize(1);
+	textures.resize(1);
+	textures[0] = std::make_shared<Image2D>(Files::Path("../textures/default_gray.png"));
 }
 
 ObjectPipeline::~ObjectPipeline()
 {
 	VkDevice device = VulkanContext::GetDevice();
 
-	G_TEXTURES.clear();
+	textures.clear();
 
 	for (Workspace& workspace : workspaces) 
 	{
@@ -54,19 +45,19 @@ ObjectPipeline::~ObjectPipeline()
 	
 	m_MaterialPipelines.clear();
 
-	if (set0_World != VK_NULL_HANDLE) {
-		vkDestroyDescriptorSetLayout(device, set0_World, nullptr);
-		set0_World = VK_NULL_HANDLE;
+	if (set0_WorldLayout != VK_NULL_HANDLE) {
+		vkDestroyDescriptorSetLayout(device, set0_WorldLayout, nullptr);
+		set0_WorldLayout = VK_NULL_HANDLE;
 	}
 
-	if (set1_Transforms != VK_NULL_HANDLE) {
-		vkDestroyDescriptorSetLayout(device, set1_Transforms, nullptr);
-		set1_Transforms = VK_NULL_HANDLE;
+	if (set1_TransformsLayout != VK_NULL_HANDLE) {
+		vkDestroyDescriptorSetLayout(device, set1_TransformsLayout, nullptr);
+		set1_TransformsLayout = VK_NULL_HANDLE;
 	}
 
-	if (set2_TEXTURE != VK_NULL_HANDLE) {
-		vkDestroyDescriptorSetLayout(device, set2_TEXTURE, nullptr);
-		set2_TEXTURE = VK_NULL_HANDLE;
+	if (set2_TexturesLayout != VK_NULL_HANDLE) {
+		vkDestroyDescriptorSetLayout(device, set2_TexturesLayout, nullptr);
+		set2_TexturesLayout = VK_NULL_HANDLE;
 	}
 
 	DestroyFrameBuffers();
@@ -184,51 +175,117 @@ void ObjectPipeline::CreateDescriptors()
 
 		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
 			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.Build(workspace.World_descriptors, set0_World);
+			.Build(workspace.set0_World, set0_WorldLayout);
 
 		VkDescriptorBufferInfo Transforms_info = CreateTransformStorageBuffer(workspace, 4096);
 		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
 			.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-			.Build(workspace.Transforms_descriptors, set1_Transforms);
+			.Build(workspace.set1_Transforms, set1_TransformsLayout);
 	}
 
-	// create texture descriptor
-	DescriptorBuilder builder = DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator);
-	for (uint32_t i = 0; i < G_TEXTURES.size(); ++i)
 	{
-		auto& tex = G_TEXTURES[i];
-		VkDescriptorImageInfo texInfo
+		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding
 		{
-			.sampler = tex->getSampler(),
-			.imageView = tex->getView(),
-			.imageLayout = tex->getLayout(),
+			.binding = 0,
+			.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			.descriptorCount = uint32_t(textures.size()),
+			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+			.pImmutableSamplers = nullptr
 		};
-		builder.BindImage(i, &texInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+		// Descriptor set layout
+		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings = {
+			// [POI] Binding 1 contains a texture array that is dynamically non-uniform sampled from in the fragment shader:
+			//	outFragColor = texture(textures[nonuniformEXT(inTexIndex)], inUV);
+			descriptorSetLayoutBinding
+		};
+
+		// [POI] The fragment shader will be using an unsized array of samplers, which has to be marked with the VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT
+		VkDescriptorSetLayoutBindingFlagsCreateInfoEXT setLayoutBindingFlags{};
+		setLayoutBindingFlags.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
+		setLayoutBindingFlags.bindingCount = 1;
+		// Binding 1 are the fragment shader images, which use indexing
+		std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
+			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT
+		};
+		setLayoutBindingFlags.pBindingFlags = descriptorBindingFlags.data();
+
+		// layout create info
+		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCI{};
+		descriptorSetLayoutCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		descriptorSetLayoutCI.pNext = nullptr;
+		descriptorSetLayoutCI.pBindings = setLayoutBindings.data();
+		descriptorSetLayoutCI.bindingCount = (uint32_t)setLayoutBindings.size();
+
+#if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
+		// SRS - increase the per-stage descriptor samplers limit on macOS (maxPerStageDescriptorUpdateAfterBindSamplers > maxPerStageDescriptorSamplers)
+		descriptorSetLayoutCI.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+#endif
+		descriptorSetLayoutCI.pNext = &setLayoutBindingFlags;
+		VulkanContext::VK_CHECK(
+			vkCreateDescriptorSetLayout(VulkanContext::GetDevice(), &descriptorSetLayoutCI, nullptr, &set2_TexturesLayout),
+			"Create descriptor set layout failed.");
+
+		// [POI] Descriptor sets
+		// We need to provide the descriptor counts for bindings with variable counts using a new structure
+		std::vector<uint32_t> variableDesciptorCounts = {
+			static_cast<uint32_t>(textures.size())
+		};
+
+		VkDescriptorSetVariableDescriptorCountAllocateInfoEXT variableDescriptorCountAllocInfo = {};
+		variableDescriptorCountAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT;
+		variableDescriptorCountAllocInfo.descriptorSetCount = static_cast<uint32_t>(variableDesciptorCounts.size());
+		variableDescriptorCountAllocInfo.pDescriptorCounts = variableDesciptorCounts.data();
+
+		VkDescriptorSetAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.pNext = nullptr;
+		allocInfo.pSetLayouts = &set2_TexturesLayout;
+		allocInfo.descriptorPool = m_DescriptorAllocator.GrabPool();
+		allocInfo.descriptorSetCount = 1;
+		allocInfo.pNext = &variableDescriptorCountAllocInfo;
+
+		VulkanContext::VK_CHECK(vkAllocateDescriptorSets(VulkanContext::GetDevice(), &allocInfo, &set2_Textures), "Create descriptor set failed");
+
+		std::array<VkWriteDescriptorSet, 1> writeDescriptorSets;
+
+		// Image descriptors for the texture array
+		std::vector<VkDescriptorImageInfo> textureDescriptors(textures.size());
+		for (size_t i = 0; i < textures.size(); i++) 
+		{
+			textureDescriptors[i].imageLayout = textures[i]->getLayout();
+			textureDescriptors[i].sampler = textures[i]->getSampler();
+			textureDescriptors[i].imageView = textures[i]->getView();
+		}
+
+		// [POI] Second and final descriptor is a texture array
+		// Unlike an array texture, these are adressed like typical arrays
+		writeDescriptorSets[0] = {};
+		writeDescriptorSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		writeDescriptorSets[0].dstBinding = 0;
+		writeDescriptorSets[0].dstArrayElement = 0;
+		writeDescriptorSets[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		writeDescriptorSets[0].descriptorCount = static_cast<uint32_t>(textures.size());
+		writeDescriptorSets[0].pBufferInfo = 0;
+		writeDescriptorSets[0].dstSet = set2_Textures;
+		writeDescriptorSets[0].pImageInfo = textureDescriptors.data();
+
+		vkUpdateDescriptorSets(VulkanContext::GetDevice(), static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, nullptr);
 	}
-	builder.Build(G_GLOBAL_TEXTURE_SET[0], set2_TEXTURE);
-
-	std::array< VkDescriptorSetLayout, 3 > layouts{
-		set0_World,
-		set1_Transforms,
-		set2_TEXTURE,
-	};
-
-	VkPushConstantRange range{
-		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-		.offset = 0,
-		.size = sizeof(MaterialPush),
-	};
-
-	VkPipelineLayoutCreateInfo create_info{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = uint32_t(layouts.size()),
-		.pSetLayouts = layouts.data(),
-		.pushConstantRangeCount = 1,
-		.pPushConstantRanges = &range,
-	};
-
-	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_MaterialPipelines[0]->m_PipelineLayout),
-		"[Vulkan] Create pipeline layout failed.");
+	// create texture descriptor
+	//DescriptorBuilder builder = DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator);
+	//for (uint32_t i = 0; i < textures.size(); ++i)
+	//{
+	//	auto& tex = textures[i];
+	//	VkDescriptorImageInfo texInfo
+	//	{
+	//		.sampler = tex->getSampler(),
+	//		.imageView = tex->getView(),
+	//		.imageLayout = tex->getLayout(),
+	//	};
+	//	builder.BindImage(i, &texInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+	//}
+	//builder.Build(set2_Textures, set2_TexturesLayout);
 }
 
 void ObjectPipeline::Rebuild()
@@ -361,7 +418,7 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 			DescriptorBuilder builder;
 			builder.Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
 				.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-				.Write(workspace.Transforms_descriptors);
+				.Write(workspace.set1_Transforms);
 		}
 
 		assert(workspace.Transforms_src.getSize() == workspace.Transforms.getSize());
@@ -428,7 +485,6 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 {
 	m_MaterialPipelines[0]->BindPipeline(commandBuffer);
 	m_MaterialPipelines[0]->BindDescriptors(commandBuffer, nullptr);
-
 
 	//draw all instances in relation to a certain material:
 	const std::vector<ObjectInstance>& sceneObjectInstances = scene->getObjectInstances();

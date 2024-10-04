@@ -23,12 +23,6 @@ public:
 	ObjectPipeline();
 	virtual ~ObjectPipeline();
 
-	struct MaterialPush
-	{
-		struct { float x, y, z, padding_; } albedo;
-	};
-	static_assert(sizeof(MaterialPush) == 16);
-
 	inline static size_t ObjectsDrawn, VerticesDrawn, NumDrawCalls;
 
 public:
@@ -56,12 +50,12 @@ private:
 		//location for ObjectsPipeline::World data: (streamed to GPU per-frame)
 		Buffer World_src; //host coherent; mapped
 		Buffer World; //device-local
-		VkDescriptorSet World_descriptors; //references World
+		VkDescriptorSet set0_World; //references World
 
 		//location for ObjectsPipeline::Transforms data: (streamed to GPU per-frame)
 		Buffer Transforms_src; //host coherent; mapped
 		Buffer Transforms; //device-local
-		VkDescriptorSet Transforms_descriptors; //references Transforms
+		VkDescriptorSet set1_Transforms; //references Transforms
 	};
 
 	VkDescriptorBufferInfo CreateTransformStorageBuffer(Workspace& workspace, size_t new_bytes);
@@ -69,15 +63,15 @@ private:
 private:
 	friend class LambertianMaterialPipeline;
 
-	VkDescriptorSetLayout set0_World = VK_NULL_HANDLE;
-	VkDescriptorSetLayout set1_Transforms = VK_NULL_HANDLE;
-	VkDescriptorSetLayout set2_TEXTURE = VK_NULL_HANDLE;
+	VkDescriptorSetLayout set0_WorldLayout = VK_NULL_HANDLE;
+	VkDescriptorSetLayout set1_TransformsLayout = VK_NULL_HANDLE;
+	VkDescriptorSetLayout set2_TexturesLayout = VK_NULL_HANDLE;
 
 	std::vector<Workspace> workspaces;
 
 	// texture
-	std::vector< VkDescriptorSet >			G_GLOBAL_TEXTURE_SET; //allocated from texture_descriptor
-	std::vector<std::shared_ptr<Image2D>>	G_TEXTURES;
+	VkDescriptorSet set2_Textures; //allocated from texture_descriptor
+	std::vector<std::shared_ptr<Image2D>>	textures;
 
 	DescriptorAllocator						m_DescriptorAllocator;
 	DescriptorLayoutCache					m_DescriptorLayoutCache;

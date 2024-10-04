@@ -5,6 +5,8 @@
 
 #include "utils/Logger.hpp"
 
+#include "LambertianMaterial.hpp"
+
 Material::Material(const CreateInfo& createInfo) :
 	m_CreateInfo(createInfo), m_Albedo(createInfo.albedo) {
 	NE_INFO("Created material with albedo {} ", glm::to_string(m_Albedo));
@@ -12,12 +14,13 @@ Material::Material(const CreateInfo& createInfo) :
 
 void Material::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout)
 {
-	ObjectPipeline::MaterialPush push{
-		.albedo = { m_Albedo.x, m_Albedo.y, m_Albedo.z, 0 }
+	LambertianMaterial::MaterialPush push{
+		.albedo = { m_Albedo.x, m_Albedo.y, m_Albedo.z, 0 },
+		.index = 0
 	};
 
 	vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-		sizeof(ObjectPipeline::MaterialPush), &push);
+		sizeof(LambertianMaterial::MaterialPush), &push);
 }
 
 Material* Material::Deserialize(const Scene::TValueMap& obj)

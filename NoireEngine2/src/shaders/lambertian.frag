@@ -1,5 +1,7 @@
 #version 450
 
+#extension GL_EXT_nonuniform_qualifier : require
+
 #define MAX_NUM_TOTAL_LIGHTS 20
 #define MAX_LIGHTS_PER_OBJ 8
 
@@ -28,11 +30,12 @@ layout(set=0,binding=0,std140) uniform World {
 	int numLights;
 }scene;
 
-layout(set=2,binding=0) uniform sampler2D TEXTURE;
+layout (set = 2, binding = 0) uniform sampler2D textures[];
 
 layout( push_constant ) uniform constants
 {
 	vec4 albedo;
+	int texIndex;
 } material;
 
 vec3 F0 = vec3(0.04);
@@ -51,7 +54,7 @@ void main() {
 		lightsSum += CalcLight(i, scene.lights[i].type);
 	}
 
-	vec3 texColor = texture(TEXTURE, inTexCoord).rgb;
+	vec3 texColor = texture(textures[nonuniformEXT(material.texIndex)], inTexCoord).rgb;
 
 	vec3 color = vec3(material.albedo) * texColor * lightsSum;
 

@@ -99,14 +99,14 @@ const vulkan_objs = [
 	maek.CPP('backend/descriptor/DescriptorLayoutCache.cpp'),
 	maek.CPP('backend/descriptor/DescriptorBuilder.cpp'),
 	maek.CPP('backend/pipeline/material_pipeline/MaterialPipeline.cpp'),
+	maek.CPP('backend/pipeline/ObjectPipeline.cpp')
 ]
 
 
 const objects_shaders = [
-	maek.GLSLC('shaders/objects.vert'),
-	maek.GLSLC('shaders/objects.frag'),
+	maek.GLSLC('shaders/lambertian.vert'),
+	maek.GLSLC('shaders/lambertian.frag'),
 ];
-vulkan_objs.push(maek.CPP('backend/pipeline/ObjectPipeline.cpp', undefined, { depends: [...objects_shaders] }));
 vulkan_objs.push(maek.CPP('backend/pipeline/material_pipeline/LambertianMaterialPipeline.cpp', undefined, { depends: [...objects_shaders] }));
 
 const imgui_objs = [
