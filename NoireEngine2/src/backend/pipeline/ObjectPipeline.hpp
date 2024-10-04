@@ -7,6 +7,7 @@
 #include "backend/images/ImageDepth.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
 #include "backend/pipeline/material_pipeline/MaterialPipeline.hpp"
+#include "LinesPipeline.hpp"
 #include "backend/renderpass/Renderpass.hpp"
 
 #include <type_traits>
@@ -61,6 +62,7 @@ private:
 
 private:
 	friend class LambertianMaterialPipeline;
+	friend class LinesPipeline;
 
 	VkDescriptorSetLayout set0_WorldLayout = VK_NULL_HANDLE;
 	VkDescriptorSetLayout set1_TransformsLayout = VK_NULL_HANDLE;
@@ -88,7 +90,7 @@ private:
 	std::vector<IndirectBatch> CompactDraws(const std::vector<ObjectInstance>& objects);
 
 private: // material pipelines
-	std::vector<std::unique_ptr<MaterialPipeline>> m_MaterialPipelines;
-
+	std::vector<std::unique_ptr<MaterialPipeline>>	m_MaterialPipelines;
+	std::unique_ptr<LinesPipeline>					s_LinesPipeline;
 };
 

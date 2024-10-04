@@ -1,7 +1,5 @@
 #include "LambertianMaterialPipeline.hpp"
 
-#include <array>
-
 #include "renderer/materials/LambertianMaterial.hpp"
 #include "backend/shader/VulkanShader.h"
 #include "backend/VulkanContext.hpp"

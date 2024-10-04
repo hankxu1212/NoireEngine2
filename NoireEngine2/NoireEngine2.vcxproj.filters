@@ -87,7 +87,7 @@
     <ClCompile Include="tutorial\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tutorial\PosColVertex.cpp">
+    <ClCompile Include="src\renderer\vertices\PosColVertex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tutorial\RTG.cpp">
@@ -557,7 +557,7 @@
     <ClInclude Include="tutorial\mat4.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="tutorial\PosColVertex.hpp">
+    <ClInclude Include="src\renderer\vertices\PosColVertex.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="tutorial\refsol.hpp">
@@ -874,8 +874,8 @@
     <None Include="src\Maekfile.js" />
     <None Include="tutorial\background.frag" />
     <None Include="tutorial\background.vert" />
-    <None Include="tutorial\lines.frag" />
-    <None Include="tutorial\lines.vert" />
+    <None Include="src\shaders\lines.frag" />
+    <None Include="src\shaders\lines.vert" />
     <None Include="tutorial\maek-cache.json" />
     <None Include="tutorial\Maekfile.js" />
     <None Include="tutorial\README.md" />

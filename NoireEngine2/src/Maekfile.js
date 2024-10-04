@@ -34,6 +34,7 @@ const core_objs = [
 
 const renderer_objs = [
 	maek.CPP('renderer/vertices/Vertex.cpp'),
+	maek.CPP('renderer/vertices/PosColVertex.cpp'),
 	maek.CPP('renderer/Frustum.cpp'),
 	maek.CPP('renderer/Camera.cpp'),
 	maek.CPP('renderer/scene/Transform.cpp'),
@@ -105,12 +106,17 @@ const vulkan_objs = [
 	maek.CPP('backend/pipeline/ObjectPipeline.cpp'),
 ]
 
-
-const objects_shaders = [
+const lambertian_shaders = [
 	maek.GLSLC('shaders/lambertian.vert'),
 	maek.GLSLC('shaders/lambertian.frag'),
 ];
-vulkan_objs.push(maek.CPP('backend/pipeline/material_pipeline/LambertianMaterialPipeline.cpp', undefined, { depends: [...objects_shaders] }));
+vulkan_objs.push(maek.CPP('backend/pipeline/material_pipeline/LambertianMaterialPipeline.cpp', undefined, { depends: [...lambertian_shaders] }));
+
+const lines_shaders = [
+	maek.GLSLC('shaders/lines.vert'),
+	maek.GLSLC('shaders/lines.frag'),
+];
+vulkan_objs.push(maek.CPP('backend/pipeline/LinesPipeline.cpp', undefined, { depends: [...lines_shaders] }));
 
 const imgui_objs = [
 	maek.CPP('../vendor/imgui/imgui.cpp'),

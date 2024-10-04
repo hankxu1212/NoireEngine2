@@ -236,9 +236,12 @@ void ObjectPipeline::CreatePipeline()
 	m_MaterialPipelines.resize(1);
 	m_MaterialPipelines[0] = std::make_unique<LambertianMaterialPipeline>(this);
 
+	s_LinesPipeline = std::make_unique<LinesPipeline>(this);
+
 	CreateDescriptors();
 
 	m_MaterialPipelines[0]->Create();
+	s_LinesPipeline->CreatePipeline();
 }
 
 void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
@@ -395,6 +398,9 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 
 		vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
 	}
+
+	// draw lines
+	s_LinesPipeline->Render(scene, commandBuffer, surfaceId);
 }
 
 std::vector<ObjectPipeline::IndirectBatch> ObjectPipeline::CompactDraws(const std::vector<ObjectInstance>& objects)
