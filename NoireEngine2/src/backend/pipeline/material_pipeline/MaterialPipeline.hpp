@@ -12,6 +12,8 @@ class MaterialPipeline
 public:
 	MaterialPipeline() = default;
 	MaterialPipeline(ObjectPipeline* objectPipeline);
+	
+	~MaterialPipeline();
 
 	void BindPipeline(const CommandBuffer& commandBuffer);
 

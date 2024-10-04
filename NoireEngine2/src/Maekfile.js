@@ -205,7 +205,7 @@ function custom_flags_and_rules() {
 			`/I../vendor/glm/`,
 			`/I../vendor/`,
 			`/I../vendor/imgui/`,
-			'/O2'
+			//'/O1'
 		];
 
 	} else if (maek.OS === 'macos') {

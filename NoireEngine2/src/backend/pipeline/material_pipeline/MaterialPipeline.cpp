@@ -2,9 +2,23 @@
 
 #include "LambertianMaterialPipeline.hpp"
 #include "backend/pipeline/ObjectPipeline.hpp"
+#include "backend/VulkanContext.hpp"
 
 MaterialPipeline::MaterialPipeline(ObjectPipeline* objectPipeline) :
 	p_ObjectPipeline(objectPipeline) {
+}
+
+MaterialPipeline::~MaterialPipeline()
+{
+	if (m_PipelineLayout != VK_NULL_HANDLE) {
+		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_PipelineLayout, nullptr);
+		m_PipelineLayout = VK_NULL_HANDLE;
+	}
+
+	if (m_Pipeline != VK_NULL_HANDLE) {
+		vkDestroyPipeline(VulkanContext::GetDevice(), m_Pipeline, nullptr);
+		m_Pipeline = VK_NULL_HANDLE;
+	}
 }
 
 void MaterialPipeline::BindPipeline(const CommandBuffer& commandBuffer)

@@ -2,8 +2,8 @@
 
 #include "backend/VulkanContext.hpp"
 
-DescriptorBuilder DescriptorBuilder::Start(DescriptorLayoutCache* layoutCache, DescriptorAllocator* allocator) {
-
+DescriptorBuilder DescriptorBuilder::Start(DescriptorLayoutCache* layoutCache, DescriptorAllocator* allocator) 
+{
 	DescriptorBuilder builder;
 
 	builder.cache = layoutCache;
@@ -66,7 +66,6 @@ DescriptorBuilder& DescriptorBuilder::BindImage(uint32_t binding, VkDescriptorIm
 
 
 bool DescriptorBuilder::Build(VkDescriptorSet& set, VkDescriptorSetLayout& layout) {
-	//build layout first
 	BuildLayout(layout);
 
 	//allocate descriptor

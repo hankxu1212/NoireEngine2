@@ -4,7 +4,7 @@
 
 void DescriptorLayoutCache::Cleanup() {
 	//delete every descriptor layout held
-	for (auto pair : layoutCache) {
+	for (auto& pair : layoutCache) {
 		vkDestroyDescriptorSetLayout(VulkanContext::GetDevice(), pair.second, nullptr);
 	}
 }

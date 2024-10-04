@@ -43,8 +43,6 @@ public:
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId) override;
 
 private:
-	void CreatePipelineLayouts();
-
 	void CreateDescriptors();
 	
 	void PushSceneDrawInfo(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
@@ -78,8 +76,8 @@ private:
 	std::vector<Workspace> workspaces;
 
 	// texture
-	std::vector< VkDescriptorSet > texture_descriptors; //allocated from texture_descriptor
-	std::vector<std::shared_ptr<Image2D>> textures;
+	std::vector< VkDescriptorSet >			G_GLOBAL_TEXTURE_SET; //allocated from texture_descriptor
+	std::vector<std::shared_ptr<Image2D>>	G_TEXTURES;
 
 	DescriptorAllocator						m_DescriptorAllocator;
 	DescriptorLayoutCache					m_DescriptorLayoutCache;

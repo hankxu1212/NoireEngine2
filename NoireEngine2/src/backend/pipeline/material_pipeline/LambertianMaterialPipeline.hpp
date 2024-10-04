@@ -7,6 +7,7 @@ class LambertianMaterialPipeline : public MaterialPipeline
 {
 public:
 	LambertianMaterialPipeline(ObjectPipeline* objectPipeline);
+
 	void Create() override;
 	void BindDescriptors(const CommandBuffer& commandBuffer, Material* materialInstance) override;
 

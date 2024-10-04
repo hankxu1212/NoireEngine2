@@ -137,13 +137,30 @@ void LambertianMaterialPipeline::Create()
 void LambertianMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer, Material* materialInstance)
 {
 	//LambertianMaterial* lambertianMaterialInstance = dynamic_cast<LambertianMaterial*>(materialInstance);
+	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[0]; // TODO: pass in surface id
+	{ //bind Transforms descriptor set:
+		std::array< VkDescriptorSet, 2 > descriptor_sets{
+			workspace.World_descriptors, //0: World
+			workspace.Transforms_descriptors, //1: Transforms
+		};
+		vkCmdBindDescriptorSets(
+			commandBuffer, //command buffer
+			VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+			m_PipelineLayout, //pipeline layout
+			0, //first set
+			uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+			0, nullptr //dynamic offsets count, ptr
+		);
+	}
 
+	// this is binded per-material pipeline
+	//bind texture descriptor set: (temporary, dont look)
 	vkCmdBindDescriptorSets(
 		commandBuffer, //command buffer
 		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
 		m_PipelineLayout, //pipeline layout
 		2, //second set
-		1, &m_DescriptorSetTexture, //descriptor sets count, ptr
+		1, &p_ObjectPipeline->G_GLOBAL_TEXTURE_SET[0], //descriptor sets count, ptr
 		0, nullptr //dynamic offsets count, ptr
 	);
 }
