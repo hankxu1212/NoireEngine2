@@ -16,9 +16,6 @@ private:
 	void CreatePipelineLayout();
 	void CreateGraphicsPipeline();
 
-	glm::vec3						m_Albedo;
-	std::shared_ptr<Image2D>		m_AlbedoMap;
-
 	VkDescriptorSetLayout			m_DescriptorSetLayoutTexture;
 	VkDescriptorSet					m_DescriptorSetTexture;
 };

@@ -28,4 +28,10 @@ public:
 		int materialIndex;
 	};
 	static_assert(sizeof(MaterialPush) == 16 + 4);
+
+	void Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout) override;
+
+private:
+	glm::vec3						m_Albedo;
+	uint32_t						m_AlbedoMapIndex = 0; // index into global texture array
 };

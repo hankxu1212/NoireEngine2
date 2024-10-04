@@ -46,7 +46,7 @@ public:
 
 	virtual std::type_index getTypeIndex() const { return typeid(Material); }
 
-	void Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout);
+	virtual void Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout);
 
 	static Material* Deserialize(const Scene::TValueMap& obj);
 

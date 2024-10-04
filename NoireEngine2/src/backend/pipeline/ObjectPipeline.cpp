@@ -184,7 +184,8 @@ void ObjectPipeline::CreateDescriptors()
 			.Build(workspace.set1_Transforms, set1_TransformsLayout);
 	}
 
-	{
+	// https://github.com/SaschaWillems/Vulkan/blob/master/examples/descriptorindexing/descriptorindexing.cpp#L127
+	{ // create set 3: textures
 		// [POI] The fragment shader will be using an unsized array of samplers, which has to be marked with the VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT
 		std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
 			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
@@ -199,12 +200,14 @@ void ObjectPipeline::CreateDescriptors()
 			static_cast<uint32_t>(textures.size())
 		};
 
-		VkDescriptorSetVariableDescriptorCountAllocateInfoEXT variableDescriptorCountAllocInfo = {};
-		variableDescriptorCountAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT;
-		variableDescriptorCountAllocInfo.descriptorSetCount = static_cast<uint32_t>(variableDesciptorCounts.size());
-		variableDescriptorCountAllocInfo.pDescriptorCounts = variableDesciptorCounts.data();
+		VkDescriptorSetVariableDescriptorCountAllocateInfoEXT variableDescriptorInfoAI = 
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT,
+			.descriptorSetCount = static_cast<uint32_t>(variableDesciptorCounts.size()),
+			.pDescriptorCounts = variableDesciptorCounts.data(),
+		};
 
-		// build set2: descriptor set for textures
+		// grab all texture information
 		std::vector<VkDescriptorImageInfo> textureDescriptors(textures.size());
 		for (uint32_t i = 0; i < textures.size(); ++i)
 		{
@@ -214,6 +217,7 @@ void ObjectPipeline::CreateDescriptors()
 			textureDescriptors[i].imageLayout = tex->getLayout();
 		}
 
+		// actually build the descriptor set now
 		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
 			.BindImage(0, textureDescriptors.data(), 
 				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<uint32_t>(textures.size()))
@@ -222,9 +226,9 @@ void ObjectPipeline::CreateDescriptors()
 			// SRS - increase the per-stage descriptor samplers limit on macOS (maxPerStageDescriptorUpdateAfterBindSamplers > maxPerStageDescriptorSamplers)
 			VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
 #else
-			0
+			0 /*VkDescriptorSetLayoutCreateFlags*/
 #endif
-			, &variableDescriptorCountAllocInfo);
+			, &variableDescriptorInfoAI);
 	}
 }
 
