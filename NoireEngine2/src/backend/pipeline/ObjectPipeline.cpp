@@ -17,21 +17,18 @@
 
 #include "backend/pipeline/material_pipeline/LambertianMaterialPipeline.hpp"
 
+#include "renderer/materials/MaterialLibrary.hpp"
+
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
 
 ObjectPipeline::ObjectPipeline()
 {
-	textures.resize(2);
-	textures[0] = std::make_shared<Image2D>(Files::Path("../textures/default_gray.png"));
-	textures[1] = std::make_shared<Image2D>(Files::Path("../textures/statue.jpg"));
 }
 
 ObjectPipeline::~ObjectPipeline()
 {
 	VkDevice device = VulkanContext::GetDevice();
-
-	textures.clear();
 
 	for (Workspace& workspace : workspaces) 
 	{
@@ -195,6 +192,8 @@ void ObjectPipeline::CreateDescriptors()
 			.bindingCount = 1,
 			.pBindingFlags = descriptorBindingFlags.data()
 		};
+
+		const auto& textures = MaterialLibrary::Get()->GetTextures();
 
 		std::vector<uint32_t> variableDesciptorCounts = {
 			static_cast<uint32_t>(textures.size())

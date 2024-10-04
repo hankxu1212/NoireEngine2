@@ -26,21 +26,22 @@ public:
 	struct MaterialPush
 	{
 		struct { float x, y, z, padding_; } albedo;
-		int materialIndex;
+		int texIndex;
 	};
 	static_assert(sizeof(MaterialPush) == 16 + 4);
 
 public:
 	LambertianMaterial() = default;
-	LambertianMaterial(const CreateInfo& createInfo);
+
+	static std::shared_ptr<Material> Create();
+
+	static std::shared_ptr<Material> Create(const CreateInfo& createInfo);
+
+	void Load();
 
 	void Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout) override;
 
 	static Material* Deserialize(const Scene::TValueMap& obj);
-
-	static std::shared_ptr<Material> Create();
-	static std::shared_ptr<Material> Create(const CreateInfo& createInfo);
-	static std::shared_ptr<Material> Create(const Node& node);
 
 	friend const Node& operator>>(const Node& node, LambertianMaterial& material);
 	friend Node& operator<<(Node& node, const LambertianMaterial& material);
@@ -50,7 +51,12 @@ public:
 
 	void Inspect() override;
 
+	Workflow getWorkflow() const override { return Workflow::Lambertian; }
+
 private:
+	LambertianMaterial(const CreateInfo& createInfo);
+	static std::shared_ptr<Material> Create(const Node& node);
+
 	CreateInfo						m_CreateInfo;
 	uint32_t						m_AlbedoMapIndex = 0; // index into global texture array
 };

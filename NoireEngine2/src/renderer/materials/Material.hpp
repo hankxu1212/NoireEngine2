@@ -30,5 +30,7 @@ public:
 	static Material* Deserialize(const Scene::TValueMap& obj);
 
 	static std::shared_ptr<Material> CreateDefault();
+
+	virtual Workflow getWorkflow() const = 0;
 };
 

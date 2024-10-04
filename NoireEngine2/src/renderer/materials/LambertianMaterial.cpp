@@ -1,5 +1,7 @@
 #include "LambertianMaterial.hpp"
 #include "utils/Logger.hpp"
+#include "backend/images/Image2D.hpp"
+#include "core/resources/Files.hpp"
 
 #include "imgui/imgui.h"
 #include <limits>
@@ -8,7 +10,7 @@ void LambertianMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayo
 {
 	LambertianMaterial::MaterialPush push{
 		.albedo = { m_CreateInfo.albedo.x, m_CreateInfo.albedo.y, m_CreateInfo.albedo.z, 0 },
-		.materialIndex = (int)m_AlbedoMapIndex
+		.texIndex = (int)m_AlbedoMapIndex
 	};
 
 	vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,
@@ -19,13 +21,17 @@ Material* LambertianMaterial::Deserialize(const Scene::TValueMap& obj)
 {
 	try {
 		const auto& attributesMap = obj.at("lambertian").as_object().value();
+		CreateInfo createInfo;
+		createInfo.name = obj.at("name").as_string().value();
+
 		auto attributeIt = attributesMap.find("albedo");
 		if (attributeIt == attributesMap.end())
 			throw std::runtime_error("Did not find albedo field in this material, aborting!");
 
-		CreateInfo createInfo;
-		createInfo.name = obj.at("name").as_string().value();
-		createInfo.albedo = attributeIt->second.as_vec3();
+		if (auto& albedoTexOpt = attributeIt->second.as_texPath())
+			createInfo.texturePath = albedoTexOpt.value();
+		else
+			createInfo.albedo = attributeIt->second.as_vec3();
 
 		return Create(createInfo).get();
 	}
@@ -41,7 +47,8 @@ LambertianMaterial::LambertianMaterial(const CreateInfo& createInfo) :
 
 std::shared_ptr<Material> LambertianMaterial::Create()
 {
-	return std::shared_ptr<LambertianMaterial>();
+	CreateInfo defaultInfo;
+	return Create(defaultInfo);
 }
 
 std::shared_ptr<Material> LambertianMaterial::Create(const CreateInfo& createInfo)
@@ -61,7 +68,16 @@ std::shared_ptr<Material> LambertianMaterial::Create(const Node& node)
 	auto result = std::make_shared<LambertianMaterial>();
 	Resources::Get()->Add(node, std::dynamic_pointer_cast<Resource>(result));
 	node >> *result;
+	result->Load();
 	return result;
+}
+
+void LambertianMaterial::Load()
+{
+	if (m_CreateInfo.texturePath != "")
+	{
+		Image2D::Create(Files::Path("../scenes/examples/" + m_CreateInfo.texturePath));
+	}
 }
 
 void LambertianMaterial::Inspect()
@@ -71,6 +87,14 @@ void LambertianMaterial::Inspect()
 	ImGui::Text("%s", "Material Name");
 	ImGui::NextColumn();
 	ImGui::Text(m_CreateInfo.name.c_str());
+	ImGui::Columns(1);
+	ImGui::PopID();
+
+	ImGui::PushID("###MaterialWorkflow");
+	ImGui::Columns(2);
+	ImGui::Text("Workflow");
+	ImGui::NextColumn();
+	ImGui::Text("Lambertian");
 	ImGui::Columns(1);
 	ImGui::PopID();
 
@@ -93,6 +117,7 @@ const Node& operator>>(const Node& node, LambertianMaterial& material)
 {
 	node["createInfo"].Get(material.m_CreateInfo);
 	node["albedoTexIndex"].Get(material.m_AlbedoMapIndex);
+	node["workflow"].Get(material.getWorkflow());
 	return node;
 }
 
@@ -100,6 +125,7 @@ Node& operator<<(Node& node, const LambertianMaterial& material)
 {
 	node["createInfo"].Set(material.m_CreateInfo);
 	node["albedoTexIndex"].Set(material.m_AlbedoMapIndex);
+	node["workflow"].Set(material.getWorkflow());
 	return node;
 }
 

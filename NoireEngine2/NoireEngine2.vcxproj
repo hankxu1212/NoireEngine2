@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\materials\MaterialLibrary.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\MaterialPipeline.cpp" />
     <ClCompile Include="src\renderer\materials\EnvironmentMaterial.cpp" />
@@ -223,6 +224,7 @@
     <ClCompile Include="vendor\imgui\misc\freetype\imgui_freetype.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\materials\MaterialLibrary.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipeline.hpp" />
     <ClInclude Include="src\renderer\materials\EnvironmentMaterial.hpp" />

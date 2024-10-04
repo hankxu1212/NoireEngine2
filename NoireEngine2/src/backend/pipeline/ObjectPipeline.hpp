@@ -70,8 +70,7 @@ private:
 	std::vector<Workspace> workspaces;
 
 	// texture
-	VkDescriptorSet set2_Textures; //allocated from texture_descriptor
-	std::vector<std::shared_ptr<Image2D>>	textures;
+	VkDescriptorSet set2_Textures;
 
 	DescriptorAllocator						m_DescriptorAllocator;
 	DescriptorLayoutCache					m_DescriptorLayoutCache;

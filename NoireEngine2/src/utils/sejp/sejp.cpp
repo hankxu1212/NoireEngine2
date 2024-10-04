@@ -302,12 +302,13 @@ value parse(std::istream &from) {
 //------------------------------------------
 
 
+static std::optional< std::string > const emptyStr;
+
 std::optional< std::string > const &value::as_string() const {
-	static std::optional< std::string > const empty;
 	if ((index & TypeBits) == String) {
 		return data->strings[index & IndexBits];
 	} else {
-		return empty;
+		return emptyStr;
 	}
 }
 
@@ -389,6 +390,15 @@ uint32_t value::as_uint32t() const
 float value::as_float() const
 {
 	return (float)as_number().value();
+}
+
+const std::optional<std::string>& value::as_texPath() const
+{
+	if (auto& opt = as_object())
+		if (opt.value().find("src") != opt.value().end()) {
+			return opt.value().at("src").as_string();
+		}
+	return emptyStr;
 }
 
 //-------------------------------

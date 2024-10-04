@@ -6,8 +6,23 @@
 
 Material* Material::Deserialize(const Scene::TValueMap& obj)
 {
-	// TODO: add conditioning
-	return LambertianMaterial::Deserialize(obj);
+	auto lambertianIt = obj.find("lambertian");
+	if (lambertianIt != obj.end())
+		return LambertianMaterial::Deserialize(obj);
+	
+	auto pbrIt = obj.find("pbr");
+	if (pbrIt != obj.end())
+		return Material::CreateDefault().get();
+
+	auto mirrorIt = obj.find("mirror");
+	if (mirrorIt != obj.end())
+		return Material::CreateDefault().get();
+
+	auto environmentIt = obj.find("environment");
+	if (environmentIt != obj.end())
+		return Material::CreateDefault().get();
+
+	return nullptr;
 }
 
 std::shared_ptr<Material> Material::CreateDefault()

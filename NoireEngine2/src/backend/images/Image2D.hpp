@@ -86,4 +86,6 @@ private:
 	bool anisotropic;
 	bool mipmap;
 	uint32_t components = 0;
+
+	uint32_t g_TextureId = 0;
 };

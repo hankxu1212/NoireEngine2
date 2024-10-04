@@ -46,7 +46,7 @@ const Mesh::CreateInfo Mesh::Deserialize(const Scene::TValueMap& obj)
 		GET_ATTRIBUTE("TEXCOORD")
 	};
 
-	std::string materialStr;
+ 	std::string materialStr;
 	auto matIt = obj.find("material");
 	if (matIt == obj.end() || !matIt->second.as_string())
 		materialStr = NE_NULL_STR;

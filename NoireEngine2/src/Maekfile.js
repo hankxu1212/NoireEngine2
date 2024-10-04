@@ -44,6 +44,7 @@ const renderer_objs = [
 	maek.CPP('renderer/object/Mesh.cpp'),
 	maek.CPP('renderer/object/ObjectInstance.cpp'),
 	maek.CPP('renderer/materials/Material.cpp'),
+	maek.CPP('renderer/materials/MaterialLibrary.cpp'),
 	maek.CPP('renderer/materials/LambertianMaterial.cpp'),
 	maek.CPP('renderer/AABB.cpp'),
 	maek.CPP('renderer/scene/SceneManager.cpp'),

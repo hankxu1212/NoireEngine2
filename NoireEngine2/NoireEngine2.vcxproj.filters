@@ -411,6 +411,9 @@
     <ClCompile Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\materials\MaterialLibrary.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h">
@@ -849,6 +852,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\materials\MaterialLibrary.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

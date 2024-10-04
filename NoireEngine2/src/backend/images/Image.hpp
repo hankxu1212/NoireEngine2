@@ -7,12 +7,13 @@ class CommandBuffer;
 class Bitmap;
 	
 // A representation of a Vulkan image, sampler, and view.
-class Image : public Descriptor {
+class Image : public Descriptor 
+{
 public:
 	Image(VkFilter filter, VkSamplerAddressMode addressMode, VkSampleCountFlagBits samples, VkImageLayout layout, VkImageUsageFlags usage,
 		VkFormat format, uint32_t mipLevels, uint32_t arrayLayers, const VkExtent3D& extent);
 
-	~Image();
+	virtual ~Image();
 
 	void Destroy();
 

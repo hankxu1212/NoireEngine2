@@ -40,6 +40,7 @@ namespace sejp {
 		const glm::vec3 as_vec3() const;
 		uint32_t as_uint32t() const;
 		float as_float() const;
+		const std::optional<std::string>& as_texPath() const;
 	};
 
 	//how you make values:

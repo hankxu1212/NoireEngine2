@@ -2,6 +2,7 @@
 
 #include "core/resources/Module.hpp"
 #include "backend/VulkanContext.hpp"
+#include "renderer/materials/MaterialLibrary.hpp"
 #include "Scene.hpp"
 
 /**
@@ -9,7 +10,7 @@
  */
 class SceneManager : public Module::Registrar<SceneManager>
 {
-	inline static const bool Registered = Register(UpdateStage::Pre, DestroyStage::Normal, Requires<VulkanContext>());
+	inline static const bool Registered = Register(UpdateStage::Pre, DestroyStage::Normal, Requires<VulkanContext, MaterialLibrary>());
 
 public:
 	SceneManager();
