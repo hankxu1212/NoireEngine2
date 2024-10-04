@@ -14,6 +14,8 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/quaternion.hpp"
 
+using namespace ImGui;
+
 class ImGuiExt
 {
 public:
@@ -37,7 +39,7 @@ public:
 
 			// x
 			{
-				ImGui::Text(labels[0]);
+				Text(labels[0]);
 				SameLine();
 				valueChange |= DragFloat("##X", &x, sensitivity, 0.0f, 0.0f, "%.2f");
 				PopItemWidth();
@@ -46,7 +48,7 @@ public:
 
 			// z
 			{
-				ImGui::Text(labels[1]);
+				Text(labels[1]);
 				SameLine();
 				valueChange |= DragFloat("##Y", &y, sensitivity, 0.0f, 0.0f, "%.2f");
 				PopItemWidth();
@@ -69,10 +71,10 @@ public:
 
 	template<typename ...Args>
 	static void ColumnDragFloat(const char* text, Args... args) {
-		ImGui::Columns(2);
-		ImGui::Text(text);
-		ImGui::NextColumn();
-		ImGui::DragFloat(args...);
-		ImGui::Columns(1);
+		Columns(2);
+		Text(text);
+		NextColumn();
+		DragFloat(args...);
+		Columns(1);
 	}
 };

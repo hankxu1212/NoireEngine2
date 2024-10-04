@@ -7,6 +7,7 @@
 #include "Application.hpp"
 
 #include "imgui/imgui.h"
+#include "editor/ImGuiExtension.hpp"
 #include <iostream>
 
 RendererComponent::RendererComponent(Mesh* mesh_) :
@@ -54,6 +55,7 @@ void RendererComponent::Inspect()
 {
 	ImGui::PushID("Mesh Inspect");
 	{
+		ImGui::SeparatorText("Mesh");
 		ImGui::Columns(2);
 		ImGui::Text("%s", "Mesh Name");
 		ImGui::NextColumn();
@@ -61,6 +63,15 @@ void RendererComponent::Inspect()
 		ImGui::Columns(1);
 	}
 	ImGui::PopID();
+	
+	if (material) {
+		ImGui::SeparatorText("Material");
+		ImGui::PushID("Material Inspect");
+		{
+			material->Inspect();
+		}
+		ImGui::PopID();
+	}
 }
 
 template<>
