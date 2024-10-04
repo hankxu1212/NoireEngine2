@@ -56,6 +56,9 @@ ImGuiPipeline::ImGuiPipeline()
     // Setup Platform/Renderer backends
     GLFWwindow* window = Window::Get()->m_Window;
     ImGui_ImplGlfw_InitForVulkan(window, true);
+
+    // no depth 
+    s_Renderpass = std::make_unique<Renderpass>(false);
 }
 
 ImGuiPipeline::~ImGuiPipeline()
@@ -68,12 +71,6 @@ ImGuiPipeline::~ImGuiPipeline()
 
     if (m_DescriptorPool != VK_NULL_HANDLE) {
         vkDestroyDescriptorPool(VulkanContext::GetDevice(), m_DescriptorPool, nullptr);
-    }
-
-    DestroyFrameBuffers();
-
-    if (m_Renderpass != VK_NULL_HANDLE) {
-        vkDestroyRenderPass(VulkanContext::GetDevice(), m_Renderpass, nullptr);
     }
 }
 
@@ -98,46 +95,9 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
     }
 
     // begin render pass
-    VkExtent2D swapChainExtent = VulkanContext::Get()->getSwapChain()->getExtent();
-
-    static std::array< VkClearValue, 2 > clear_values{
-        VkClearValue{.color{.float32{1.0f, 0.5f, 0.5f, 1.0f} } },
-        VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
-    };
-
-    VkRenderPassBeginInfo begin_info{
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-        .renderPass = m_Renderpass,
-        .framebuffer = m_Framebuffers[VulkanContext::Get()->getCurrentFrame()],
-        .renderArea{
-            .offset = {.x = 0, .y = 0},
-            .extent = swapChainExtent,
-        },
-        .clearValueCount = uint32_t(clear_values.size()),
-        .pClearValues = clear_values.data(),
-    };
-
-    vkCmdBeginRenderPass(commandBuffer, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
-    {
-        VkRect2D scissor{
-            .offset = {.x = 0, .y = 0},
-            .extent = swapChainExtent,
-        };
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-        VkViewport viewport{
-            .x = 0.0f,
-            .y = 0.0f,
-            .width = float(swapChainExtent.width),
-            .height = float(swapChainExtent.height),
-            .minDepth = 0.0f,
-            .maxDepth = 1.0f,
-        };
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
-    }
-    vkCmdEndRenderPass(commandBuffer);
+    s_Renderpass->Begin(commandBuffer);
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+    s_Renderpass->End(commandBuffer);
 }
 
 void ImGuiPipeline::CreateRenderPass()
@@ -173,63 +133,26 @@ void ImGuiPipeline::CreateRenderPass()
        .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
     };
 
-    VkRenderPassCreateInfo info = {};
-    info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    info.attachmentCount = 1;
-    info.pAttachments = &color_attachment;
-    info.subpassCount = 1;
-    info.pSubpasses = &subpass;
-    info.dependencyCount = 1;
-    info.pDependencies = &dependency;
-
+    VkRenderPassCreateInfo info = {
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+        .attachmentCount = 1,
+        .pAttachments = &color_attachment,
+        .subpassCount = 1,
+        .pSubpasses = &subpass,
+        .dependencyCount = 1,
+        .pDependencies = &dependency
+    };
 
     VulkanContext::VK_CHECK(
-        vkCreateRenderPass(VulkanContext::GetDevice(), &info, nullptr, &m_Renderpass),
+        vkCreateRenderPass(VulkanContext::GetDevice(), &info, nullptr, &s_Renderpass->renderpass),
         "[Vulkan] Create Render pass in ImGui pipeline failed"
     );
 }
 
 void ImGuiPipeline::Rebuild()
 {
-    DestroyFrameBuffers();
-
-    // TODO: add support for multiple swapchains
-    const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
-
-    //Make framebuffers for each swapchain image:
-    m_Framebuffers.assign(swapchain->getImageViews().size(), VK_NULL_HANDLE);
-    for (size_t i = 0; i < swapchain->getImageViews().size(); ++i) {
-        std::array< VkImageView, 1 > attachments{
-            swapchain->getImageViews()[i],
-        };
-        VkFramebufferCreateInfo create_info{
-            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-            .renderPass = m_Renderpass,
-            .attachmentCount = uint32_t(attachments.size()),
-            .pAttachments = attachments.data(),
-            .width = swapchain->getExtent().width,
-            .height = swapchain->getExtent().height,
-            .layers = 1,
-        };
-
-        VulkanContext::VK_CHECK(
-            vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_Framebuffers[i]),
-            "[vulkan] Creating frame buffer failed"
-        );
-    }
+    s_Renderpass->Rebuild();
 }
-
-void ImGuiPipeline::DestroyFrameBuffers()
-{
-    for (VkFramebuffer& framebuffer : m_Framebuffers)
-    {
-        assert(framebuffer != VK_NULL_HANDLE);
-        vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
-        framebuffer = VK_NULL_HANDLE;
-    }
-    m_Framebuffers.clear();
-}
-
 
 void ImGuiPipeline::CreatePipeline()
 {
@@ -245,7 +168,7 @@ void ImGuiPipeline::CreatePipeline()
         .QueueFamily = context->getLogicalDevice()->getGraphicsFamily(),
         .Queue = context->getLogicalDevice()->getGraphicsQueue(),
         .DescriptorPool = m_DescriptorPool,
-        .RenderPass = m_Renderpass,
+        .RenderPass = s_Renderpass->renderpass,
         .MinImageCount = 2,
         .ImageCount = 3,
         .MSAASamples = VK_SAMPLE_COUNT_1_BIT,

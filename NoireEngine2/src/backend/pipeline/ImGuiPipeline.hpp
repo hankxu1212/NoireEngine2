@@ -2,6 +2,7 @@
 
 #include "VulkanPipeline.hpp"
 #include "backend/images/ImageDepth.hpp"
+#include "backend/renderpass/Renderpass.hpp"
 
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_vulkan.h"
@@ -26,7 +27,6 @@ public:
 
 private:
 	void SetTheme();
-	void DestroyFrameBuffers();
 
 private:
 	// the current ImGuiContext
@@ -34,7 +34,6 @@ private:
 	bool									m_BlockEvents = true;
 
 	VkDescriptorPool						m_DescriptorPool = VK_NULL_HANDLE;
-	VkRenderPass							m_Renderpass = VK_NULL_HANDLE;
-	std::vector<VkFramebuffer>				m_Framebuffers;
+	std::unique_ptr<Renderpass>				s_Renderpass;
 };
 

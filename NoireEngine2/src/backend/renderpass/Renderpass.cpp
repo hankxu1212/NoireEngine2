@@ -18,22 +18,25 @@ Renderpass::~Renderpass()
 
 void Renderpass::Rebuild()
 {
-	if (s_SwapchainDepthImage != nullptr && s_SwapchainDepthImage->getImage() != VK_NULL_HANDLE) {
-		DestroyFrameBuffers();
-	}
+	DestroyFrameBuffers();
 
 	// TODO: add support for multiple swapchains
 	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
-	s_SwapchainDepthImage = std::make_unique<ImageDepth>(swapchain->getExtentVec2(), VK_SAMPLE_COUNT_1_BIT);
+
+	if (hasDepth)
+		s_SwapchainDepthImage = std::make_unique<ImageDepth>(swapchain->getExtentVec2(), VK_SAMPLE_COUNT_1_BIT);
 
 	//Make framebuffers for each swapchain image:
 	m_Framebuffers.assign(swapchain->getImageViews().size(), VK_NULL_HANDLE);
-	for (size_t i = 0; i < swapchain->getImageViews().size(); ++i) {
-		std::array< VkImageView, 2 > attachments{
-			swapchain->getImageViews()[i],
-			s_SwapchainDepthImage->getView()
-		};
-		VkFramebufferCreateInfo create_info{
+	for (size_t i = 0; i < swapchain->getImageViews().size(); ++i) 
+	{
+		std::vector<VkImageView> attachments;
+		attachments.emplace_back(swapchain->getImageViews()[i]);
+		if (hasDepth)
+			attachments.emplace_back(s_SwapchainDepthImage->getView());
+
+		VkFramebufferCreateInfo create_info
+		{
 			.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
 			.renderPass = renderpass,
 			.attachmentCount = uint32_t(attachments.size()),
@@ -99,8 +102,8 @@ void Renderpass::DestroyFrameBuffers()
 {
 	for (VkFramebuffer& framebuffer : m_Framebuffers)
 	{
-		assert(framebuffer != VK_NULL_HANDLE);
-		vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
+		if(framebuffer != VK_NULL_HANDLE)
+			vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
 		framebuffer = VK_NULL_HANDLE;
 	}
 	m_Framebuffers.clear();
