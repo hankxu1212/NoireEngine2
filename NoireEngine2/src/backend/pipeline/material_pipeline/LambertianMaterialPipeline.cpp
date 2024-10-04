@@ -175,7 +175,7 @@ void LambertianMaterialPipeline::CreateGraphicsPipeline()
 		.pColorBlendState = &color_blend_state,
 		.pDynamicState = &dynamic_state,
 		.layout = m_PipelineLayout,
-		.renderPass = p_ObjectPipeline->m_Renderpass,
+		.renderPass = p_ObjectPipeline->m_Renderpass->renderpass,
 		.subpass = 0,
 	};
 

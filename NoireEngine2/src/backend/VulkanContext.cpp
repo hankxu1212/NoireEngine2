@@ -150,6 +150,14 @@ void VulkanContext::VK_CHECK(VkResult err, const char* msg)
     NE_ERROR(std::format("[vulkan] Error: {} with errorno: {}", msg, string_VkResult(err)));
 }
 
+void VulkanContext::VK_CHECK(VkResult err)
+{
+    if (err == VK_SUCCESS)
+        return;
+
+    NE_ERROR("[vulkan] Error: ", string_VkResult(err));
+}
+
 std::shared_ptr<CommandPool>& VulkanContext::GetCommandPool(const TID& threadId)
 {
     if (auto it = m_CommandPools.find(threadId); it != m_CommandPools.end())

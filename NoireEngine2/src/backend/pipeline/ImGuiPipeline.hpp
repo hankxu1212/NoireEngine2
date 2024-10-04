@@ -35,7 +35,6 @@ private:
 
 	VkDescriptorPool						m_DescriptorPool = VK_NULL_HANDLE;
 	VkRenderPass							m_Renderpass = VK_NULL_HANDLE;
-	std::unique_ptr<ImageDepth>				s_SwapchainDepthImage;
 	std::vector<VkFramebuffer>				m_Framebuffers;
 };
 

@@ -95,13 +95,14 @@ const vulkan_objs = [
 	maek.CPP('backend/images/ImageDepth.cpp'),
 	maek.CPP('backend/buffers/Buffer.cpp'),
 	maek.CPP('backend/renderpass/Swapchain.cpp'),
+	maek.CPP('backend/renderpass/Renderpass.cpp'),
 	maek.CPP('backend/renderer/Renderer.cpp'),
 	maek.CPP('backend/shader/VulkanShader.cpp'),
 	maek.CPP('backend/descriptor/DescriptorAllocator.cpp'),
 	maek.CPP('backend/descriptor/DescriptorLayoutCache.cpp'),
 	maek.CPP('backend/descriptor/DescriptorBuilder.cpp'),
 	maek.CPP('backend/pipeline/material_pipeline/MaterialPipeline.cpp'),
-	maek.CPP('backend/pipeline/ObjectPipeline.cpp')
+	maek.CPP('backend/pipeline/ObjectPipeline.cpp'),
 ]
 
 

@@ -61,6 +61,7 @@ public:
 
 public:
 	static void VK_CHECK(VkResult err, const char* msg);
+	static void VK_CHECK(VkResult err);
 
 	static inline const VkDevice			GetDevice() { return *(VulkanContext::Get()->getLogicalDevice()); }
 	inline const LogicalDevice*				getLogicalDevice() const { return s_LogicalDevice.get(); }

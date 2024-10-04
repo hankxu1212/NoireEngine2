@@ -7,6 +7,7 @@
 #include "backend/images/ImageDepth.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
 #include "backend/pipeline/material_pipeline/MaterialPipeline.hpp"
+#include "backend/renderpass/Renderpass.hpp"
 
 #include <type_traits>
 #include "glm/glm.hpp"
@@ -43,8 +44,6 @@ private:
 
 	void RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
-	void DestroyFrameBuffers();
-
 	struct Workspace
 	{
 		//location for ObjectsPipeline::World data: (streamed to GPU per-frame)
@@ -75,9 +74,7 @@ private:
 	DescriptorAllocator						m_DescriptorAllocator;
 	DescriptorLayoutCache					m_DescriptorLayoutCache;
 
-	VkRenderPass							m_Renderpass = VK_NULL_HANDLE;
-	std::unique_ptr<ImageDepth>				s_SwapchainDepthImage;
-	std::vector<VkFramebuffer>				m_Framebuffers;
+	std::unique_ptr<Renderpass>				m_Renderpass;
 
 	// for draw indirect
 	struct IndirectBatch

@@ -7,14 +7,6 @@
 #include <vulkan/vk_enum_string_helper.h>
 #include "glm/gtx/string_cast.hpp"
 
-static void imgui_vk_check(VkResult err)
-{
-    if (err == VK_SUCCESS)
-        return;
-
-    NE_ERROR("[vulkan] Error: {}", string_VkResult(err));
-}
-
 // allocates a seperate custom descriptor pool for imgui
 static void CreateImGuiDescriptorPool(VkDevice logicalDevice, VkDescriptorPool& descriptorPool)
 {
@@ -41,7 +33,7 @@ static void CreateImGuiDescriptorPool(VkDevice logicalDevice, VkDescriptorPool& 
         .pPoolSizes = pool_sizes
     };
 
-    imgui_vk_check(vkCreateDescriptorPool(logicalDevice, &pool_info, nullptr, &descriptorPool));
+    VulkanContext::VK_CHECK(vkCreateDescriptorPool(logicalDevice, &pool_info, nullptr, &descriptorPool));
 }
 
 
@@ -199,13 +191,10 @@ void ImGuiPipeline::CreateRenderPass()
 
 void ImGuiPipeline::Rebuild()
 {
-    if (s_SwapchainDepthImage != nullptr && s_SwapchainDepthImage->getImage() != VK_NULL_HANDLE) {
-        DestroyFrameBuffers();
-    }
+    DestroyFrameBuffers();
 
     // TODO: add support for multiple swapchains
     const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
-    s_SwapchainDepthImage = std::make_unique<ImageDepth>(swapchain->getExtentVec2(), VK_SAMPLE_COUNT_1_BIT);
 
     //Make framebuffers for each swapchain image:
     m_Framebuffers.assign(swapchain->getImageViews().size(), VK_NULL_HANDLE);
@@ -239,7 +228,6 @@ void ImGuiPipeline::DestroyFrameBuffers()
         framebuffer = VK_NULL_HANDLE;
     }
     m_Framebuffers.clear();
-    s_SwapchainDepthImage.reset();
 }
 
 
@@ -264,7 +252,7 @@ void ImGuiPipeline::CreatePipeline()
         .PipelineCache = context->getPipelineCache(),
         .Subpass = 0,
         .Allocator = nullptr,
-        .CheckVkResultFn = imgui_vk_check,
+        .CheckVkResultFn = VulkanContext::VK_CHECK,
     };
 
     ImGui_ImplVulkan_Init(&init_info);
