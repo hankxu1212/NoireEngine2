@@ -228,6 +228,7 @@
   <ItemGroup>
     <ClInclude Include="src\backend\renderpass\Renderpass.hpp" />
     <ClInclude Include="src\backend\pipeline\LinesPipeline.hpp" />
+    <ClInclude Include="src\renderer\gizmos\GizmosInstance.hpp" />
     <ClInclude Include="src\renderer\materials\MaterialLibrary.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipeline.hpp" />

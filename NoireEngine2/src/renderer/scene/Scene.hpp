@@ -3,6 +3,7 @@
 #include "utils/Singleton.hpp"
 #include "TransformMatrixStack.hpp"
 #include "renderer/object/ObjectInstance.hpp"
+#include "renderer/gizmos/GizmosInstance.hpp"
 #include "utils/sejp/sejp.hpp"
 #include "SceneNode.hpp"
 #include "renderer/lighting/Light.hpp"
@@ -67,11 +68,13 @@ public:
 
 	void PushObjectInstance(ObjectInstance&& instance);
 
-	CameraComponent* GetRenderCam();
+	void PushGizmosInstance(GizmosInstance* instance);
 
-	CameraComponent* GetCullingCam();
+	CameraComponent* GetRenderCam() const;
 
-	inline CameraComponent* sceneCam();
+	CameraComponent* GetCullingCam() const;
+
+	inline CameraComponent* sceneCam() const;
 	
 	inline CameraComponent* debugCam() const;
 
@@ -85,6 +88,8 @@ public:
 	inline size_t getSceneUniformSize() const { return sizeof(SceneUniform); }
 
 	inline const std::vector<ObjectInstance>& getObjectInstances() const { return m_ObjectInstances; }
+
+	inline const std::vector<GizmosInstance*>& getGizmosInstances() const { return m_GizmosInstances; }
 
 	inline const std::vector<Light*>& getLightInstances() const { return m_SceneLights; }
 
@@ -105,7 +110,6 @@ private:
 	// a list of cameras, will be sorted everyframe ordered by their priority
 	// in scene/debug mode, the scene will choose the smallest priority as the rendering/culling camera
 	std::vector<CameraComponent*> m_SceneCameras;
-	bool sceneCamDirty = true;
 
 	// in user mode, the scene will render everything through the debug camera
 	CameraComponent* m_DebugCamera = nullptr;
@@ -117,6 +121,7 @@ private:
 	SceneUniform m_SceneInfo;
 
 	std::vector<ObjectInstance> m_ObjectInstances;
+	std::vector<GizmosInstance*> m_GizmosInstances;
 
 	// a list of lights
 	std::vector<Light*> m_SceneLights;

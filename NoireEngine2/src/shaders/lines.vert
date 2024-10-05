@@ -12,5 +12,5 @@ layout(set=0, binding=0, std140) uniform Camera {
 
 void main() {
 	gl_Position = CLIP_FROM_WORLD * vec4(Position, 1.0);
-	color = vec4(Position, 1.0);
+	color = Color;
 }

@@ -136,13 +136,13 @@ void Mesh::Load()
 
 void Mesh::CreateAABB(const std::vector<Vertex>& vertices)
 {
-	m_AABB.min = glm::vec3(std::numeric_limits<float>::infinity());
-	m_AABB.max = -glm::vec3(std::numeric_limits<float>::infinity());
+	m_AABB.originMin = glm::vec3(FLT_MAX);
+	m_AABB.originMax = glm::vec3(-FLT_MAX);
 
 	for (uint32_t i = 0; i < vertices.size(); ++i)
 	{
-		m_AABB.min = glm::min(m_AABB.min, vertices[i].position);
-		m_AABB.max = glm::max(m_AABB.max, vertices[i].position);
+		m_AABB.originMin = glm::min(m_AABB.originMin, vertices[i].position);
+		m_AABB.originMax = glm::max(m_AABB.originMax, vertices[i].position);
 	}
 }
 

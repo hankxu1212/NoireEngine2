@@ -35,9 +35,11 @@ void Scene::Unload()
 {
 }
 
+static bool sceneCamDirty = true; // prompt update again
+
 void Scene::Update()
 {
-	sceneCamDirty = true; // prompt update again
+	sceneCamDirty = true;
 
 	// update entities and components
 	Entity::root().Update();
@@ -53,9 +55,11 @@ void Scene::Render()
 		return;
 	}
 
-	// push all transforms to pipeline
-	m_MatrixStack.Clear();
 	m_ObjectInstances.clear();
+	m_GizmosInstances.clear();
+	m_MatrixStack.Clear();
+
+	// push all transforms to pipeline
 	for (auto& child : Entity::root().children()) 
 	{
 		child->RenderPass(m_MatrixStack);
@@ -405,8 +409,13 @@ void Scene::PushObjectInstance(ObjectInstance&& instance)
 	m_ObjectInstances.emplace_back(std::move(instance));
 }
 
+void Scene::PushGizmosInstance(GizmosInstance* instance)
+{
+	m_GizmosInstances.emplace_back(instance);
+}
+
 // rendering will be on debug cam, unless it is in scene mode
-CameraComponent* Scene::GetRenderCam()
+CameraComponent* Scene::GetRenderCam() const
 {
 	if (SceneManager::Get()->getCameraMode() == CameraMode::Scene)
 		return sceneCam();
@@ -415,7 +424,7 @@ CameraComponent* Scene::GetRenderCam()
 }
 
 // culling will be on scene cam, unless it is in user mode
-CameraComponent* Scene::GetCullingCam()
+CameraComponent* Scene::GetCullingCam() const
 {
 	if (SceneManager::Get()->getCameraMode() == CameraMode::User)
 		return debugCam();
@@ -423,7 +432,7 @@ CameraComponent* Scene::GetCullingCam()
 		return sceneCam();
 }
 
-CameraComponent* Scene::sceneCam()
+CameraComponent* Scene::sceneCam() const
 {
 	static CameraComponent* SceneCamera = nullptr;
 

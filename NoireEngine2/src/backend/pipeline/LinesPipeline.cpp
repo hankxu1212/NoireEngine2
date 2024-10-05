@@ -2,6 +2,8 @@
 #include "backend/shader/VulkanShader.h"
 #include "backend/VulkanContext.hpp"
 #include "renderer/vertices/PosColVertex.hpp"
+#include "renderer/components/CameraComponent.hpp"
+#include "renderer/scene/Scene.hpp"
 
 static uint32_t vert_code[] =
 #include "spv/shaders/lines.vert.inl"
@@ -18,6 +20,17 @@ LinesPipeline::LinesPipeline(ObjectPipeline* objectPipeline) :
 
 LinesPipeline::~LinesPipeline()
 {
+	for (Workspace& workspace : workspaces)
+	{
+		workspace.LinesVerticesSrc.Destroy();
+		workspace.LinesVertices.Destroy();
+		workspace.CameraSrc.Destroy();
+		workspace.Camera.Destroy();
+	}
+	workspaces.clear();
+
+	m_DescriptorAllocator.Cleanup();
+
 	if (m_PipelineLayout != VK_NULL_HANDLE) {
 		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_PipelineLayout, nullptr);
 		m_PipelineLayout = VK_NULL_HANDLE;
@@ -28,10 +41,139 @@ LinesPipeline::~LinesPipeline()
 		m_Pipeline = VK_NULL_HANDLE;
 	}
 
-	vkDestroyDescriptorSetLayout(VulkanContext::GetDevice(), set0_Camera, nullptr);
+	if (set0_CameraLayout != VK_NULL_HANDLE) {
+		vkDestroyDescriptorSetLayout(VulkanContext::GetDevice(), set0_CameraLayout, nullptr);
+		set0_CameraLayout = VK_NULL_HANDLE;
+	}
 }
 
 void LinesPipeline::CreatePipeline()
+{
+	workspaces.resize(VulkanContext::Get()->getWorkspaceSize());
+
+	CreateDescriptors();
+	CreatePipelineLayout();
+	CreateGraphicsPipeline();
+}
+static uint32_t totalGizmosSize;
+
+void LinesPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+{
+	if (scene->getGizmosInstances().empty())
+		return;
+
+	Workspace& workspace = workspaces[surfaceId];
+
+	{ //draw with the lines pipeline:
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
+
+		{ //use lines_vertices (offset 0) as vertex buffer binding 0:
+			std::array< VkBuffer, 1 > vertex_buffers{ workspace.LinesVertices.getBuffer()};
+			std::array< VkDeviceSize, 1 > offsets{ 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, uint32_t(vertex_buffers.size()), vertex_buffers.data(), offsets.data());
+		}
+
+		{ //bind Camera descriptor set:
+			std::array< VkDescriptorSet, 1 > descriptor_sets{
+				workspace.set0_Camera, //0: Camera
+			};
+			vkCmdBindDescriptorSets(
+				commandBuffer, //command buffer
+				VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+				m_PipelineLayout, //pipeline layout
+				0, //first set
+				uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+				0, nullptr //dynamic offsets count, ptr
+			);
+		}
+
+		//draw lines vertices:
+		vkCmdDraw(commandBuffer, totalGizmosSize, 1, 0, 0);
+	}
+}
+
+void* OffsetPointer(void* ptr, size_t offset) {
+	return static_cast<void*>(static_cast<std::byte*>(ptr) + offset);
+}
+
+void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+{
+	Workspace& workspace = workspaces[surfaceId];
+
+	const std::vector<GizmosInstance*>& gizmos = scene->getGizmosInstances();
+	
+	if (!gizmos.empty()) { //upload lines vertices:
+		//[re-]allocate lines buffers if needed:
+		size_t needed_bytes = 0;
+		for (int i = 0; i < gizmos.size(); ++i)
+			needed_bytes += gizmos[i]->m_LinesVertices.size() * sizeof(PosColVertex);
+		totalGizmosSize = uint32_t(needed_bytes / sizeof(PosColVertex));
+
+		if (workspace.LinesVerticesSrc.getBuffer() == VK_NULL_HANDLE || workspace.LinesVerticesSrc.getSize() < needed_bytes) {
+			//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
+			size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
+
+			workspace.LinesVerticesSrc = Buffer(
+				new_bytes,
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //host-visible memory, coherent (no special sync needed)
+				Buffer::Mapped //get a pointer to the memory
+			);
+			workspace.LinesVertices = Buffer(
+				new_bytes,
+				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //going to use as vertex buffer, also going to have GPU into this memory
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT //GPU-local memory
+			);
+
+			std::cout << "Re-allocated lines buffers to " << new_bytes << " bytes." << std::endl;
+		}
+
+		assert(workspace.LinesVerticesSrc.getSize() >= needed_bytes);
+
+		//host-side copy into LinesVerticesSrc:
+		size_t offset = 0;
+		for (int i = 0; i < gizmos.size(); ++i) {
+			auto size = gizmos[i]->m_LinesVertices.size() * sizeof(PosColVertex);
+			std::memcpy(
+				OffsetPointer(workspace.LinesVerticesSrc.data(), offset),
+				gizmos[i]->m_LinesVertices.data(), 
+				size
+			);
+			offset += size;
+		}
+		Buffer::CopyBuffer(commandBuffer, workspace.LinesVerticesSrc.getBuffer(), workspace.LinesVertices.getBuffer(), needed_bytes);
+	}
+
+	{ //upload camera info:
+		LinesPipeline::CameraUniform camera{
+			.clipFromWorld = scene->GetRenderCam()->camera()->getWorldToClipMatrix()
+		};
+
+		//host-side copy into Camera_src:
+		memcpy(workspace.CameraSrc.data(), &camera, sizeof(camera));
+
+		Buffer::CopyBuffer(commandBuffer, workspace.CameraSrc.getBuffer(), workspace.Camera.getBuffer(), sizeof(camera));
+	}
+}
+
+void LinesPipeline::CreatePipelineLayout()
+{
+	std::array< VkDescriptorSetLayout, 1 > layouts{
+		set0_CameraLayout,
+	};
+
+	VkPipelineLayoutCreateInfo create_info{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+		.setLayoutCount = uint32_t(layouts.size()),
+		.pSetLayouts = layouts.data(),
+		.pushConstantRangeCount = 0,
+		.pPushConstantRanges = nullptr,
+	};
+
+	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
+}
+
+void LinesPipeline::CreateGraphicsPipeline()
 {
 	VulkanShader vertModule(vert_code, VulkanShader::ShaderStage::Vertex);
 	VulkanShader fragModule(frag_code, VulkanShader::ShaderStage::Frag);
@@ -40,41 +182,6 @@ void LinesPipeline::CreatePipeline()
 		vertModule.shaderStage(),
 		fragModule.shaderStage()
 	};
-
-	{ //the set0_Camera layout holds a Camera structure in a uniform buffer used in the vertex shader:
-		std::array< VkDescriptorSetLayoutBinding, 1 > bindings{
-			VkDescriptorSetLayoutBinding{
-				.binding = 0,
-				.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				.descriptorCount = 1,
-				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT
-			},
-		};
-
-		VkDescriptorSetLayoutCreateInfo create_info{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.bindingCount = uint32_t(bindings.size()),
-			.pBindings = bindings.data(),
-		};
-
-		VulkanContext::VK_CHECK(vkCreateDescriptorSetLayout(VulkanContext::GetDevice(), &create_info, nullptr, &set0_Camera));
-	}
-
-	{
-		std::array< VkDescriptorSetLayout, 1 > layouts{
-			set0_Camera,
-		};
-
-		VkPipelineLayoutCreateInfo create_info{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-			.setLayoutCount = uint32_t(layouts.size()),
-			.pSetLayouts = layouts.data(),
-			.pushConstantRangeCount = 0,
-			.pPushConstantRanges = nullptr,
-		};
-
-		VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
-	}
 
 	//the viewport and scissor state will be set at runtime for the pipeline:
 	std::vector< VkDynamicState > dynamic_states{
@@ -120,7 +227,7 @@ void LinesPipeline::CreatePipeline()
 		.cullMode = VK_CULL_MODE_BACK_BIT,
 		.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
 		.depthBiasEnable = VK_FALSE,
-		.lineWidth = 1.0f,
+		.lineWidth = 2.0f,
 	};
 
 	//multisampling will be disabled (one sample per pixel):
@@ -176,6 +283,32 @@ void LinesPipeline::CreatePipeline()
 	VulkanContext::VK_CHECK(vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &create_info, nullptr, &m_Pipeline));
 }
 
-void LinesPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void LinesPipeline::CreateDescriptors()
 {
+	// create world and transform descriptor
+	for (Workspace& workspace : workspaces)
+	{
+		workspace.CameraSrc = Buffer(
+			sizeof(CameraUniform),
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			Buffer::Mapped
+		);
+		workspace.Camera = Buffer(
+			sizeof(CameraUniform),
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
+
+		VkDescriptorBufferInfo CameraInfo
+		{
+			.buffer = workspace.Camera.getBuffer(),
+			.offset = 0,
+			.range = workspace.Camera.getSize(),
+		};
+
+		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+			.BindBuffer(0, &CameraInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.Build(workspace.set0_Camera, set0_CameraLayout);
+	}
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer/components/Component.hpp"
+#include "renderer/gizmos/GizmosInstance.hpp"
 
 class Mesh;
 class Material;
@@ -21,4 +22,5 @@ public:
 
 	Mesh* mesh = nullptr;
 	Material* material = nullptr;
+	GizmosInstance gizmos;
 };

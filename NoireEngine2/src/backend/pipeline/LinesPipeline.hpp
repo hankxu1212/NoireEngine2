@@ -3,6 +3,8 @@
 #include "VulkanPipeline.hpp"
 #include "backend/renderpass/Renderpass.hpp"
 #include "backend/buffers/Buffer.hpp"
+#include "renderer/vertices/PosColVertex.hpp"
+#include "backend/descriptor/DescriptorBuilder.hpp"
 
 class ObjectPipeline;
 
@@ -10,30 +12,43 @@ class LinesPipeline : public VulkanPipeline
 {
 public:
 	LinesPipeline(ObjectPipeline*);
-	virtual ~LinesPipeline();
+	~LinesPipeline();
 
 	void CreatePipeline() override;
 
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId) override;
 
-	//descriptor set layouts:
-	VkDescriptorSetLayout set0_Camera = VK_NULL_HANDLE;
+	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
+
+	void CreateGraphicsPipeline();
+	void CreatePipelineLayout();
+	void CreateDescriptors();
+
+	VkDescriptorSetLayout set0_CameraLayout = VK_NULL_HANDLE;
 
 	//types for descriptors:
-	struct Camera {
-		glm::mat4 CLIP_FROM_WORLD;
+	struct CameraUniform {
+		glm::mat4 clipFromWorld;
 	};
-	static_assert(sizeof(Camera) == 64);
+	static_assert(sizeof(CameraUniform) == 64);
 
 	struct Workspace
 	{
-		Buffer LinesVerticesSrc; //host coherent; mapped
 		Buffer LinesVertices; //device-local
+		Buffer LinesVerticesSrc; //host coherent; mapped
+
+		//location for LinesPipeline::Camera data: (streamed to GPU per-frame)
+		Buffer CameraSrc; //host coherent; mapped
+		Buffer Camera; //device-local
+		VkDescriptorSet set0_Camera; //references Camera
 	};
 
-	std::vector< Workspace > workspaces;
+	std::vector<Workspace> workspaces;
 
 	VkPipeline			m_Pipeline;
 	VkPipelineLayout	m_PipelineLayout;
 	ObjectPipeline*		p_ObjectPipeline;
+
+	DescriptorAllocator						m_DescriptorAllocator;
+	DescriptorLayoutCache					m_DescriptorLayoutCache;
 };

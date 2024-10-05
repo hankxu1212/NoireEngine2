@@ -289,8 +289,7 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 			//update the descriptor set:
 			VkDescriptorBufferInfo Transforms_info = CreateTransformStorageBuffer(workspace, new_bytes);
 
-			DescriptorBuilder builder;
-			builder.Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+			DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
 				.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 				.Write(workspace.set1_Transforms);
 		}
@@ -308,26 +307,25 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 		}
 
 		Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), needed_bytes);
+	}
 
-		{ //memory barrier to make sure copies complete before rendering happens:
-			std::array< VkBufferMemoryBarrier, 1> memoryBarriers = { 
-				workspace.Transforms.CreateMemoryBarrier(VK_ACCESS_MEMORY_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT),
-			};
+	s_LinesPipeline->Prepare(scene, commandBuffer, surfaceId);
 
-			// we only allow a workspace to be "reused" once its work has been fully cleared and executed 
-			// so src is never in danger of being overwritten 
-			// -- we only write to it by direct memory mapped writes from the host and the device reads it with the copy command
-			// -- Ajax
+	{ //memory barrier to make sure copies complete before rendering happens:
+		VkMemoryBarrier memory_barrier{
+			.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+			.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
+			.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+		};
 
-			vkCmdPipelineBarrier(commandBuffer,
-				VK_PIPELINE_STAGE_TRANSFER_BIT, //srcStageMask
-				VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, //dstStageMask
-				0, //dependencyFlags
-				0, nullptr, //memoryBarriers (count, data)
-				1, memoryBarriers.data(), //bufferMemoryBarriers (count, data)
-				0, nullptr //imageMemoryBarriers (count, data)
-			);
-		}
+		vkCmdPipelineBarrier(commandBuffer,
+			VK_PIPELINE_STAGE_TRANSFER_BIT, //srcStageMask
+			VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, //dstStageMask
+			0, //dependencyFlags
+			1, &memory_barrier, //memoryBarriers (count, data)
+			0, nullptr, //bufferMemoryBarriers (count, data)
+			0, nullptr //imageMemoryBarriers (count, data)
+		);
 	}
 }
 

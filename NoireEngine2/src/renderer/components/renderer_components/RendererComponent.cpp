@@ -49,6 +49,9 @@ void RendererComponent::Render(const glm::mat4& model)
 		mesh, // mesh pointer
 		material // material pointer
 	});
+
+	gizmos.DrawLineCubeAroundAABB(mesh->getAABB());
+	GetScene()->PushGizmosInstance(&gizmos);
 }
 
 void RendererComponent::Inspect()
