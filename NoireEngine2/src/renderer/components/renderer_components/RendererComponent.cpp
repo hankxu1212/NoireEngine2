@@ -5,6 +5,7 @@
 #include "renderer/object/Mesh.hpp"
 #include "renderer/materials/Material.hpp"
 #include "Application.hpp"
+#include "backend/pipeline/ObjectPipeline.hpp"
 
 #include "imgui/imgui.h"
 #include "editor/ImGuiExtension.hpp"
@@ -50,8 +51,10 @@ void RendererComponent::Render(const glm::mat4& model)
 		material // material pointer
 	});
 
-	gizmos.DrawLineCubeAroundAABB(mesh->getAABB());
-	GetScene()->PushGizmosInstance(&gizmos);
+	if (ObjectPipeline::UseGizmos && useGizmos) {
+		gizmos.DrawLineCubeAroundAABB(mesh->getAABB());
+		GetScene()->PushGizmosInstance(&gizmos);
+	}
 }
 
 void RendererComponent::Inspect()
@@ -64,6 +67,13 @@ void RendererComponent::Inspect()
 		ImGui::NextColumn();
 		ImGui::Text(mesh->getInfo().name.c_str());
 		ImGui::Columns(1);
+
+		ImGui::Columns(2);
+		ImGui::Text("Gizmos");
+		ImGui::NextColumn();
+		ImGui::Checkbox("###USEGIZMOS", &useGizmos);
+		ImGui::Columns(1);
+		ImGui::Separator(); // -----------------------------------------------------
 	}
 	ImGui::PopID();
 	

@@ -26,6 +26,7 @@ public:
 	virtual ~ObjectPipeline();
 
 	inline static size_t ObjectsDrawn, VerticesDrawn, NumDrawCalls;
+	inline static bool UseGizmos = true;
 
 public:
 	void CreateRenderPass() override;
@@ -41,7 +42,7 @@ public:
 private:
 	void CreateDescriptors();
 	
-	void PushSceneDrawInfo(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
+	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
 	void RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
@@ -70,7 +71,6 @@ private:
 
 	std::vector<Workspace> workspaces;
 
-	// texture
 	VkDescriptorSet set2_Textures;
 
 	DescriptorAllocator						m_DescriptorAllocator;

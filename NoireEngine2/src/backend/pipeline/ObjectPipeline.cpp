@@ -246,7 +246,7 @@ void ObjectPipeline::CreatePipeline()
 
 void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
-	PushSceneDrawInfo(scene, commandBuffer, surfaceId);
+	Prepare(scene, commandBuffer, surfaceId);
 	m_Renderpass->Begin(commandBuffer);
 	RenderPass(scene, commandBuffer, surfaceId);
 	m_Renderpass->End(commandBuffer);
@@ -257,7 +257,7 @@ void ObjectPipeline::Update(const Scene* scene)
 
 }
 
-void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
 	Workspace& workspace = workspaces[surfaceId];
 
@@ -308,8 +308,10 @@ void ObjectPipeline::PushSceneDrawInfo(const Scene* scene, const CommandBuffer& 
 
 		Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), needed_bytes);
 	}
-
-	s_LinesPipeline->Prepare(scene, commandBuffer, surfaceId);
+	
+	if (UseGizmos) {
+		s_LinesPipeline->Prepare(scene, commandBuffer, surfaceId);
+	}
 
 	{ //memory barrier to make sure copies complete before rendering happens:
 		VkMemoryBarrier memory_barrier{
@@ -398,7 +400,9 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 	}
 
 	// draw lines
-	s_LinesPipeline->Render(scene, commandBuffer, surfaceId);
+	if (UseGizmos) {
+		s_LinesPipeline->Render(scene, commandBuffer, surfaceId);
+	}
 }
 
 std::vector<ObjectPipeline::IndirectBatch> ObjectPipeline::CompactDraws(const std::vector<ObjectInstance>& objects)

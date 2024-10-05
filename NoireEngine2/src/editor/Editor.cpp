@@ -291,9 +291,16 @@ void Editor::ShowStats()
 
         // enable UI
         ImGui::Columns(2);
-        ImGui::Text("%s", "Stats Only UI");
+        ImGui::Text("Stats Only");
         ImGui::NextColumn();
         ImGui::Checkbox("##STATSONLYUI", &statsOnly);
+        ImGui::Columns(1);
+        ImGui::Separator(); // -----------------------------------------------------
+
+        ImGui::Columns(2);
+        ImGui::Text("Gizmos");
+        ImGui::NextColumn();
+        ImGui::Checkbox("##DRAWGIZMOS", &ObjectPipeline::UseGizmos);
         ImGui::Columns(1);
         ImGui::Separator(); // -----------------------------------------------------
 

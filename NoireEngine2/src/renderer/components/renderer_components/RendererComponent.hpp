@@ -23,4 +23,5 @@ public:
 	Mesh* mesh = nullptr;
 	Material* material = nullptr;
 	GizmosInstance gizmos;
+	bool useGizmos = true;
 };
