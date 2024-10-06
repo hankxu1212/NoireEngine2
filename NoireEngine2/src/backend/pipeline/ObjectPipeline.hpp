@@ -48,14 +48,11 @@ private:
 
 	struct Workspace
 	{
-		//location for ObjectsPipeline::World data: (streamed to GPU per-frame)
-		Buffer World_src; //host coherent; mapped
-		Buffer World; //device-local
-		VkDescriptorSet set0_World; //references World
+		Buffer WorldPersistent; //host coherent and visible; persistently mapped
+		VkDescriptorSet set0_World;
 
 		//location for ObjectsPipeline::Transforms data: (streamed to GPU per-frame)
-		Buffer Transforms_src; //host coherent; mapped
-		Buffer Transforms; //device-local
+		Buffer TransformsPersistent; // host hoherent and visible, persistently mapped
 		VkDescriptorSet set1_Transforms; //references Transforms
 	};
 

@@ -22,10 +22,8 @@ LinesPipeline::~LinesPipeline()
 {
 	for (Workspace& workspace : workspaces)
 	{
-		workspace.LinesVerticesSrc.Destroy();
-		workspace.LinesVertices.Destroy();
-		workspace.CameraSrc.Destroy();
-		workspace.Camera.Destroy();
+		workspace.CameraPersistent.Destroy();
+		workspace.LinesVerticesPersistent.Destroy();
 	}
 	workspaces.clear();
 
@@ -68,7 +66,7 @@ void LinesPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
 
 		{ //use lines_vertices (offset 0) as vertex buffer binding 0:
-			std::array< VkBuffer, 1 > vertex_buffers{ workspace.LinesVertices.getBuffer()};
+			std::array< VkBuffer, 1 > vertex_buffers{ workspace.LinesVerticesPersistent.getBuffer()};
 			std::array< VkDeviceSize, 1 > offsets{ 0 };
 			vkCmdBindVertexBuffers(commandBuffer, 0, uint32_t(vertex_buffers.size()), vertex_buffers.data(), offsets.data());
 		}
@@ -109,39 +107,38 @@ void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuff
 			needed_bytes += gizmos[i]->m_LinesVertices.size() * sizeof(PosColVertex);
 		totalGizmosSize = uint32_t(needed_bytes / sizeof(PosColVertex));
 
-		if (workspace.LinesVerticesSrc.getBuffer() == VK_NULL_HANDLE || workspace.LinesVerticesSrc.getSize() < needed_bytes) {
-			//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
-			size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
+		if (workspace.LinesVerticesPersistent.getBuffer() == VK_NULL_HANDLE
+			|| workspace.LinesVerticesPersistent.getSize() < needed_bytes) {
+			workspace.LinesVerticesPersistent.Destroy();
 
-			workspace.LinesVerticesSrc = Buffer(
-				new_bytes,
-				VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //host-visible memory, coherent (no special sync needed)
-				Buffer::Mapped //get a pointer to the memory
-			);
-			workspace.LinesVertices = Buffer(
-				new_bytes,
-				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //going to use as vertex buffer, also going to have GPU into this memory
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT //GPU-local memory
-			);
+			if (workspace.LinesVerticesPersistent.getBuffer() == VK_NULL_HANDLE || workspace.LinesVerticesPersistent.getSize() < needed_bytes) {
+				//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
+				size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
 
-			std::cout << "Re-allocated lines buffers to " << new_bytes << " bytes." << std::endl;
+				workspace.LinesVerticesPersistent = Buffer(
+					new_bytes,
+					VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, //going to use as vertex buffer, also going to have GPU into this memory
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+					Buffer::Mapped
+				);
+
+				std::cout << "Re-allocated lines buffers to " << new_bytes << " bytes." << std::endl;
+			}
 		}
 
-		assert(workspace.LinesVerticesSrc.getSize() >= needed_bytes);
+		assert(workspace.LinesVerticesPersistent.getSize() >= needed_bytes);
 
 		//host-side copy into LinesVerticesSrc:
 		size_t offset = 0;
 		for (int i = 0; i < gizmos.size(); ++i) {
 			auto size = gizmos[i]->m_LinesVertices.size() * sizeof(PosColVertex);
 			std::memcpy(
-				OffsetPointer(workspace.LinesVerticesSrc.data(), offset),
+				OffsetPointer(workspace.LinesVerticesPersistent.data(), offset),
 				gizmos[i]->m_LinesVertices.data(), 
 				size
 			);
 			offset += size;
 		}
-		Buffer::CopyBuffer(commandBuffer, workspace.LinesVerticesSrc.getBuffer(), workspace.LinesVertices.getBuffer(), needed_bytes);
 	}
 
 	{ //upload camera info:
@@ -150,9 +147,7 @@ void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuff
 		};
 
 		//host-side copy into Camera_src:
-		memcpy(workspace.CameraSrc.data(), &camera, sizeof(camera));
-
-		Buffer::CopyBuffer(commandBuffer, workspace.CameraSrc.getBuffer(), workspace.Camera.getBuffer(), sizeof(camera));
+		memcpy(workspace.CameraPersistent.data(), &camera, sizeof(camera));
 	}
 }
 
@@ -288,23 +283,18 @@ void LinesPipeline::CreateDescriptors()
 	// create world and transform descriptor
 	for (Workspace& workspace : workspaces)
 	{
-		workspace.CameraSrc = Buffer(
+		workspace.CameraPersistent = Buffer(
 			sizeof(CameraUniform),
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 			Buffer::Mapped
-		);
-		workspace.Camera = Buffer(
-			sizeof(CameraUniform),
-			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
 
 		VkDescriptorBufferInfo CameraInfo
 		{
-			.buffer = workspace.Camera.getBuffer(),
+			.buffer = workspace.CameraPersistent.getBuffer(),
 			.offset = 0,
-			.range = workspace.Camera.getSize(),
+			.range = workspace.CameraPersistent.getSize(),
 		};
 
 		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)

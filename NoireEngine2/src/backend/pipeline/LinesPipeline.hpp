@@ -34,12 +34,9 @@ public:
 
 	struct Workspace
 	{
-		Buffer LinesVertices; //device-local
-		Buffer LinesVerticesSrc; //host coherent; mapped
+		Buffer LinesVerticesPersistent; //host coherent and visible; persistently mapped
 
-		//location for LinesPipeline::Camera data: (streamed to GPU per-frame)
-		Buffer CameraSrc; //host coherent; mapped
-		Buffer Camera; //device-local
+		Buffer CameraPersistent; //host coherent and visible; persistently mapped
 		VkDescriptorSet set0_Camera; //references Camera
 	};
 
