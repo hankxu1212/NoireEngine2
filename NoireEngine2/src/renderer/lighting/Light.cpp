@@ -38,7 +38,7 @@ void Light::Render(const glm::mat4& model)
 			static_cast<uint8_t>(m_LightUniform.color.z * 255), 
 			255 
 		};
-		gizmos.DrawWiredSphere(m_LightUniform.limit, pos, c);
+		gizmos.DrawWireSphere(m_LightUniform.limit, pos, c);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
 	else if (m_LightUniform.type == (uint32_t)Type::Spot)

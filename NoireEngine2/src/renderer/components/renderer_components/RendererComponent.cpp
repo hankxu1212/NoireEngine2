@@ -52,7 +52,7 @@ void RendererComponent::Render(const glm::mat4& model)
 	});
 
 	if (ObjectPipeline::UseGizmos && useGizmos) {
-		gizmos.DrawWiredCubeAroundAABB(mesh->getAABB());
+		gizmos.DrawWireCube1(mesh->getAABB().min, mesh->getAABB().max, Color4_4::Green);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
 }

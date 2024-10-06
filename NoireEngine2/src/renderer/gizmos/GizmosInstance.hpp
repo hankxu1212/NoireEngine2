@@ -5,24 +5,53 @@
 
 struct GizmosInstance 
 {
-    void DrawWiredCubeAroundAABB(const AABB& aabb)
+    void DrawWireCube2(const glm::vec3& center, const glm::vec3& halfExtent, Color4_4 color = Color4_4::White) {
+        m_LinesVertices.clear();
+
+        // Define the 8 vertices of the cube
+        glm::vec3 v0 = center + glm::vec3(-halfExtent.x, -halfExtent.y, -halfExtent.z);
+        glm::vec3 v1 = center + glm::vec3(halfExtent.x, -halfExtent.y, -halfExtent.z);
+        glm::vec3 v2 = center + glm::vec3(halfExtent.x, halfExtent.y, -halfExtent.z);
+        glm::vec3 v3 = center + glm::vec3(-halfExtent.x, halfExtent.y, -halfExtent.z);
+        glm::vec3 v4 = center + glm::vec3(-halfExtent.x, -halfExtent.y, halfExtent.z);
+        glm::vec3 v5 = center + glm::vec3(halfExtent.x, -halfExtent.y, halfExtent.z);
+        glm::vec3 v6 = center + glm::vec3(halfExtent.x, halfExtent.y, halfExtent.z);
+        glm::vec3 v7 = center + glm::vec3(-halfExtent.x, halfExtent.y, halfExtent.z);
+
+        // Create the 12 edges of the cube
+        AddEdge(v0, v1, color); // Bottom face
+        AddEdge(v1, v2, color);
+        AddEdge(v2, v3, color);
+        AddEdge(v3, v0, color);
+
+        AddEdge(v4, v5, color); // Top face
+        AddEdge(v5, v6, color);
+        AddEdge(v6, v7, color);
+        AddEdge(v7, v4, color);
+
+        AddEdge(v0, v4, color); // Vertical edges
+        AddEdge(v1, v5, color);
+        AddEdge(v2, v6, color);
+        AddEdge(v3, v7, color);
+    }
+
+    void DrawWireCube1(const glm::vec3& min, const glm::vec3& max, Color4_4 color = Color4_4::White)
     {
         m_LinesVertices.clear();
 
         // Calculate the 8 corners of the AABB
         PosColVertex corners[8] = {
             // Bottom face
-            {{aabb.min.x, aabb.min.y, aabb.min.z}, Color4_4::Green}, // (minX, minY, minZ)
-            {{aabb.max.x, aabb.min.y, aabb.min.z}, Color4_4::Green}, // (maxX, minY, minZ)
-            {{aabb.min.x, aabb.max.y, aabb.min.z}, Color4_4::Green}, // (minX, maxY, minZ)
-            {{aabb.max.x, aabb.max.y, aabb.min.z}, Color4_4::Green}, // (maxX, maxY, minZ)
+            {{min.x, min.y, min.z}, color}, // (minX, minY, minZ)
+            {{max.x, min.y, min.z}, color}, // (maxX, minY, minZ)
+            {{min.x, max.y, min.z}, color}, // (minX, maxY, minZ)
+            {{max.x, max.y, min.z}, color}, // (maxX, maxY, minZ)
             // Top face
-            {{aabb.min.x, aabb.min.y, aabb.max.z}, Color4_4::Green}, // (minX, minY, maxZ)
-            {{aabb.max.x, aabb.min.y, aabb.max.z}, Color4_4::Green}, // (maxX, minY, maxZ)
-            {{aabb.min.x, aabb.max.y, aabb.max.z}, Color4_4::Green}, // (minX, maxY, maxZ)
-            {{aabb.max.x, aabb.max.y, aabb.max.z}, Color4_4::Green}, // (maxX, maxY, maxZ)
+            {{min.x, min.y, max.z}, color}, // (minX, minY, maxZ)
+            {{max.x, min.y, max.z}, color}, // (maxX, minY, maxZ)
+            {{min.x, max.y, max.z}, color}, // (minX, maxY, maxZ)
+            {{max.x, max.y, max.z}, color}, // (maxX, maxY, maxZ)
         };
-
 
         AddEdge(corners[0], corners[1]); // Bottom face: (minX, minY, minZ) to (maxX, minY, minZ)
         AddEdge(corners[0], corners[2]); // Bottom face: (minX, minY, minZ) to (minX, maxY, minZ)
@@ -40,7 +69,7 @@ struct GizmosInstance
         AddEdge(corners[3], corners[7]); // Side: (maxX, maxY, minZ) to (maxX, maxY, maxZ)
     }
 
-    void DrawWiredSphere(float radius, const glm::vec3& center, Color4_4 color=Color4_4::White)
+    void DrawWireSphere(float radius, const glm::vec3& center, Color4_4 color=Color4_4::White)
     {
         m_LinesVertices.clear();
         constexpr uint32_t segments = 20;
@@ -124,6 +153,13 @@ struct GizmosInstance
     {
         m_LinesVertices.push_back(start);
         m_LinesVertices.push_back(end);
+    };
+
+    // Helper function to add edges
+    void AddEdge(const glm::vec3& start, const glm::vec3& end, Color4_4 color)
+    {
+        m_LinesVertices.emplace_back(start, color);
+        m_LinesVertices.emplace_back(end, color);
     };
 
     std::vector<PosColVertex> m_LinesVertices;
