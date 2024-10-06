@@ -27,7 +27,8 @@ LinesPipeline::~LinesPipeline()
 	}
 	workspaces.clear();
 
-	m_DescriptorAllocator.Cleanup();
+	m_DescriptorAllocator.Cleanup(); // destroy pool and sets
+	m_DescriptorLayoutCache.Cleanup(); // destroy all set layouts
 
 	if (m_PipelineLayout != VK_NULL_HANDLE) {
 		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_PipelineLayout, nullptr);
@@ -37,11 +38,6 @@ LinesPipeline::~LinesPipeline()
 	if (m_Pipeline != VK_NULL_HANDLE) {
 		vkDestroyPipeline(VulkanContext::GetDevice(), m_Pipeline, nullptr);
 		m_Pipeline = VK_NULL_HANDLE;
-	}
-
-	if (set0_CameraLayout != VK_NULL_HANDLE) {
-		vkDestroyDescriptorSetLayout(VulkanContext::GetDevice(), set0_CameraLayout, nullptr);
-		set0_CameraLayout = VK_NULL_HANDLE;
 	}
 }
 

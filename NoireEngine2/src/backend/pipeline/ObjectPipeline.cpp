@@ -30,34 +30,17 @@ ObjectPipeline::ObjectPipeline()
 
 ObjectPipeline::~ObjectPipeline()
 {
-	VkDevice device = VulkanContext::GetDevice();
-
 	for (Workspace& workspace : workspaces) 
 	{
 		workspace.TransformsPersistent.Destroy();
-		//workspace.Transforms.Destroy();
 		workspace.WorldPersistent.Destroy();
 	}
 	workspaces.clear();
 
-	m_DescriptorAllocator.Cleanup();
+	m_DescriptorAllocator.Cleanup(); // destroy pool and sets
+	m_DescriptorLayoutCache.Cleanup(); // destroy all set layouts
 	
 	m_MaterialPipelines.clear();
-
-	if (set0_WorldLayout != VK_NULL_HANDLE) {
-		vkDestroyDescriptorSetLayout(device, set0_WorldLayout, nullptr);
-		set0_WorldLayout = VK_NULL_HANDLE;
-	}
-
-	if (set1_TransformsLayout != VK_NULL_HANDLE) {
-		vkDestroyDescriptorSetLayout(device, set1_TransformsLayout, nullptr);
-		set1_TransformsLayout = VK_NULL_HANDLE;
-	}
-
-	if (set2_TexturesLayout != VK_NULL_HANDLE) {
-		vkDestroyDescriptorSetLayout(device, set2_TexturesLayout, nullptr);
-		set2_TexturesLayout = VK_NULL_HANDLE;
-	}
 }
 
 void ObjectPipeline::CreateRenderPass()
