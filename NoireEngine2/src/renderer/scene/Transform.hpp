@@ -66,6 +66,8 @@ public:
     // decomposes a transformation matrix `m`
     static void Decompose(const glm::mat4& m, glm::vec3& pos, glm::quat& rot, glm::vec3& scale);
 
+    void Decompose(const glm::mat4& m);
+
     // applies a transformation matrix
     void Apply(glm::mat4& transformation);
 

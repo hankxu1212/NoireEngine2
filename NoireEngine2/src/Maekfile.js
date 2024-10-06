@@ -128,6 +128,7 @@ const imgui_objs = [
 	maek.CPP('../vendor/imgui/backends/imgui_impl_vulkan.cpp'),
 	maek.CPP('../vendor/imgui/backends/imgui_impl_glfw.cpp'),
 	maek.CPP('backend/pipeline/ImGuiPipeline.cpp'),
+	maek.CPP('../vendor/imguizmo/imguizmo/ImGuizmo.cpp'),
 ]
 
 const scripting_objs = [
@@ -215,7 +216,8 @@ function custom_flags_and_rules() {
 			`/I../vendor/glm/`,
 			`/I../vendor/`,
 			`/I../vendor/imgui/`,
-			'/O2'
+			`/I../vendor/imguizmo/`,
+			//'/O2'
 		];
 
 	} else if (maek.OS === 'macos') {

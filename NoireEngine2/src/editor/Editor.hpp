@@ -26,7 +26,6 @@ public:
 	{
 		g_Editor = this;
 
-		//s_DebugConsole = CreateScope<DebugConsole>();
 		s_HierarchyPanel = std::make_unique<SceneHierarchyPanel>();
 		//s_ContentBrowerPanel = CreateScope<ContentBrowserPanel>();
 	}
@@ -62,9 +61,8 @@ private:
 	void ShowGizmos();
 	void ShowStats();
 
-//private:
-//	bool OnKeyPressed(KeyPressedEvent& e);
-//	void OnDuplicateEntity();
+private:
+	bool OnKeyPressed(KeyPressedEvent& e);
 
 private:
 	std::unique_ptr<SceneHierarchyPanel> s_HierarchyPanel;

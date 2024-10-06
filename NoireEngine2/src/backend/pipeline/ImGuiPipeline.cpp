@@ -3,6 +3,7 @@
 #include "backend/VulkanContext.hpp"
 #include "utils/Logger.hpp"
 #include "core/resources/Files.hpp"
+#include "imguizmo/ImGuizmo.h"
 
 #include <vulkan/vk_enum_string_helper.h>
 #include "glm/gtx/string_cast.hpp"
@@ -79,9 +80,13 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-
+    ImGuizmo::BeginFrame();
+    
     for (Layer* layer : Application::Get().GetLayerStack())
         layer->OnImGuiRender();
+
+    for (Layer* layer : Application::Get().GetLayerStack())
+        layer->OnViewportRender();
 
     ImGui::Render();
 

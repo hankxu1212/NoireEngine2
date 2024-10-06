@@ -165,6 +165,12 @@ void Transform::Decompose(const glm::mat4& m, glm::vec3& pos, glm::quat& rot, gl
     rot = glm::quat_cast(rotMtx);
 }
 
+void Transform::Decompose(const glm::mat4& m)
+{
+    Decompose(m, m_Position, m_Rotation, m_Scale);
+    isDirty = true;
+}
+
 void Transform::Apply(glm::mat4& transformation)
 {
     Decompose(transformation * Local(), m_Position, m_Rotation, m_Scale);

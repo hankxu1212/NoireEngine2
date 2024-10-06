@@ -66,7 +66,7 @@
     <NMakeBuildCommandLine>node src/Maekfile.js</NMakeBuildCommandLine>
     <NMakeOutput>src/bin/main.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src;vendor/glm;vendor;vendor/imgui;vendor/imgui/backends</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src;vendor/glm;vendor;vendor/imgui;vendor/imgui/backends;vendor/imguizmo/</NMakeIncludeSearchPath>
     <AdditionalOptions>/std:c++20</AdditionalOptions>
     <NMakeForcedIncludes>
     </NMakeForcedIncludes>
@@ -179,6 +179,18 @@
     <ClCompile Include="tutorial\Tutorial.cpp" />
     <ClCompile Include="src\backend\shader\VulkanShader.cpp" />
     <ClCompile Include="src\renderer\vertices\Vertex.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\example\imgui.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\example\imgui_demo.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\example\imgui_draw.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\example\imgui_tables.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\example\imgui_widgets.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\example\main.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\GraphEditor.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\ImCurveEdit.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\ImGradient.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\ImGuizmo.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\ImSequencer.cpp" />
+    <ClCompile Include="vendor\imguizmo\imguizmo\vcpkg-example\main.cpp" />
     <ClCompile Include="vendor\imgui\backends\imgui_impl_allegro5.cpp" />
     <ClCompile Include="vendor\imgui\backends\imgui_impl_android.cpp" />
     <ClCompile Include="vendor\imgui\backends\imgui_impl_dx10.cpp" />
@@ -343,6 +355,21 @@
     <ClInclude Include="tutorial\VK.hpp" />
     <ClInclude Include="src\backend\shader\VulkanShader.h" />
     <ClInclude Include="src\renderer\vertices\Vertex.hpp" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\example\ImApp.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\example\imconfig.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\example\imgui.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\example\imgui_internal.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\example\imstb_rectpack.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\example\imstb_textedit.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\example\imstb_truetype.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\example\stb_image.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\GraphEditor.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\ImCurveEdit.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\ImGradient.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\ImGuizmo.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\ImSequencer.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\ImZoomSlider.h" />
+    <ClInclude Include="vendor\imguizmo\imguizmo\vcpkg-example\ImApp.h" />
     <ClInclude Include="vendor\imgui\backends\imgui_impl_allegro5.h" />
     <ClInclude Include="vendor\imgui\backends\imgui_impl_android.h" />
     <ClInclude Include="vendor\imgui\backends\imgui_impl_dx10.h" />

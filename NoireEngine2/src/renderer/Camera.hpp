@@ -30,6 +30,7 @@ public:
     inline const glm::mat4& getProjectionMatrix() const { return projectionMatrix; }
     inline const glm::mat4& getWorldToClipMatrix() const { return worldToClip; }
 
+    inline glm::mat4& GetViewMatrixUnsafe() { return viewMatrix; } // allows function to modify the projection matrix. use with care!
     inline glm::mat4& GetProjectionMatrixUnsafe() { return projectionMatrix; } // allows function to modify the projection matrix. use with care!
     
     inline const Frustum& getViewFrustum() const { return frustum; }

@@ -1,16 +1,15 @@
 #include "Editor.hpp"
 
 #include "Application.hpp"
-#include "imgui/imgui.h"
 #include "renderer/scene/SceneManager.hpp"
 #include "backend/pipeline/ObjectPipeline.hpp"
+#include "imguizmo/ImGuizmo.h"
 
 Editor* Editor::g_Editor = nullptr;
 
 void Editor::OnAttach()
 {
     open = true;
-    //ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 }
 
 void Editor::OnUpdate()
@@ -24,8 +23,9 @@ void Editor::OnDetach()
 
 void Editor::OnEvent(Event& e)
 {
-}
+    e.Dispatch<KeyPressedEvent>(NE_BIND_EVENT_FN(Editor::OnKeyPressed));
 
+}
 void Editor::OnImGuiRender()
 {
     Display();
@@ -333,31 +333,104 @@ void Editor::ShowStats()
     ImGui::End();
 }
 
+bool Editor::OnKeyPressed(KeyPressedEvent& e)
+{
+    if (e.m_IsRepeat)
+        return false;
+
+    //bool control = NativeInput::IsKeyPressed(Key::LeftControl) || NativeInput::IsKeyPressed(Key::RightControl);
+    //bool shift = NativeInput::IsKeyPressed(Key::LeftShift) || NativeInput::IsKeyPressed(Key::RightShift);
+
+    switch (e.m_KeyCode)
+    {
+    // Scene Commands
+    //case Key::D:
+    //{
+    //    if (control)
+    //        OnDuplicateEntity();
+    //    break;
+    //}
+
+    // Gizmos
+    case Key::Q:
+    {
+        if (!ImGuizmo::IsUsing())
+            m_GizmoType = -1;
+        break;
+    }
+    case Key::G:
+    {
+        if (!ImGuizmo::IsUsing())
+            m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+        break;
+    }
+    case Key::R:
+    {
+        if (!ImGuizmo::IsUsing())
+            m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+        break;
+    }
+    case Key::S:
+    {
+        /*if (control)
+        {
+            if (shift)
+                SceneManager::Get()->SaveSceneAs();
+            else
+                SceneManager::Get()->SaveScene();
+        }
+        else */
+        if (!ImGuizmo::IsUsing())
+            m_GizmoType = ImGuizmo::OPERATION::SCALE;
+        break;
+    }
+    /*
+    case Key::Delete:
+    {
+        if (Application::Get().GetImGuiLayer()->getActiveWidgetID() == 0)
+        {
+            Entity selectedEntity = s_HierarchyPanel->getSelectedEntity();
+            if (selectedEntity)
+            {
+                s_HierarchyPanel->SetSelectedEntity({});
+                SceneManager::Get()->getScene()->DestroyEntity(selectedEntity);
+            }
+        }
+        break;
+    }*/
+    }
+
+    return false;
+}
+
 void Editor::ShowGizmos()
 {
     if (!m_EditorInfo.show_gizmos)
         return;
+   
 
-    /*
-    Entity selectedEntity = s_HierarchyPanel->getSelectedEntity();
-    if (selectedEntity && m_GizmoType != -1 && selectedEntity.HasComponent<TransformComponent>())
+    Entity* selectedEntity = s_HierarchyPanel->getSelectedEntity();
+    if (selectedEntity && m_GizmoType != -1)
     {
-        ImGuizmo::SetDrawlist();
-
-        auto& viewportBounds = Application::Get().GetImGuiLayer()->getViewportBounds();
-        ImGuizmo::SetRect(viewportBounds.x, viewportBounds.y, viewportBounds.z - viewportBounds.x, viewportBounds.w - viewportBounds.y);
+        ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
 
         // Editor camera
-        auto sceneCamera = SceneManager::Get()->getScene()->getMainCamera();
+        auto sceneCamera = SceneManager::Get()->getScene()->GetRenderCam()->camera();
+        glm::mat4& cameraView = sceneCamera->GetViewMatrixUnsafe();
         glm::mat4& cameraProjection = sceneCamera->GetProjectionMatrixUnsafe();
-        const glm::mat4& cameraView = sceneCamera->getViewMatrix();
+
+        auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+        auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+        auto viewportOffset = ImGui::GetWindowPos();
+        glm::vec4 viewportBounds = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y,
+                             viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+        ImGuizmo::SetRect(viewportBounds.x, viewportBounds.y, viewportBounds.z - viewportBounds.x, viewportBounds.w - viewportBounds.y);
 
         // Entity transform
-        auto& tc = selectedEntity.GetComponent<TransformComponent>();
-        glm::mat4 transform = tc.transform.Local();
+        glm::mat4 transformMat = selectedEntity->transform()->LocalDirty();
 
         // Snapping
-        bool snap = Input::IsKeyPressed(Key::LeftControl);
+        bool snap = NativeInput::IsKeyPressed(Key::LeftControl);
         float snapValue = 0.5f; // Snap to 0.5m for translation/scale
         // Snap to 45 degrees for rotation
         if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
@@ -367,21 +440,14 @@ void Editor::ShowGizmos()
 
         cameraProjection[1][1] *= -1; // invert to opengl y-up
         ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-            (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),
+            (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::WORLD, glm::value_ptr(transformMat),
             nullptr, snap ? snapValues : nullptr);
         cameraProjection[1][1] *= -1; // invert back
 
         if (ImGuizmo::IsUsing())
         {
-            glm::vec3 translation, scale;
-            glm::quat rotation;
-            Transform::Decompose(transform, translation, rotation, scale);
-
-            tc.transform.position = translation;
-            tc.transform.rotation = rotation;
-            tc.transform.scale = scale;
+            selectedEntity->transform()->Decompose(transformMat);
         }
     }
-    */
 }
 
