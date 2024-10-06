@@ -22,4 +22,7 @@ public:
 	virtual const char* getName() { return "component"; }
 
 	Entity* entity;
+
+protected:
+	bool useGizmos = true;
 };

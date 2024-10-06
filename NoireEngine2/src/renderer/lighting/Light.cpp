@@ -26,7 +26,11 @@ void Light::Update()
 
 void Light::Render(const glm::mat4& model)
 {
-	if (m_LightUniform.type != (uint32_t)Type::Directional && ObjectPipeline::UseGizmos) {
+	if (!ObjectPipeline::UseGizmos || !useGizmos)
+		return;
+
+	if (m_LightUniform.type == (uint32_t)Type::Point) 
+	{
 		auto& pos = GetTransform()->position();
 		Color4_4 c{ 
 			static_cast<uint8_t>(m_LightUniform.color.x * 255), 
@@ -35,7 +39,20 @@ void Light::Render(const glm::mat4& model)
 			255 
 		};
 		gizmos.DrawWiredSphere(m_LightUniform.limit, pos, c);
-			GetScene()->PushGizmosInstance(&gizmos);
+		GetScene()->PushGizmosInstance(&gizmos);
+	}
+	else if (m_LightUniform.type == (uint32_t)Type::Spot)
+	{
+		auto& pos = GetTransform()->position();
+		auto dir = GetTransform()->Back();
+		Color4_4 c{
+			static_cast<uint8_t>(m_LightUniform.color.x * 255),
+			static_cast<uint8_t>(m_LightUniform.color.y * 255),
+			static_cast<uint8_t>(m_LightUniform.color.z * 255),
+			255
+		};
+		gizmos.DrawSpotLight(pos, dir, m_LightUniform.fov * (1 - m_LightUniform.blend), m_LightUniform.fov, m_LightUniform.limit, c);
+		GetScene()->PushGizmosInstance(&gizmos);
 	}
 }
 
@@ -93,6 +110,13 @@ void Light::Inspect()
 		ImGui::DragFloat("###Intensity", &m_LightUniform.intensity, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 		ImGui::Columns(1);
 
+		ImGui::Columns(2);
+		ImGui::Text("Gizmos");
+		ImGui::NextColumn();
+		ImGui::Checkbox("###USEGIZMOS", &useGizmos);
+		ImGui::Columns(1);
+		ImGui::Separator(); // -----------------------------------------------------
+
 		if (m_LightUniform.type != /*Type::Directional*/0)
 		{
 			ImGui::Columns(2);
@@ -105,6 +129,21 @@ void Light::Inspect()
 			ImGui::Text("Limit");
 			ImGui::NextColumn();
 			ImGui::DragFloat("###Limit", &m_LightUniform.limit, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+			ImGui::Columns(1);
+		}
+
+		if (m_LightUniform.type == /*Type::Spot*/2)
+		{
+			ImGui::Columns(2);
+			ImGui::Text("FOV");
+			ImGui::NextColumn();
+			ImGui::DragFloat("###FOV", &m_LightUniform.fov, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+			ImGui::Columns(1);
+
+			ImGui::Columns(2);
+			ImGui::Text("Blend");
+			ImGui::NextColumn();
+			ImGui::DragFloat("###BLEND", &m_LightUniform.blend, 0.002f, 0, 1, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 			ImGui::Columns(1);
 		}
 	}

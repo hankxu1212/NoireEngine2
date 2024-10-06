@@ -10,6 +10,7 @@ Editor* Editor::g_Editor = nullptr;
 void Editor::OnAttach()
 {
     open = true;
+    ImGuizmo::AllowAxisFlip(true);
 }
 
 void Editor::OnUpdate()

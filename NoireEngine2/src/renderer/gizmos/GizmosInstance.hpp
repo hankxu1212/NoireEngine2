@@ -72,6 +72,53 @@ struct GizmosInstance
         }
     }
 
+    // Function to draw a wired spotlight with direction
+    void DrawSpotLight(const glm::vec3& position, const glm::vec3& direction, float innerRadius, float outerRadius, float range, Color4_4 color = Color4_4::White) 
+    {
+        m_LinesVertices.clear();
+
+        constexpr uint32_t segments = 3;
+
+        glm::vec3 right = glm::normalize(glm::cross(direction, glm::vec3(0, 1, 0)));
+        glm::vec3 up = glm::cross(right, direction);
+
+        // Base position at the end of the cone (range away from the light position)
+        glm::vec3 baseCenter = position + direction * range;
+
+        // Draw the inner circle at the base of the spotlight
+        DrawCircle(baseCenter, innerRadius, right, up, 20, color);
+
+        // Draw the outer circle at the base of the spotlight
+        DrawCircle(baseCenter, outerRadius, right, up, 20, color);
+
+        for (int i = 0; i < segments; ++i) 
+        {
+            float angle = (2.0f * glm::pi<float>() * float(i)) / float(segments);
+
+            glm::vec3 directionOnPlane = right * cos(angle) + up * sin(angle);
+            glm::vec3 outerPoint = baseCenter + directionOnPlane * outerRadius;
+
+            // Add lines from the position of the spotlight to the inner circle
+            AddEdge({ position, color }, { outerPoint, color });
+        }
+    }
+
+    // Helper function to draw a circle in a specific plane defined by right and up vectors
+    void DrawCircle(const glm::vec3& center, float radius, const glm::vec3& right, const glm::vec3& up, int segments, Color4_4 color = Color4_4::White)
+    {
+        for (int i = 0; i < segments; ++i) 
+        {
+            float angle1 = (2.0f * glm::pi<float>() * float(i)) / float(segments);
+            float angle2 = (2.0f * glm::pi<float>() * float(i + 1)) / float(segments);
+
+            // Create two points on the circle
+            glm::vec3 point1 = center + (right * cos(angle1) + up * sin(angle1)) * radius;
+            glm::vec3 point2 = center + (right * cos(angle2) + up * sin(angle2)) * radius;
+
+            AddEdge({ point1, color }, { point2, color });
+        }
+    }
+
     // Helper function to add edges
     void AddEdge(const PosColVertex& start, const PosColVertex& end)
     {

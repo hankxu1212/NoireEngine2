@@ -646,22 +646,24 @@ namespace IMGUIZMO_NAMESPACE
       HatchedAxisLineThickness   = 6.0f;
       CenterCircleSize           = 6.0f;
 
-      // initialize default colors
-      Colors[DIRECTION_X]           = ImVec4(0.666f, 0.000f, 0.000f, 1.000f);
-      Colors[DIRECTION_Y]           = ImVec4(0.000f, 0.666f, 0.000f, 1.000f);
-      Colors[DIRECTION_Z]           = ImVec4(0.000f, 0.000f, 0.666f, 1.000f);
-      Colors[PLANE_X]               = ImVec4(0.666f, 0.000f, 0.000f, 0.380f);
-      Colors[PLANE_Y]               = ImVec4(0.000f, 0.666f, 0.000f, 0.380f);
-      Colors[PLANE_Z]               = ImVec4(0.000f, 0.000f, 0.666f, 0.380f);
-      Colors[SELECTION]             = ImVec4(1.000f, 0.500f, 0.062f, 0.541f);
-      Colors[INACTIVE]              = ImVec4(0.600f, 0.600f, 0.600f, 0.600f);
-      Colors[TRANSLATION_LINE]      = ImVec4(0.666f, 0.666f, 0.666f, 0.666f);
-      Colors[SCALE_LINE]            = ImVec4(0.250f, 0.250f, 0.250f, 1.000f);
-      Colors[ROTATION_USING_BORDER] = ImVec4(1.000f, 0.500f, 0.062f, 1.000f);
-      Colors[ROTATION_USING_FILL]   = ImVec4(1.000f, 0.500f, 0.062f, 0.500f);
-      Colors[HATCHED_AXIS_LINES]    = ImVec4(0.000f, 0.000f, 0.000f, 0.500f);
-      Colors[TEXT]                  = ImVec4(1.000f, 1.000f, 1.000f, 1.000f);
-      Colors[TEXT_SHADOW]           = ImVec4(0.000f, 0.000f, 0.000f, 1.000f);
+      Colors[DIRECTION_X] = ImVec4(0.945f, 0.451f, 0.451f, 1.000f); // Soft Pink
+      Colors[DIRECTION_Y] = ImVec4(0.451f, 0.945f, 0.561f, 1.000f); // Mint Green
+      Colors[DIRECTION_Z] = ImVec4(0.451f, 0.729f, 0.945f, 1.000f); // Baby Blue
+
+      Colors[PLANE_X] = ImVec4(0.945f, 0.451f, 0.451f, 1.000f); // Opaque Soft Pink
+      Colors[PLANE_Y] = ImVec4(0.451f, 0.945f, 0.561f, 1.000f); // Opaque Mint Green
+      Colors[PLANE_Z] = ImVec4(0.451f, 0.729f, 0.945f, 1.000f); // Opaque Baby Blue
+
+      Colors[SELECTION] = ImVec4(1.000f, 0.800f, 0.600f, 1.000f); // Opaque Peach for selection
+      Colors[INACTIVE] = ImVec4(0.800f, 0.800f, 0.800f, 0.500f); // Opaque Light Gray for inactive elements
+      Colors[TRANSLATION_LINE] = ImVec4(0.729f, 0.729f, 0.729f, 1.000f); // Opaque Soft Gray for translation lines
+      Colors[SCALE_LINE] = ImVec4(0.451f, 0.451f, 0.451f, 1.000f); // Opaque Dark Gray for scaling lines
+      Colors[ROTATION_USING_BORDER] = ImVec4(1.000f, 0.800f, 0.600f, 1.000f); // Opaque Peach for rotation border
+      Colors[ROTATION_USING_FILL] = ImVec4(1.000f, 0.800f, 0.600f, 1.000f); // Opaque Peach for rotation fill
+      Colors[HATCHED_AXIS_LINES] = ImVec4(0.200f, 0.200f, 0.200f, 1.000f); // Opaque Soft Dark Gray for hatched axis lines
+      Colors[TEXT] = ImVec4(1.000f, 1.000f, 1.000f, 1.000f); // Opaque Pure White for text
+      Colors[TEXT_SHADOW] = ImVec4(0.000f, 0.000f, 0.000f, 0.100f); // Opaque Soft Black for text shadow
+
    }
 
    struct Context
