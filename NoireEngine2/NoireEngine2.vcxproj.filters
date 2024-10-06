@@ -462,6 +462,12 @@
     <ClCompile Include="src\backend\images\ImageCube.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\backend\pipeline\SkyboxPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\vertices\PosVertex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h">
@@ -962,6 +968,12 @@
     <ClInclude Include="src\backend\images\ImageCube.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\backend\pipeline\SkyboxPipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\vertices\PosVertex.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />
@@ -986,6 +998,9 @@
     <None Include="vendor\imgui\examples\libs\emscripten\shell_minimal.html" />
     <None Include="src\shaders\lambertian.frag" />
     <None Include="src\shaders\lambertian.vert" />
+    <None Include="src\shaders\skybox.frag" />
+    <None Include="src\shaders\skybox.vert" />
+    <None Include="src\shaders\glsl\world_uniform.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

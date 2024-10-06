@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <cassert>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -76,13 +77,15 @@ static std::string GetExecutableFile()
 std::string Files::Path(const std::string& suffix)
 {
 	static std::string path = GetExecutableFile(); //cache result of GetExecutableFile()
+	assert(Exists(path + "/" + suffix));
 	return path + "/" + suffix;
 }
 
 std::string Files::Path(const char* suffix)
 {
-	const std::string& strPath = suffix;
-	return Path(strPath);
+	static std::string path = GetExecutableFile(); //cache result of GetExecutableFile()
+	assert(Exists(path + "/" + suffix));
+	return path + "/" + suffix;
 }
 
 bool Files::Exists(const std::string& path)

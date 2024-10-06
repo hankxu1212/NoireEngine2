@@ -54,7 +54,7 @@ ImageCube::ImageCube(std::unique_ptr<Bitmap>&& bitmap, VkFormat format, VkImageL
 	VkSampleCountFlagBits samples, bool anisotropic, bool mipmap) :
 	Image(filter, addressMode, samples, layout,
 		usage | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		format, 1, 6, { bitmap->size.x, bitmap->size.y, 1 }),
+		format, 1, /*ArrayLayers*/6, { bitmap->size.x, bitmap->size.y, 1 }),
 	anisotropic(anisotropic),
 	mipmap(mipmap),
 	components(bitmap->bytesPerPixel) {

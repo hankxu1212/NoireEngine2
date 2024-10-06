@@ -10,9 +10,9 @@ layout(location=1) out vec3 normal;
 layout(location=2) out vec2 texCoord;
 
 struct Transform {
-	mat4 CLIP_FROM_LOCAL;
-	mat4 WORLD_FROM_LOCAL;
-	mat4 WORLD_FROM_LOCAL_NORMAL;
+	mat4 localToClip;
+	mat4 model;
+	mat4 modelNormal;
 };
 
 layout(set=1, binding=0, std140) readonly buffer Transforms {
@@ -20,8 +20,8 @@ layout(set=1, binding=0, std140) readonly buffer Transforms {
 };
 
 void main() {
-	gl_Position = TRANSFORMS[gl_InstanceIndex].CLIP_FROM_LOCAL * vec4(Position, 1.0);
-	position = mat4x3(TRANSFORMS[gl_InstanceIndex].WORLD_FROM_LOCAL) * vec4(Position, 1.0);
-	normal = mat3(TRANSFORMS[gl_InstanceIndex].WORLD_FROM_LOCAL_NORMAL) * Normal;
+	gl_Position = TRANSFORMS[gl_InstanceIndex].localToClip * vec4(Position, 1.0);
+	position = mat4x3(TRANSFORMS[gl_InstanceIndex].model) * vec4(Position, 1.0);
+	normal = mat3(TRANSFORMS[gl_InstanceIndex].modelNormal) * Normal;
 	texCoord = TexCoord;
 }

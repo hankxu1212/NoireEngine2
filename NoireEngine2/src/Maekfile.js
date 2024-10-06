@@ -35,6 +35,7 @@ const core_objs = [
 const renderer_objs = [
 	maek.CPP('renderer/vertices/Vertex.cpp'),
 	maek.CPP('renderer/vertices/PosColVertex.cpp'),
+	maek.CPP('renderer/vertices/PosVertex.cpp'),
 	maek.CPP('renderer/Frustum.cpp'),
 	maek.CPP('renderer/Camera.cpp'),
 	maek.CPP('renderer/scene/Transform.cpp'),
@@ -119,6 +120,12 @@ const lines_shaders = [
 	maek.GLSLC('shaders/lines.frag'),
 ];
 vulkan_objs.push(maek.CPP('backend/pipeline/LinesPipeline.cpp', undefined, { depends: [...lines_shaders] }));
+
+const skybox_shaders = [
+	maek.GLSLC('shaders/skybox.vert'),
+	maek.GLSLC('shaders/skybox.frag'),
+];
+vulkan_objs.push(maek.CPP('backend/pipeline/SkyboxPipeline.cpp', undefined, { depends: [...skybox_shaders] }));
 
 const imgui_objs = [
 	maek.CPP('../vendor/imgui/imgui.cpp'),

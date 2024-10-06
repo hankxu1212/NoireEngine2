@@ -18,8 +18,6 @@
 #include "backend/pipeline/material_pipeline/LambertianMaterialPipeline.hpp"
 #include "renderer/materials/MaterialLibrary.hpp"
 
-#include "backend/images/ImageCube.hpp"
-
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
 
@@ -28,7 +26,6 @@ ObjectPipeline::ObjectPipeline()
 {
 	m_Renderpass = std::make_unique<Renderpass>(true);
 	Image2D::Create(Files::Path("../textures/default.png"));
-	ImageCube::Create(Files::Path("../scene/examples/env-cube.png"), ".png");
 }
 
 ObjectPipeline::~ObjectPipeline()
@@ -226,10 +223,13 @@ void ObjectPipeline::CreatePipeline()
 
 	s_LinesPipeline = std::make_unique<LinesPipeline>(this);
 
+	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>(this);
+
 	CreateDescriptors();
 
 	m_MaterialPipelines[0]->Create();
 	s_LinesPipeline->CreatePipeline();
+	s_SkyboxPipeline->CreatePipeline();
 }
 
 void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
@@ -300,6 +300,8 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 	if (UseGizmos) {
 		s_LinesPipeline->Prepare(scene, commandBuffer, surfaceId);
 	}
+
+	s_SkyboxPipeline->Prepare(scene, commandBuffer, surfaceId);
 
 	{ //memory barrier to make sure copies complete before rendering happens:
 		VkMemoryBarrier memory_barrier{
@@ -391,6 +393,8 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 	if (UseGizmos) {
 		s_LinesPipeline->Render(scene, commandBuffer, surfaceId);
 	}
+
+	s_SkyboxPipeline->Render(scene, commandBuffer, surfaceId);
 }
 
 std::vector<ObjectPipeline::IndirectBatch> ObjectPipeline::CompactDraws(const std::vector<ObjectInstance>& objects)

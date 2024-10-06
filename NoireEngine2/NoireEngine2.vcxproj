@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\pipeline\SkyboxPipeline.cpp" />
     <ClCompile Include="src\backend\images\ImageCube.cpp" />
     <ClCompile Include="src\backend\renderpass\Renderpass.cpp" />
     <ClCompile Include="src\backend\pipeline\LinesPipeline.cpp" />
@@ -160,6 +161,7 @@
     <ClCompile Include="src\math\vector\Vec3.cpp" />
     <ClCompile Include="src\math\vector\Vec4.cpp" />
     <ClCompile Include="src\renderer\scene\SceneNode.cpp" />
+    <ClCompile Include="src\renderer\vertices\PosVertex.cpp" />
     <ClCompile Include="src\scripting\Behaviour.cpp" />
     <ClCompile Include="src\scripting\core\Input.cpp" />
     <ClCompile Include="src\scripting\core\SceneNavigationCamera.cpp" />
@@ -240,6 +242,7 @@
     <ClCompile Include="vendor\imgui\misc\freetype\imgui_freetype.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\pipeline\SkyboxPipeline.hpp" />
     <ClInclude Include="src\backend\images\ImageCube.hpp" />
     <ClInclude Include="src\backend\renderpass\Renderpass.hpp" />
     <ClInclude Include="src\backend\pipeline\LinesPipeline.hpp" />
@@ -271,6 +274,7 @@
     <ClInclude Include="src\renderer\components\renderer_components\RendererComponent.hpp" />
     <ClInclude Include="src\renderer\scene\SceneNode.hpp" />
     <ClInclude Include="src\renderer\vertices\PosNorTanTexVertex.hpp" />
+    <ClInclude Include="src\renderer\vertices\PosVertex.hpp" />
     <ClInclude Include="src\scripting\Behaviour.hpp" />
     <ClInclude Include="src\renderer\components\CameraComponent.hpp" />
     <ClInclude Include="src\renderer\components\Components.hpp" />
@@ -415,6 +419,9 @@
     <None Include="src\scenes\s72\viewer\s72-viewer.html" />
     <None Include="src\shaders\lambertian.frag" />
     <None Include="src\shaders\lambertian.vert" />
+    <None Include="src\shaders\skybox.frag" />
+    <None Include="src\shaders\skybox.vert" />
+    <None Include="src\shaders\glsl\world_uniform.glsl" />
     <None Include="tutorial\background.frag" />
     <None Include="tutorial\background.vert" />
     <None Include="src\shaders\lines.frag" />

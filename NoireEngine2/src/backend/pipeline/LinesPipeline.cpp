@@ -276,7 +276,7 @@ void LinesPipeline::CreateGraphicsPipeline()
 		.subpass = 0,
 	};
 
-	VulkanContext::VK_CHECK(vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &create_info, nullptr, &m_Pipeline));
+	VulkanContext::VK_CHECK(vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VulkanContext::Get()->getPipelineCache(), 1, &create_info, nullptr, &m_Pipeline));
 }
 
 void LinesPipeline::CreateDescriptors()

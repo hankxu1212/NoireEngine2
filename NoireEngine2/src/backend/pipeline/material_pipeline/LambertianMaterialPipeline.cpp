@@ -91,16 +91,6 @@ void LambertianMaterialPipeline::CreateGraphicsPipeline()
 		.pDynamicStates = dynamic_states.data()
 	};
 
-
-	//this pipeline will take no per-vertex inputs:
-	VkPipelineVertexInputStateCreateInfo vertex_input_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-		.vertexBindingDescriptionCount = 0,
-		.pVertexBindingDescriptions = nullptr,
-		.vertexAttributeDescriptionCount = 0,
-		.pVertexAttributeDescriptions = nullptr,
-	};
-
 	//this pipeline will draw triangles:
 	VkPipelineInputAssemblyStateCreateInfo input_assembly_state{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -177,7 +167,6 @@ void LambertianMaterialPipeline::CreateGraphicsPipeline()
 	};
 
 	VulkanContext::VK_CHECK(
-		vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &create_info, nullptr, &m_Pipeline),
+		vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VulkanContext::Get()->getPipelineCache(), 1, &create_info, nullptr, &m_Pipeline),
 		"[Vulkan] Create pipeline failed");
-
 }

@@ -2,9 +2,6 @@
 
 #extension GL_EXT_nonuniform_qualifier : require
 
-#define MAX_NUM_TOTAL_LIGHTS 20
-#define MAX_LIGHTS_PER_OBJ 8
-
 #define saturate(x) clamp(x, 0.0, 1.0)
 
 layout(location=0) in vec3 inPosition;
@@ -13,22 +10,7 @@ layout(location=2) in vec2 inTexCoord;
 
 layout(location=0) out vec4 outColor;
 
-struct Light {
-    vec4 color;
-    vec4 position;
-    vec4 direction;
-	float radius;
-	float limit;
-	float intensity;
-	float fov;
-	float blend;
-	int type;
-};
-
-layout(set=0,binding=0,std140) uniform World {
-	Light lights[MAX_NUM_TOTAL_LIGHTS];
-	int numLights;
-}scene;
+#include "glsl/world_uniform.glsl"
 
 layout (set = 2, binding = 0) uniform sampler2D textures[];
 

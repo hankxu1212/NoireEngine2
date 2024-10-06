@@ -20,6 +20,7 @@ public:
 
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
 
+private:
 	void CreateGraphicsPipeline();
 	void CreatePipelineLayout();
 	void CreateDescriptors();

@@ -6,9 +6,11 @@
 #include "renderer/object/ObjectInstance.hpp"
 #include "backend/images/ImageDepth.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
-#include "backend/pipeline/material_pipeline/MaterialPipeline.hpp"
-#include "LinesPipeline.hpp"
 #include "backend/renderpass/Renderpass.hpp"
+
+#include "backend/pipeline/material_pipeline/MaterialPipeline.hpp"
+#include "SkyboxPipeline.hpp"
+#include "LinesPipeline.hpp"
 
 #include <type_traits>
 #include "glm/glm.hpp"
@@ -64,13 +66,15 @@ private:
 private:
 	friend class LambertianMaterialPipeline;
 	friend class LinesPipeline;
-
-	VkDescriptorSetLayout set0_WorldLayout = VK_NULL_HANDLE;
-	VkDescriptorSetLayout set1_TransformsLayout = VK_NULL_HANDLE;
-	VkDescriptorSetLayout set2_TexturesLayout = VK_NULL_HANDLE;
+	friend class SkyboxPipeline;
 
 	std::vector<Workspace> workspaces;
 
+	VkDescriptorSetLayout set0_WorldLayout = VK_NULL_HANDLE;
+	
+	VkDescriptorSetLayout set1_TransformsLayout = VK_NULL_HANDLE;
+
+	VkDescriptorSetLayout set2_TexturesLayout = VK_NULL_HANDLE;
 	VkDescriptorSet set2_Textures;
 
 	DescriptorAllocator						m_DescriptorAllocator;
@@ -92,5 +96,6 @@ private:
 private: // material pipelines
 	std::vector<std::unique_ptr<MaterialPipeline>>	m_MaterialPipelines;
 	std::unique_ptr<LinesPipeline>					s_LinesPipeline;
+	std::unique_ptr<SkyboxPipeline>					s_SkyboxPipeline;
 };
 
