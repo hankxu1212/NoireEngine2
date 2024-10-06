@@ -78,7 +78,12 @@ function uploadTex(gl, width, height, data, mips) {
 
 	if (data instanceof Uint8ClampedArray) {
 		console.assert(data.length === 4*width*height, "RGBA data is correct length for texture.");
-		gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+		const flipped = new Uint8ClampedArray(data.length);
+		for (let row = 0; row < height; ++row) {
+			flipped.set(data.subarray((height-1-row) * width * 4, (height-1-row+1) * width * 4), row * width * 4);
+		}
+
+		gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, flipped);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -531,6 +536,8 @@ export class Viewer {
 		this.userCamera = new UserCamera();
 		this.camera = this.userCamera;
 
+		this.backfaceCulling = true;
+
 		this.playing = false;
 		this.playRate = 1.0;
 		this.time = 0.0;
@@ -736,11 +743,13 @@ export class Viewer {
 		gl.enable(gl.DEPTH_TEST);
 		gl.useProgram(this.programs.simple);
 
-		/*
-		//backface culling likely to confuse folks, though it would be a nice debug option to have:
-		gl.enable(gl.CULL_FACE);
-		gl.cullFace(gl.BACK);
-		*/
+		if (this.backfaceCulling) {
+			//backface culling likely to confuse folks, though it would be a nice debug option to have:
+			gl.enable(gl.CULL_FACE);
+			gl.cullFace(gl.BACK);
+		} else {
+			gl.disable(gl.CULL_FACE);
+		}
 
 		const CLIP_FROM_WORLD = mul(
 			this.camera.makeCLIP_FROM_LOCAL(),
