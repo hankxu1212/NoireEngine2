@@ -1,26 +1,26 @@
-#pragma once
+﻿#pragma once
 
 #include "renderer/AABB.hpp"
 #include "renderer/vertices/PosColVertex.hpp"
 
 struct GizmosInstance 
 {
-    void DrawLineCubeAroundAABB(const AABB& aabb)
+    void DrawWiredCubeAroundAABB(const AABB& aabb)
     {
         m_LinesVertices.clear();
 
         // Calculate the 8 corners of the AABB
         PosColVertex corners[8] = {
             // Bottom face
-            {{aabb.min.x, aabb.min.y, aabb.min.z}, { 0,255,0,255 }}, // (minX, minY, minZ)
-            {{aabb.max.x, aabb.min.y, aabb.min.z}, { 0,255,0,255 }}, // (maxX, minY, minZ)
-            {{aabb.min.x, aabb.max.y, aabb.min.z}, { 0,255,0,255 }}, // (minX, maxY, minZ)
-            {{aabb.max.x, aabb.max.y, aabb.min.z}, { 0,255,0,255 }}, // (maxX, maxY, minZ)
+            {{aabb.min.x, aabb.min.y, aabb.min.z}, Color4_4::Green}, // (minX, minY, minZ)
+            {{aabb.max.x, aabb.min.y, aabb.min.z}, Color4_4::Green}, // (maxX, minY, minZ)
+            {{aabb.min.x, aabb.max.y, aabb.min.z}, Color4_4::Green}, // (minX, maxY, minZ)
+            {{aabb.max.x, aabb.max.y, aabb.min.z}, Color4_4::Green}, // (maxX, maxY, minZ)
             // Top face
-            {{aabb.min.x, aabb.min.y, aabb.max.z}, { 0,255,0,255 }}, // (minX, minY, maxZ)
-            {{aabb.max.x, aabb.min.y, aabb.max.z}, { 0,255,0,255 }}, // (maxX, minY, maxZ)
-            {{aabb.min.x, aabb.max.y, aabb.max.z}, { 0,255,0,255 }}, // (minX, maxY, maxZ)
-            {{aabb.max.x, aabb.max.y, aabb.max.z}, { 0,255,0,255 }}, // (maxX, maxY, maxZ)
+            {{aabb.min.x, aabb.min.y, aabb.max.z}, Color4_4::Green}, // (minX, minY, maxZ)
+            {{aabb.max.x, aabb.min.y, aabb.max.z}, Color4_4::Green}, // (maxX, minY, maxZ)
+            {{aabb.min.x, aabb.max.y, aabb.max.z}, Color4_4::Green}, // (minX, maxY, maxZ)
+            {{aabb.max.x, aabb.max.y, aabb.max.z}, Color4_4::Green}, // (maxX, maxY, maxZ)
         };
 
 
@@ -38,6 +38,38 @@ struct GizmosInstance
         AddEdge(corners[1], corners[5]); // Side: (maxX, minY, minZ) to (maxX, minY, maxZ)
         AddEdge(corners[2], corners[6]); // Side: (minX, maxY, minZ) to (minX, maxY, maxZ)
         AddEdge(corners[3], corners[7]); // Side: (maxX, maxY, minZ) to (maxX, maxY, maxZ)
+    }
+
+    void DrawWiredSphere(float radius, const glm::vec3& center, Color4_4 color=Color4_4::White)
+    {
+        m_LinesVertices.clear();
+        constexpr uint32_t segments = 20;
+
+        for (int i = 0; i < segments; ++i) 
+        {
+            float theta1 = glm::pi<float>() * (-0.5f + float(i) / float(segments));    // Latitude angle for segment i
+            float theta2 = glm::pi<float>() * (-0.5f + float(i + 1) / float(segments)); // Next latitude angle
+
+            float phi1 = 2.0f * glm::pi<float>() * float(i) / float(segments);         // Longitude angle for equator
+            float phi2 = 2.0f * glm::pi<float>() * float(i + 1) / float(segments);     // Next longitude angle
+
+            // Create smooth line along the equator (latitude = 0)
+            AddEdge(
+                { {radius * cos(phi1), radius * sin(phi1), 0}, color },
+                { {radius * cos(phi2), radius * sin(phi2), 0}, color }
+            );
+
+            float rc1 = radius * cos(theta1);
+            float rc2 = radius * cos(theta2);
+            // create 4 lines
+            for (float l = 0; l < 2 * glm::pi<float>(); l += glm::half_pi<float>())
+            {
+                AddEdge(
+                    { {rc1 * cos(l), rc1 * sin(l), radius * sin(theta1) }, color },
+                    { {rc2 * cos(l), rc2 * sin(l), radius * sin(theta2) }, color }
+                );
+            }
+        }
     }
 
     // Helper function to add edges

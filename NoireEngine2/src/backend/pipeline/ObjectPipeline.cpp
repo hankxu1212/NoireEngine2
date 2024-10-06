@@ -25,6 +25,7 @@
 ObjectPipeline::ObjectPipeline()
 {
 	m_Renderpass = std::make_unique<Renderpass>(true);
+	Image2D::Create(Files::Path("../textures/default.png"));
 }
 
 ObjectPipeline::~ObjectPipeline()
@@ -187,7 +188,7 @@ void ObjectPipeline::CreateDescriptors()
 			.bindingCount = 1,
 			.pBindingFlags = descriptorBindingFlags.data()
 		};
-
+		
 		const auto& textures = MaterialLibrary::Get()->GetTextures();
 
 		std::vector<uint32_t> variableDesciptorCounts = {

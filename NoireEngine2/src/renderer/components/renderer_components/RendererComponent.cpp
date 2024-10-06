@@ -52,7 +52,7 @@ void RendererComponent::Render(const glm::mat4& model)
 	});
 
 	if (ObjectPipeline::UseGizmos && useGizmos) {
-		gizmos.DrawLineCubeAroundAABB(mesh->getAABB());
+		gizmos.DrawWiredCubeAroundAABB(mesh->getAABB());
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
 }

@@ -62,9 +62,7 @@ public:
     }
 
     template <class... _Types>
-    static void NULLIFY(_Types...Args) {
-
-    }
+    static void NULLIFY(_Types...Args) { }
 };
 
 //#define NE_DEBUG(...)   Logger::NULLIFY(__VA_ARGS__)

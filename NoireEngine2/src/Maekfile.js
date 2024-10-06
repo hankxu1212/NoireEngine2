@@ -67,6 +67,7 @@ const util_objs = [
 	maek.CPP('math/vector/Vec2.cpp'),
 	maek.CPP('math/vector/Vec3.cpp'),
 	maek.CPP('math/vector/Vec4.cpp'),
+	maek.CPP('math/color/Color.cpp'),
 	maek.CPP('math/color/Color3.cpp'),
 	maek.CPP('math/color/Color4.cpp'),
 	maek.CPP('math/matrix/Mat2.cpp'),

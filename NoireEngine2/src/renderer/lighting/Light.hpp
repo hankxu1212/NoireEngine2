@@ -5,6 +5,7 @@
 #include "math/color/Color.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "renderer/components/Component.hpp"
+#include "renderer/gizmos/GizmosInstance.hpp"
 
 #include <variant>
 
@@ -37,6 +38,8 @@ public:
 public:
 	void Update() override;
 
+	void Render(const glm::mat4& model) override;
+
 	void Inspect() override;
 
 	_NODISCARD LightUniform& GetLightUniform() { return m_LightUniform; }
@@ -45,4 +48,5 @@ public:
 
 private:
 	LightUniform m_LightUniform;
+	GizmosInstance gizmos;
 };

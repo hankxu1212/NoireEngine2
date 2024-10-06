@@ -29,7 +29,7 @@ Camera::Camera(Type type_, bool orthographic_, float np, float fp, float fov, fl
 
 void Camera::Update(const Transform& t)
 {
-	viewMatrix = glm::lookAt(t.m_Position, t.m_Position - t.Forward(), t.Up());
+	viewMatrix = glm::lookAt(t.position(), t.position() - t.Forward(), t.Up());
 
 	if (orthographic) {
 		projectionMatrix = glm::ortho(

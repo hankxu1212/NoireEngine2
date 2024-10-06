@@ -17,7 +17,7 @@ Entity::~Entity()
 void Entity::SetParent(Entity* newParent)
 {
 	m_Parent = newParent;
-	s_Transform->parent = newParent->transform();
+	s_Transform->SetParent(newParent->transform());
 }
 
 void Entity::Update()

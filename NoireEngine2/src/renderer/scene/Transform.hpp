@@ -17,6 +17,7 @@ public:
     const glm::vec3& position() const { return m_Position; }
     const glm::quat& rotation() const { return m_Rotation; }
     const glm::vec3& scale() const { return m_Scale; }
+    const Transform* parent() const { return m_Parent; }
 
     void SetPosition(glm::vec3);
     void SetPosition(glm::vec3&);
@@ -27,15 +28,12 @@ public:
     void SetScale(glm::vec3);
     void SetScale(glm::vec3&);
 
+    void SetParent(Transform* newParent) { m_Parent = newParent; }
+
 public:
     void Inspect();
 
 public:
-    glm::vec3 m_Position = Vec3::Zero;
-    glm::quat m_Rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-    glm::vec3 m_Scale = Vec3::One;
-    Transform* parent = nullptr;
-
     // the local transformation matrix
     glm::mat4 Local() const;
     glm::mat4 LocalDirty();
@@ -91,7 +89,6 @@ public:
     bool operator!() const {
         return this == nullptr;
     }
-
 private:
     // attach a new transform as parent
     void AttachParent(Transform& parentTransform);
@@ -101,4 +98,9 @@ private:
 
     bool isDirty = true;
     glm::mat4 localMat;
+
+    Transform* m_Parent = nullptr;
+    glm::vec3 m_Position = Vec3::Zero;
+    glm::quat m_Rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+    glm::vec3 m_Scale = Vec3::One;
 };

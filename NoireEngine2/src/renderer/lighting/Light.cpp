@@ -1,6 +1,8 @@
 #include "Light.hpp"
 #include "renderer/scene/Entity.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "backend/pipeline/ObjectPipeline.hpp"
+
 #include "imgui/imgui.h"
 
 Light::Light(Type type)
@@ -20,6 +22,21 @@ void Light::Update()
 	Transform* transform = GetTransform();
 	memcpy(&m_LightUniform.direction, glm::value_ptr(transform->Forward()), sizeof(glm::vec3));
 	memcpy(&m_LightUniform.position, glm::value_ptr(transform->LocalDirty()[3]), sizeof(glm::vec3));
+}
+
+void Light::Render(const glm::mat4& model)
+{
+	if (m_LightUniform.type != (uint32_t)Type::Directional && ObjectPipeline::UseGizmos) {
+		auto& pos = GetTransform()->position();
+		Color4_4 c{ 
+			static_cast<uint8_t>(m_LightUniform.color.x * 255), 
+			static_cast<uint8_t>(m_LightUniform.color.y * 255), 
+			static_cast<uint8_t>(m_LightUniform.color.z * 255), 
+			255 
+		};
+		gizmos.DrawWiredSphere(m_LightUniform.limit, pos, c);
+			GetScene()->PushGizmosInstance(&gizmos);
+	}
 }
 
 Light::Light(Type type, Color3 color, float intensity, float radius) :

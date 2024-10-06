@@ -7,8 +7,8 @@
 
 struct PosColVertex 
 {
-	struct { float x, y, z; } Position;
-	struct { uint8_t r, g, b, a; } Color;
+	glm::vec3 Position;
+	Color4_4 Color;
 	//a pipeline vertex input state that works with a buffer holding a PosColVertex[] array:
 	static const VkPipelineVertexInputStateCreateInfo array_input_state;
 };

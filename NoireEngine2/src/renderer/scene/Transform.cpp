@@ -4,7 +4,7 @@
 #include "editor/ImGuiExtension.hpp"
 
 Transform::Transform(const Transform& other) : 
-    m_Position(other.m_Position), m_Rotation(other.m_Rotation), m_Scale(other.m_Scale), parent(other.parent) {
+    m_Position(other.m_Position), m_Rotation(other.m_Rotation), m_Scale(other.m_Scale), m_Parent(other.m_Parent) {
 }
 
 Transform::Transform(glm::vec3 t) : 
@@ -91,8 +91,8 @@ glm::vec3 Transform::LocalInverseScale() const { return 1.0f / m_Scale; }
 glm::quat Transform::LocalInverseRotation() const { return glm::inverse(m_Rotation); }
 
 glm::mat4 Transform::World() const {
-    if (parent) {
-        return parent->World() * Local();
+    if (m_Parent) {
+        return m_Parent->World() * Local();
     }
     else {
         return Local();
@@ -101,8 +101,8 @@ glm::mat4 Transform::World() const {
 
 glm::vec3 Transform::WorldLocation() const
 {
-    if (parent) {
-        return parent->WorldLocation() + m_Position;
+    if (m_Parent) {
+        return m_Parent->WorldLocation() + m_Position;
     }
     else {
         return m_Position;
@@ -111,8 +111,8 @@ glm::vec3 Transform::WorldLocation() const
 
 glm::vec3 Transform::WorldScale() const
 {
-    if (parent) {
-        return parent->WorldScale() * m_Scale;
+    if (m_Parent) {
+        return m_Parent->WorldScale() * m_Scale;
     }
     else {
         return m_Scale;
@@ -121,8 +121,8 @@ glm::vec3 Transform::WorldScale() const
 
 glm::quat Transform::WorldRotation() const
 {
-    if (parent) {
-        return parent->WorldRotation() * m_Rotation;
+    if (m_Parent) {
+        return m_Parent->WorldRotation() * m_Rotation;
     }
     else {
         return m_Rotation;
@@ -130,8 +130,8 @@ glm::quat Transform::WorldRotation() const
 }
 
 glm::mat4 Transform::WorldInverse() const {
-    if (parent) {
-        return LocalInverse() * parent->WorldInverse();
+    if (m_Parent) {
+        return LocalInverse() * m_Parent->WorldInverse();
     }
     else {
         return LocalInverse();
@@ -143,11 +143,6 @@ glm::vec3 Transform::WorldInverseLocation() const { return -WorldLocation(); }
 glm::vec3 Transform::WorldInverseScale() const { return 1.0f / WorldScale(); }
 
 glm::quat Transform::WorldInverseRotation() const { return glm::inverse(WorldRotation()); }
-
-bool operator!=(const Transform& a, const Transform& b) {
-    return a.parent != b.parent || a.m_Position != b.m_Position ||
-        a.m_Rotation != b.m_Rotation || a.m_Scale != b.m_Scale;
-}
 
 glm::vec3 Transform::Forward() const { return m_Rotation * Vec3::Forward; }
 glm::vec3 Transform::Back() const { return m_Rotation * Vec3::Back; }
@@ -214,17 +209,17 @@ void Transform::LerpTo(const glm::vec3& targetPosition, float t)
     m_Position = lerp(m_Position, targetPosition, t);
 }
 
-void Transform::AttachParent(Transform& parentTransform)
+void Transform::AttachParent(Transform& m_ParentTransform)
 {
-    parent = &parentTransform;
-    auto parentInverse = parentTransform.LocalInverse();
-    Apply(parentInverse);
+    m_Parent = &m_ParentTransform;
+    auto m_ParentInverse = m_ParentTransform.LocalInverse();
+    Apply(m_ParentInverse);
 }
 
 void Transform::RemoveParent()
 {
-    auto parentWorld = parent->World();
-    Apply(parentWorld);
+    auto m_ParentWorld = m_Parent->World();
+    Apply(m_ParentWorld);
 }
 
 void Transform::Inspect()

@@ -91,6 +91,7 @@
   <ItemGroup>
     <ClCompile Include="src\backend\renderpass\Renderpass.cpp" />
     <ClCompile Include="src\backend\pipeline\LinesPipeline.cpp" />
+    <ClCompile Include="src\math\color\Color.cpp" />
     <ClCompile Include="src\renderer\materials\MaterialLibrary.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\MaterialPipeline.cpp" />
