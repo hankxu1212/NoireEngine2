@@ -16,16 +16,19 @@
 #include "utils/Logger.hpp"
 
 #include "backend/pipeline/material_pipeline/LambertianMaterialPipeline.hpp"
-
 #include "renderer/materials/MaterialLibrary.hpp"
+
+#include "backend/images/ImageCube.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
+
 
 ObjectPipeline::ObjectPipeline()
 {
 	m_Renderpass = std::make_unique<Renderpass>(true);
 	Image2D::Create(Files::Path("../textures/default.png"));
+	ImageCube::Create(Files::Path("../scene/examples/env-cube.png"), ".png");
 }
 
 ObjectPipeline::~ObjectPipeline()
@@ -320,7 +323,7 @@ VkDescriptorBufferInfo ObjectPipeline::CreateTransformStorageBuffer(Workspace& w
 void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
 	m_MaterialPipelines[0]->BindPipeline(commandBuffer);
-	m_MaterialPipelines[0]->BindDescriptors(commandBuffer, nullptr);
+	m_MaterialPipelines[0]->BindDescriptors(commandBuffer, surfaceId);
 
 	//draw all instances in relation to a certain material:
 	const std::vector<ObjectInstance>& sceneObjectInstances = scene->getObjectInstances();

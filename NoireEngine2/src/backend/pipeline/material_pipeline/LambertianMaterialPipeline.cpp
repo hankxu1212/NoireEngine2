@@ -23,10 +23,9 @@ void LambertianMaterialPipeline::Create()
 	CreateGraphicsPipeline();
 }
 
-void LambertianMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer, Material* materialInstance)
+void LambertianMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
-	//LambertianMaterial* lambertianMaterialInstance = dynamic_cast<LambertianMaterial*>(materialInstance);
-	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[0]; // TODO: pass in surface id
+	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[surfaceId];
 	std::array< VkDescriptorSet, 3 > descriptor_sets{
 		workspace.set0_World,
 		workspace.set1_Transforms,

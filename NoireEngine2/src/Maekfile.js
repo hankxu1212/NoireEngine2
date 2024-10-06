@@ -94,6 +94,7 @@ const vulkan_objs = [
 	maek.CPP('backend/commands/CommandPool.cpp'),
 	maek.CPP('backend/images/Image.cpp'),
 	maek.CPP('backend/images/Image2D.cpp'),
+	maek.CPP('backend/images/ImageCube.cpp'),
 	maek.CPP('backend/images/ImageDepth.cpp'),
 	maek.CPP('backend/buffers/Buffer.cpp'),
 	maek.CPP('backend/renderpass/Swapchain.cpp'),

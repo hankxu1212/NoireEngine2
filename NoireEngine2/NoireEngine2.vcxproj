@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\images\ImageCube.cpp" />
     <ClCompile Include="src\backend\renderpass\Renderpass.cpp" />
     <ClCompile Include="src\backend\pipeline\LinesPipeline.cpp" />
     <ClCompile Include="src\math\color\Color.cpp" />
@@ -239,6 +240,7 @@
     <ClCompile Include="vendor\imgui\misc\freetype\imgui_freetype.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\images\ImageCube.hpp" />
     <ClInclude Include="src\backend\renderpass\Renderpass.hpp" />
     <ClInclude Include="src\backend\pipeline\LinesPipeline.hpp" />
     <ClInclude Include="src\renderer\gizmos\GizmosInstance.hpp" />
