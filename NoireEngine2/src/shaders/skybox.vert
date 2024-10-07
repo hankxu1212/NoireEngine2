@@ -12,6 +12,7 @@ void main()
 {
 	outFragUVW = inPosition;
 	outFragUVW.xy *= -1.0;
+	outFragUVW = outFragUVW.xzy; // does a flip of y-z coordinates
 
 	vec4 pos = projection * mat4(mat3(view)) * vec4(inPosition, 1.0);
 

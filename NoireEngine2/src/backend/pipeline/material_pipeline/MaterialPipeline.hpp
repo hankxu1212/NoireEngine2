@@ -13,7 +13,7 @@ public:
 	MaterialPipeline() = default;
 	MaterialPipeline(ObjectPipeline* objectPipeline);
 	
-	~MaterialPipeline();
+	virtual ~MaterialPipeline();
 
 	void BindPipeline(const CommandBuffer& commandBuffer);
 
@@ -23,8 +23,8 @@ public:
 
 	static std::unique_ptr<MaterialPipeline> Create(Material::Workflow workflow, ObjectPipeline* objectPipeline);
 
-	VkPipeline			m_Pipeline;
-	VkPipelineLayout	m_PipelineLayout;
-	ObjectPipeline*		p_ObjectPipeline;
+	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
+	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
+	ObjectPipeline*		p_ObjectPipeline = nullptr;
 };
 

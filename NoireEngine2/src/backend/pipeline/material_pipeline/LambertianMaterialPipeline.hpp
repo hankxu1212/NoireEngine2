@@ -12,11 +12,7 @@ public:
 	void BindDescriptors(const CommandBuffer& commandBuffer, uint32_t surfaceId) override;
 
 private:
-	
 	void CreatePipelineLayout();
 	void CreateGraphicsPipeline();
-
-	VkDescriptorSetLayout			m_DescriptorSetLayoutTexture;
-	VkDescriptorSet					m_DescriptorSetTexture;
 };
 

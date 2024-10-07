@@ -48,6 +48,7 @@ const renderer_objs = [
 	maek.CPP('renderer/materials/Material.cpp'),
 	maek.CPP('renderer/materials/MaterialLibrary.cpp'),
 	maek.CPP('renderer/materials/LambertianMaterial.cpp'),
+	maek.CPP('renderer/materials/EnvironmentMaterial.cpp'),
 	maek.CPP('renderer/AABB.cpp'),
 	maek.CPP('renderer/scene/SceneManager.cpp'),
 	maek.CPP('renderer/animation/Animation.cpp'),
@@ -109,23 +110,18 @@ const vulkan_objs = [
 	maek.CPP('backend/pipeline/ObjectPipeline.cpp'),
 ]
 
-const lambertian_shaders = [
-	maek.GLSLC('shaders/lambertian.vert'),
-	maek.GLSLC('shaders/lambertian.frag'),
-];
-vulkan_objs.push(maek.CPP('backend/pipeline/material_pipeline/LambertianMaterialPipeline.cpp', undefined, { depends: [...lambertian_shaders] }));
+function use_shaders(name, pipeline) {
+	const shaders = [
+		maek.GLSLC(name + '.vert'),
+		maek.GLSLC(name + '.frag'),
+	];
+	vulkan_objs.push(maek.CPP(pipeline, undefined, { depends: [...shaders] }));
+}
 
-const lines_shaders = [
-	maek.GLSLC('shaders/lines.vert'),
-	maek.GLSLC('shaders/lines.frag'),
-];
-vulkan_objs.push(maek.CPP('backend/pipeline/LinesPipeline.cpp', undefined, { depends: [...lines_shaders] }));
-
-const skybox_shaders = [
-	maek.GLSLC('shaders/skybox.vert'),
-	maek.GLSLC('shaders/skybox.frag'),
-];
-vulkan_objs.push(maek.CPP('backend/pipeline/SkyboxPipeline.cpp', undefined, { depends: [...skybox_shaders] }));
+use_shaders('shaders/lambertian', 'backend/pipeline/material_pipeline/LambertianMaterialPipeline.cpp');
+use_shaders('shaders/lines', 'backend/pipeline/LinesPipeline.cpp');
+use_shaders('shaders/skybox', 'backend/pipeline/SkyboxPipeline.cpp');
+use_shaders('shaders/environment', 'backend/pipeline/material_pipeline/EnvironmentMaterialPipeline.cpp');
 
 const imgui_objs = [
 	maek.CPP('../vendor/imgui/imgui.cpp'),
@@ -225,7 +221,7 @@ function custom_flags_and_rules() {
 			`/I../vendor/`,
 			`/I../vendor/imgui/`,
 			`/I../vendor/imguizmo/`,
-			'/O2'
+			//'/O2'
 		];
 
 	} else if (maek.OS === 'macos') {

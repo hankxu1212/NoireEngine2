@@ -33,7 +33,6 @@ public:
 	VkDescriptorPool GrabPool();
 
 private:
-
 	VkDescriptorPool currentPool{ VK_NULL_HANDLE };
 	PoolSizes descriptorSizes;
 	std::vector<VkDescriptorPool> usedPools;

@@ -76,7 +76,8 @@ void LambertianMaterial::Load()
 {
 	if (m_CreateInfo.texturePath != "")
 	{
-		Image2D::Create(Files::Path("../scenes/examples/" + m_CreateInfo.texturePath));
+		auto tex = Image2D::Create(Files::Path("../scenes/examples/" + m_CreateInfo.texturePath));
+		m_AlbedoMapIndex = tex->getTextureId();
 	}
 }
 

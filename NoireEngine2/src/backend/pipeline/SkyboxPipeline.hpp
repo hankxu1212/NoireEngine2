@@ -29,7 +29,6 @@ private:
 
 	VkDescriptorSetLayout set0_CameraLayout = VK_NULL_HANDLE;
 
-	//types for descriptors:
 	struct CameraUniform {
 		glm::mat4 projection;
 		glm::mat4 view;

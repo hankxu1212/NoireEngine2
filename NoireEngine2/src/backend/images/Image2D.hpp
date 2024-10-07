@@ -74,6 +74,7 @@ public:
 	bool IsAnisotropic() const { return anisotropic; }
 	bool IsMipmap() const { return mipmap; }
 	uint32_t GetComponents() const { return components; }
+	uint32_t getTextureId() const { return g_TextureId; }
 
 	friend const Node& operator>>(const Node& node, Image2D& image);
 	friend Node& operator<<(Node& node, const Image2D& image);

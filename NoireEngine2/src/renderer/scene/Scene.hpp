@@ -17,6 +17,7 @@ class Transform;
 class CameraComponent;
 
 #define MAX_NUM_TOTAL_LIGHTS 20
+#define MAX_WORKFLOWS 4
 
 namespace Core {
 	class SceneNavigationCamera;
@@ -66,7 +67,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Rendering and scene uniforms
 
-	void PushObjectInstance(ObjectInstance&& instance);
+	void PushObjectInstance(ObjectInstance&& instance, uint32_t index);
 
 	void PushGizmosInstance(GizmosInstance* instance);
 
@@ -87,7 +88,7 @@ public:
 
 	inline size_t getSceneUniformSize() const { return sizeof(SceneUniform); }
 
-	inline const std::vector<ObjectInstance>& getObjectInstances() const { return m_ObjectInstances; }
+	inline const std::vector<std::vector<ObjectInstance>>& getObjectInstances() const { return m_ObjectInstances; }
 
 	inline const std::vector<GizmosInstance*>& getGizmosInstances() const { return m_GizmosInstances; }
 
@@ -120,7 +121,7 @@ private:
 	//types for descriptors:
 	SceneUniform m_SceneInfo;
 
-	std::vector<ObjectInstance> m_ObjectInstances;
+	std::vector<std::vector<ObjectInstance>> m_ObjectInstances;
 	std::vector<GizmosInstance*> m_GizmosInstances;
 
 	// a list of lights

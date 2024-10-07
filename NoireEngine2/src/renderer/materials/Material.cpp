@@ -2,7 +2,9 @@
 #include "backend/pipeline/ObjectPipeline.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "utils/Logger.hpp"
+
 #include "LambertianMaterial.hpp"
+#include "EnvironmentMaterial.hpp"
 
 Material* Material::Deserialize(const Scene::TValueMap& obj)
 {
@@ -20,7 +22,7 @@ Material* Material::Deserialize(const Scene::TValueMap& obj)
 
 	auto environmentIt = obj.find("environment");
 	if (environmentIt != obj.end())
-		return Material::CreateDefault().get();
+		return EnvironmentMaterial::Deserialize(obj);
 
 	return nullptr;
 }

@@ -9,15 +9,7 @@ layout(location=0) out vec3 position;
 layout(location=1) out vec3 normal;
 layout(location=2) out vec2 texCoord;
 
-struct Transform {
-	mat4 localToClip;
-	mat4 model;
-	mat4 modelNormal;
-};
-
-layout(set=1, binding=0, std140) readonly buffer Transforms {
-	Transform TRANSFORMS[];
-};
+#include "glsl/transform_uniform.glsl"
 
 void main() {
 	gl_Position = TRANSFORMS[gl_InstanceIndex].localToClip * vec4(Position, 1.0);

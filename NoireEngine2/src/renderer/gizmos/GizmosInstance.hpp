@@ -84,8 +84,8 @@ struct GizmosInstance
 
             // Create smooth line along the equator (latitude = 0)
             AddEdge(
-                { {radius * cos(phi1), radius * sin(phi1), 0}, color },
-                { {radius * cos(phi2), radius * sin(phi2), 0}, color }
+                { center + glm::vec3{radius * cos(phi1), radius * sin(phi1), 0}, color },
+                { center + glm::vec3{radius * cos(phi2), radius * sin(phi2), 0}, color }
             );
 
             float rc1 = radius * cos(theta1);
@@ -94,8 +94,8 @@ struct GizmosInstance
             for (float l = 0; l < 2 * glm::pi<float>(); l += glm::half_pi<float>())
             {
                 AddEdge(
-                    { {rc1 * cos(l), rc1 * sin(l), radius * sin(theta1) }, color },
-                    { {rc2 * cos(l), rc2 * sin(l), radius * sin(theta2) }, color }
+                    { center + glm::vec3 {rc1 * cos(l), rc1 * sin(l), radius * sin(theta1) }, color },
+                    { center + glm::vec3 {rc2 * cos(l), rc2 * sin(l), radius * sin(theta2) }, color }
                 );
             }
         }

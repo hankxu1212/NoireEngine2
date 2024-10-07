@@ -65,6 +65,7 @@ private:
 
 private:
 	friend class LambertianMaterialPipeline;
+	friend class EnvironmentMaterialPipeline;
 	friend class LinesPipeline;
 	friend class SkyboxPipeline;
 
@@ -87,7 +88,7 @@ private:
 	{
 		Mesh* mesh;
 		Material* material;
-		uint32_t first;
+		uint32_t firstInstanceIndex;
 		uint32_t count;
 	};
 

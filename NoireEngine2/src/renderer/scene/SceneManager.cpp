@@ -11,7 +11,7 @@ SceneManager::SceneManager()
 	if (Application::Get().GetSpecification().InitialScene)
 		scene = std::make_unique<Scene>(Application::GetSpecification().InitialScene.value());
 	else
-		scene = std::make_unique<Scene>("../scenes/examples/lights-Mix.s72");
+		scene = std::make_unique<Scene>("../scenes/examples/materials.s72");
 }
 
 SceneManager::~SceneManager()
@@ -39,8 +39,5 @@ void SceneManager::Shutdown()
 void SceneManager::SetCameraMode(Scene::CameraMode newMode)
 {
 	cameraMode = newMode;
-	if (cameraMode == Scene::CameraMode::Scene)
-		scene->m_UserNavigationCamera->enabled = false;
-	else
-		scene->m_UserNavigationCamera->enabled = true;
+	scene->m_UserNavigationCamera->enabled = cameraMode != Scene::CameraMode::Scene;
 }

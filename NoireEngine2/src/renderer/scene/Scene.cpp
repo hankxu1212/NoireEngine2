@@ -24,6 +24,8 @@ Scene::Scene(const std::string& path)
 	InstantiateCoreScripts();
 
 	m_SceneInfo.numLights = 1;
+
+	m_ObjectInstances.resize(MAX_WORKFLOWS);
 }
 
 Scene::~Scene()
@@ -55,7 +57,9 @@ void Scene::Render()
 		return;
 	}
 
-	m_ObjectInstances.clear();
+	for (auto& instances : m_ObjectInstances)
+		instances.clear();
+
 	m_GizmosInstances.clear();
 	m_MatrixStack.Clear();
 
@@ -404,9 +408,9 @@ void Scene::Deserialize(const std::string& path)
 	}
 }
 
-void Scene::PushObjectInstance(ObjectInstance&& instance)
+void Scene::PushObjectInstance(ObjectInstance&& instance, uint32_t index)
 {
-	m_ObjectInstances.emplace_back(std::move(instance));
+	m_ObjectInstances[index].emplace_back(std::move(instance));
 }
 
 void Scene::PushGizmosInstance(GizmosInstance* instance)

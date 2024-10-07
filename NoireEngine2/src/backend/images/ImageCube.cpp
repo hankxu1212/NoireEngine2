@@ -110,7 +110,7 @@ void ImageCube::Load(std::unique_ptr<Bitmap> loadBitmap) {
 					bitmapSide.bytesPerPixel);
 				offset = loadBitmap->data.get();
 			}
-
+			assert(offset);
 			std::memcpy(offset, bitmapSide.data.get(), lengthSide);
 			offset += lengthSide;
 		}

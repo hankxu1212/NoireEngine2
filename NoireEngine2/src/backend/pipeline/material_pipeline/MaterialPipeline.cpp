@@ -1,6 +1,6 @@
 #include "MaterialPipeline.hpp"
 
-#include "LambertianMaterialPipeline.hpp"
+#include "MaterialPipelines.hpp"
 #include "backend/pipeline/ObjectPipeline.hpp"
 #include "backend/VulkanContext.hpp"
 

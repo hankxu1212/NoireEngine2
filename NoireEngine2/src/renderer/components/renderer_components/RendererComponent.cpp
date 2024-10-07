@@ -49,7 +49,7 @@ void RendererComponent::Render(const glm::mat4& model)
 		0, //  first vertex
 		mesh, // mesh pointer
 		material // material pointer
-	});
+	}, (uint32_t)material->getWorkflow());
 
 	if (ObjectPipeline::UseGizmos && useGizmos) {
 		gizmos.DrawWireCube1(mesh->getAABB().min, mesh->getAABB().max, Color4_4::Green);

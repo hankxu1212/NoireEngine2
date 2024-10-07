@@ -15,7 +15,7 @@
 #include "renderer/scene/Scene.hpp"
 #include "utils/Logger.hpp"
 
-#include "backend/pipeline/material_pipeline/LambertianMaterialPipeline.hpp"
+#include "backend/pipeline/material_pipeline/MaterialPipelines.hpp"
 #include "renderer/materials/MaterialLibrary.hpp"
 
 #include <glm/gtx/string_cast.hpp>
@@ -218,8 +218,9 @@ void ObjectPipeline::Rebuild()
 
 void ObjectPipeline::CreatePipeline()
 {
-	m_MaterialPipelines.resize(1);
-	m_MaterialPipelines[0] = std::make_unique<LambertianMaterialPipeline>(this);
+	m_MaterialPipelines.resize(4);
+	m_MaterialPipelines[(uint32_t)Material::Workflow::Lambertian] = std::make_unique<LambertianMaterialPipeline>(this);
+	m_MaterialPipelines[(uint32_t)Material::Workflow::Environment] = std::make_unique<EnvironmentMaterialPipeline>(this);
 
 	s_LinesPipeline = std::make_unique<LinesPipeline>(this);
 
@@ -227,7 +228,11 @@ void ObjectPipeline::CreatePipeline()
 
 	CreateDescriptors();
 
-	m_MaterialPipelines[0]->Create();
+	//for (int i = 0; i < m_MaterialPipelines.size(); ++i)
+		//m_MaterialPipelines[i]->Create();
+	m_MaterialPipelines[(uint32_t)Material::Workflow::Lambertian]->Create();
+	m_MaterialPipelines[(uint32_t)Material::Workflow::Environment]->Create();
+
 	s_LinesPipeline->CreatePipeline();
 	s_SkyboxPipeline->CreatePipeline();
 }
@@ -259,43 +264,46 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 		Buffer::CopyBuffer(commandBuffer, workspace.World_src.getBuffer(), workspace.World.getBuffer(), workspace.World_src.getSize());
 	}
 
-	const std::vector<ObjectInstance>& sceneObjectInstances = scene->getObjectInstances();
+	const auto& sceneObjectInstances = scene->getObjectInstances();
 
 	//upload object transforms and allocate needed bytes
-	if (!sceneObjectInstances.empty()) 
+	size_t needed_bytes = 0;
+	for (int i = 0; i < sceneObjectInstances.size(); ++i)
+		needed_bytes += sceneObjectInstances[i].size() * sizeof(ObjectInstance::TransformUniform);
+
+	// resize as neccesary
+	if (workspace.Transforms_src.getBuffer() == VK_NULL_HANDLE 
+		|| workspace.Transforms_src.getSize() < needed_bytes) 
 	{
-		size_t needed_bytes = sceneObjectInstances.size() * sizeof(ObjectInstance::TransformUniform);
-		if (workspace.Transforms_src.getBuffer() == VK_NULL_HANDLE 
-			|| workspace.Transforms_src.getSize() < needed_bytes) 
-		{
-			//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
-			size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
+		//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
+		size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
 
-			workspace.Transforms_src.Destroy();
-			workspace.Transforms.Destroy();
+		workspace.Transforms_src.Destroy();
+		workspace.Transforms.Destroy();
 
-			//update the descriptor set:
-			VkDescriptorBufferInfo Transforms_info = CreateTransformStorageBuffer(workspace, new_bytes);
+		//update the descriptor set:
+		VkDescriptorBufferInfo Transforms_info = CreateTransformStorageBuffer(workspace, new_bytes);
 
-			DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
-				.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-				.Write(workspace.set1_Transforms);
-		}
+		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+			.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.Write(workspace.set1_Transforms);
+	}
 
-		assert(workspace.Transforms_src.getSize() == workspace.Transforms.getSize());
-		assert(workspace.Transforms_src.getSize() >= needed_bytes);
+	assert(workspace.Transforms_src.getSize() == workspace.Transforms.getSize());
+	assert(workspace.Transforms_src.getSize() >= needed_bytes);
 
-		{ //copy transforms into Transforms_src:
-			assert(workspace.Transforms_src.data() != nullptr);
-			ObjectInstance::TransformUniform* out = reinterpret_cast<ObjectInstance::TransformUniform*>(workspace.Transforms_src.data());
-			for (ObjectInstance const& inst : sceneObjectInstances) {
+	{ //copy transforms into Transforms_src:
+		assert(workspace.Transforms_src.data() != nullptr);
+		ObjectInstance::TransformUniform* out = reinterpret_cast<ObjectInstance::TransformUniform*>(workspace.Transforms_src.data());
+		for (int i = 0; i < sceneObjectInstances.size(); ++i) {
+			for (auto& inst : sceneObjectInstances[i]) {
 				*out = inst.m_TransformUniform;
 				++out;
 			}
 		}
-
-		Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), needed_bytes);
 	}
+
+	Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), workspace.Transforms_src.getSize());
 	
 	if (UseGizmos) {
 		s_LinesPipeline->Prepare(scene, commandBuffer, surfaceId);
@@ -347,47 +355,65 @@ VkDescriptorBufferInfo ObjectPipeline::CreateTransformStorageBuffer(Workspace& w
 //draw with the objects pipeline:
 void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
 {
-	m_MaterialPipelines[0]->BindPipeline(commandBuffer);
-	m_MaterialPipelines[0]->BindDescriptors(commandBuffer, surfaceId);
+	const auto& allInstances = scene->getObjectInstances();
 
-	//draw all instances in relation to a certain material:
-	const std::vector<ObjectInstance>& sceneObjectInstances = scene->getObjectInstances();
-	ObjectsDrawn = sceneObjectInstances.size();
-	std::vector<IndirectBatch> draws = CompactDraws(sceneObjectInstances);
-	NumDrawCalls = draws.size();
+	ObjectsDrawn = 0;
+	NumDrawCalls = 0;
+	VerticesDrawn = 0;
 
-	//encode the draw data of each object into the indirect draw buffer
 	VkDrawIndexedIndirectCommand* drawCommands = (VkDrawIndexedIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
 
-	VerticesDrawn = 0;
-	for (auto i = 0; i < ObjectsDrawn; i++)
-	{
-		drawCommands[i].indexCount = sceneObjectInstances[i].mesh->getIndexCount();
-		drawCommands[i].instanceCount = 1;
-		drawCommands[i].firstIndex = 0;
-		drawCommands[i].vertexOffset = 0;
-		drawCommands[i].firstInstance = i;
-
-		VerticesDrawn += sceneObjectInstances[i].mesh->getVertexCount();
-	}
-
+	//draw all instances in relation to a certain material:
+	uint32_t instanceIndex = 0;
+	uint32_t offsetIndex = 0; 
 	VertexInput* previouslyBindedVertex = nullptr;
-	for (IndirectBatch& draw : draws)
+
+	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
 	{
-		VertexInput* vertexInputPtr = draw.mesh->getVertexInput();
-		if (vertexInputPtr != previouslyBindedVertex) {
-			vertexInputPtr->Bind(commandBuffer);
-			previouslyBindedVertex = vertexInputPtr;
+		auto& workflowInstances = allInstances[workflowIndex];
+		if (workflowInstances.empty())
+			continue;
+
+		m_MaterialPipelines[workflowIndex]->BindPipeline(commandBuffer);
+		m_MaterialPipelines[workflowIndex]->BindDescriptors(commandBuffer, surfaceId);
+
+		uint32_t instanceCount = (uint32_t)workflowInstances.size();
+
+		std::vector<IndirectBatch> draws = CompactDraws(workflowInstances);
+		NumDrawCalls += draws.size();
+
+		//encode the draw data of each object into the indirect draw buffer
+		for (uint32_t i = 0; i < instanceCount; i++)
+		{
+			drawCommands[instanceIndex].indexCount = workflowInstances[i].mesh->getIndexCount();
+			drawCommands[instanceIndex].instanceCount = 1;
+			drawCommands[instanceIndex].firstIndex = 0;
+			drawCommands[instanceIndex].vertexOffset = 0;
+			drawCommands[instanceIndex].firstInstance = instanceIndex;
+			instanceIndex++;
+
+			VerticesDrawn += workflowInstances[i].mesh->getVertexCount();
 		}
 
-		draw.mesh->Bind(commandBuffer);
-		draw.material->Push(commandBuffer, m_MaterialPipelines[0]->m_PipelineLayout);
+		for (IndirectBatch& draw : draws)
+		{
+			VertexInput* vertexInputPtr = draw.mesh->getVertexInput();
+			if (vertexInputPtr != previouslyBindedVertex) {
+				vertexInputPtr->Bind(commandBuffer);
+				previouslyBindedVertex = vertexInputPtr;
+			}
 
-		VkDeviceSize offset = draw.first * sizeof(VkDrawIndexedIndirectCommand);
-		uint32_t stride = sizeof(VkDrawIndexedIndirectCommand);
+			draw.mesh->Bind(commandBuffer);
+			draw.material->Push(commandBuffer, m_MaterialPipelines[workflowIndex]->m_PipelineLayout);
 
-		vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
+			VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * sizeof(VkDrawIndexedIndirectCommand);
+			constexpr uint32_t stride = sizeof(VkDrawIndexedIndirectCommand);
+
+			vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
+		}
+		offsetIndex = instanceCount;
 	}
+	ObjectsDrawn = instanceIndex;
 
 	// draw lines
 	if (UseGizmos) {

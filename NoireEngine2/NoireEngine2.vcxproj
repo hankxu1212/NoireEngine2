@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\SkyboxPipeline.cpp" />
     <ClCompile Include="src\backend\images\ImageCube.cpp" />
     <ClCompile Include="src\backend\renderpass\Renderpass.cpp" />
@@ -242,6 +243,8 @@
     <ClCompile Include="vendor\imgui\misc\freetype\imgui_freetype.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.hpp" />
+    <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipelines.hpp" />
     <ClInclude Include="src\backend\pipeline\SkyboxPipeline.hpp" />
     <ClInclude Include="src\backend\images\ImageCube.hpp" />
     <ClInclude Include="src\backend\renderpass\Renderpass.hpp" />
@@ -416,7 +419,11 @@
     <None Include="src\core\resources\nodes\NodeConstView.inl" />
     <None Include="src\core\resources\nodes\NodeView.inl" />
     <None Include="src\Maekfile.js" />
+    <None Include="src\scenes\examples\test_env.s72" />
     <None Include="src\scenes\s72\viewer\s72-viewer.html" />
+    <None Include="src\shaders\environment.frag" />
+    <None Include="src\shaders\environment.vert" />
+    <None Include="src\shaders\glsl\transform_uniform.glsl" />
     <None Include="src\shaders\lambertian.frag" />
     <None Include="src\shaders\lambertian.vert" />
     <None Include="src\shaders\skybox.frag" />
