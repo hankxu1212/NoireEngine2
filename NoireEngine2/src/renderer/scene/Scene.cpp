@@ -23,8 +23,6 @@ Scene::Scene(const std::string& path)
 	Deserialize(path);
 	InstantiateCoreScripts();
 
-	m_SceneInfo.numLights = 1;
-
 	m_ObjectInstances.resize(MAX_WORKFLOWS);
 }
 
@@ -496,4 +494,7 @@ void Scene::UpdateSceneInfo()
 		i++;
 	}
 	m_SceneInfo.numLights = i;
+
+	const glm::vec3& pos = GetRenderCam()->GetTransform()->position();
+	m_SceneInfo.cameraPosition = {pos.x, pos.y, pos.z, 0};
 }

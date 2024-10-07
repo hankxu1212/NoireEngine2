@@ -6,7 +6,6 @@
 #include "renderer/components/CameraComponent.hpp"
 #include "renderer/scene/Scene.hpp"
 #include "core/resources/Files.hpp"
-#include "renderer/vertices/PosVertex.hpp"
 
 static uint32_t vert_code[] =
 #include "spv/shaders/environment.vert.inl"

@@ -90,6 +90,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.cpp" />
+    <ClCompile Include="src\backend\pipeline\material_pipeline\MirrorMaterialPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\SkyboxPipeline.cpp" />
     <ClCompile Include="src\backend\images\ImageCube.cpp" />
     <ClCompile Include="src\backend\renderpass\Renderpass.cpp" />
@@ -245,6 +246,7 @@
   <ItemGroup>
     <ClInclude Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipelines.hpp" />
+    <ClInclude Include="src\backend\pipeline\material_pipeline\MirrorMaterialPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\SkyboxPipeline.hpp" />
     <ClInclude Include="src\backend\images\ImageCube.hpp" />
     <ClInclude Include="src\backend\renderpass\Renderpass.hpp" />
@@ -426,6 +428,8 @@
     <None Include="src\shaders\glsl\transform_uniform.glsl" />
     <None Include="src\shaders\lambertian.frag" />
     <None Include="src\shaders\lambertian.vert" />
+    <None Include="src\shaders\mirror.frag" />
+    <None Include="src\shaders\mirror.vert" />
     <None Include="src\shaders\skybox.frag" />
     <None Include="src\shaders\skybox.vert" />
     <None Include="src\shaders\glsl\world_uniform.glsl" />

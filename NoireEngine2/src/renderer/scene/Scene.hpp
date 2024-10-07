@@ -81,8 +81,11 @@ public:
 
 	struct SceneUniform {
 		LightUniform lights[MAX_NUM_TOTAL_LIGHTS];
-		uint32_t numLights;
+		alignas(16) uint32_t numLights;
+		alignas(16) struct { float x, y, z, _padding; } cameraPosition;
 	};
+
+	static_assert(sizeof(SceneUniform) == sizeof(LightUniform) * MAX_NUM_TOTAL_LIGHTS + 16 * 2);
 
 	inline const void* getSceneUniformPtr() const { return &m_SceneInfo; }
 

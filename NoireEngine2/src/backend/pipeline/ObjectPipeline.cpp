@@ -221,6 +221,7 @@ void ObjectPipeline::CreatePipeline()
 	m_MaterialPipelines.resize(4);
 	m_MaterialPipelines[(uint32_t)Material::Workflow::Lambertian] = std::make_unique<LambertianMaterialPipeline>(this);
 	m_MaterialPipelines[(uint32_t)Material::Workflow::Environment] = std::make_unique<EnvironmentMaterialPipeline>(this);
+	m_MaterialPipelines[(uint32_t)Material::Workflow::Mirror] = std::make_unique<MirrorMaterialPipeline>(this);
 
 	s_LinesPipeline = std::make_unique<LinesPipeline>(this);
 
@@ -232,6 +233,7 @@ void ObjectPipeline::CreatePipeline()
 		//m_MaterialPipelines[i]->Create();
 	m_MaterialPipelines[(uint32_t)Material::Workflow::Lambertian]->Create();
 	m_MaterialPipelines[(uint32_t)Material::Workflow::Environment]->Create();
+	m_MaterialPipelines[(uint32_t)Material::Workflow::Mirror]->Create();
 
 	s_LinesPipeline->CreatePipeline();
 	s_SkyboxPipeline->CreatePipeline();
@@ -411,7 +413,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 
 			vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
 		}
-		offsetIndex = instanceCount;
+		offsetIndex += instanceCount;
 	}
 	ObjectsDrawn = instanceIndex;
 

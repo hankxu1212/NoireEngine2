@@ -5,6 +5,7 @@
 
 #include "LambertianMaterial.hpp"
 #include "EnvironmentMaterial.hpp"
+#include "MirrorMaterial.hpp"
 
 Material* Material::Deserialize(const Scene::TValueMap& obj)
 {
@@ -18,7 +19,7 @@ Material* Material::Deserialize(const Scene::TValueMap& obj)
 
 	auto mirrorIt = obj.find("mirror");
 	if (mirrorIt != obj.end())
-		return Material::CreateDefault().get();
+		return MirrorMaterial::Deserialize(obj);
 
 	auto environmentIt = obj.find("environment");
 	if (environmentIt != obj.end())

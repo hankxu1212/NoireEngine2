@@ -49,6 +49,7 @@ const renderer_objs = [
 	maek.CPP('renderer/materials/MaterialLibrary.cpp'),
 	maek.CPP('renderer/materials/LambertianMaterial.cpp'),
 	maek.CPP('renderer/materials/EnvironmentMaterial.cpp'),
+	maek.CPP('renderer/materials/MirrorMaterial.cpp'),
 	maek.CPP('renderer/AABB.cpp'),
 	maek.CPP('renderer/scene/SceneManager.cpp'),
 	maek.CPP('renderer/animation/Animation.cpp'),
@@ -122,6 +123,7 @@ use_shaders('shaders/lambertian', 'backend/pipeline/material_pipeline/Lambertian
 use_shaders('shaders/lines', 'backend/pipeline/LinesPipeline.cpp');
 use_shaders('shaders/skybox', 'backend/pipeline/SkyboxPipeline.cpp');
 use_shaders('shaders/environment', 'backend/pipeline/material_pipeline/EnvironmentMaterialPipeline.cpp');
+use_shaders('shaders/mirror', 'backend/pipeline/material_pipeline/MirrorMaterialPipeline.cpp');
 
 const imgui_objs = [
 	maek.CPP('../vendor/imgui/imgui.cpp'),
@@ -221,7 +223,7 @@ function custom_flags_and_rules() {
 			`/I../vendor/`,
 			`/I../vendor/imgui/`,
 			`/I../vendor/imguizmo/`,
-			//'/O2'
+			'/O2'
 		];
 
 	} else if (maek.OS === 'macos') {

@@ -16,4 +16,5 @@ struct Light {
 layout(set=0,binding=0,std140) uniform World {
 	Light lights[MAX_NUM_TOTAL_LIGHTS];
 	int numLights;
+	vec4 cameraPos;
 }scene;
