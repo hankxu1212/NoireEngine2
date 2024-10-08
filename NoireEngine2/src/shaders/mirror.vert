@@ -14,6 +14,6 @@ layout(location=2) out vec2 texCoord;
 void main() {
 	gl_Position = TRANSFORMS[gl_InstanceIndex].localToClip * vec4(Position, 1.0);
 	position = mat4x3(TRANSFORMS[gl_InstanceIndex].model) * vec4(Position, 1.0);
-	normal = mat3(transpose(inverse(TRANSFORMS[gl_InstanceIndex].modelNormal))) * Normal;
+	normal = mat3(transpose(TRANSFORMS[gl_InstanceIndex].modelNormal)) * Normal;
 	texCoord = TexCoord;
 }

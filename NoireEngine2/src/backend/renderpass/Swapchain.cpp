@@ -43,7 +43,7 @@ SwapChain::SwapChain(const PhysicalDevice& physicalDevice, Surface& surface, con
 	}
 
 	// image counts
-	auto desiredImageCount = surfaceCapabilities.minImageCount + 1;
+	auto desiredImageCount = surfaceCapabilities.minImageCount;
 	if (surfaceCapabilities.maxImageCount > 0 && desiredImageCount > surfaceCapabilities.maxImageCount) {
 		desiredImageCount = surfaceCapabilities.maxImageCount;
 	}

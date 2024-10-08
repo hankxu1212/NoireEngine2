@@ -77,9 +77,9 @@ public:
 	inline const VkSemaphore				getPresentSemaphore() { return m_PerSurfaceBuffers[0]->getPresentSemaphore(); }
 	inline const VkSemaphore				getRenderSemaphore() { return m_PerSurfaceBuffers[0]->getRenderSemaphore(); }
 	inline const VkFence					getFence() { return m_PerSurfaceBuffers[0]->getFence(); }
-	inline const std::size_t				getCurrentFrame() { return m_PerSurfaceBuffers[0]->currentFrame; }
+	inline const size_t						getCurrentFrame() { return m_PerSurfaceBuffers[0]->currentFrame; }
 	inline Buffer*							getIndirectBuffer() { return m_PerSurfaceBuffers[0]->getIndirectBuffer(); }
-	inline const std::uint32_t				getWorkspaceSize() const { return static_cast<uint32_t>(m_PerSurfaceBuffers.size()); }
+	inline const uint32_t					getFramesInFlight() const { return m_Swapchains[0]->getImageCount(); }
 
 
 	inline static float WaitForSwapchainTime, RenderTime;
@@ -95,7 +95,6 @@ private:
 		std::vector<VkSemaphore>	renderCompletesSemaphores;
 		std::vector<VkFence>		flightFences;
 		std::size_t					currentFrame = 0;
-		bool						framebufferResized = false;
 
 		std::vector<std::unique_ptr<CommandBuffer>>	commandBuffers;
 
@@ -128,3 +127,5 @@ private:
 	void RecreateSwapchain();
 	void CleanPerSurfaceStructs();
 };
+
+#define CURR_FRAME VulkanContext::Get()->getCurrentFrame()

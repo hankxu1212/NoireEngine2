@@ -23,7 +23,7 @@ public:
 
 	void Update(const Scene* scene) override;
 
-	void Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId) override;
+	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
 private:
 	void SetTheme();

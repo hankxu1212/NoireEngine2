@@ -61,6 +61,22 @@ DescriptorBuilder& DescriptorBuilder::BindImage(uint32_t binding, VkDescriptorIm
 	return *this;
 }
 
+DescriptorBuilder& DescriptorBuilder::AddBinding(uint32_t binding, VkDescriptorType type, VkShaderStageFlags stageFlags)
+{
+	//create the descriptor binding for the layout
+	VkDescriptorSetLayoutBinding newBinding{};
+
+	newBinding.descriptorCount = 1;
+	newBinding.descriptorType = type;
+	newBinding.pImmutableSamplers = nullptr;
+	newBinding.stageFlags = stageFlags;
+	newBinding.binding = binding;
+
+	bindings.push_back(newBinding);
+
+	return *this;
+}
+
 bool DescriptorBuilder::Build(VkDescriptorSet& set, VkDescriptorSetLayout& layout, const void* pNextLayout, VkDescriptorSetLayoutCreateFlags flags, const void* pNextAlloc) {
 	BuildLayout(layout, pNextLayout, flags);
 
@@ -90,6 +106,9 @@ void DescriptorBuilder::BuildLayout(VkDescriptorSetLayout& layout, const void* p
 
 void DescriptorBuilder::Write(VkDescriptorSet& set)
 {
+	if (writes.empty())
+		return;
+
 	for (VkWriteDescriptorSet& w : writes) {
 		w.dstSet = set;
 	}

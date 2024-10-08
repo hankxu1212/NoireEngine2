@@ -16,9 +16,9 @@ public:
 
 	void CreatePipeline() override;
 
-	void Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId) override;
+	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
-	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
+	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
 
 private:
 	void CreateGraphicsPipeline();

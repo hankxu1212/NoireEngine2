@@ -19,7 +19,7 @@ public:
 
 	virtual void Create() {}
 
-	virtual void BindDescriptors(const CommandBuffer& commandBuffer, uint32_t surfaceId) {}
+	virtual void BindDescriptors(const CommandBuffer& commandBuffer) {}
 
 	static std::unique_ptr<MaterialPipeline> Create(Material::Workflow workflow, ObjectPipeline* objectPipeline);
 

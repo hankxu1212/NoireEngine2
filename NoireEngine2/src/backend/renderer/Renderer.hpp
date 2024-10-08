@@ -19,7 +19,7 @@ public:
 
 	void Update();
 
-	void Render(const CommandBuffer& commandBuffer, uint32_t surfaceId);
+	void Render(const CommandBuffer& commandBuffer);
 
 	void Rebuild();
 

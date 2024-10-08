@@ -37,16 +37,16 @@ void Renderer::Update()
 	imguiPipeline->Update(SceneManager::Get()->getScene());
 }
 
-void Renderer::Render(const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void Renderer::Render(const CommandBuffer& commandBuffer)
 {
 	Timer timer;
 	{
-		objectPipeline->Render(SceneManager::Get()->getScene(), commandBuffer, surfaceId);
+		objectPipeline->Render(SceneManager::Get()->getScene(), commandBuffer);
 	}
 	if (Application::StatsDirty)
 		ObjectRenderTime = timer.GetElapsed(true);
 	{
-		imguiPipeline->Render(SceneManager::Get()->getScene(), commandBuffer, surfaceId);
+		imguiPipeline->Render(SceneManager::Get()->getScene(), commandBuffer);
 	}
 	if (Application::StatsDirty)
 		UIRenderTime = timer.GetElapsed(false);

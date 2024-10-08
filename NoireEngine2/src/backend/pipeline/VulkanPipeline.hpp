@@ -24,5 +24,5 @@ public:
 	
 	virtual void Update(const Scene* scene) {}
 
-	virtual void Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId) {}
+	virtual void Render(const Scene* scene, const CommandBuffer& commandBuffer) {}
 };

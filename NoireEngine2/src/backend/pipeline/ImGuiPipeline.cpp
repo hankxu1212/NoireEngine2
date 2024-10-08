@@ -75,7 +75,7 @@ ImGuiPipeline::~ImGuiPipeline()
     }
 }
 
-void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();

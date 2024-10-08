@@ -43,8 +43,8 @@ void RendererComponent::Render(const glm::mat4& model)
 	GetScene()->PushObjectInstance({
 		{
 			renderCam->getWorldToClipMatrix() * model,
-			model,
-			model,
+			model, // model
+			glm::inverse(model), // normal
 		}, // transform uniform
 		0, //  first vertex
 		mesh, // mesh pointer

@@ -127,7 +127,7 @@ void ObjectPipeline::CreateRenderPass()
 
 void ObjectPipeline::CreateDescriptors()
 {
-	workspaces.resize(VulkanContext::Get()->getWorkspaceSize());
+	workspaces.resize(VulkanContext::Get()->getFramesInFlight());
 
 	// create world and transform descriptor
 	for (Workspace& workspace : workspaces)
@@ -155,9 +155,8 @@ void ObjectPipeline::CreateDescriptors()
 			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.Build(workspace.set0_World, set0_WorldLayout);
 
-		VkDescriptorBufferInfo Transforms_info = CreateTransformStorageBuffer(workspace, 4096);
 		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
-			.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 			.Build(workspace.set1_Transforms, set1_TransformsLayout);
 	}
 
@@ -239,11 +238,11 @@ void ObjectPipeline::CreatePipeline()
 	s_SkyboxPipeline->CreatePipeline();
 }
 
-void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	Prepare(scene, commandBuffer, surfaceId);
+	Prepare(scene, commandBuffer);
 	m_Renderpass->Begin(commandBuffer);
-	RenderPass(scene, commandBuffer, surfaceId);
+	RenderPass(scene, commandBuffer);
 	m_Renderpass->End(commandBuffer);
 }
 
@@ -252,9 +251,9 @@ void ObjectPipeline::Update(const Scene* scene)
 
 }
 
-void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	Workspace& workspace = workspaces[surfaceId];
+	Workspace& workspace = workspaces[CURR_FRAME];
 
 	//upload world info:
 	{ 
@@ -308,10 +307,10 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 	Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), workspace.Transforms_src.getSize());
 	
 	if (UseGizmos) {
-		s_LinesPipeline->Prepare(scene, commandBuffer, surfaceId);
+		s_LinesPipeline->Prepare(scene, commandBuffer);
 	}
 
-	s_SkyboxPipeline->Prepare(scene, commandBuffer, surfaceId);
+	s_SkyboxPipeline->Prepare(scene, commandBuffer);
 
 	{ //memory barrier to make sure copies complete before rendering happens:
 		VkMemoryBarrier memory_barrier{
@@ -355,7 +354,7 @@ VkDescriptorBufferInfo ObjectPipeline::CreateTransformStorageBuffer(Workspace& w
 }
 
 //draw with the objects pipeline:
-void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& commandBuffer)
 {
 	const auto& allInstances = scene->getObjectInstances();
 
@@ -377,7 +376,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 			continue;
 
 		m_MaterialPipelines[workflowIndex]->BindPipeline(commandBuffer);
-		m_MaterialPipelines[workflowIndex]->BindDescriptors(commandBuffer, surfaceId);
+		m_MaterialPipelines[workflowIndex]->BindDescriptors(commandBuffer);
 
 		uint32_t instanceCount = (uint32_t)workflowInstances.size();
 
@@ -419,10 +418,10 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 
 	// draw lines
 	if (UseGizmos) {
-		s_LinesPipeline->Render(scene, commandBuffer, surfaceId);
+		s_LinesPipeline->Render(scene, commandBuffer);
 	}
 
-	s_SkyboxPipeline->Render(scene, commandBuffer, surfaceId);
+	s_SkyboxPipeline->Render(scene, commandBuffer);
 }
 
 std::vector<ObjectPipeline::IndirectBatch> ObjectPipeline::CompactDraws(const std::vector<ObjectInstance>& objects)

@@ -39,14 +39,14 @@ public:
 
 	void Update(const Scene* scene) override;
 
-	void Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId) override;
+	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
 private:
 	void CreateDescriptors();
 	
-	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
+	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
 
-	void RenderPass(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId);
+	void RenderPass(const Scene* scene, const CommandBuffer& commandBuffer);
 
 	struct Workspace
 	{

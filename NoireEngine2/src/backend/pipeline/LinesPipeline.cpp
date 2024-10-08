@@ -45,7 +45,7 @@ LinesPipeline::~LinesPipeline()
 
 void LinesPipeline::CreatePipeline()
 {
-	workspaces.resize(VulkanContext::Get()->getWorkspaceSize());
+	workspaces.resize(VulkanContext::Get()->getFramesInFlight());
 
 	CreateDescriptors();
 	CreatePipelineLayout();
@@ -53,12 +53,12 @@ void LinesPipeline::CreatePipeline()
 }
 static uint32_t totalGizmosSize;
 
-void LinesPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void LinesPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
 	if (scene->getGizmosInstances().empty())
 		return;
 
-	Workspace& workspace = workspaces[surfaceId];
+	Workspace& workspace = workspaces[CURR_FRAME];
 
 	{ //draw with the lines pipeline:
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
@@ -92,9 +92,9 @@ void* OffsetPointer(void* ptr, size_t offset) {
 	return static_cast<void*>(static_cast<std::byte*>(ptr) + offset);
 }
 
-void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	Workspace& workspace = workspaces[surfaceId];
+	Workspace& workspace = workspaces[CURR_FRAME];
 
 	const std::vector<GizmosInstance*>& gizmos = scene->getGizmosInstances();
 	

@@ -9,7 +9,7 @@ public:
 	LambertianMaterialPipeline(ObjectPipeline* objectPipeline);
 
 	void Create() override;
-	void BindDescriptors(const CommandBuffer& commandBuffer, uint32_t surfaceId) override;
+	void BindDescriptors(const CommandBuffer& commandBuffer) override;
 
 private:
 	void CreatePipelineLayout();

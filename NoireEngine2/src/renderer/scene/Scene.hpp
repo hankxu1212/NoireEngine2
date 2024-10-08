@@ -7,6 +7,7 @@
 #include "utils/sejp/sejp.hpp"
 #include "SceneNode.hpp"
 #include "renderer/lighting/Light.hpp"
+#include "backend/images/ImageCube.hpp"
 
 #include <filesystem>
 #include <unordered_map>
@@ -129,4 +130,6 @@ private:
 
 	// a list of lights
 	std::vector<Light*> m_SceneLights;
+
+	std::shared_ptr<ImageCube> m_Skybox;
 };

@@ -93,7 +93,7 @@ SkyboxPipeline::~SkyboxPipeline()
 
 void SkyboxPipeline::CreatePipeline()
 {
-	workspaces.resize(VulkanContext::Get()->getWorkspaceSize());
+	workspaces.resize(VulkanContext::Get()->getFramesInFlight());
 
 	CreateDescriptors();
 	CreateVertexBuffer();
@@ -101,9 +101,9 @@ void SkyboxPipeline::CreatePipeline()
 	CreateGraphicsPipeline();
 }
 
-void SkyboxPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void SkyboxPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	Workspace& workspace = workspaces[surfaceId];
+	Workspace& workspace = workspaces[CURR_FRAME];
 
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
 
@@ -129,9 +129,9 @@ void SkyboxPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 	vkCmdDraw(commandBuffer, 36, 1, 0, 0);
 }
 
-void SkyboxPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void SkyboxPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	Workspace& workspace = workspaces[surfaceId];
+	Workspace& workspace = workspaces[CURR_FRAME];
 
 	{ //upload camera info:
 		SkyboxPipeline::CameraUniform camera{

@@ -65,21 +65,20 @@ void VulkanContext::Update()
         if (Application::StatsDirty)
             WaitForSwapchainTime = timer.GetElapsed(true);
 
-        s_Renderer->Render(*commandBuffer, static_cast<uint32_t>(surfaceId));
-        // submit the command buffer
-        {
-            commandBuffer->End();
-            commandBuffer->Submit(perSurfaceBuffer->getPresentSemaphore(),
-                perSurfaceBuffer->getRenderSemaphore(),
-                perSurfaceBuffer->getFence());
+        s_Renderer->Render(*commandBuffer);
 
-            auto presentResult = swapchain->QueuePresent(s_LogicalDevice->getPresentQueue(), perSurfaceBuffer->getRenderSemaphore());
-            if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
-                perSurfaceBuffer->framebufferResized = true;
-            }
-            else if (presentResult != VK_SUCCESS) {
-                VK_CHECK(presentResult, "[vulkan] Failed to present swap chain image!");
-            }
+        // submit the command buffer
+        commandBuffer->Submit(perSurfaceBuffer->getPresentSemaphore(),
+            perSurfaceBuffer->getRenderSemaphore(),
+            perSurfaceBuffer->getFence());
+
+        // queue present
+        auto presentResult = swapchain->QueuePresent(s_LogicalDevice->getPresentQueue(), perSurfaceBuffer->getRenderSemaphore());
+        if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
+            RecreateSwapchain();
+        }
+        else if (presentResult != VK_SUCCESS) {
+            VK_CHECK(presentResult, "[vulkan] Failed to present swap chain image!");
         }
 
         if (Application::StatsDirty)

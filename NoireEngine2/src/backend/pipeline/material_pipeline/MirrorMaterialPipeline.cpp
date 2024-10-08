@@ -34,9 +34,9 @@ void MirrorMaterialPipeline::Create()
 	CreateGraphicsPipeline();
 }
 
-void MirrorMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer, uint32_t surfaceId)
+void MirrorMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer)
 {
-	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[surfaceId];
+	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
 	std::array< VkDescriptorSet, 4 > descriptor_sets{
 		workspace.set0_World,
 		workspace.set1_Transforms,
