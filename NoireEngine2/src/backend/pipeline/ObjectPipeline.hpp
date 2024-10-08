@@ -80,7 +80,6 @@ private:
 	VkDescriptorSet set2_Textures;
 
 	DescriptorAllocator						m_DescriptorAllocator;
-	DescriptorLayoutCache					m_DescriptorLayoutCache;
 
 	std::unique_ptr<Renderpass>				m_Renderpass;
 

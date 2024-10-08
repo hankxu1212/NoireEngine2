@@ -28,6 +28,8 @@ VulkanContext::~VulkanContext()
 
     CleanPerSurfaceStructs();
 
+    m_DescriptorLayoutCache.Cleanup();
+
     s_Renderer->Cleanup();
 
     std::cout << "Destroyed vulkan context module\n";

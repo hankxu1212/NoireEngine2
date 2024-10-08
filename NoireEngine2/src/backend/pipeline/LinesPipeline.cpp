@@ -4,14 +4,7 @@
 #include "renderer/vertices/PosColVertex.hpp"
 #include "renderer/components/CameraComponent.hpp"
 #include "renderer/scene/Scene.hpp"
-
-static uint32_t vert_code[] =
-#include "spv/shaders/lines.vert.inl"
-;
-
-static uint32_t frag_code[] =
-#include "spv/shaders/lines.frag.inl"
-;
+#include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 
 LinesPipeline::LinesPipeline(ObjectPipeline* objectPipeline) :
 	p_ObjectPipeline(objectPipeline)
@@ -30,7 +23,6 @@ LinesPipeline::~LinesPipeline()
 	workspaces.clear();
 
 	m_DescriptorAllocator.Cleanup(); // destroy pool and sets
-	m_DescriptorLayoutCache.Cleanup(); // destroy all set layouts
 
 	if (m_PipelineLayout != VK_NULL_HANDLE) {
 		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_PipelineLayout, nullptr);
@@ -171,117 +163,29 @@ void LinesPipeline::CreatePipelineLayout()
 
 void LinesPipeline::CreateGraphicsPipeline()
 {
-	VulkanShader vertModule(vert_code, VulkanShader::ShaderStage::Vertex);
-	VulkanShader fragModule(frag_code, VulkanShader::ShaderStage::Frag);
-
-	std::array< VkPipelineShaderStageCreateInfo, 2 > stages{
-		vertModule.shaderStage(),
-		fragModule.shaderStage()
-	};
-
-	//the viewport and scissor state will be set at runtime for the pipeline:
 	std::vector< VkDynamicState > dynamic_states{
 		VK_DYNAMIC_STATE_VIEWPORT,
 		VK_DYNAMIC_STATE_SCISSOR
 	};
-	VkPipelineDynamicStateCreateInfo dynamic_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-		.dynamicStateCount = uint32_t(dynamic_states.size()),
-		.pDynamicStates = dynamic_states.data()
-	};
 
-
-	//this pipeline will take no per-vertex inputs:
-	VkPipelineVertexInputStateCreateInfo vertex_input_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-		.vertexBindingDescriptionCount = 0,
-		.pVertexBindingDescriptions = nullptr,
-		.vertexAttributeDescriptionCount = 0,
-		.pVertexAttributeDescriptions = nullptr,
-	};
-
-	//this pipeline will draw lines:
-	VkPipelineInputAssemblyStateCreateInfo input_assembly_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-		.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
-		.primitiveRestartEnable = VK_FALSE
-	};
-
-	//this pipeline will render to one viewport and scissor rectangle:
-	VkPipelineViewportStateCreateInfo viewport_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-		.viewportCount = 1,
-		.scissorCount = 1,
-	};
-
-	//the rasterizer will cull back faces and fill polygons:
-	VkPipelineRasterizationStateCreateInfo rasterization_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-		.depthClampEnable = VK_FALSE,
-		.rasterizerDiscardEnable = VK_FALSE,
-		.polygonMode = VK_POLYGON_MODE_FILL,
-		.cullMode = VK_CULL_MODE_BACK_BIT,
-		.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
-		.depthBiasEnable = VK_FALSE,
-		.lineWidth = 2.0f,
-	};
-
-	//multisampling will be disabled (one sample per pixel):
-	VkPipelineMultisampleStateCreateInfo multisample_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-		.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
-		.sampleShadingEnable = VK_FALSE,
-	};
-
-	//depth test will be less, and stencil test will be disabled:
-	VkPipelineDepthStencilStateCreateInfo depth_stencil_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-		.depthTestEnable = VK_TRUE,
-		.depthWriteEnable = VK_TRUE,
-		.depthCompareOp = VK_COMPARE_OP_LESS,
-		.depthBoundsTestEnable = VK_FALSE,
-		.stencilTestEnable = VK_FALSE,
-	};
-
-	//there will be one color attachment with blending disabled:
 	std::array< VkPipelineColorBlendAttachmentState, 1 > attachment_states{
 		VkPipelineColorBlendAttachmentState{
 			.blendEnable = VK_FALSE,
 			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
 		},
 	};
-	VkPipelineColorBlendStateCreateInfo color_blend_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-		.logicOpEnable = VK_FALSE,
-		.attachmentCount = uint32_t(attachment_states.size()),
-		.pAttachments = attachment_states.data(),
-		.blendConstants{0.0f, 0.0f, 0.0f, 0.0f},
-	};
 
-	//all of the above structures get bundled together into one very large create_info:
-	VkGraphicsPipelineCreateInfo create_info{
-		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-		.stageCount = uint32_t(stages.size()),
-		.pStages = stages.data(),
-		.pVertexInputState = &PosColVertex::array_input_state,
-		.pInputAssemblyState = &input_assembly_state,
-		.pViewportState = &viewport_state,
-		.pRasterizationState = &rasterization_state,
-		.pMultisampleState = &multisample_state,
-		.pDepthStencilState = &depth_stencil_state,
-		.pColorBlendState = &color_blend_state,
-		.pDynamicState = &dynamic_state,
-		.layout = m_PipelineLayout,
-		.renderPass = p_ObjectPipeline->m_Renderpass->renderpass,
-		.subpass = 0,
-	};
-
-	VulkanContext::VK_CHECK(vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VulkanContext::Get()->getPipelineCache(), 1, &create_info, nullptr, &m_Pipeline));
+	VulkanGraphicsPipelineBuilder::Start()
+		.SetDynamicStates(dynamic_states)
+		.SetVertexInput(&PosColVertex::array_input_state)
+		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_LINE_LIST)
+		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, 2.0f)
+		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
+		.Build("../spv/shaders/lines.vert.spv", "../spv/shaders/lines.frag.spv", &m_Pipeline, m_PipelineLayout, p_ObjectPipeline->m_Renderpass->renderpass);
 }
 
 void LinesPipeline::CreateDescriptors()
 {
-	// create world and transform descriptor
 	for (Workspace& workspace : workspaces)
 	{
 		workspace.CameraSrc = Buffer(
@@ -303,7 +207,7 @@ void LinesPipeline::CreateDescriptors()
 			.range = workspace.Camera.getSize(),
 		};
 
-		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindBuffer(0, &CameraInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 			.Build(workspace.set0_Camera, set0_CameraLayout);
 	}

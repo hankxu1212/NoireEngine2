@@ -40,7 +40,6 @@ ObjectPipeline::~ObjectPipeline()
 	workspaces.clear();
 
 	m_DescriptorAllocator.Cleanup(); // destroy pool and sets
-	m_DescriptorLayoutCache.Cleanup(); // destroy all set layouts
 	
 	m_MaterialPipelines.clear();
 }
@@ -151,11 +150,13 @@ void ObjectPipeline::CreateDescriptors()
 			.range = workspace.World.getSize(),
 		};
 
-		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+		// build world buffer descriptor
+		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.Build(workspace.set0_World, set0_WorldLayout);
 
-		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+		// build transform layout, no buffer allocation
+		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 			.Build(workspace.set1_Transforms, set1_TransformsLayout);
 	}
@@ -196,7 +197,7 @@ void ObjectPipeline::CreateDescriptors()
 		}
 
 		// actually build the descriptor set now
-		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindImage(0, textureDescriptors.data(), 
 				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<uint32_t>(textures.size()))
 			.Build(set2_Textures, set2_TexturesLayout, &setLayoutBindingFlags,
@@ -285,7 +286,7 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 		//update the descriptor set:
 		VkDescriptorBufferInfo Transforms_info = CreateTransformStorageBuffer(workspace, new_bytes);
 
-		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 			.Write(workspace.set1_Transforms);
 	}

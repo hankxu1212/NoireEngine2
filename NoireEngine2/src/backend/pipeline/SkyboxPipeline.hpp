@@ -52,7 +52,6 @@ private:
 	ObjectPipeline*		p_ObjectPipeline;
 
 	DescriptorAllocator						m_DescriptorAllocator;
-	DescriptorLayoutCache					m_DescriptorLayoutCache;
 
 	Buffer m_VertexBuffer;
 

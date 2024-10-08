@@ -109,6 +109,7 @@ const vulkan_objs = [
 	maek.CPP('backend/descriptor/DescriptorBuilder.cpp'),
 	maek.CPP('backend/pipeline/material_pipeline/MaterialPipeline.cpp'),
 	maek.CPP('backend/pipeline/ObjectPipeline.cpp'),
+	maek.CPP('backend/pipeline/VulkanGraphicsPipelineBuilder.cpp'),
 ]
 
 function use_shaders(name, pipeline) {
@@ -265,7 +266,7 @@ function custom_flags_and_rules() {
 	
 	maek.DEFAULT_OPTIONS.GLSLC = [`${VULKAN_SDK}/bin/glslc` + (maek.OS === 'windows' ? '.exe' : ''), '-Werror', '-g', '-mfmt=c', '--target-env=vulkan1.2'];
 	maek.DEFAULT_OPTIONS.GLSLCFlags = [];
-	maek.DEFAULT_OPTIONS.spirvSuffix = '.inl';
+	maek.DEFAULT_OPTIONS.spirvSuffix = '.spv';
 	maek.DEFAULT_OPTIONS.spirvPrefix = 'spv/';
 
 	//maek.GLSLC is a rule to run google's "glslc" compiler:
@@ -287,7 +288,7 @@ function custom_flags_and_rules() {
 		const spirvFile = spirvFileBase + options.spirvSuffix;
 
 		const glslc = [...options.GLSLC, ...options.GLSLCFlags];
-		const command = [...glslc, '-o', spirvFile, glslFile];
+		const command = [...glslc, '-mfmt=bin', '-o', spirvFile, glslFile];
 
 		//The actual build task:
 		const task = async () => {

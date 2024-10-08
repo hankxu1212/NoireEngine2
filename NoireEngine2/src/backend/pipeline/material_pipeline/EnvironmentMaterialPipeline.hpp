@@ -26,7 +26,6 @@ private:
 	VkDescriptorSet set3_Cubemap = VK_NULL_HANDLE;
 
 	DescriptorAllocator						m_DescriptorAllocator;
-	DescriptorLayoutCache					m_DescriptorLayoutCache;
 
 	std::shared_ptr<ImageCube> cube;
 };

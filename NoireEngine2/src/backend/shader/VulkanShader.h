@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+#include <string>
 
 class VulkanShader
 {
@@ -11,7 +12,9 @@ public:
 	template< size_t N >
 	VulkanShader(uint32_t const (&arr)[N], ShaderStage stage) : VulkanShader(arr, 4 * N, stage) {}
 
-	VulkanShader(uint32_t const* code, size_t bytes, ShaderStage stage);
+	VulkanShader(const uint32_t* code, size_t bytes, ShaderStage stage);
+
+	VulkanShader(const std::string& path, ShaderStage stage);
 
 	~VulkanShader();
 

@@ -242,6 +242,7 @@
     <ClCompile Include="vendor\imgui\misc\cpp\imgui_stdlib.cpp" />
     <ClCompile Include="vendor\imgui\misc\fonts\binary_to_compressed_c.cpp" />
     <ClCompile Include="vendor\imgui\misc\freetype\imgui_freetype.cpp" />
+    <ClCompile Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.hpp" />
@@ -415,6 +416,7 @@
     <ClInclude Include="vendor\imgui\misc\cpp\imgui_stdlib.h" />
     <ClInclude Include="vendor\imgui\misc\freetype\imgui_freetype.h" />
     <ClInclude Include="vendor\imgui\misc\single_file\imgui_single_file.h" />
+    <ClInclude Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\core\resources\nodes\Node.inl" />

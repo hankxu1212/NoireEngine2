@@ -76,7 +76,6 @@ SkyboxPipeline::~SkyboxPipeline()
 	workspaces.clear();
 
 	m_DescriptorAllocator.Cleanup(); // destroy pool and sets
-	m_DescriptorLayoutCache.Cleanup(); // destroy all set layouts
 
 	m_VertexBuffer.Destroy();
 
@@ -289,7 +288,7 @@ void SkyboxPipeline::CreateDescriptors()
 			.range = workspace.Camera.getSize(),
 		};
 
-		DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindBuffer(0, &CameraInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 			.Build(workspace.set0_Camera, set0_CameraLayout);
 	}
@@ -301,7 +300,7 @@ void SkyboxPipeline::CreateDescriptors()
 		.imageLayout = cube->getLayout()
 	};
 
-	DescriptorBuilder::Start(&m_DescriptorLayoutCache, &m_DescriptorAllocator)
+	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 		.BindImage(0, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 		.Build(set1_Cubemap, set1_CubemapLayout);
 }

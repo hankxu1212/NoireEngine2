@@ -24,6 +24,8 @@
 
 #include "renderer/Renderer.hpp"
 
+#include "backend/descriptor/DescriptorLayoutCache.hpp"
+
 /**
  * Manages Instance, Physical/Logical devices, Swapchains (to a certain extent) and surfaces.
  */
@@ -81,6 +83,7 @@ public:
 	inline Buffer*							getIndirectBuffer() { return m_PerSurfaceBuffers[0]->getIndirectBuffer(); }
 	inline const uint32_t					getFramesInFlight() const { return m_Swapchains[0]->getImageCount(); }
 
+	inline DescriptorLayoutCache*			getDescriptorLayoutCache() { return &m_DescriptorLayoutCache; }
 
 	inline static float WaitForSwapchainTime, RenderTime;
 
@@ -121,6 +124,7 @@ private:
 
 	std::unique_ptr<Renderer>									s_Renderer;
 
+	DescriptorLayoutCache										m_DescriptorLayoutCache;
 
 private:
 	void CreatePipelineCache();

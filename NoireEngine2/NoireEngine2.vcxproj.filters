@@ -471,6 +471,12 @@
     <ClCompile Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\backend\pipeline\material_pipeline\MirrorMaterialPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h">
@@ -983,6 +989,12 @@
     <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipelines.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\backend\pipeline\material_pipeline\MirrorMaterialPipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />
@@ -1014,6 +1026,8 @@
     <None Include="src\shaders\environment.vert" />
     <None Include="src\shaders\environment.frag" />
     <None Include="src\scenes\examples\test_env.s72" />
+    <None Include="src\shaders\mirror.frag" />
+    <None Include="src\shaders\mirror.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">
