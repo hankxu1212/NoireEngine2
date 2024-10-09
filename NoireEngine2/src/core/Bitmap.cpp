@@ -23,7 +23,7 @@
 
 #include "core/resources/Files.hpp"
 
-Bitmap::Bitmap(std::filesystem::path filename) {
+Bitmap::Bitmap(std::filesystem::path& filename) {
 	Load(filename);
 }
 

@@ -2,8 +2,6 @@
 
 #extension GL_EXT_nonuniform_qualifier : require
 
-#define saturate(x) clamp(x, 0.0, 1.0)
-
 layout(location=0) in vec3 inPosition;
 layout(location=1) in vec3 inNormal;
 layout(location=2) in vec2 inTexCoord;
@@ -11,6 +9,7 @@ layout(location=2) in vec2 inTexCoord;
 layout(location=0) out vec4 outColor;
 
 #include "glsl/world_uniform.glsl"
+#include "glsl/utils.glsl"
 
 layout (set = 2, binding = 0) uniform sampler2D textures[];
 
@@ -40,11 +39,7 @@ void main() {
 
 	vec3 color = vec3(material.albedo) * texColor * lightsSum;
 
-    // gamma correct
-	color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0/ gamma)); 
-
-	outColor = vec4(color, 1);
+	outColor = gamma_map(color, gamma);
 }
 
 vec3 DirLight(int i)

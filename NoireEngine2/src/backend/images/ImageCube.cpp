@@ -6,6 +6,7 @@
 #include "core/Bitmap.hpp"
 #include "backend/buffers/Buffer.hpp"
 #include "renderer/materials/MaterialLibrary.hpp"
+#include "utils/Logger.hpp"
 
 std::shared_ptr<ImageCube> ImageCube::Create(const Node& node) {
 	if (auto resource = Resources::Get()->Find<ImageCube>(node))
@@ -18,50 +19,26 @@ std::shared_ptr<ImageCube> ImageCube::Create(const Node& node) {
 	return result;
 }
 
-std::shared_ptr<ImageCube> ImageCube::Create(const std::filesystem::path& filename, const std::string& fileSuffix, VkFilter filter, VkSamplerAddressMode addressMode,
-	bool anisotropic, bool mipmap) {
-	ImageCube temp(filename, fileSuffix, filter, addressMode, anisotropic, mipmap, false);
+std::shared_ptr<ImageCube> ImageCube::Create(const std::filesystem::path& filename, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic, bool mipmap)
+{
+	ImageCube temp(filename, filter, addressMode, anisotropic, mipmap);
 	Node node;
 	node << temp;
 	return Create(node);
 }
 
-ImageCube::ImageCube(std::filesystem::path filename, std::string fileSuffix, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic, bool mipmap, bool load) :
+// by default, this loads a big HDR texture with VK_FORMAT_R32G32B32A32_SFLOAT
+ImageCube::ImageCube(std::filesystem::path filename, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic, bool mipmap) :
 	Image(filter, addressMode, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 		VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		VK_FORMAT_R8G8B8A8_UNORM, 1, 6, { 0, 0, 1 }),
+		VK_FORMAT_R32G32B32A32_SFLOAT, 1, 6, { 0, 0, 1 }),
 	filename(std::move(filename)),
-	fileSuffix(std::move(fileSuffix)),
 	anisotropic(anisotropic),
 	mipmap(mipmap) {
-	if (load) {
-		ImageCube::Load();
-	}
 }
 
-ImageCube::ImageCube(const glm::vec2 extent, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage, VkFilter filter, VkSamplerAddressMode addressMode,
-	VkSampleCountFlagBits samples, bool anisotropic, bool mipmap) :
-	Image(filter, addressMode, samples, layout,
-		usage | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		format, 1, 6, { (uint32_t)extent.x, (uint32_t)extent.y, 1 }),
-	anisotropic(anisotropic),
-	mipmap(mipmap),
-	components(4) {
-	ImageCube::Load();
-}
-
-ImageCube::ImageCube(std::unique_ptr<Bitmap>&& bitmap, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage, VkFilter filter, VkSamplerAddressMode addressMode,
-	VkSampleCountFlagBits samples, bool anisotropic, bool mipmap) :
-	Image(filter, addressMode, samples, layout,
-		usage | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		format, 1, /*ArrayLayers*/6, { bitmap->size.x, bitmap->size.y, 1 }),
-	anisotropic(anisotropic),
-	mipmap(mipmap),
-	components(bitmap->bytesPerPixel) {
-	ImageCube::Load(std::move(bitmap));
-}
-
-void ImageCube::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t baseArrayLayer) {
+void ImageCube::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t baseArrayLayer) 
+{
 	Buffer bufferStaging(extent.width * extent.height * components * arrayLayers, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
@@ -77,8 +54,6 @@ void ImageCube::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t b
 
 const Node& operator>>(const Node& node, ImageCube& image) {
 	node["filename"].Get(image.filename);
-	node["fileSuffix"].Get(image.fileSuffix);
-	node["fileSides"].Get(image.fileSides);
 	node["filter"].Get(image.filter);
 	node["addressMode"].Get(image.addressMode);
 	node["anisotropic"].Get(image.anisotropic);
@@ -88,8 +63,6 @@ const Node& operator>>(const Node& node, ImageCube& image) {
 
 Node& operator<<(Node& node, const ImageCube& image) {
 	node["filename"].Set(image.filename);
-	node["fileSuffix"].Set(image.fileSuffix);
-	node["fileSides"].Set(image.fileSides);
 	node["filter"].Set(image.filter);
 	node["addressMode"].Set(image.addressMode);
 	node["anisotropic"].Set(image.anisotropic);
@@ -97,27 +70,42 @@ Node& operator<<(Node& node, const ImageCube& image) {
 	return node;
 }
 
+inline glm::vec4 rgbe_to_float(glm::u8vec4 col) {
+	//avoid decoding zero to a denormalized value:
+	if (col == glm::u8vec4(0, 0, 0, 0)) return glm::vec4(0.0f);
+
+	int exp = int(col.a) - 128;
+	return glm::vec4(
+		std::ldexp((col.r + 0.5f) / 256.0f, exp),
+		std::ldexp((col.g + 0.5f) / 256.0f, exp),
+		std::ldexp((col.b + 0.5f) / 256.0f, exp),
+		1
+	);
+}
+
 void ImageCube::Load(std::unique_ptr<Bitmap> loadBitmap) {
 	if (!filename.empty() && !loadBitmap) {
-		uint8_t* offset = nullptr;
+		auto rawBitmap = Bitmap(filename); // in rgbe format
 
-		for (const auto& side : fileSides) {
-			Bitmap bitmapSide(filename / (side + fileSuffix));
-			auto lengthSide = bitmapSide.GetLength();
+		// Reinterpret the data as an array of glm::u8vec4
+		glm::u8vec4* vec4_data = reinterpret_cast<glm::u8vec4*>(rawBitmap.data.get());
 
-			if (!loadBitmap) {
-				loadBitmap = std::make_unique<Bitmap>(std::make_unique<uint8_t[]>(lengthSide * arrayLayers), bitmapSide.size,
-					bitmapSide.bytesPerPixel);
-				offset = loadBitmap->data.get();
-			}
-			assert(offset);
-			std::memcpy(offset, bitmapSide.data.get(), lengthSide);
-			offset += lengthSide;
+		size_t num_vec4_elements = rawBitmap.GetLength() / sizeof(glm::u8vec4);  // Make sure to calculate the correct size
+
+		std::vector<glm::vec4> rgbData;
+
+		for (size_t i = 0; i < num_vec4_elements; ++i) {
+			glm::u8vec4 color = vec4_data[i];
+			rgbData.emplace_back(rgbe_to_float(color));
 		}
 
-		extent = { loadBitmap->size.y, loadBitmap->size.y, 1 };
-		components = loadBitmap->bytesPerPixel;
+		// make a new bitmap
+		loadBitmap = std::make_unique<Bitmap>(std::make_unique<uint8_t[]>(rgbData.size() * sizeof(glm::vec4)), rawBitmap.size, 16);
+		memcpy(loadBitmap->data.get(), rgbData.data(), rgbData.size() * sizeof(glm::vec4));
 	}
+
+	extent = { loadBitmap->size.x, loadBitmap->size.x, 1 };
+	components = loadBitmap->bytesPerPixel;
 
 	if (extent.width == 0 || extent.height == 0) {
 		return;
@@ -135,7 +123,7 @@ void ImageCube::Load(std::unique_ptr<Bitmap> loadBitmap) {
 	}
 
 	if (loadBitmap) {
-		Buffer bufferStaging(loadBitmap->GetLength() * arrayLayers, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		Buffer bufferStaging(loadBitmap->GetLength(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 		uint8_t* data;

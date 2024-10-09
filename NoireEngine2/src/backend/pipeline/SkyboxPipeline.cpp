@@ -6,14 +6,7 @@
 #include "renderer/scene/Scene.hpp"
 #include "core/resources/Files.hpp"
 #include "renderer/vertices/PosVertex.hpp"
-
-static uint32_t vert_code[] =
-#include "spv/shaders/skybox.vert.inl"
-;
-
-static uint32_t frag_code[] =
-#include "spv/shaders/skybox.frag.inl"
-;
+#include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 
 float skyboxVertices[] = {
 	// positions          
@@ -63,7 +56,7 @@ float skyboxVertices[] = {
 SkyboxPipeline::SkyboxPipeline(ObjectPipeline* objectPipeline) :
 	p_ObjectPipeline(objectPipeline)
 {
-	cube = ImageCube::Create(Files::Path("../scenes/SkyboxClouds"), ".png");
+	cube = ImageCube::Create(Files::Path("../scenes/examples/ox_bridge_morning.png"));
 }
 
 SkyboxPipeline::~SkyboxPipeline()
@@ -147,68 +140,11 @@ void SkyboxPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 
 void SkyboxPipeline::CreateGraphicsPipeline()
 {
-	VulkanShader vertModule(vert_code, VulkanShader::ShaderStage::Vertex);
-	VulkanShader fragModule(frag_code, VulkanShader::ShaderStage::Frag);
-
-	std::array< VkPipelineShaderStageCreateInfo, 2 > stages{
-		vertModule.shaderStage(),
-		fragModule.shaderStage()
-	};
-
 	std::vector< VkDynamicState > dynamic_states{
 		VK_DYNAMIC_STATE_VIEWPORT,
 		VK_DYNAMIC_STATE_SCISSOR,
 	};
 
-	VkPipelineDynamicStateCreateInfo dynamic_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-		.dynamicStateCount = uint32_t(dynamic_states.size()),
-		.pDynamicStates = dynamic_states.data()
-	};
-
-	// draw trigs
-	VkPipelineInputAssemblyStateCreateInfo input_assembly_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-		.primitiveRestartEnable = VK_FALSE
-	};
-
-	VkPipelineViewportStateCreateInfo viewport_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-		.viewportCount = 1,
-		.scissorCount = 1,
-	};
-
-	// cull front face to render cube inside-out
-	VkPipelineRasterizationStateCreateInfo rasterization_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-		.depthClampEnable = VK_FALSE,
-		.rasterizerDiscardEnable = VK_FALSE,
-		.polygonMode = VK_POLYGON_MODE_FILL,
-		.cullMode = VK_CULL_MODE_FRONT_BIT,
-		.frontFace = VK_FRONT_FACE_CLOCKWISE,
-		.depthBiasEnable = VK_FALSE,
-		.lineWidth = 1.0f,
-	};
-
-	//multisampling will be disabled (one sample per pixel):
-	VkPipelineMultisampleStateCreateInfo multisample_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-		.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
-		.sampleShadingEnable = VK_FALSE,
-	};
-
-	//depth test will be less, and stencil test will be disabled:
-	VkPipelineDepthStencilStateCreateInfo depth_stencil_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-		.depthTestEnable = VK_TRUE,
-		.depthWriteEnable = VK_TRUE,
-		.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
-		.depthBoundsTestEnable = VK_FALSE,
-		.stencilTestEnable = VK_FALSE,
-	};
-
-	//there will be one color attachment with blending disabled:
 	std::array< VkPipelineColorBlendAttachmentState, 1 > attachment_states{
 		VkPipelineColorBlendAttachmentState{
 			.blendEnable = VK_FALSE,
@@ -216,34 +152,14 @@ void SkyboxPipeline::CreateGraphicsPipeline()
 		},
 	};
 
-	VkPipelineColorBlendStateCreateInfo color_blend_state{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-		.logicOpEnable = VK_FALSE,
-		.attachmentCount = uint32_t(attachment_states.size()),
-		.pAttachments = attachment_states.data(),
-		.blendConstants{0.0f, 0.0f, 0.0f, 0.0f},
-	};
-
-	VkGraphicsPipelineCreateInfo create_info{
-		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-		.stageCount = uint32_t(stages.size()),
-		.pStages = stages.data(),
-		.pVertexInputState = &PosVertex::array_input_state,
-		.pInputAssemblyState = &input_assembly_state,
-		.pViewportState = &viewport_state,
-		.pRasterizationState = &rasterization_state,
-		.pMultisampleState = &multisample_state,
-		.pDepthStencilState = &depth_stencil_state,
-		.pColorBlendState = &color_blend_state,
-		.pDynamicState = &dynamic_state,
-		.layout = m_PipelineLayout,
-		.renderPass = p_ObjectPipeline->m_Renderpass->renderpass,
-		.subpass = 0,
-	};
-
-	VulkanContext::VK_CHECK(
-		vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VulkanContext::Get()->getPipelineCache(), 1, &create_info, nullptr, &m_Pipeline),
-		"[Vulkan] Create pipeline failed");
+	VulkanGraphicsPipelineBuilder::Start()
+		.SetDynamicStates(dynamic_states)
+		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+		.SetVertexInput(&PosVertex::array_input_state)
+		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_CLOCKWISE)
+		.SetDepthStencil(VK_TRUE, VK_TRUE, VK_FALSE, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL)
+		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
+		.Build("../spv/shaders/skybox.vert.spv", "../spv/shaders/skybox.frag.spv", &m_Pipeline, m_PipelineLayout, p_ObjectPipeline->m_Renderpass->renderpass);
 }
 
 void SkyboxPipeline::CreatePipelineLayout()

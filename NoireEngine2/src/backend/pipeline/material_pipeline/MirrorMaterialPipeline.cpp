@@ -11,7 +11,7 @@
 MirrorMaterialPipeline::MirrorMaterialPipeline(ObjectPipeline* objectPipeline) :
 	p_ObjectPipeline(objectPipeline)
 {
-	cube = ImageCube::Create(Files::Path("../scenes/SkyboxClouds"), ".png");
+	cube = ImageCube::Create(Files::Path("../scenes/examples/ox_bridge_morning.png"));
 }
 
 MirrorMaterialPipeline::~MirrorMaterialPipeline()

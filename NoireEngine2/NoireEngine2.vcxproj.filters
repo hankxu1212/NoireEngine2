@@ -1028,6 +1028,7 @@
     <None Include="src\scenes\examples\test_env.s72" />
     <None Include="src\shaders\mirror.frag" />
     <None Include="src\shaders\mirror.vert" />
+    <None Include="src\shaders\glsl\utils.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">
