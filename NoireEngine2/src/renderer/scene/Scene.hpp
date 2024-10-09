@@ -80,7 +80,8 @@ public:
 	
 	inline CameraComponent* debugCam() const;
 
-	struct SceneUniform {
+	struct SceneUniform 
+	{
 		LightUniform lights[MAX_NUM_TOTAL_LIGHTS];
 		alignas(16) uint32_t numLights;
 		alignas(16) struct { float x, y, z, _padding; } cameraPosition;
@@ -97,6 +98,17 @@ public:
 	inline const std::vector<GizmosInstance*>& getGizmosInstances() const { return m_GizmosInstances; }
 
 	inline const std::vector<Light*>& getLightInstances() const { return m_SceneLights; }
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Skybox
+	enum class SkyboxType { HDR, RGB };
+
+	void AddSkybox(const std::string& path, SkyboxType type = SkyboxType::HDR);
+
+	const std::shared_ptr<ImageCube>& getSkybox() const { return m_Skybox; }
+
+	bool hasSkybox() const { return m_Skybox.get(); }
 
 public: // event functions. Do not create function definitions!
 	template<typename T>

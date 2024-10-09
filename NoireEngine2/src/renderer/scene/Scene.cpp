@@ -269,6 +269,30 @@ static void MakeAnimation(const Scene::TSceneMap& sceneMap)
 	}
 }
 
+static void MakeEnvironment(Scene* scene, const Scene::TSceneMap& sceneMap)
+{
+	auto it = sceneMap.find(SceneNode::Environment);
+	if (it == sceneMap.end())
+		return;
+
+	int i = 0;
+	for (const auto& nameValuePair : it->second)
+	{
+		i++;
+		if (i > 1)
+			NE_ERROR("Multiple environment objects found.. Aborting!");
+
+		const auto& environmentObjOpt = nameValuePair.second.as_object();
+		if (!environmentObjOpt) {
+			NE_WARN("Could not read driver object as map.");
+			continue;
+		}
+
+		const auto& name = environmentObjOpt.value().at("radiance").as_texPath().value();
+		scene->AddSkybox("../scenes/examples/" + name);
+	}
+}
+
 static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::string& nodeName, Entity* parent)
 {
 	NE_DEBUG("Creating entity", Logger::CYAN, Logger::BOLD);
@@ -397,12 +421,26 @@ void Scene::Deserialize(const std::string& path)
 			}
 
 			MakeAnimation(sceneMap);
+			MakeEnvironment(this, sceneMap);
 		}
 
 		NE_INFO("Finished loading scene");
 	}
 	catch (std::exception& e) {
 		NE_ERROR("Failed to deserialize a scene with path: [{}]. Error: {}", std::move(path), e.what());
+	}
+}
+
+void Scene::AddSkybox(const std::string& path, SkyboxType type)
+{
+	switch (type)
+	{
+	case SkyboxType::HDR:
+		m_Skybox = ImageCube::Create(Files::Path(path), true);
+		break;
+	case SkyboxType::RGB:
+		m_Skybox = ImageCube::Create(Files::Path(path), false);
+		break;
 	}
 }
 

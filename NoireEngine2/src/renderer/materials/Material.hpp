@@ -14,9 +14,9 @@ public:
 	enum class Workflow
 	{
 		Lambertian = 0,
-		PBR = 1,
-		Environment = 2,
-		Mirror = 3
+		Environment = 1,
+		Mirror = 2,
+		PBR = 3,
 	};
 
 public:

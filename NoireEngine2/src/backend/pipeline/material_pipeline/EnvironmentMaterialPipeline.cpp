@@ -7,11 +7,11 @@
 #include "renderer/scene/Scene.hpp"
 #include "core/resources/Files.hpp"
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
+#include "renderer/scene/SceneManager.hpp"
 
 EnvironmentMaterialPipeline::EnvironmentMaterialPipeline(ObjectPipeline* objectPipeline) :
 	p_ObjectPipeline(objectPipeline)
 {
-	cube = ImageCube::Create(Files::Path("../scenes/examples/ox_bridge_morning.png"));
 }
 
 EnvironmentMaterialPipeline::~EnvironmentMaterialPipeline()
@@ -21,7 +21,6 @@ EnvironmentMaterialPipeline::~EnvironmentMaterialPipeline()
 
 void EnvironmentMaterialPipeline::Create()
 {
-	CreateDescriptors();
 	CreatePipelineLayout();
 	CreateGraphicsPipeline();
 }
@@ -33,7 +32,7 @@ void EnvironmentMaterialPipeline::BindDescriptors(const CommandBuffer& commandBu
 		workspace.set0_World,
 		workspace.set1_Transforms,
 		p_ObjectPipeline->set2_Textures,
-		set3_Cubemap
+		p_ObjectPipeline->set3_Cubemap
 	};
 	vkCmdBindDescriptorSets(
 		commandBuffer, //command buffer
@@ -73,7 +72,7 @@ void EnvironmentMaterialPipeline::CreatePipelineLayout()
 		p_ObjectPipeline->set0_WorldLayout,
 		p_ObjectPipeline->set1_TransformsLayout,
 		p_ObjectPipeline->set2_TexturesLayout,
-		set3_CubemapLayout
+		p_ObjectPipeline->set3_CubemapLayout
 	};
 
 	VkPipelineLayoutCreateInfo create_info{
@@ -85,18 +84,4 @@ void EnvironmentMaterialPipeline::CreatePipelineLayout()
 	};
 
 	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
-}
-
-void EnvironmentMaterialPipeline::CreateDescriptors()
-{
-	VkDescriptorImageInfo cubeMapInfo
-	{
-		.sampler = cube->getSampler(),
-		.imageView = cube->getView(),
-		.imageLayout = cube->getLayout()
-	};
-
-	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-		.BindImage(0, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.Build(set3_Cubemap, set3_CubemapLayout);
 }

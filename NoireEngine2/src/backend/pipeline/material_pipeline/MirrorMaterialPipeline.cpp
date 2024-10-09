@@ -11,7 +11,6 @@
 MirrorMaterialPipeline::MirrorMaterialPipeline(ObjectPipeline* objectPipeline) :
 	p_ObjectPipeline(objectPipeline)
 {
-	cube = ImageCube::Create(Files::Path("../scenes/examples/ox_bridge_morning.png"));
 }
 
 MirrorMaterialPipeline::~MirrorMaterialPipeline()
@@ -21,7 +20,6 @@ MirrorMaterialPipeline::~MirrorMaterialPipeline()
 
 void MirrorMaterialPipeline::Create()
 {
-	CreateDescriptors();
 	CreatePipelineLayout();
 	CreateGraphicsPipeline();
 }
@@ -33,7 +31,7 @@ void MirrorMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer)
 		workspace.set0_World,
 		workspace.set1_Transforms,
 		p_ObjectPipeline->set2_Textures,
-		set3_Cubemap
+		p_ObjectPipeline->set3_Cubemap
 	};
 	vkCmdBindDescriptorSets(
 		commandBuffer, //command buffer
@@ -73,7 +71,7 @@ void MirrorMaterialPipeline::CreatePipelineLayout()
 		p_ObjectPipeline->set0_WorldLayout,
 		p_ObjectPipeline->set1_TransformsLayout,
 		p_ObjectPipeline->set2_TexturesLayout,
-		set3_CubemapLayout
+		p_ObjectPipeline->set3_CubemapLayout
 	};
 
 	VkPipelineLayoutCreateInfo create_info{
@@ -85,18 +83,4 @@ void MirrorMaterialPipeline::CreatePipelineLayout()
 	};
 
 	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
-}
-
-void MirrorMaterialPipeline::CreateDescriptors()
-{
-	VkDescriptorImageInfo cubeMapInfo
-	{
-		.sampler = cube->getSampler(),
-		.imageView = cube->getView(),
-		.imageLayout = cube->getLayout()
-	};
-
-	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-		.BindImage(0, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.Build(set3_Cubemap, set3_CubemapLayout);
 }

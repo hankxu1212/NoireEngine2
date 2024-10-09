@@ -6,14 +6,17 @@
 
 #include "backend/VulkanContext.hpp"
 #include "backend/shader/VulkanShader.h"
+
 #include "math/Math.hpp"
 #include "core/Time.hpp"
 #include "core/Timer.hpp"
-#include "renderer/object/Mesh.hpp"
-#include "renderer/materials/Material.hpp"
-#include "core/resources/Files.hpp"
-#include "renderer/scene/Scene.hpp"
 #include "utils/Logger.hpp"
+#include "core/resources/Files.hpp"
+
+#include "renderer/materials/Material.hpp"
+#include "renderer/object/Mesh.hpp"
+#include "renderer/scene/Scene.hpp"
+#include "renderer/scene/SceneManager.hpp"
 
 #include "backend/pipeline/material_pipeline/MaterialPipelines.hpp"
 #include "renderer/materials/MaterialLibrary.hpp"
@@ -209,6 +212,23 @@ void ObjectPipeline::CreateDescriptors()
 #endif
 			, &variableDescriptorInfoAI);
 	}
+
+	// create skybox descriptor
+	Scene* scene = SceneManager::Get()->getScene();
+	if (!scene->hasSkybox())
+		scene->AddSkybox("../textures/Skybox.png", Scene::SkyboxType::RGB);
+
+	const auto& skybox = scene->getSkybox();
+	VkDescriptorImageInfo cubeMapInfo
+	{
+		.sampler = skybox->getSampler(),
+		.imageView = skybox->getView(),
+		.imageLayout = skybox->getLayout()
+	};
+
+	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+		.BindImage(0, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+		.Build(set3_Cubemap, set3_CubemapLayout);
 }
 
 void ObjectPipeline::Rebuild()
@@ -218,10 +238,10 @@ void ObjectPipeline::Rebuild()
 
 void ObjectPipeline::CreatePipeline()
 {
-	m_MaterialPipelines.resize(4);
-	m_MaterialPipelines[(uint32_t)Material::Workflow::Lambertian] = std::make_unique<LambertianMaterialPipeline>(this);
-	m_MaterialPipelines[(uint32_t)Material::Workflow::Environment] = std::make_unique<EnvironmentMaterialPipeline>(this);
-	m_MaterialPipelines[(uint32_t)Material::Workflow::Mirror] = std::make_unique<MirrorMaterialPipeline>(this);
+	m_MaterialPipelines.resize(3);
+	for (int i = 0; i < 3; i++) {
+		m_MaterialPipelines[i] = MaterialPipeline::Create(Material::Workflow(i), this);
+	}
 
 	s_LinesPipeline = std::make_unique<LinesPipeline>(this);
 
@@ -229,13 +249,12 @@ void ObjectPipeline::CreatePipeline()
 
 	CreateDescriptors();
 
-	//for (int i = 0; i < m_MaterialPipelines.size(); ++i)
-		//m_MaterialPipelines[i]->Create();
-	m_MaterialPipelines[(uint32_t)Material::Workflow::Lambertian]->Create();
-	m_MaterialPipelines[(uint32_t)Material::Workflow::Environment]->Create();
-	m_MaterialPipelines[(uint32_t)Material::Workflow::Mirror]->Create();
+	for (int i = 0; i < 3; i++) {
+		m_MaterialPipelines[i]->Create();
+	}
 
 	s_LinesPipeline->CreatePipeline();
+
 	s_SkyboxPipeline->CreatePipeline();
 }
 

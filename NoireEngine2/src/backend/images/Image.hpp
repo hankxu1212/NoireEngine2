@@ -23,8 +23,6 @@ public:
 		const std::optional<OffsetSize>& offsetSize=std::nullopt
 	) const override;
 
-	static VkDescriptorSetLayoutBinding GetDescriptorSetLayout(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stage, uint32_t count);
-
 	/**
 	  * Copies the images pixels from memory to a bitmap. If this method is called from multiple threads at the same time Vulkan will crash!
 	  * @param mipLevel The mipmap level index to sample.

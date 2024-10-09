@@ -419,6 +419,7 @@
     <ClInclude Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="C:\Users\HX\Downloads\Skybox.hdr" />
     <None Include="src\core\resources\nodes\Node.inl" />
     <None Include="src\core\resources\nodes\NodeConstView.inl" />
     <None Include="src\core\resources\nodes\NodeView.inl" />

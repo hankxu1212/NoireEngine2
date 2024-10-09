@@ -1029,6 +1029,7 @@
     <None Include="src\shaders\mirror.frag" />
     <None Include="src\shaders\mirror.vert" />
     <None Include="src\shaders\glsl\utils.glsl" />
+    <None Include="C:\Users\HX\Downloads\Skybox.hdr" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

@@ -10,11 +10,11 @@ class Bitmap;
 
 class ImageCube : public Image, public Resource {
 public:
-	static std::shared_ptr<ImageCube> Create(const std::filesystem::path& filename, VkFilter filter = VK_FILTER_LINEAR,
+	static std::shared_ptr<ImageCube> Create(const std::filesystem::path& filename, bool usingHDR = true, VkFilter filter = VK_FILTER_LINEAR,
 		VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, bool anisotropic = true, bool mipmap = true);
 
 	explicit ImageCube(std::filesystem::path filename, VkFilter filter=VK_FILTER_LINEAR, VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, 
-		bool anisotropic=true, bool mipmap=true);
+		bool anisotropic=true, bool mipmap=true, bool usingHDR=true);
 
 	/**
 	  * Sets the pixels of this image.
@@ -30,6 +30,8 @@ public:
 	bool anisotropic;
 	bool mipmap;
 	uint32_t components = 0;
+
+	bool isHDR = true;
 
 private:
 	static std::shared_ptr<ImageCube> Create(const Node& node);

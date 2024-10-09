@@ -19,22 +19,24 @@ std::shared_ptr<ImageCube> ImageCube::Create(const Node& node) {
 	return result;
 }
 
-std::shared_ptr<ImageCube> ImageCube::Create(const std::filesystem::path& filename, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic, bool mipmap)
+std::shared_ptr<ImageCube> ImageCube::Create(const std::filesystem::path& filename, bool usingHDR, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic, bool mipmap)
 {
-	ImageCube temp(filename, filter, addressMode, anisotropic, mipmap);
+	ImageCube temp(filename, filter, addressMode, anisotropic, mipmap, usingHDR);
 	Node node;
 	node << temp;
 	return Create(node);
 }
 
 // by default, this loads a big HDR texture with VK_FORMAT_R32G32B32A32_SFLOAT
-ImageCube::ImageCube(std::filesystem::path filename, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic, bool mipmap) :
+ImageCube::ImageCube(std::filesystem::path filename, VkFilter filter, VkSamplerAddressMode addressMode, 
+	bool anisotropic, bool mipmap, bool usingHDR) :
 	Image(filter, addressMode, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 		VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		VK_FORMAT_R32G32B32A32_SFLOAT, 1, 6, { 0, 0, 1 }),
+		usingHDR ? VK_FORMAT_R32G32B32A32_SFLOAT : VK_FORMAT_R8G8B8A8_UNORM, 1, 6, { 0, 0, 1 }),
 	filename(std::move(filename)),
 	anisotropic(anisotropic),
-	mipmap(mipmap) {
+	mipmap(mipmap),
+	isHDR(usingHDR) {
 }
 
 void ImageCube::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t baseArrayLayer) 
@@ -58,6 +60,8 @@ const Node& operator>>(const Node& node, ImageCube& image) {
 	node["addressMode"].Get(image.addressMode);
 	node["anisotropic"].Get(image.anisotropic);
 	node["mipmap"].Get(image.mipmap);
+	node["mode"].Get(image.isHDR);
+	node["format"].Get(image.format);
 	return node;
 }
 
@@ -67,6 +71,8 @@ Node& operator<<(Node& node, const ImageCube& image) {
 	node["addressMode"].Set(image.addressMode);
 	node["anisotropic"].Set(image.anisotropic);
 	node["mipmap"].Set(image.mipmap);
+	node["mode"].Set(image.isHDR);
+	node["format"].Set(image.format);
 	return node;
 }
 
@@ -85,23 +91,28 @@ inline glm::vec4 rgbe_to_float(glm::u8vec4 col) {
 
 void ImageCube::Load(std::unique_ptr<Bitmap> loadBitmap) {
 	if (!filename.empty() && !loadBitmap) {
-		auto rawBitmap = Bitmap(filename); // in rgbe format
+		if (isHDR) {
+			auto rawBitmap = Bitmap(filename); // in rgbe format
 
-		// Reinterpret the data as an array of glm::u8vec4
-		glm::u8vec4* vec4_data = reinterpret_cast<glm::u8vec4*>(rawBitmap.data.get());
+			// Reinterpret the data as an array of glm::u8vec4
+			glm::u8vec4* vec4_data = reinterpret_cast<glm::u8vec4*>(rawBitmap.data.get());
 
-		size_t num_vec4_elements = rawBitmap.GetLength() / sizeof(glm::u8vec4);  // Make sure to calculate the correct size
+			size_t num_vec4_elements = rawBitmap.GetLength() / sizeof(glm::u8vec4);  // Make sure to calculate the correct size
 
-		std::vector<glm::vec4> rgbData;
+			std::vector<glm::vec4> rgbData;
 
-		for (size_t i = 0; i < num_vec4_elements; ++i) {
-			glm::u8vec4 color = vec4_data[i];
-			rgbData.emplace_back(rgbe_to_float(color));
+			for (size_t i = 0; i < num_vec4_elements; ++i) {
+				glm::u8vec4 color = vec4_data[i];
+				rgbData.emplace_back(rgbe_to_float(color));
+			}
+
+			// make a new bitmap
+			loadBitmap = std::make_unique<Bitmap>(std::make_unique<uint8_t[]>(rgbData.size() * sizeof(glm::vec4)), rawBitmap.size, 16);
+			memcpy(loadBitmap->data.get(), rgbData.data(), rgbData.size() * sizeof(glm::vec4));
 		}
-
-		// make a new bitmap
-		loadBitmap = std::make_unique<Bitmap>(std::make_unique<uint8_t[]>(rgbData.size() * sizeof(glm::vec4)), rawBitmap.size, 16);
-		memcpy(loadBitmap->data.get(), rgbData.data(), rgbData.size() * sizeof(glm::vec4));
+		else { // load as png
+			loadBitmap = std::make_unique<Bitmap>(filename);
+		}
 	}
 
 	extent = { loadBitmap->size.x, loadBitmap->size.x, 1 };

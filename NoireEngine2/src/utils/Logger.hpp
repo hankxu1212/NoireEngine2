@@ -50,7 +50,7 @@ public:
         ERROR(std::format(_Fmt, std::move(_Args)...));
     }
 
-    static void ERROR(const std::string str)
+    [[noreturn]] static void ERROR(const std::string str)
     {
         std::cout << "\033[" << BOLD << ";" << RED << "m" << "[Error] " << str << "\033[0m" << std::endl;
         abort();

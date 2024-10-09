@@ -24,7 +24,6 @@ private:
 	void CreateGraphicsPipeline();
 	void CreatePipelineLayout();
 	void CreateDescriptors();
-
 	void CreateVertexBuffer();
 
 	VkDescriptorSetLayout set0_CameraLayout = VK_NULL_HANDLE;
@@ -44,9 +43,6 @@ private:
 	};
 	std::vector<Workspace> workspaces;
 
-	VkDescriptorSetLayout set1_CubemapLayout = VK_NULL_HANDLE;
-	VkDescriptorSet set1_Cubemap = VK_NULL_HANDLE;
-
 	VkPipeline			m_Pipeline;
 	VkPipelineLayout	m_PipelineLayout;
 	ObjectPipeline*		p_ObjectPipeline;
@@ -54,7 +50,5 @@ private:
 	DescriptorAllocator						m_DescriptorAllocator;
 
 	Buffer m_VertexBuffer;
-
-	std::shared_ptr<ImageCube> cube;
 };
 

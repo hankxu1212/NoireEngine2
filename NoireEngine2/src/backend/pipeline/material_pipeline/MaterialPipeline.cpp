@@ -32,7 +32,11 @@ std::unique_ptr<MaterialPipeline> MaterialPipeline::Create(Material::Workflow wo
 	{
 	case Material::Workflow::Lambertian:
 		return std::make_unique<LambertianMaterialPipeline>(objectPipeline);
+	case Material::Workflow::Environment:
+		return std::make_unique<EnvironmentMaterialPipeline>(objectPipeline);
+	case Material::Workflow::Mirror:
+		return std::make_unique<MirrorMaterialPipeline>(objectPipeline);
 	default:
-		return std::make_unique<LambertianMaterialPipeline>(objectPipeline); // TODO: change this!
+		return std::make_unique<LambertianMaterialPipeline>(objectPipeline);
 	}
 }

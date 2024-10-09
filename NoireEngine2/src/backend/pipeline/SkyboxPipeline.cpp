@@ -7,6 +7,7 @@
 #include "core/resources/Files.hpp"
 #include "renderer/vertices/PosVertex.hpp"
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
+#include "renderer/scene/SceneManager.hpp"
 
 float skyboxVertices[] = {
 	// positions          
@@ -52,11 +53,12 @@ float skyboxVertices[] = {
 	-1.0f, -1.0f,  1.0f,
 	 1.0f, -1.0f,  1.0f
 };
+#define SKYBOX_SIZE_BYTES 36 * 12
+static_assert(sizeof(skyboxVertices) == SKYBOX_SIZE_BYTES);
 
 SkyboxPipeline::SkyboxPipeline(ObjectPipeline* objectPipeline) :
 	p_ObjectPipeline(objectPipeline)
 {
-	cube = ImageCube::Create(Files::Path("../scenes/examples/ox_bridge_morning.png"));
 }
 
 SkyboxPipeline::~SkyboxPipeline()
@@ -86,7 +88,6 @@ SkyboxPipeline::~SkyboxPipeline()
 void SkyboxPipeline::CreatePipeline()
 {
 	workspaces.resize(VulkanContext::Get()->getFramesInFlight());
-
 	CreateDescriptors();
 	CreateVertexBuffer();
 	CreatePipelineLayout();
@@ -106,7 +107,7 @@ void SkyboxPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 	{ //bind Camera descriptor set:
 		std::array< VkDescriptorSet, 2 > descriptor_sets{
 			workspace.set0_Camera,
-			set1_Cubemap
+			p_ObjectPipeline->set3_Cubemap
 		};
 		vkCmdBindDescriptorSets(
 			commandBuffer, //command buffer
@@ -166,7 +167,7 @@ void SkyboxPipeline::CreatePipelineLayout()
 {
 	std::array< VkDescriptorSetLayout, 2 > layouts{
 		set0_CameraLayout,
-		set1_CubemapLayout
+		p_ObjectPipeline->set3_CubemapLayout
 	};
 
 	VkPipelineLayoutCreateInfo create_info{
@@ -208,26 +209,15 @@ void SkyboxPipeline::CreateDescriptors()
 			.BindBuffer(0, &CameraInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 			.Build(workspace.set0_Camera, set0_CameraLayout);
 	}
-	
-	VkDescriptorImageInfo cubeMapInfo
-	{
-		.sampler = cube->getSampler(),
-		.imageView = cube->getView(),
-		.imageLayout = cube->getLayout()
-	};
-
-	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-		.BindImage(0, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.Build(set1_Cubemap, set1_CubemapLayout);
 }
 
 void SkyboxPipeline::CreateVertexBuffer()
 {
 	m_VertexBuffer = Buffer(
-		36 * 12,
+		SKYBOX_SIZE_BYTES,
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 	);
 
-	Buffer::TransferToBuffer(skyboxVertices, 36 * 12, m_VertexBuffer.getBuffer());
+	Buffer::TransferToBuffer(skyboxVertices, SKYBOX_SIZE_BYTES, m_VertexBuffer.getBuffer());
 }

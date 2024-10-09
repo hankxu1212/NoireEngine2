@@ -79,6 +79,9 @@ private:
 	VkDescriptorSetLayout set2_TexturesLayout = VK_NULL_HANDLE;
 	VkDescriptorSet set2_Textures;
 
+	VkDescriptorSetLayout set3_CubemapLayout = VK_NULL_HANDLE;
+	VkDescriptorSet set3_Cubemap = VK_NULL_HANDLE;
+
 	DescriptorAllocator						m_DescriptorAllocator;
 
 	std::unique_ptr<Renderpass>				m_Renderpass;

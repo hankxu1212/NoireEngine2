@@ -101,6 +101,9 @@ void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuff
 			//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
 			size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
 
+			workspace.LinesVerticesSrc.Destroy();
+			workspace.LinesVertices.Destroy();
+
 			workspace.LinesVerticesSrc = Buffer(
 				new_bytes,
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
