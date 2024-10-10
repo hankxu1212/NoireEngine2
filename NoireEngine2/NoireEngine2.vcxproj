@@ -64,7 +64,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NMakeBuildCommandLine>node src/Maekfile.js</NMakeBuildCommandLine>
-    <NMakeOutput>src/bin/main.exe</NMakeOutput>
+    <NMakeOutput>src/bin/cube.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src;vendor/glm;vendor;vendor/imgui;vendor/imgui/backends;vendor/imguizmo/</NMakeIncludeSearchPath>
     <AdditionalOptions>/std:c++20</AdditionalOptions>
@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\utils\IBLUtilsApplication.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\MirrorMaterialPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\SkyboxPipeline.cpp" />
@@ -163,6 +164,7 @@
     <ClCompile Include="src\math\vector\Vec3.cpp" />
     <ClCompile Include="src\math\vector\Vec4.cpp" />
     <ClCompile Include="src\renderer\scene\SceneNode.cpp" />
+    <ClCompile Include="src\renderer\utils\IBLEntrypoint.cpp" />
     <ClCompile Include="src\renderer\vertices\PosVertex.cpp" />
     <ClCompile Include="src\scripting\Behaviour.cpp" />
     <ClCompile Include="src\scripting\core\Input.cpp" />
@@ -245,6 +247,7 @@
     <ClCompile Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\utils\IBLUtilsApplication.h" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipelines.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\MirrorMaterialPipeline.hpp" />
@@ -419,7 +422,6 @@
     <ClInclude Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="C:\Users\HX\Downloads\Skybox.hdr" />
     <None Include="src\core\resources\nodes\Node.inl" />
     <None Include="src\core\resources\nodes\NodeConstView.inl" />
     <None Include="src\core\resources\nodes\NodeView.inl" />

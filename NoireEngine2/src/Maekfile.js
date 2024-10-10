@@ -18,8 +18,11 @@ const maek = init_maek();
 custom_flags_and_rules();
 
 // c++
-const core_objs = [
+const main_application = [
 	maek.CPP('Entrypoint.cpp'),
+]
+
+const core_objs = [
 	maek.CPP('Application.cpp'),
 	maek.CPP('core/layers/LayerStack.cpp'),
 	maek.CPP('core/window/Window.cpp'),
@@ -145,9 +148,15 @@ const scripting_objs = [
 	maek.CPP('scripting/core/SceneNavigationCamera.cpp')
 ]
 
+const cube_application = [
+	maek.CPP('renderer/utils/IBLEntrypoint.cpp'),
+	maek.CPP('renderer/utils/IBLUtilsApplication.cpp'),
+]
+
 // executable
 const main_exe = maek.LINK
 	([
+		...main_application,
 		...core_objs,
 		...renderer_objs,
 		...util_objs,
@@ -160,7 +169,21 @@ const main_exe = maek.LINK
 	'bin/main'
 );
 
-maek.TARGETS = [main_exe];
+const cube_exe = maek.LINK
+	([
+		...cube_application,
+		...core_objs,
+		...renderer_objs,
+		...util_objs,
+		...editor_objs,
+		...vulkan_objs,
+		...component_objs,
+		...imgui_objs,
+		...scripting_objs
+	], 'bin/cube'
+);
+
+maek.TARGETS = [main_exe, cube_exe];
 
 //- - - - - - - - - - - - - - - - - - - - -
 function custom_flags_and_rules() {

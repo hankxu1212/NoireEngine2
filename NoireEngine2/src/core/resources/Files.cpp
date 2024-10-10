@@ -74,17 +74,19 @@ static std::string GetExecutableFile()
 #endif
 }
 
-std::string Files::Path(const std::string& suffix)
+std::string Files::Path(const std::string& suffix, bool assert)
 {
 	static std::string path = GetExecutableFile(); //cache result of GetExecutableFile()
-	assert(Exists(path + "/" + suffix));
+	if (assert)
+		assert(Exists(path + "/" + suffix));
 	return path + "/" + suffix;
 }
 
-std::string Files::Path(const char* suffix)
+std::string Files::Path(const char* suffix, bool assert)
 {
 	static std::string path = GetExecutableFile(); //cache result of GetExecutableFile()
-	assert(Exists(path + "/" + suffix));
+	if (assert)
+		assert(Exists(path + "/" + suffix));
 	return path + "/" + suffix;
 }
 

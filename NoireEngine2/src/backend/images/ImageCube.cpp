@@ -76,19 +76,6 @@ Node& operator<<(Node& node, const ImageCube& image) {
 	return node;
 }
 
-inline glm::vec4 rgbe_to_float(glm::u8vec4 col) {
-	//avoid decoding zero to a denormalized value:
-	if (col == glm::u8vec4(0, 0, 0, 0)) return glm::vec4(0.0f);
-
-	int exp = int(col.a) - 128;
-	return glm::vec4(
-		std::ldexp((col.r + 0.5f) / 256.0f, exp),
-		std::ldexp((col.g + 0.5f) / 256.0f, exp),
-		std::ldexp((col.b + 0.5f) / 256.0f, exp),
-		1
-	);
-}
-
 void ImageCube::Load(std::unique_ptr<Bitmap> loadBitmap) {
 	if (!filename.empty() && !loadBitmap) {
 		if (isHDR) {

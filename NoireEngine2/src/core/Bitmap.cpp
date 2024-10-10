@@ -23,12 +23,12 @@
 
 #include "core/resources/Files.hpp"
 
-Bitmap::Bitmap(std::filesystem::path& filename) {
+Bitmap::Bitmap(const std::filesystem::path& filename) {
 	Load(filename);
 }
 
 Bitmap::Bitmap(const glm::vec2 size, uint32_t bytesPerPixel) :
-	data(std::make_unique<uint8_t[]>(size_t(size.x * size.y* bytesPerPixel))),
+	data(std::make_unique<uint8_t[]>(size_t(size.x * size.y * bytesPerPixel))),
 	size(size),
 	bytesPerPixel(bytesPerPixel) {
 }

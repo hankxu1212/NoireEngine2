@@ -216,7 +216,8 @@ void ObjectPipeline::CreateDescriptors()
 	// create skybox descriptor
 	Scene* scene = SceneManager::Get()->getScene();
 	if (!scene->hasSkybox())
-		scene->AddSkybox("../textures/Skybox.png", Scene::SkyboxType::RGB);
+		scene->AddSkybox("../scenes/examples/AA.png", Scene::SkyboxType::RGB);
+		//scene->AddSkybox("../textures/Skybox.png", Scene::SkyboxType::RGB);
 
 	const auto& skybox = scene->getSkybox();
 	VkDescriptorImageInfo cubeMapInfo
