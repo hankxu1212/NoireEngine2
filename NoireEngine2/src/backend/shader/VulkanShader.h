@@ -6,7 +6,7 @@
 class VulkanShader
 {
 public:
-	enum ShaderStage { Frag, Vertex };
+	enum ShaderStage { Frag, Vertex, Compute };
 
 public:
 	template< size_t N >

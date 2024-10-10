@@ -1080,4 +1080,8 @@
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="src\shaders\compute\edgedetect.comp" />
+    <FxCompile Include="src\shaders\compute\lambertian.comp" />
+  </ItemGroup>
 </Project>

@@ -8,15 +8,19 @@
 
 SceneManager::SceneManager()
 {
-	if (Application::Get().GetSpecification().InitialScene)
-		scene = std::make_unique<Scene>(Application::GetSpecification().InitialScene.value());
-	else
-		scene = std::make_unique<Scene>("../scenes/examples/sg-Articulation.s72");
 }
 
 SceneManager::~SceneManager()
 {
 	Shutdown();
+}
+
+void SceneManager::LoadDefault()
+{
+	if (Application::Get().GetSpecification().InitialScene)
+		scene = std::make_unique<Scene>(Application::GetSpecification().InitialScene.value());
+	else
+		scene = std::make_unique<Scene>("../scenes/examples/sg-Articulation.s72");
 }
 
 void SceneManager::Update()

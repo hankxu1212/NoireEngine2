@@ -23,8 +23,12 @@ public:
 	  * @param mipmap If mapmaps will be generated.
 	  * @param load If this resource will be loaded immediately, otherwise {@link Image2d#Load} can be called later.
 	*/
-	explicit Image2D(std::filesystem::path filename, VkFilter filter = VK_FILTER_LINEAR, VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+	explicit Image2D(const std::filesystem::path& filename, VkFilter filter = VK_FILTER_LINEAR, VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT,
 		bool anisotropic = true, bool mipmap = true, bool load = true);
+
+	explicit Image2D(const std::filesystem::path& filename, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage,
+		VkFilter filter = VK_FILTER_LINEAR, VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT, bool anisotropic = false, bool mipmap = false);
 
 	/**
 	  * Creates a new 2D image.

@@ -11,6 +11,8 @@
 #include "editor/Editor.hpp"
 #include "core/Timer.hpp"
 
+#include "renderer/scene/SceneManager.hpp"
+
 Application* Application::s_Instance = nullptr;
 
 Application::Application(const ApplicationSpecification& specification)
@@ -18,28 +20,32 @@ Application::Application(const ApplicationSpecification& specification)
 {
 	s_Instance = this;
 
-	// initialize scripting engine
-	ScriptingEngine* scriptingEngine = new ScriptingEngine();
-
 	auto& registry = Module::GetRegistry();
-
 	for (auto it = registry.begin(); it != registry.end(); ++it)
 		CreateModule(it);
 
 	// initialize glfw window
 	
-	// initialize instance, physical device, and logical device, also renderer
+	// initialize instance, physical device, and logical device
 
-	// renderer initialized here
+	// the application will only serve as modules if alternativeApplication is true
+	if (specification.alternativeApplication)
+		return;
+
+	// initialize scripting engine
+	ScriptingEngine* scriptingEngine = new ScriptingEngine();
+
+	// load default scene
+	SceneManager::Get()->LoadDefault();
+
+	// renderer initialized here, include renderpass and all pipelines are intiialized
 	VulkanContext::Get()->InitializeRenderer();
-
-	// scene initialization occurs here in renderer
 
 	// all objects pushed here
 
 	// imgui context initialized here
 
-	// initializes window
+	// bind window
 	Window::Get()->SetEventCallback(NE_BIND_EVENT_FN(Application::OnEvent));
 
 	// initialize new surface, create new render pass, frame bufferr, swapchain

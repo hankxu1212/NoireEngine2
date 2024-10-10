@@ -73,8 +73,19 @@ public:
 
 	std::shared_ptr<CommandPool>&			GetCommandPool(const TID& threadId = std::this_thread::get_id());
 
-	inline const Surface*					getSurface(std::size_t id=0) const { return m_Surfaces[id].get(); }
-	inline const SwapChain*					getSwapChain(std::size_t id=0) { return m_Swapchains[id].get(); }
+	inline const Surface* getSurface(std::size_t id = 0) const
+	{
+		if (m_Surfaces.empty())
+			return nullptr;
+		return m_Surfaces[id].get();
+	}
+
+	inline const SwapChain* getSwapChain(std::size_t id = 0)
+	{
+		if (m_Swapchains.empty())
+			return nullptr;
+		return m_Swapchains[id].get();
+	}
 
 	inline const VkSemaphore				getPresentSemaphore() { return m_PerSurfaceBuffers[0]->getPresentSemaphore(); }
 	inline const VkSemaphore				getRenderSemaphore() { return m_PerSurfaceBuffers[0]->getRenderSemaphore(); }

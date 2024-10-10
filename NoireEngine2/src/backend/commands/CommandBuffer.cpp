@@ -97,8 +97,7 @@ VkQueue CommandBuffer::GetQueue() const
 	case VK_QUEUE_GRAPHICS_BIT:
 		return VulkanContext::Get()->getLogicalDevice()->getGraphicsQueue();
 	case VK_QUEUE_COMPUTE_BIT:
-		throw std::runtime_error("[CommandBuffers] Compute shader/pipeline is not implemented!");
-		//return logicalDevice->GetComputeQueue();
+		return VulkanContext::Get()->getLogicalDevice()->getComputeQueue();
 	default:
 		return nullptr;
 	}

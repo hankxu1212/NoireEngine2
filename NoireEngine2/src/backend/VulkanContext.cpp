@@ -30,7 +30,8 @@ VulkanContext::~VulkanContext()
 
     m_DescriptorLayoutCache.Cleanup();
 
-    s_Renderer->Cleanup();
+    if (s_Renderer)
+        s_Renderer->Cleanup();
 
     std::cout << "Destroyed vulkan context module\n";
 }

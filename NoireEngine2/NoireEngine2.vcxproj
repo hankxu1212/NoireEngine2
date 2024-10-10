@@ -464,6 +464,10 @@
     <Image Include="src\textures\statue.jpg" />
     <Image Include="src\textures\viking_room.png" />
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="src\shaders\compute\edgedetect.comp" />
+    <FxCompile Include="src\shaders\compute\lambertian.comp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

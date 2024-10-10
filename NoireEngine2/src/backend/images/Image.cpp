@@ -371,11 +371,14 @@ bool Image::CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory
 	auto physicalDevice = VulkanContext::Get()->getPhysicalDevice();
 	auto surface = VulkanContext::Get()->getSurface(0);
 
-	// Checks blit swapchain support.
-	auto supportsBlit = true;
-	VkFormatProperties formatProperties;
+	bool supportsBlit = true;
+	if (!surface) {
+		supportsBlit = false;
+		goto start;
+	}
 
 	// Check if the device supports blitting from optimal images (the swapchain images are in optimal format).
+	VkFormatProperties formatProperties;
 	vkGetPhysicalDeviceFormatProperties(*physicalDevice, surface->getFormat().format, &formatProperties);
 
 	if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT)) {
@@ -391,6 +394,7 @@ bool Image::CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory
 		supportsBlit = false;
 	}
 
+start:
 	CreateImage(dstImage, dstImageMemory, extent, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_LINEAR,
 		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 1, 1, VK_IMAGE_TYPE_2D);
 

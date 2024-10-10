@@ -7,9 +7,15 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/constants.hpp"
 
+#include "backend/shader/VulkanShader.h"
+
 IBLUtilsApplication::IBLUtilsApplication(IBLUtilsApplicationSpecification& specs_)
 {
 	specs = specs_;
+
+    ApplicationSpecification appSpecs;
+    appSpecs.alternativeApplication = true;
+    app = std::make_unique<Application>(appSpecs);
 }
 
 IBLUtilsApplication::~IBLUtilsApplication()
@@ -165,7 +171,8 @@ inline glm::u8vec4 Vec4ToU8Vec4(const glm::vec4& vec) {
     );
 }
 
-void computeTangentBitangent(const glm::vec3& normal, glm::vec3& tangent, glm::vec3& bitangent) {
+void ComputeTangentBitangent(const glm::vec3& normal, glm::vec3& tangent, glm::vec3& bitangent) 
+{
     glm::vec3 reference = (fabs(normal.y) < 0.999f) ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(1.0f, 0.0f, 0.0f);
     tangent = glm::normalize(glm::cross(normal, reference));
     bitangent = glm::normalize(glm::cross(normal, tangent));
@@ -185,13 +192,37 @@ void printProgress(float percentage) {
 
 void IBLUtilsApplication::Run()
 {
-	Bitmap inBitMap = Bitmap(Files::Path(specs.inFile));
-	NE_INFO("Loaded input file: {}, size: {}x{}", specs.inFile, inBitMap.size.x, inBitMap.size.y);
-	
-    const uint32_t dim = 32; // out dim of the lambertian LUT
-    const uint32_t samples = 1024 * 32; // out dim of the lambertian LUT
+    CreateComputePipeline();
+    Prepare();
+    ExecuteComputeShader();
+    SaveAsImage();
 
-	Bitmap outBitMap = Bitmap(glm::vec2(dim, dim * 6), 4);
+    inputImg.reset();
+    storageImg.reset();
+    m_DescriptorAllocator.Cleanup();
+
+    if (m_PipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_PipelineLayout, nullptr);
+        m_PipelineLayout = VK_NULL_HANDLE;
+    }
+
+    if (m_Pipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(VulkanContext::GetDevice(), m_Pipeline, nullptr);
+        m_Pipeline = VK_NULL_HANDLE;
+    }
+    
+    vkDestroyFence(VulkanContext::GetDevice(), fence, nullptr);
+}
+
+void IBLUtilsApplication::RunCPUBlit()
+{
+    Bitmap inBitMap = Bitmap(Files::Path(specs.inFile));
+    NE_INFO("Loaded input file: {}, size: {}x{}", specs.inFile, inBitMap.size.x, inBitMap.size.y);
+
+    const uint32_t dim = 32; // out dim of the lambertian LUT
+    const uint32_t samples = 1024 * 4; // out dim of the lambertian LUT
+
+    Bitmap outBitMap = Bitmap(glm::vec2(dim, dim * 6), 4);
     std::vector<glm::u8vec4> rgbData;
 
     int progress = 0;
@@ -204,10 +235,43 @@ void IBLUtilsApplication::Run()
             {
                 glm::vec4 irradiance(0);
                 glm::vec3 N = CubeUVtoCartesian(face, glm::vec2(col / (float)dim, row / (float)dim)); // sample a direction from output UV to direction
-                
+
                 // tangent space to world
                 glm::vec3 tangent, bitangent;
-                computeTangentBitangent(N, tangent, bitangent);
+                ComputeTangentBitangent(N, tangent, bitangent);
+                //size_t samples = 0;
+                //for (int bface = 0; bface < 6; ++bface)
+                //{
+                //    for (uint32_t brow = 0; brow < inBitMap.size.x; ++brow)
+                //    {
+                //        for (uint32_t bcol = 0; bcol < inBitMap.size.x; ++bcol)
+                //        {
+                //            glm::vec3 pixelDirection = CubeUVtoCartesian(bface, glm::vec2(bcol / (float)inBitMap.size.x, brow / (float)inBitMap.size.x));
+                //            float cos_theta = glm::dot(N, pixelDirection);
+                //            if (cos_theta < 0)
+                //                continue;
+                //            else
+                //            {
+                //                // Calculate the byte index for the sampled color
+                //                uint32_t faceOffset = bface * inBitMap.size.x * inBitMap.size.x * 4; // Assuming 4 bytes per pixel (RGB)
+                //                uint32_t pixelIndex = faceOffset + (brow * inBitMap.size.x + bcol) * 4; // RGB
+
+                //                // Retrieve color value from the cubemap
+                //                glm::u8vec4 colorAtPixel = {
+                //                    cubemap[pixelIndex],
+                //                    cubemap[pixelIndex + 1],
+                //                    cubemap[pixelIndex + 2],
+                //                    cubemap[pixelIndex + 3],
+                //                };
+
+                //                glm::vec4 rgba = rgbe_to_float(colorAtPixel);
+                //                float pdf = cos_theta * glm::one_over_pi<float>(); // cos theta / pi
+                //                irradiance += rgba / pdf;
+                //                samples++;
+                //            }
+                //        }
+                //    }
+                //}
 
                 for (int xx = 0; xx < samples; xx++)
                 {
@@ -245,5 +309,92 @@ void IBLUtilsApplication::Run()
     assert(outBitMap.GetLength() == rgbData.size() * 4);
     memcpy(outBitMap.data.get(), rgbData.data(), rgbData.size() * 4);
 
-	outBitMap.Write(Files::Path(specs.outFile, false));
+    outBitMap.Write(Files::Path(specs.outFile, false));
+}
+
+void IBLUtilsApplication::CreateComputePipeline()
+{
+    const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+
+    VkFormatProperties formatProperties;
+    // Get device properties for the requested texture format
+    vkGetPhysicalDeviceFormatProperties(*VulkanContext::Get()->getPhysicalDevice(), format, &formatProperties);
+    // Check if requested image format supports image storage operations required for storing pixel from the compute shader
+    assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT);
+
+    // make the input image
+    inputImg = std::make_shared<Image2D>(Files::Path(specs.inFile), format, 
+        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+    VkDescriptorImageInfo inputTex
+    {
+        .sampler = inputImg->getSampler(),
+        .imageView = inputImg->getView(),
+        .imageLayout = inputImg->getLayout()
+    };
+
+    storageImg = std::make_shared<Image2D>(glm::vec2(inputImg->getExtent().width, inputImg->getExtent().height), 
+        format, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+    VkDescriptorImageInfo storageTex
+    {
+        .sampler = storageImg->getSampler(),
+        .imageView = storageImg->getView(),
+        .imageLayout = storageImg->getLayout()
+    };
+
+    DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+        .BindImage(0, &inputTex, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT)
+        .BindImage(1, &storageTex, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT)
+        .Build(set1_Texture, set1_TextureLayout);
+}
+
+void IBLUtilsApplication::Prepare()
+{
+    // create pipeline layout
+    std::array< VkDescriptorSetLayout, 1 > layouts{
+        set1_TextureLayout,
+    };
+
+    VkPipelineLayoutCreateInfo create_info{
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .setLayoutCount = uint32_t(layouts.size()),
+        .pSetLayouts = layouts.data(),
+        .pushConstantRangeCount = 0,
+        .pPushConstantRanges = nullptr,
+    };
+
+    VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
+
+    VulkanShader vertModule("../spv/shaders/compute/lambertian.comp.spv", VulkanShader::ShaderStage::Compute);
+
+    VkComputePipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipelineInfo.layout = m_PipelineLayout;
+    pipelineInfo.stage = vertModule.shaderStage();
+
+    if (vkCreateComputePipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create compute pipeline!");
+    }
+
+    VkFenceCreateInfo fenceInfo{};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    vkCreateFence(VulkanContext::GetDevice(), &fenceInfo, nullptr, &fence);
+}
+
+void IBLUtilsApplication::ExecuteComputeShader()
+{
+    CommandBuffer cmd(true, VK_QUEUE_COMPUTE_BIT);
+
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_Pipeline);
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_PipelineLayout, 0, 1, &set1_Texture, 0, 0);
+    vkCmdDispatch(cmd, inputImg->getExtent().width / 16, inputImg->getExtent().height / 16, 1);
+    cmd.Submit(nullptr, nullptr, fence);
+
+    vkWaitForFences(VulkanContext::GetDevice(), 1, &fence, VK_TRUE, UINT64_MAX);
+}
+
+void IBLUtilsApplication::SaveAsImage()
+{
+    auto bitmap = storageImg->getBitmap(0, 0);
+    bitmap->Write(specs.outFile);
 }
