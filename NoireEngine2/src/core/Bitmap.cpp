@@ -65,3 +65,14 @@ void Bitmap::Write(const std::filesystem::path& filename)
 	std::unique_ptr<uint8_t[]> png(stbi_write_png_to_mem(data.get(), size.x * bytesPerPixel, size.x, size.y, bytesPerPixel, &len));
 	os.write(reinterpret_cast<char*>(png.get()), len);
 }
+
+void Bitmap::Write(const std::filesystem::path& filename, const uint8_t* pixels, const glm::uvec2 size, uint32_t bytesPerPixel)
+{
+	if (auto parentPath = filename.parent_path(); !parentPath.empty())
+		std::filesystem::create_directories(parentPath);
+
+	std::ofstream os(filename, std::ios::binary | std::ios::out);
+	int32_t len;
+	std::unique_ptr<uint8_t[]> png(stbi_write_png_to_mem(pixels, size.x * bytesPerPixel, size.x, size.y, bytesPerPixel, &len));
+	os.write(reinterpret_cast<char*>(png.get()), len);
+}

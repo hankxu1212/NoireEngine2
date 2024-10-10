@@ -48,7 +48,7 @@ WriteDescriptorSet Image::getWriteDescriptor(uint32_t binding, VkDescriptorType 
 	return { descriptorWrite, imageInfo };
 }
 
-std::unique_ptr<Bitmap> Image::getBitmap(uint32_t mipLevel, uint32_t arrayLayer) const {
+std::unique_ptr<Bitmap> Image::getBitmap(uint32_t mipLevel, uint32_t arrayLayer, uint32_t bytesPerPixel) const {
 	auto logicalDevice = VulkanContext::GetDevice();
 
 	glm::vec2 size(int32_t(extent.width >> mipLevel), int32_t(extent.height >> mipLevel));
@@ -65,7 +65,7 @@ std::unique_ptr<Bitmap> Image::getBitmap(uint32_t mipLevel, uint32_t arrayLayer)
 	VkSubresourceLayout dstSubresourceLayout;
 	vkGetImageSubresourceLayout(logicalDevice, dstImage, &dstImageSubresource, &dstSubresourceLayout);
 
-	auto bitmap = std::make_unique<Bitmap>(std::make_unique<uint8_t[]>(dstSubresourceLayout.size), size);
+	auto bitmap = std::make_unique<Bitmap>(std::make_unique<uint8_t[]>(dstSubresourceLayout.size), size, bytesPerPixel);
 
 	void* data;
 	vkMapMemory(logicalDevice, dstImageMemory, dstSubresourceLayout.offset, dstSubresourceLayout.size, 0, &data);
@@ -399,7 +399,7 @@ bool Image::CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory
 	}
 
 start:
-	CreateImage(dstImage, dstImageMemory, extent, /* VK_FORMAT_R8G8B8A8_UNORM */ VK_FORMAT_R32G32B32A32_SFLOAT, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_LINEAR,
+	CreateImage(dstImage, dstImageMemory, extent, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_LINEAR,
 		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 1, numLayers, VK_IMAGE_TYPE_2D);
 
 	CommandBuffer commandBuffer;

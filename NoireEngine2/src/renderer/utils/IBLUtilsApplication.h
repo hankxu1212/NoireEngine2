@@ -8,6 +8,7 @@ struct IBLUtilsApplicationSpecification
 {
 	std::string inFile, outFile;
 	bool isGGX = false;
+	uint32_t outdim = 32;
 };
 
 class IBLUtilsApplication

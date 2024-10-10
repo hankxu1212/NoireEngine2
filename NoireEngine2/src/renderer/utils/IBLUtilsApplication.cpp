@@ -314,17 +314,16 @@ void IBLUtilsApplication::RunCPUBlit()
 
 void IBLUtilsApplication::CreateComputePipeline()
 {
-    const VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
 
-    VkFormatProperties formatProperties;
-    // Get device properties for the requested texture format
-    vkGetPhysicalDeviceFormatProperties(*VulkanContext::Get()->getPhysicalDevice(), format, &formatProperties);
     // Check if requested image format supports image storage operations required for storing pixel from the compute shader
+    VkFormatProperties formatProperties;
+    vkGetPhysicalDeviceFormatProperties(*VulkanContext::Get()->getPhysicalDevice(), format, &formatProperties);
     assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT);
 
     // make the input image
     inputImg = std::make_shared<ImageCube>(Files::Path(specs.inFile), format,
-        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT, false);
     VkDescriptorImageInfo inputTex
     {
         .sampler = inputImg->getSampler(),
@@ -332,8 +331,8 @@ void IBLUtilsApplication::CreateComputePipeline()
         .imageLayout = inputImg->getLayout()
     };
 
-    storageImg = std::make_shared<ImageCube>(glm::vec2(inputImg->getExtent().width, inputImg->getExtent().height), 
-        format, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+    storageImg = std::make_shared<ImageCube>(glm::vec2(specs.outdim, specs.outdim), 
+        format, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT, false);
     VkDescriptorImageInfo storageTex
     {
         .sampler = storageImg->getSampler(),
@@ -395,6 +394,15 @@ void IBLUtilsApplication::ExecuteComputeShader()
 
 void IBLUtilsApplication::SaveAsImage()
 {
-    auto bitmap = storageImg->getBitmap(0, 0);
-    bitmap->Write(Files::Path(specs.outFile, false));
+    std::vector<uint8_t> allBytes;
+    for (int i = 0; i < 6; i++)
+    {
+        auto bitmap = storageImg->getBitmap(0, i, 4);
+
+        size_t currOffset = allBytes.size();
+        allBytes.resize(allBytes.size() + bitmap->GetLength());
+        memcpy(allBytes.data() + currOffset, bitmap->data.get(), bitmap->GetLength());
+    }
+    glm::uvec2 size(specs.outdim, specs.outdim * 6);
+    Bitmap::Write(Files::Path(specs.outFile, false), allBytes.data(), size, 4);
 }

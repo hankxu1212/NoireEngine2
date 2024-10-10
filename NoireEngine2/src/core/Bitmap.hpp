@@ -14,6 +14,8 @@ public:
 	void Load(const std::filesystem::path& filename);
 	void Write(const std::filesystem::path& filename);
 
+	static void Write(const std::filesystem::path& filename, const uint8_t* pixels, const glm::uvec2 size, uint32_t bytesPerPixel);
+
 	uint32_t GetLength() const { return size.x * size.y * bytesPerPixel; }
 
 	std::unique_ptr<uint8_t[]> data;
