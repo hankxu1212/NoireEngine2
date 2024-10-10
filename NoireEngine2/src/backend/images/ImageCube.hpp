@@ -16,6 +16,10 @@ public:
 	explicit ImageCube(std::filesystem::path filename, VkFilter filter=VK_FILTER_LINEAR, VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, 
 		bool anisotropic=true, bool mipmap=true, bool usingHDR=true);
 
+	explicit ImageCube(const std::filesystem::path& filename, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage);
+
+	explicit ImageCube(const glm::vec2 extent, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage);
+	
 	/**
 	  * Sets the pixels of this image.
 	  * @param pixels The pixels to copy from.

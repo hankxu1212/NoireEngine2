@@ -2,7 +2,7 @@
 
 #include <string>
 #include "backend/VulkanContext.hpp"
-#include "backend/images/Image2D.hpp"
+#include "backend/images/ImageCube.hpp"
 
 struct IBLUtilsApplicationSpecification
 {
@@ -34,8 +34,8 @@ private:
 	VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 	VkPipeline m_Pipeline;
 
-	std::shared_ptr<Image2D> inputImg;
-	std::shared_ptr<Image2D> storageImg;
+	std::shared_ptr<ImageCube> inputImg;
+	std::shared_ptr<ImageCube> storageImg;
 
 	DescriptorAllocator m_DescriptorAllocator;
 

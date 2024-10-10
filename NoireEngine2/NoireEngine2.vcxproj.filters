@@ -33,9 +33,6 @@
     <ClCompile Include="src\backend\devices\Surface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\layers\LayerStack.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\backend\devices\VulkanInstance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -483,6 +480,9 @@
     <ClCompile Include="src\renderer\utils\IBLUtilsApplication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\layers\LayerStack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h">
@@ -522,12 +522,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\core\MouseCodes.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\layers\Layer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\core\layers\LayerStack.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\core\KeyCodes.hpp">
@@ -1004,6 +998,12 @@
     <ClInclude Include="src\renderer\utils\IBLUtilsApplication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\layers\Layer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\layers\LayerStack.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />
@@ -1038,6 +1038,10 @@
     <None Include="src\shaders\mirror.frag" />
     <None Include="src\shaders\mirror.vert" />
     <None Include="src\shaders\glsl\utils.glsl" />
+    <None Include="src\shaders\glsl\cubemap.glsl" />
+    <None Include="src\shaders\glsl\hdr.glsl" />
+    <None Include="src\shaders\glsl\sampling.glsl" />
+    <None Include="src\shaders\glsl\random.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

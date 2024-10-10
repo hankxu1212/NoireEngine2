@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\layers\LayerStack.cpp" />
     <ClCompile Include="src\renderer\utils\IBLUtilsApplication.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\MirrorMaterialPipeline.cpp" />
@@ -146,7 +147,6 @@
     <ClCompile Include="src\backend\renderpass\VulkanFramebuffers.cpp" />
     <ClCompile Include="src\backend\renderpass\VulkanRenderPass.cpp" />
     <ClCompile Include="src\backend\renderpass\Swapchain.cpp" />
-    <ClCompile Include="src\core\layers\LayerStack.cpp" />
     <ClCompile Include="src\core\resources\nodes\Node.cpp" />
     <ClCompile Include="src\core\resources\nodes\NodeConstView.cpp" />
     <ClCompile Include="src\core\resources\nodes\NodeView.cpp" />
@@ -247,6 +247,8 @@
     <ClCompile Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\layers\Layer.hpp" />
+    <ClInclude Include="src\core\layers\LayerStack.hpp" />
     <ClInclude Include="src\renderer\utils\IBLUtilsApplication.h" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipelines.hpp" />
@@ -317,8 +319,6 @@
     <ClInclude Include="src\backend\renderpass\Swapchain.hpp" />
     <ClInclude Include="src\core\Core.hpp" />
     <ClInclude Include="src\core\KeyCodes.hpp" />
-    <ClInclude Include="src\core\layers\Layer.hpp" />
-    <ClInclude Include="src\core\layers\LayerStack.hpp" />
     <ClInclude Include="src\core\MouseCodes.hpp" />
     <ClInclude Include="src\core\resources\nodes\Node.hpp" />
     <ClInclude Include="src\core\resources\nodes\NodeConstView.hpp" />
@@ -430,6 +430,10 @@
     <None Include="src\scenes\s72\viewer\s72-viewer.html" />
     <None Include="src\shaders\environment.frag" />
     <None Include="src\shaders\environment.vert" />
+    <None Include="src\shaders\glsl\cubemap.glsl" />
+    <None Include="src\shaders\glsl\hdr.glsl" />
+    <None Include="src\shaders\glsl\random.glsl" />
+    <None Include="src\shaders\glsl\sampling.glsl" />
     <None Include="src\shaders\glsl\transform_uniform.glsl" />
     <None Include="src\shaders\glsl\utils.glsl" />
     <None Include="src\shaders\lambertian.frag" />

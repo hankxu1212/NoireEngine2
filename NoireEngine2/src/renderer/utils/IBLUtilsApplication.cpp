@@ -314,7 +314,7 @@ void IBLUtilsApplication::RunCPUBlit()
 
 void IBLUtilsApplication::CreateComputePipeline()
 {
-    const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+    const VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
 
     VkFormatProperties formatProperties;
     // Get device properties for the requested texture format
@@ -323,7 +323,7 @@ void IBLUtilsApplication::CreateComputePipeline()
     assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT);
 
     // make the input image
-    inputImg = std::make_shared<Image2D>(Files::Path(specs.inFile), format, 
+    inputImg = std::make_shared<ImageCube>(Files::Path(specs.inFile), format,
         VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
     VkDescriptorImageInfo inputTex
     {
@@ -332,7 +332,7 @@ void IBLUtilsApplication::CreateComputePipeline()
         .imageLayout = inputImg->getLayout()
     };
 
-    storageImg = std::make_shared<Image2D>(glm::vec2(inputImg->getExtent().width, inputImg->getExtent().height), 
+    storageImg = std::make_shared<ImageCube>(glm::vec2(inputImg->getExtent().width, inputImg->getExtent().height), 
         format, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
     VkDescriptorImageInfo storageTex
     {
@@ -387,7 +387,7 @@ void IBLUtilsApplication::ExecuteComputeShader()
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_Pipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_PipelineLayout, 0, 1, &set1_Texture, 0, 0);
-    vkCmdDispatch(cmd, inputImg->getExtent().width / 16, inputImg->getExtent().height / 16, 1);
+    vkCmdDispatch(cmd, inputImg->getExtent().width / 16, inputImg->getExtent().height / 16, 6);
     cmd.Submit(nullptr, nullptr, fence);
 
     vkWaitForFences(VulkanContext::GetDevice(), 1, &fence, VK_TRUE, UINT64_MAX);
@@ -396,5 +396,5 @@ void IBLUtilsApplication::ExecuteComputeShader()
 void IBLUtilsApplication::SaveAsImage()
 {
     auto bitmap = storageImg->getBitmap(0, 0);
-    bitmap->Write(specs.outFile);
+    bitmap->Write(Files::Path(specs.outFile, false));
 }

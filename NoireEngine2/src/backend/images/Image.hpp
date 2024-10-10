@@ -73,7 +73,7 @@ public:
 	static void CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, const VkExtent3D& extent, uint32_t layerCount, uint32_t baseArrayLayer);
 
 	static bool CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory& dstImageMemory, VkFormat srcFormat, const VkExtent3D& extent,
-		VkImageLayout srcImageLayout, uint32_t mipLevel, uint32_t arrayLayer);
+		VkImageLayout srcImageLayout, uint32_t mipLevel, uint32_t arrayLayer, uint32_t numLayers);
 
 protected:
 	VkExtent3D extent;

@@ -39,6 +39,26 @@ ImageCube::ImageCube(std::filesystem::path filename, VkFilter filter, VkSamplerA
 	isHDR(usingHDR) {
 }
 
+ImageCube::ImageCube(const std::filesystem::path& filename, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage) :
+	filename(filename), 
+	anisotropic(true),
+	mipmap(false),
+	Image(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER, VK_SAMPLE_COUNT_1_BIT, layout,
+		usage | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		format, 1, 6, { 0, 0, 1 }) {
+	Load();
+}
+
+ImageCube::ImageCube(const glm::vec2 extent, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage) :
+	anisotropic(true),
+	mipmap(false),
+	Image(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER, VK_SAMPLE_COUNT_1_BIT, layout,
+		usage | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		format, 1, 6, { static_cast<uint32_t>(extent.x), static_cast<uint32_t>(extent.y), 1 })
+{
+	Load();
+}
+
 void ImageCube::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t baseArrayLayer) 
 {
 	Buffer bufferStaging(extent.width * extent.height * components * arrayLayers, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -102,8 +122,10 @@ void ImageCube::Load(std::unique_ptr<Bitmap> loadBitmap) {
 		}
 	}
 
-	extent = { loadBitmap->size.x, loadBitmap->size.x, 1 };
-	components = loadBitmap->bytesPerPixel;
+	if (loadBitmap) {
+		extent = { loadBitmap->size.x, loadBitmap->size.x, 1 };
+		components = loadBitmap->bytesPerPixel;
+	}
 
 	if (extent.width == 0 || extent.height == 0) {
 		return;

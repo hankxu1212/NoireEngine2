@@ -55,7 +55,7 @@ std::unique_ptr<Bitmap> Image::getBitmap(uint32_t mipLevel, uint32_t arrayLayer)
 
 	VkImage dstImage;
 	VkDeviceMemory dstImageMemory;
-	CopyImage(image, dstImage, dstImageMemory, format, { static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y),  1 }, layout, mipLevel, arrayLayer);
+	CopyImage(image, dstImage, dstImageMemory, format, { static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y),  1 }, layout, mipLevel, arrayLayer, 1);
 
 	VkImageSubresource dstImageSubresource = {};
 	dstImageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -330,7 +330,8 @@ void Image::TransitionImageLayout(const VkImage& image, VkFormat format, VkImage
 
 void Image::InsertImageMemoryBarrier(const CommandBuffer& commandBuffer, const VkImage& image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask,
 	VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,
-	VkImageAspectFlags imageAspect, uint32_t mipLevels, uint32_t baseMipLevel, uint32_t layerCount, uint32_t baseArrayLayer) {
+	VkImageAspectFlags imageAspect, uint32_t mipLevels, uint32_t baseMipLevel, uint32_t layerCount, uint32_t baseArrayLayer) 
+{
 	VkImageMemoryBarrier imageMemoryBarrier = {};
 	imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	imageMemoryBarrier.srcAccessMask = srcAccessMask;
@@ -348,7 +349,8 @@ void Image::InsertImageMemoryBarrier(const CommandBuffer& commandBuffer, const V
 	vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 }
 
-void Image::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, const VkExtent3D& extent, uint32_t layerCount, uint32_t baseArrayLayer) {
+void Image::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, const VkExtent3D& extent, uint32_t layerCount, uint32_t baseArrayLayer) 
+{
 	CommandBuffer commandBuffer;
 
 	VkBufferImageCopy region = {};
@@ -367,11 +369,13 @@ void Image::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, cons
 }
 
 bool Image::CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory& dstImageMemory, VkFormat srcFormat, const VkExtent3D& extent,
-	VkImageLayout srcImageLayout, uint32_t mipLevel, uint32_t arrayLayer) {
+	VkImageLayout srcImageLayout, uint32_t mipLevel, uint32_t arrayLayer, uint32_t numLayers) {
 	auto physicalDevice = VulkanContext::Get()->getPhysicalDevice();
 	auto surface = VulkanContext::Get()->getSurface(0);
 
 	bool supportsBlit = true;
+
+	// no surface found, use copy
 	if (!surface) {
 		supportsBlit = false;
 		goto start;
@@ -395,10 +399,9 @@ bool Image::CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory
 	}
 
 start:
-	CreateImage(dstImage, dstImageMemory, extent, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_LINEAR,
-		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 1, 1, VK_IMAGE_TYPE_2D);
+	CreateImage(dstImage, dstImageMemory, extent, /* VK_FORMAT_R8G8B8A8_UNORM */ VK_FORMAT_R32G32B32A32_SFLOAT, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_LINEAR,
+		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 1, numLayers, VK_IMAGE_TYPE_2D);
 
-	// Do the actual blit from the swapchain image to our host visible destination image.
 	CommandBuffer commandBuffer;
 
 	// Transition destination image to transfer destination layout.
@@ -418,12 +421,12 @@ start:
 		imageBlitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		imageBlitRegion.srcSubresource.mipLevel = mipLevel;
 		imageBlitRegion.srcSubresource.baseArrayLayer = arrayLayer;
-		imageBlitRegion.srcSubresource.layerCount = 1;
+		imageBlitRegion.srcSubresource.layerCount = numLayers;
 		imageBlitRegion.srcOffsets[1] = blitSize;
 		imageBlitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		imageBlitRegion.dstSubresource.mipLevel = 0;
 		imageBlitRegion.dstSubresource.baseArrayLayer = 0;
-		imageBlitRegion.dstSubresource.layerCount = 1;
+		imageBlitRegion.dstSubresource.layerCount = numLayers;
 		imageBlitRegion.dstOffsets[1] = blitSize;
 		vkCmdBlitImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageBlitRegion, VK_FILTER_NEAREST);
 	}
@@ -433,11 +436,11 @@ start:
 		imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		imageCopyRegion.srcSubresource.mipLevel = mipLevel;
 		imageCopyRegion.srcSubresource.baseArrayLayer = arrayLayer;
-		imageCopyRegion.srcSubresource.layerCount = 1;
+		imageCopyRegion.srcSubresource.layerCount = numLayers;
 		imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		imageCopyRegion.dstSubresource.mipLevel = 0;
 		imageCopyRegion.dstSubresource.baseArrayLayer = 0;
-		imageCopyRegion.dstSubresource.layerCount = 1;
+		imageCopyRegion.dstSubresource.layerCount = numLayers;
 		imageCopyRegion.extent = extent;
 		vkCmdCopyImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageCopyRegion);
 	}
