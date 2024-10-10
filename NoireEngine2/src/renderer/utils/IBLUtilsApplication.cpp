@@ -405,4 +405,5 @@ void IBLUtilsApplication::SaveAsImage()
     }
     glm::uvec2 size(specs.outdim, specs.outdim * 6);
     Bitmap::Write(Files::Path(specs.outFile, false), allBytes.data(), size, 4);
+    NE_INFO("Written to:{}", Files::Path(specs.outFile, false));
 }

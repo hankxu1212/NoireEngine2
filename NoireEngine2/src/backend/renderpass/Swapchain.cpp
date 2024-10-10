@@ -64,19 +64,21 @@ SwapChain::SwapChain(const PhysicalDevice& physicalDevice, Surface& surface, con
 		}
 	}
 
-	//VkSwapchainPresentScalingCreateInfoEXT swapchainScalingCreateInfo {
-	//	.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_PRESENT_SCALING_CREATE_INFO_EXT,
-	//	.scalingBehavior = VK_PRESENT_SCALING_ONE_TO_ONE_BIT_EXT
-	//};
+	/*VkSwapchainPresentScalingCreateInfoEXT swapchainScalingCreateInfo {
+		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_PRESENT_SCALING_CREATE_INFO_EXT,
+		.scalingBehavior = VK_PRESENT_SCALING_ONE_TO_ONE_BIT_EXT
+	};*/
 
 	VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
 	swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	//swapchainCreateInfo.pNext = &swapchainScalingCreateInfo;
+	// swapchainCreateInfo.pNext = &swapchainScalingCreateInfo;
 	swapchainCreateInfo.surface = surface;
 	swapchainCreateInfo.minImageCount = desiredImageCount;
 	swapchainCreateInfo.imageFormat = surfaceFormat.format;
 	swapchainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
-	swapchainCreateInfo.imageExtent = this->extent;
+	swapchainCreateInfo.imageExtent = extent;
+	assert(extent.height == 1080);
+	assert(extent.width == 1920);
 	swapchainCreateInfo.imageArrayLayers = 1;
 	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;

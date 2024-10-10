@@ -28,7 +28,8 @@ struct ApplicationCommandLineArgs
 struct ApplicationSpecification
 {
 	std::string Name = "Noire Engine Application";
-	uint32_t width=1920, height=1080;
+	uint32_t width = 1920;
+	uint32_t height = 1080;
 	ApplicationCommandLineArgs CommandLineArgs;
 	
 	enum class Culling { None, Frustum } Culling = Culling::Frustum;

@@ -55,7 +55,7 @@ VulkanShader::VulkanShader(const std::string& path, ShaderStage stage)
 			.pName = "main"
 		};
 	}
-	else if (stage == ShaderStage::Frag) {
+	else if (stage == ShaderStage::Vertex) {
 		m_ShaderStage = VkPipelineShaderStageCreateInfo{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
 			.stage = VK_SHADER_STAGE_VERTEX_BIT,

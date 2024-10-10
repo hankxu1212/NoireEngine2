@@ -2,48 +2,44 @@
 
 layout (local_size_x = 4, local_size_y = 4, local_size_z=1) in;
 
-// input and output are both interpreted as unsigend, normalized floating point numbers
+// input and output are both interpreted as unsigend, normalized fixed point numbers
 layout (binding = 0, rgba8) uniform readonly imageCube inputImage;
 layout (binding = 1, rgba8) uniform imageCube resultImage;
 
-#include "../glsl/sampling.glsl"
-#include "../glsl/random.glsl"
 #include "../glsl/cubemap.glsl"
 #include "../glsl/hdr.glsl"
 
 void main()
 {
     // normal direction
-    vec2 uvw_in = vec2(gl_GlobalInvocationID.xy / 32);
-    vec3 N = CubeUVtoCartesian(int(gl_GlobalInvocationID.z), uvw_in.xy);
+    ivec3 inSize = ivec3(imageSize(inputImage), 6);
+    ivec3 outSize = ivec3(imageSize(resultImage), 6);
 
-    vec3 tangent, bitangent;
-    ComputeTangentBitangent(N, tangent, bitangent);
+    vec2 uv_in = gl_GlobalInvocationID.xy / vec2(outSize.xy);
+    // find current normal on the result cubemap
+    vec3 normal = CubeUVtoCartesian(int(gl_GlobalInvocationID.z), uv_in);
 
     vec3 irradiance = vec3(0);
+    int samples = 0;
 
-    int samples = 1024 * 32;
-    for (int s=0;s<samples;s++)
+    // iterate over all pixels in the input cubemap
+    for (int z=0;z<inSize.z;++z)
     {
-        // spherical to cartesian (in tangent space)
-        vec3 sampleDir = CosineSampleHemisphere(random(uvw_in), random(uvw_in * s)); // sample a direction from cosine given a normal
-    
-        // sample direction in world space
-        vec3 wsSampleDir = sampleDir.x * tangent + sampleDir.y * bitangent + sampleDir.z * N;
-    
-        // generate environment uv
-        int uvFace;
-        vec2 wsUV = CartesianToCubeUV(normalize(wsSampleDir), uvFace);
-        ivec3 ws_uv_3 = ivec3(wsUV * 512, uvFace);
-    
-        // sample from environment
-        vec4 sampled_rgbe = imageLoad(inputImage, ws_uv_3); // sample from direction from the input UV
-        vec3 sampled_rgb = vec3(rgbe_f_to_float(sampled_rgbe));
-    
-        // cosine theta = dot(y, (0,1,0)) = y
-        float pdf = sampleDir.y * INV_PI; // cos theta / pi
-        vec3 newIrradiance = sampled_rgb / pdf;
-        irradiance += newIrradiance; // convert to u8vec4 for averaging
+        for (int i=0;i<inSize.x;++i)
+        {
+            for (int j=0;j<inSize.y;++j)
+            {
+                vec3 sampled_normal = CubeUVtoCartesian(z, vec2(i,j) / vec2(inSize.xy));
+                float cos_theta = dot(sampled_normal, normal);
+                if (cos_theta <= 0)
+                    continue;
+
+                vec4 sampled_rgbe = imageLoad(inputImage, ivec3(i,j,z));
+                vec3 sampled_rgb = vec3(rgbe_f_to_float(sampled_rgbe));
+                irradiance += sampled_rgb * cos_theta;
+                samples++;
+            }
+        }
     }
 
     irradiance /= samples;

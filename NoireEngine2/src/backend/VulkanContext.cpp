@@ -185,7 +185,11 @@ void VulkanContext::RecreateSwapchain()
         w = wd->m_Data.Width;
         h = wd->m_Data.Height;
     } while (!w || !h);
-    auto extent = VkExtent2D{ w, h };
+
+    VkExtent2D extent {
+        .height = h, 
+        .width = w,
+    };
 
     CleanPerSurfaceStructs();
 
