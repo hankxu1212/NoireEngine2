@@ -28,3 +28,9 @@ vec4 gamma_map(vec3 color, float gamma)
 #define SQRT_THREE      1.73205080757        // Square root of 3
 #define EPSILON         1e-5                 // Small epsilon value for floating point comparisons
 
+void ComputeTangentBitangent(vec3 normal, out vec3 tangent, out vec3 bitangent)
+{
+    vec3 reference = (abs(normal.y) < 0.999) ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    tangent = normalize(cross(normal, reference));
+    bitangent = normalize(cross(normal, tangent));
+}

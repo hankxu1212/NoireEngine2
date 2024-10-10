@@ -1,11 +1,8 @@
 #version 450
 
-layout (local_size_x = 16, local_size_y = 16, local_size_z=1) in;
+layout (local_size_x = 4, local_size_y = 4, local_size_z=1) in;
 
-// the HDR image is loaded as a RGBA8 file
-// the out image is also a RGBA8 file, which means we have to convert each pixel from RGBE to RGB
-// everytime we want to do operations on it
-
+// input and output are both interpreted as unsigend, normalized floating point numbers
 layout (binding = 0, rgba8) uniform readonly imageCube inputImage;
 layout (binding = 1, rgba8) uniform imageCube resultImage;
 
@@ -16,9 +13,40 @@ layout (binding = 1, rgba8) uniform imageCube resultImage;
 
 void main()
 {
-    vec4 rgbe = imageLoad(inputImage, ivec3(gl_GlobalInvocationID.xyz));
+    // normal direction
+    vec2 uvw_in = vec2(gl_GlobalInvocationID.xy / 32);
+    vec3 N = CubeUVtoCartesian(int(gl_GlobalInvocationID.z), uvw_in.xy);
 
-    ivec3 newcoords = ivec3(gl_GlobalInvocationID.xy / 512.0 * 32.0, gl_GlobalInvocationID.z);
+    vec3 tangent, bitangent;
+    ComputeTangentBitangent(N, tangent, bitangent);
 
-    imageStore(resultImage, newcoords, rgbe);
+    vec3 irradiance = vec3(0);
+
+    int samples = 1024 * 32;
+    for (int s=0;s<samples;s++)
+    {
+        // spherical to cartesian (in tangent space)
+        vec3 sampleDir = CosineSampleHemisphere(random(uvw_in), random(uvw_in * s)); // sample a direction from cosine given a normal
+    
+        // sample direction in world space
+        vec3 wsSampleDir = sampleDir.x * tangent + sampleDir.y * bitangent + sampleDir.z * N;
+    
+        // generate environment uv
+        int uvFace;
+        vec2 wsUV = CartesianToCubeUV(normalize(wsSampleDir), uvFace);
+        ivec3 ws_uv_3 = ivec3(wsUV * 512, uvFace);
+    
+        // sample from environment
+        vec4 sampled_rgbe = imageLoad(inputImage, ws_uv_3); // sample from direction from the input UV
+        vec3 sampled_rgb = vec3(rgbe_f_to_float(sampled_rgbe));
+    
+        // cosine theta = dot(y, (0,1,0)) = y
+        float pdf = sampleDir.y * INV_PI; // cos theta / pi
+        vec3 newIrradiance = sampled_rgb / pdf;
+        irradiance += newIrradiance; // convert to u8vec4 for averaging
+    }
+
+    irradiance /= samples;
+    vec4 rgb_out = float_f_to_rgbe(irradiance);
+    imageStore(resultImage, ivec3(gl_GlobalInvocationID.xyz), rgb_out);
 }

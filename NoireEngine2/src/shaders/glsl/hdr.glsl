@@ -1,4 +1,5 @@
-vec4 rgbe_to_float(uvec4 col) {
+vec4 rgbe_to_float(uvec4 col) 
+{
     if (col.a == 0u) {
         return vec4(0.0);
     }
@@ -13,7 +14,7 @@ vec4 rgbe_to_float(uvec4 col) {
     );
 }
 
-uvec4 float_to_rgbe(vec4 col) {
+uvec4 float_to_rgbe(vec3 col) {
     float maxComponent = max(max(col.r, col.g), col.b);
 
     if (maxComponent < 1e-32) {
@@ -39,4 +40,16 @@ vec4 to_vec4(uvec4 uvec) {
 
 uvec4 to_uvec4(vec4 vec) {
     return clamp(uvec4(vec * 255.0), 0, 255);
+}
+
+// converts rgbe in unsigned normalized float format to unsigned normalized float format in rgb
+vec4 rgbe_f_to_float(vec4 vec)
+{
+    return rgbe_to_float(to_uvec4(vec));
+}
+
+// converts rgb in unsigned normalized float format to unsigned normalized float format in rgbe
+vec4 float_f_to_rgbe(vec3 vec)
+{
+    return to_vec4(float_to_rgbe(vec));
 }

@@ -386,7 +386,7 @@ void IBLUtilsApplication::ExecuteComputeShader()
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_Pipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_PipelineLayout, 0, 1, &set1_Texture, 0, 0);
-    vkCmdDispatch(cmd, inputImg->getExtent().width / 16, inputImg->getExtent().height / 16, 6);
+    vkCmdDispatch(cmd, storageImg->getExtent().width / 4, storageImg->getExtent().height / 4, 6);
     cmd.Submit(nullptr, nullptr, fence);
 
     vkWaitForFences(VulkanContext::GetDevice(), 1, &fence, VK_TRUE, UINT64_MAX);
