@@ -12,6 +12,7 @@ layout(location=0) out vec4 outColor;
 #include "glsl/utils.glsl"
 
 layout (set = 2, binding = 0) uniform sampler2D textures[];
+layout (set = 3, binding = 1) uniform samplerCube lambertianIDL;
 
 layout( push_constant ) uniform constants
 {
@@ -35,9 +36,19 @@ void main() {
 		lightsSum += CalcLight(i, scene.lights[i].type);
 	}
 
+	// IDL
+	vec3 ambientLighting;
+	{
+		vec3 environmentalLight = vec3(texture(lambertianIDL, n));
+		ambientLighting = environmentalLight * vec3(material.albedo);
+		ambientLighting *= 0.1;
+	}
+
+
+	// material
 	vec3 texColor = texture(textures[nonuniformEXT(material.texIndex)], inTexCoord).rgb;
 
-	vec3 color = vec3(material.albedo) * texColor * lightsSum;
+	vec3 color = vec3(material.albedo) * texColor * lightsSum + ambientLighting;
 
 	outColor = gamma_map(color, gamma);
 }

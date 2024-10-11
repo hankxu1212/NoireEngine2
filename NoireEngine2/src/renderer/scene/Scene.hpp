@@ -8,6 +8,7 @@
 #include "SceneNode.hpp"
 #include "renderer/lighting/Light.hpp"
 #include "backend/images/ImageCube.hpp"
+#include "backend/images/Image2D.hpp"
 
 #include <filesystem>
 #include <unordered_map>
@@ -108,6 +109,8 @@ public:
 
 	const std::shared_ptr<ImageCube>& getSkybox() const { return m_Skybox; }
 
+	const std::shared_ptr<ImageCube>& getSkyboxLambertian() const { return m_SkyboxLambertian; }
+
 	bool hasSkybox() const { return m_Skybox.get(); }
 
 public: // event functions. Do not create function definitions!
@@ -143,5 +146,7 @@ private:
 	// a list of lights
 	std::vector<Light*> m_SceneLights;
 
+	// IBL
 	std::shared_ptr<ImageCube> m_Skybox;
+	std::shared_ptr<ImageCube> m_SkyboxLambertian; // cosine weighted convolution on the skybox image
 };

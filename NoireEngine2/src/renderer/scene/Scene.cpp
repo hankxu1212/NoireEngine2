@@ -433,13 +433,18 @@ void Scene::Deserialize(const std::string& path)
 
 void Scene::AddSkybox(const std::string& path, SkyboxType type)
 {
+	// path + .lambertian + .png
+	std::string lambertianPath = path.substr(0, path.length() - 4) + ".lambertian.png";
+
 	switch (type)
 	{
 	case SkyboxType::HDR:
-		m_Skybox = ImageCube::Create(Files::Path(path), true);
+		m_Skybox = ImageCube::Create(Files::Path(path));
+		m_SkyboxLambertian = ImageCube::Create(Files::Path(lambertianPath));
 		break;
 	case SkyboxType::RGB:
 		m_Skybox = ImageCube::Create(Files::Path(path), false);
+		m_SkyboxLambertian = ImageCube::Create(Files::Path(lambertianPath), false);
 		break;
 	}
 }

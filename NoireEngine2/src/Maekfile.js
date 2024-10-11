@@ -151,14 +151,12 @@ const scripting_objs = [
 const cube_application = [
 	maek.CPP('renderer/utils/IBLEntrypoint.cpp'),
 ]
-function use_shaders_compute(name, pipeline) {
-	const shaders = [
-		maek.GLSLC(name + '.comp'),
-	];
-	cube_application.push(maek.CPP(pipeline, undefined, { depends: [...shaders] }));
-}
 
-use_shaders_compute("shaders/compute/lambertian", 'renderer/utils/IBLUtilsApplication.cpp')
+const compute_shaders = [
+	maek.GLSLC("shaders/compute/lambertian_hdr.comp"),
+	maek.GLSLC("shaders/compute/lambertian_png.comp"),
+];
+cube_application.push(maek.CPP('renderer/utils/IBLUtilsApplication.cpp', undefined, { depends: [...compute_shaders] }));
 
 // executable
 const main_exe = maek.LINK

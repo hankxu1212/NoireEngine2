@@ -8,6 +8,7 @@ struct IBLUtilsApplicationSpecification
 {
 	std::string inFile, outFile;
 	bool isGGX = false;
+	bool isHDR = true;
 	uint32_t outdim = 32;
 };
 
@@ -18,8 +19,6 @@ public:
 	~IBLUtilsApplication();
 
 	void Run();
-
-	void RunCPUBlit();
 
 	void CreateComputePipeline();
 

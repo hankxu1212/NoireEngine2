@@ -20,7 +20,7 @@ void SceneManager::LoadDefault()
 	if (Application::Get().GetSpecification().InitialScene)
 		scene = std::make_unique<Scene>(Application::GetSpecification().InitialScene.value());
 	else
-		scene = std::make_unique<Scene>("../scenes/examples/sg-Articulation.s72");
+		scene = std::make_unique<Scene>("../scenes/examples/materials.s72");
 }
 
 void SceneManager::Update()

@@ -32,20 +32,15 @@ void Image::Destroy()
 	vkDestroyImage(logicalDevice, image, nullptr);
 }
 
-WriteDescriptorSet Image::getWriteDescriptor(uint32_t binding, VkDescriptorType descriptorType, const std::optional<OffsetSize>& offsetSize) const {
-	VkDescriptorImageInfo imageInfo = {};
-	imageInfo.sampler = sampler;
-	imageInfo.imageView = view;
-	imageInfo.imageLayout = layout;
+VkDescriptorImageInfo Image::GetDescriptorInfo() const
+{
+	VkDescriptorImageInfo imageInfo {
+		.sampler = sampler,
+		.imageView = view,
+		.imageLayout = layout
+	};
 
-	VkWriteDescriptorSet descriptorWrite = {};
-	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrite.dstSet = VK_NULL_HANDLE; // Will be set in the descriptor handler.
-	descriptorWrite.dstBinding = binding;
-	descriptorWrite.dstArrayElement = 0;
-	descriptorWrite.descriptorCount = 1;
-	descriptorWrite.descriptorType = descriptorType;
-	return { descriptorWrite, imageInfo };
+	return imageInfo;
 }
 
 std::unique_ptr<Bitmap> Image::getBitmap(uint32_t mipLevel, uint32_t arrayLayer, uint32_t bytesPerPixel) const {

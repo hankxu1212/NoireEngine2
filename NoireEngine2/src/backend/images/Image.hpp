@@ -1,13 +1,15 @@
 #pragma once
 
-#include "backend/descriptor/Descriptor.hpp"
 #include "glm/glm.hpp"
+#include <vulkan/vulkan.h>
+#include <memory>
+#include <optional>
 
 class CommandBuffer;
 class Bitmap;
 	
 // A representation of a Vulkan image, sampler, and view.
-class Image : public Descriptor 
+class Image
 {
 public:
 	Image(VkFilter filter, VkSamplerAddressMode addressMode, VkSampleCountFlagBits samples, VkImageLayout layout, VkImageUsageFlags usage,
@@ -17,11 +19,7 @@ public:
 
 	void Destroy();
 
-	WriteDescriptorSet getWriteDescriptor(
-		uint32_t binding, 
-		VkDescriptorType descriptorType, 
-		const std::optional<OffsetSize>& offsetSize=std::nullopt
-	) const override;
+	VkDescriptorImageInfo GetDescriptorInfo() const;
 
 	/**
 	  * Copies the images pixels from memory to a bitmap. If this method is called from multiple threads at the same time Vulkan will crash!

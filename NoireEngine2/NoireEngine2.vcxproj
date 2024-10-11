@@ -307,7 +307,6 @@
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3native.h" />
     <ClInclude Include="src\backend\commands\CommandBuffer.hpp" />
     <ClInclude Include="src\backend\commands\CommandPool.hpp" />
-    <ClInclude Include="src\backend\descriptor\Descriptor.hpp" />
     <ClInclude Include="src\backend\devices\LogicalDevice.hpp" />
     <ClInclude Include="src\backend\devices\PhysicalDevice.hpp" />
     <ClInclude Include="src\backend\devices\Surface.hpp" />
@@ -428,6 +427,7 @@
     <None Include="src\Maekfile.js" />
     <None Include="src\scenes\examples\test_env.s72" />
     <None Include="src\scenes\s72\viewer\s72-viewer.html" />
+    <None Include="src\shaders\compute\lambertian_png.comp" />
     <None Include="src\shaders\environment.frag" />
     <None Include="src\shaders\environment.vert" />
     <None Include="src\shaders\glsl\cubemap.glsl" />
@@ -465,12 +465,13 @@
     <Image Include="src\textures\icon-mesh.png" />
     <Image Include="src\textures\icon-shader.png" />
     <Image Include="src\textures\NE-icon.png" />
+    <Image Include="src\textures\Skybox.png" />
     <Image Include="src\textures\statue.jpg" />
     <Image Include="src\textures\viking_room.png" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\shaders\compute\edgedetect.comp" />
-    <FxCompile Include="src\shaders\compute\lambertian.comp" />
+    <FxCompile Include="src\shaders\compute\lambertian_hdr.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

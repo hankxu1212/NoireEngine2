@@ -7,8 +7,8 @@
 
 [[maybe_unused]] static void Parse(ApplicationCommandLineArgs args, IBLUtilsApplicationSpecification& spec)
 {
-    if (args.Count != 4)
-        throw std::runtime_error("Incorrect number of arguments. Must take exactly 3 arguments: inFile, --method, outFile");
+    if (args.Count > 5)
+        throw std::runtime_error("Incorrect number of arguments. Must take 3 or 4 arguments: inFile, (--lambertian|--ggx), outFile, (--hdr|--png)");
 
     spec.inFile = args[1];
     spec.outFile = args[3];
@@ -19,17 +19,27 @@
         spec.isGGX = true;
     else
         throw std::runtime_error("Parsing isGGX parameter failed. Got:" + std::string(args[2]));
+
+    if (args.Count == 5) 
+    {
+        if (strcmp(args[4], "--png") == 0)
+            spec.isHDR = false;
+        else if (strcmp(args[4], "--hdr") == 0)
+            spec.isHDR = true;
+        else
+            throw std::runtime_error("Parsing isHDR parameter failed. Got:" + std::string(args[4]));
+    }
 }
 
 
 static IBLUtilsApplication* CreateApplication(ApplicationCommandLineArgs args)
 {
     IBLUtilsApplicationSpecification spec;
+    //spec.inFile = "../scenes/examples/ox_bridge_morning.png";
+    //spec.isGGX = false;
+    //spec.outFile = "../scenes/examples/AA.png";
 
-    spec.inFile = "../scenes/examples/ox_bridge_morning.png";
-    spec.isGGX = false;
-    spec.outFile = "../scenes/examples/AA.png";
-    //Parse(args, spec);
+    Parse(args, spec);
 
     return new IBLUtilsApplication(spec);
 }

@@ -24,6 +24,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
 
+#define DEFAULT_SKYBOX "../textures/Skybox.png"
 
 ObjectPipeline::ObjectPipeline()
 {
@@ -213,22 +214,20 @@ void ObjectPipeline::CreateDescriptors()
 			, &variableDescriptorInfoAI);
 	}
 
-	// create skybox descriptor
+	// create skybox descriptors
 	Scene* scene = SceneManager::Get()->getScene();
 	if (!scene->hasSkybox())
-		scene->AddSkybox("../scenes/examples/AA.png", Scene::SkyboxType::RGB);
-		//scene->AddSkybox("../textures/Skybox.png", Scene::SkyboxType::RGB);
+		scene->AddSkybox(DEFAULT_SKYBOX, Scene::SkyboxType::RGB);
 
 	const auto& skybox = scene->getSkybox();
-	VkDescriptorImageInfo cubeMapInfo
-	{
-		.sampler = skybox->getSampler(),
-		.imageView = skybox->getView(),
-		.imageLayout = skybox->getLayout()
-	};
+	VkDescriptorImageInfo cubeMapInfo = skybox->GetDescriptorInfo();
+
+	const auto& skyboxLambertian = scene->getSkyboxLambertian();
+	VkDescriptorImageInfo lambertianLUTInfo = skyboxLambertian->GetDescriptorInfo();
 
 	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 		.BindImage(0, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+		.BindImage(1, &lambertianLUTInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 		.Build(set3_Cubemap, set3_CubemapLayout);
 }
 
