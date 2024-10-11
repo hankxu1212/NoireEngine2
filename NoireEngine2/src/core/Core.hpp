@@ -23,4 +23,4 @@ const T& max(const T& a, const T& b)
 }
 
 #define NE_ENTITY_TYPE "NEntity"
-#define NE_NULL_STR "<NONE>"
+#define NE_NULL_STR "<empty>"

@@ -123,7 +123,7 @@ void Mesh::Load()
 	m_Vertex = VertexInput::Create(m_CreateInfo.attributes).get();
 
 	// load all bytes from binary
-	const std::string fullPath = "../scenes/examples/" + m_CreateInfo.src;
+	const std::string fullPath = "../scenes/SphereScene/" + m_CreateInfo.src;
 	std::vector<std::byte> bytes = Files::Read(fullPath);
 
 	// extract vertex information

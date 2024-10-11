@@ -5,11 +5,14 @@
 layout(location=0) in vec3 inPosition;
 layout(location=1) in vec3 inNormal;
 layout(location=2) in vec2 inTexCoord;
+layout(location=3) in vec3 inTangent;
+layout(location=4) in vec3 inBitangent;
 
 layout(location=0) out vec4 outColor;
 
 #include "glsl/world_uniform.glsl"
 #include "glsl/utils.glsl"
+#include "glsl/lighting.glsl"
 
 layout (set = 2, binding = 0) uniform sampler2D textures[];
 layout (set = 3, binding = 1) uniform samplerCube lambertianIDL;
@@ -17,97 +20,53 @@ layout (set = 3, binding = 1) uniform samplerCube lambertianIDL;
 layout( push_constant ) uniform constants
 {
 	vec4 albedo;
-	int texIndex;
+	int albedoTexId;
+	int normalTexId;
+	float normalStrength;
+	float environmentLightIntensity;
 } material;
 
 vec3 F0 = vec3(0.04);
 vec3 n;
-float gamma = 2.2f;
-
-vec3 CalcLight(int i, int type);
+mat3 TBN;
 
 void main() {
-	n = normalize(inNormal);
+	if (material.normalTexId >= 0)
+	{
+		n = texture(textures[material.normalTexId], inTexCoord).rgb;
+		n = normalize(n * 2.0 - 1.0);  // this normal is in tangent space
+		n.xy *= material.normalStrength;
+		n = normalize(n);
+	}
+	else
+		n = normalize(inNormal);
+
+	vec3 t = normalize(inTangent);
+	vec3 b = normalize(inBitangent);
+	TBN = mat3(n, t, b);
+
+	LIGHTING_VAR_NORMAL = n;
+	LIGHTING_VAR_TBN = TBN;
+	LIGHTING_VAR_TANGENT_FRAG_POS = TBN * inPosition;
+	LIGHTING_VAR_TANGENT_VIEW_POS = TBN * vec3(scene.cameraPos);
 
 	//hemisphere sky + directional sun:
-	vec3 lightsSum = vec3(0);
-	for (int i = 0; i < min(MAX_LIGHTS_PER_OBJ, scene.numLights); ++i)
-	{
-		lightsSum += CalcLight(i, scene.lights[i].type);
-	}
+	vec3 lightsSum = DirectLighting();
 
 	// IDL
 	vec3 ambientLighting;
 	{
 		vec3 environmentalLight = vec3(texture(lambertianIDL, n));
 		ambientLighting = environmentalLight * vec3(material.albedo);
-		ambientLighting *= 0.1;
+		ambientLighting *= material.environmentLightIntensity;
 	}
 
-
 	// material
-	vec3 texColor = texture(textures[nonuniformEXT(material.texIndex)], inTexCoord).rgb;
+	vec3 texColor = vec3(1);
+	if (material.albedoTexId >= 0)
+		texColor = texture(textures[material.albedoTexId], inTexCoord).rgb;
 
 	vec3 color = vec3(material.albedo) * texColor * lightsSum + ambientLighting;
 
-	outColor = gamma_map(color, gamma);
-}
-
-vec3 DirLight(int i)
-{
-	return max(0.0, dot(n,vec3(scene.lights[i].direction))) * scene.lights[i].intensity * vec3(scene.lights[i].color);
-}
-
-vec3 PointLight(int i)
-{
-	Light light = scene.lights[i];
-
-	float D = distance(vec3(light.position), inPosition); // distance to light
-    
-	vec3 lightDir = normalize(vec3(light.position) - inPosition);
-	
-	float cosTheta = saturate(dot(n, lightDir));
-
-	float d_over_radius = (D / light.limit);
-	float d_over_radius_4 = d_over_radius * d_over_radius * d_over_radius * d_over_radius;
-	float saturated = saturate(1 - d_over_radius_4);
-	float attenuation = saturated * saturated / (D * D + 1);
-
-	return cosTheta * light.intensity * attenuation * vec3(light.color);
-}
-
-vec3 SpotLight(int i)
-{
-	Light light = scene.lights[i];
-
-	float D = distance(vec3(light.position), inPosition); // distance to light
-
-    vec3 lightDir = normalize(vec3(light.position) - inPosition);
-
-	float cosTheta = saturate(dot(n, lightDir));
-
-    // spotlight intensity
-    float theta = dot(lightDir, vec3(normalize(light.direction)));
-    float inner = cos(light.fov * (1 - light.blend) / 2);
-    float outer = cos(light.fov / 2);
-	float epsilon = saturate(inner - outer);
-	float intensity = clamp((theta - outer) / epsilon, 0.0, 1.0);
-
-	// not sure if this is the right way to attune limit
-	float d_over_radius = (D / light.limit);
-	float d_over_radius_4 = d_over_radius * d_over_radius * d_over_radius * d_over_radius;
-	float saturated = saturate(1 - d_over_radius_4);
-	float attenuation = saturated * saturated / (D * D + 1);
-
-	return cosTheta * light.intensity * intensity * attenuation * vec3(light.color);
-}
-
-vec3 CalcLight(int i, int type)
-{
-	if (type == 0) // dir light
-		return DirLight(i);
-	else if (type == 1) // point light
-		return PointLight(i);
-	else // spot light
-		return SpotLight(i);
+	outColor = gamma_map(color, 2.2f);
 }

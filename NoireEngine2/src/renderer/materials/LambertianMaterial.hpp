@@ -10,25 +10,55 @@ public:
 	{
 		std::string name = "Default Lambertian";
 		glm::vec3 albedo = glm::vec3(1);
-		std::string texturePath;
+		std::string texturePath = NE_NULL_STR;
+		std::string normalPath = NE_NULL_STR;
+		std::string displacementPath = NE_NULL_STR;
+		std::string rootPath;
 
 		CreateInfo() = default;
 
-		CreateInfo(const std::string& n, const glm::vec3& a, const std::string& tPath) :
-			name(n), albedo(a), texturePath(tPath) {
-		}
+		CreateInfo(const std::string& name,
+			const glm::vec3& albedo,
+			const std::string& texturePath = NE_NULL_STR,
+			const std::string& normalPath = NE_NULL_STR,
+			const std::string& displacementPath = NE_NULL_STR,
+			const std::string& rootPath = "")
+			: name(name),
+			albedo(albedo),
+			texturePath(texturePath),
+			normalPath(normalPath),
+			displacementPath(displacementPath),
+			rootPath(rootPath)
+		{}
 
-		CreateInfo(const CreateInfo& other) :
-			name(other.name), albedo(other.albedo), texturePath(other.texturePath) {
-		}
+		CreateInfo(const CreateInfo& other)
+			: name(other.name),
+			albedo(other.albedo),
+			texturePath(other.texturePath),
+			normalPath(other.normalPath),
+			displacementPath(other.displacementPath),
+			rootPath(other.rootPath)
+		{}
+
+		CreateInfo(CreateInfo&& other) noexcept
+			: name(std::move(other.name)),
+			albedo(std::move(other.albedo)),
+			texturePath(std::move(other.texturePath)),
+			normalPath(std::move(other.normalPath)),
+			displacementPath(std::move(other.displacementPath)),
+			rootPath(std::move(other.rootPath))
+		{}
 	};
 
 	struct MaterialPush
 	{
 		struct { float x, y, z, padding_; } albedo;
-		int texIndex;
+		int albedoTexId = -1;
+		int normalTexId = -1;
+		float normalStrength = 1;
+		float environmentLightIntensity;
 	};
-	static_assert(sizeof(MaterialPush) == 16 + 4);
+	static_assert(sizeof(MaterialPush) == 16 + 4 + 4 + 4 + 4);
 
 public:
 	LambertianMaterial() = default;
@@ -58,5 +88,8 @@ private:
 	static std::shared_ptr<Material> Create(const Node& node);
 
 	CreateInfo						m_CreateInfo;
-	uint32_t						m_AlbedoMapIndex = 0; // index into global texture array
+	int								m_AlbedoMapId = -1; // index into global texture array
+	int								m_NormalMapId = -1; // index into global texture array
+	float							m_NormalStrength = 1;
+	float							m_EnvironmentLightInfluence = 0.1f;
 };

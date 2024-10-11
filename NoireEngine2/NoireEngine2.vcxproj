@@ -432,6 +432,7 @@
     <None Include="src\shaders\environment.vert" />
     <None Include="src\shaders\glsl\cubemap.glsl" />
     <None Include="src\shaders\glsl\hdr.glsl" />
+    <None Include="src\shaders\glsl\lighting.glsl" />
     <None Include="src\shaders\glsl\random.glsl" />
     <None Include="src\shaders\glsl\sampling.glsl" />
     <None Include="src\shaders\glsl\transform_uniform.glsl" />
@@ -465,6 +466,7 @@
     <Image Include="src\textures\icon-mesh.png" />
     <Image Include="src\textures\icon-shader.png" />
     <Image Include="src\textures\NE-icon.png" />
+    <Image Include="src\textures\Skybox.lambertian.png" />
     <Image Include="src\textures\Skybox.png" />
     <Image Include="src\textures\statue.jpg" />
     <Image Include="src\textures\viking_room.png" />

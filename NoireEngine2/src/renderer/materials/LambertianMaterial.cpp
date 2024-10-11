@@ -10,7 +10,10 @@ void LambertianMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayo
 {
 	LambertianMaterial::MaterialPush push{
 		.albedo = { m_CreateInfo.albedo.x, m_CreateInfo.albedo.y, m_CreateInfo.albedo.z, 0 },
-		.texIndex = (int)m_AlbedoMapIndex
+		.albedoTexId = m_AlbedoMapId,
+		.normalTexId = m_NormalMapId,
+		.normalStrength = m_NormalStrength,
+		.environmentLightIntensity = m_EnvironmentLightInfluence
 	};
 
 	vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,
@@ -24,14 +27,41 @@ Material* LambertianMaterial::Deserialize(const Scene::TValueMap& obj)
 		CreateInfo createInfo;
 		createInfo.name = obj.at("name").as_string().value();
 
-		auto attributeIt = attributesMap.find("albedo");
-		if (attributeIt == attributesMap.end())
-			throw std::runtime_error("Did not find albedo field in this material, aborting!");
+		// find albedo map
+		{
+			auto attributeIt = attributesMap.find("albedo");
+			if (attributeIt == attributesMap.end())
+				throw std::runtime_error("Did not find albedo field in this material, aborting!");
 
-		if (auto& albedoTexOpt = attributeIt->second.as_texPath())
-			createInfo.texturePath = albedoTexOpt.value();
-		else
-			createInfo.albedo = attributeIt->second.as_vec3();
+			if (auto& albedoTexOpt = attributeIt->second.as_texPath())
+				createInfo.texturePath = albedoTexOpt.value();
+			else
+				createInfo.albedo = attributeIt->second.as_vec3();
+		}
+
+		// find normal map
+		{
+			auto materialNormalIt = obj.find("normalMap");
+			if (materialNormalIt != obj.end()) 
+			{
+				if (auto& normalTexOpt = materialNormalIt->second.as_texPath()) {
+					createInfo.normalPath = normalTexOpt.value();
+					NE_INFO("Found normal map on this entity:{}", createInfo.normalPath);
+				}
+			}
+		}
+
+		// find displacement map
+		{
+			auto materialHeightIt = obj.find("displacementMap");
+			if (materialHeightIt != obj.end())
+			{
+				if (auto& heightTexOpt = materialHeightIt->second.as_texPath()) {
+					createInfo.displacementPath = heightTexOpt.value();
+					NE_INFO("Found displacement map on this entity:{}", createInfo.displacementPath);
+				}
+			}
+		}
 
 		return Create(createInfo).get();
 	}
@@ -74,10 +104,15 @@ std::shared_ptr<Material> LambertianMaterial::Create(const Node& node)
 
 void LambertianMaterial::Load()
 {
-	if (m_CreateInfo.texturePath != "")
+	if (m_CreateInfo.texturePath != NE_NULL_STR)
 	{
-		auto tex = Image2D::Create(Files::Path("../scenes/examples/" + m_CreateInfo.texturePath));
-		m_AlbedoMapIndex = tex->getTextureId();
+		auto tex = Image2D::Create(Files::Path("../scenes/SphereScene/" + m_CreateInfo.texturePath));
+		m_AlbedoMapId = tex->getTextureId();
+	}
+	if (m_CreateInfo.normalPath != NE_NULL_STR)
+	{
+		auto tex = Image2D::Create(Files::Path("../scenes/SphereScene/" + m_CreateInfo.normalPath));
+		m_NormalMapId = tex->getTextureId();
 	}
 }
 
@@ -105,19 +140,48 @@ void LambertianMaterial::Inspect()
 
 	ImGui::PushID("###AlbedoTexture");
 	ImGui::Columns(2);
-	ImGui::Text("%s", "Albedo Texture");
+	ImGui::Text("Albedo Texture");
 	ImGui::NextColumn();
 	ImGui::Text(m_CreateInfo.texturePath.c_str());
 	ImGui::Columns(1);
 	ImGui::PopID();
 
-	ImGui::DragInt("Albedo Texture Index", (int*)&m_AlbedoMapIndex, 1, 0, 4096);
+	ImGui::DragInt("Albedo Texture ID", &m_AlbedoMapId, 1, -1, 4096);
+
+	ImGui::PushID("###NormalStrength");
+	ImGui::Columns(2);
+	ImGui::Text("Normal Strength");
+	ImGui::NextColumn();
+	ImGui::DragFloat("###NormalStrength", &m_NormalStrength, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::Columns(1);
+	ImGui::PopID();
+
+	ImGui::PushID("###NormalTexture");
+	ImGui::Columns(2);
+	ImGui::Text("Normal Texture");
+	ImGui::NextColumn();
+	ImGui::Text(m_CreateInfo.normalPath.c_str());
+	ImGui::Columns(1);
+	ImGui::PopID();
+
+	ImGui::DragInt("Normal Texture ID", &m_NormalMapId, 1, -1, 4096);
+
+	ImGui::PushID("###EnvironmentLightingIntensity");
+	ImGui::Columns(2);
+	ImGui::Text("Environment Lighting Influence");
+	ImGui::NextColumn();
+	ImGui::DragFloat("####ETI", &m_EnvironmentLightInfluence, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::Columns(1);
+	ImGui::PopID();
 }
 
 const Node& operator>>(const Node& node, LambertianMaterial& material)
 {
 	node["createInfo"].Get(material.m_CreateInfo);
-	node["albedoTexIndex"].Get(material.m_AlbedoMapIndex);
+	node["albedoTexId"].Get(material.m_AlbedoMapId);
+	node["normalTexId"].Get(material.m_NormalMapId);
+	node["normalStrength"].Get(material.m_NormalStrength);
+	node["environmentInfluence"].Get(material.m_EnvironmentLightInfluence);
 	node["workflow"].Get(material.getWorkflow());
 	return node;
 }
@@ -125,7 +189,10 @@ const Node& operator>>(const Node& node, LambertianMaterial& material)
 Node& operator<<(Node& node, const LambertianMaterial& material)
 {
 	node["createInfo"].Set(material.m_CreateInfo);
-	node["albedoTexIndex"].Set(material.m_AlbedoMapIndex);
+	node["albedoTexId"].Set(material.m_AlbedoMapId);
+	node["normalTexId"].Set(material.m_NormalMapId);
+	node["normalStrength"].Set(material.m_NormalStrength);
+	node["environmentInfluence"].Set(material.m_EnvironmentLightInfluence);
 	node["workflow"].Set(material.getWorkflow());
 	return node;
 }
@@ -135,6 +202,9 @@ const Node& operator>>(const Node& node, LambertianMaterial::CreateInfo& info)
 	node["albedo"].Get(info.albedo);
 	node["name"].Get(info.name);
 	node["albedoTex"].Get(info.texturePath);
+	node["normalTex"].Get(info.normalPath);
+	node["displacementTex"].Get(info.displacementPath);
+	node["rootPath"].Get(info.rootPath);
 	return node;
 }
 
@@ -143,6 +213,9 @@ Node& operator<<(Node& node, const LambertianMaterial::CreateInfo& info)
 	node["albedo"].Set(info.albedo);
 	node["name"].Set(info.name);
 	node["albedoTex"].Set(info.texturePath);
+	node["normalTex"].Set(info.normalPath);
+	node["displacementTex"].Set(info.displacementPath);
+	node["rootPath"].Set(info.rootPath);
 	return node;
 }
 
