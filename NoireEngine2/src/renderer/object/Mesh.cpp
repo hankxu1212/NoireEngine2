@@ -9,6 +9,7 @@
 #include "renderer/materials/Material.hpp"
 #include "core/Core.hpp"
 #include "core/Timer.hpp"
+#include "renderer/scene/SceneManager.hpp"
 
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
@@ -123,8 +124,8 @@ void Mesh::Load()
 	m_Vertex = VertexInput::Create(m_CreateInfo.attributes).get();
 
 	// load all bytes from binary
-	const std::string fullPath = "../scenes/SphereScene/" + m_CreateInfo.src;
-	std::vector<std::byte> bytes = Files::Read(fullPath);
+	const auto& path = SceneManager::Get()->getScene()->getRootPath().parent_path() / m_CreateInfo.src;
+	std::vector<std::byte> bytes = Files::ReadAbsolute(path.string());
 
 	// extract vertex information
 	// ASSUMING: POSITION, NORMAL, TANGENT, TEXCOORD  (PosNorTanTexVertex)

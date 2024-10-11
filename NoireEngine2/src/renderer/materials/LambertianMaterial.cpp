@@ -2,6 +2,7 @@
 #include "utils/Logger.hpp"
 #include "backend/images/Image2D.hpp"
 #include "core/resources/Files.hpp"
+#include "renderer/scene/SceneManager.hpp"
 
 #include "imgui/imgui.h"
 #include <limits>
@@ -104,14 +105,15 @@ std::shared_ptr<Material> LambertianMaterial::Create(const Node& node)
 
 void LambertianMaterial::Load()
 {
+	const auto& rootPath = SceneManager::Get()->getScene()->getRootPath();
 	if (m_CreateInfo.texturePath != NE_NULL_STR)
 	{
-		auto tex = Image2D::Create(Files::Path("../scenes/SphereScene/" + m_CreateInfo.texturePath));
+		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.texturePath);
 		m_AlbedoMapId = tex->getTextureId();
 	}
 	if (m_CreateInfo.normalPath != NE_NULL_STR)
 	{
-		auto tex = Image2D::Create(Files::Path("../scenes/SphereScene/" + m_CreateInfo.normalPath));
+		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.normalPath);
 		m_NormalMapId = tex->getTextureId();
 	}
 }

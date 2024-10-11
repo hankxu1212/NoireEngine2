@@ -15,10 +15,13 @@
 
 #include "core/Timer.hpp"
 
-Scene::Scene(const std::string& path)
+static bool sceneCamDirty = true; // prompt update again
+static std::unordered_map<std::string, Entity*> nameToEntityMap;
+
+void Scene::Load(const std::string& path)
 {
 	if (!Files::Exists(Files::Path(path)))
-		NE_ERROR("Path " + path + " does not exist.");
+		NE_ERROR("Path [" + path + "] does not exist.");
 
 	Deserialize(path);
 	InstantiateCoreScripts();
@@ -34,8 +37,6 @@ Scene::~Scene()
 void Scene::Unload()
 {
 }
-
-static bool sceneCamDirty = true; // prompt update again
 
 void Scene::Update()
 {
@@ -67,8 +68,6 @@ void Scene::Render()
 		child->RenderPass(m_MatrixStack);
  	}
 }
-
-static std::unordered_map<std::string, Entity*> nameToEntityMap;
 
 static void LoadTransform(const Scene::TValueMap& obj, glm::vec3& outPosition, glm::quat& outRotation, glm::vec3& outScale)
 {
@@ -289,7 +288,7 @@ static void MakeEnvironment(Scene* scene, const Scene::TSceneMap& sceneMap)
 		}
 
 		const auto& name = environmentObjOpt.value().at("radiance").as_texPath().value();
-		scene->AddSkybox("../scenes/examples/" + name);
+		scene->AddSkybox(name);
 	}
 }
 
@@ -357,7 +356,9 @@ static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::str
 
 void Scene::Deserialize(const std::string& path)
 {
-	NE_INFO("Loading scene: {}", path);
+	sceneRootAbsolutePath = Files::Path(path);
+
+	NE_INFO("Loading scene: {}", sceneRootAbsolutePath.string());
 
 	TSceneMap sceneMap; // entire scene map
 
@@ -365,7 +366,7 @@ void Scene::Deserialize(const std::string& path)
 	bool foundScene = false;
 
 	try {
-		sejp::value loaded = sejp::load(Files::Path(path));
+		sejp::value loaded = sejp::load(sceneRootAbsolutePath.string());
 		auto& arr = loaded.as_array().value();
 
 		// do a first parse of the file, put everything into sceneMap, hashed by name
@@ -439,12 +440,12 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 	switch (type)
 	{
 	case SkyboxType::HDR:
-		m_Skybox = ImageCube::Create(Files::Path(path));
-		m_SkyboxLambertian = ImageCube::Create(Files::Path(lambertianPath));
+		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path);
+		m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath);
 		break;
 	case SkyboxType::RGB:
-		m_Skybox = ImageCube::Create(Files::Path(path), false);
-		m_SkyboxLambertian = ImageCube::Create(Files::Path(lambertianPath), false);
+		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path, false);
+		m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath, false);
 		break;
 	}
 }

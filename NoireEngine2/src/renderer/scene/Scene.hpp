@@ -46,9 +46,10 @@ public:
 	};
 
 public:
-	Scene(const std::string& path);
+	Scene() = default;
 	~Scene();
 
+	void Load(const std::string& path);
 	void Unload();
 
 	void Update();
@@ -100,6 +101,7 @@ public:
 
 	inline const std::vector<Light*>& getLightInstances() const { return m_SceneLights; }
 
+	inline const std::filesystem::path& getRootPath() const { return sceneRootAbsolutePath; }
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Skybox
@@ -126,6 +128,8 @@ private:
 
 private:
 	friend class SceneManager;
+
+	std::filesystem::path sceneRootAbsolutePath;
 
 	// a list of cameras, will be sorted everyframe ordered by their priority
 	// in scene/debug mode, the scene will choose the smallest priority as the rendering/culling camera

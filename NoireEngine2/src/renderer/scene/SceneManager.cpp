@@ -8,6 +8,7 @@
 
 SceneManager::SceneManager()
 {
+	scene = std::make_unique<Scene>();
 }
 
 SceneManager::~SceneManager()
@@ -18,9 +19,10 @@ SceneManager::~SceneManager()
 void SceneManager::LoadDefault()
 {
 	if (Application::Get().GetSpecification().InitialScene)
-		scene = std::make_unique<Scene>(Application::GetSpecification().InitialScene.value());
+		scene->Load(Application::GetSpecification().InitialScene.value());
 	else
-		scene = std::make_unique<Scene>("../scenes/SphereScene/SphereScene.s72");
+		//scene->Load("../scenes/SphereScene/SphereScene.s72");
+		scene->Load("../scenes/examples/Materials.s72");
 }
 
 void SceneManager::Update()

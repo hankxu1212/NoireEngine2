@@ -20,15 +20,19 @@
 
 std::vector<std::byte> Files::Read(const std::string& path)
 {
-	std::string name = Path(path);
-	auto length = std::filesystem::file_size(name);
+	return ReadAbsolute(Path(path));
+}
+
+std::vector<std::byte> Files::ReadAbsolute(const std::string& absolutePath)
+{
+	auto length = std::filesystem::file_size(absolutePath);
 	if (length == 0) {
-		std::cerr << "Found empty file: " << name << std::endl;
+		std::cerr << "Found empty file: " << absolutePath << std::endl;
 		return {};  // empty vector
 	}
 
 	std::vector<std::byte> buffer(length);
-	std::ifstream inputFile(name, std::ios_base::binary);
+	std::ifstream inputFile(absolutePath, std::ios_base::binary);
 	inputFile.read(reinterpret_cast<char*>(buffer.data()), length);
 	inputFile.close();
 	return buffer;
