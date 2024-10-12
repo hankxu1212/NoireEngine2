@@ -1,3 +1,4 @@
+// you need to define these functions to use a forward lighting pass
 vec3 LIGHTING_VAR_NORMAL;
 mat3 LIGHTING_VAR_TBN;
 vec3 LIGHTING_VAR_TANGENT_FRAG_POS;

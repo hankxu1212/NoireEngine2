@@ -212,3 +212,18 @@ bool Node::operator<(const Node &rhs) const {
 
 	return false;
 }
+
+// glm operators
+const Node& operator>>(const Node& node, glm::vec3& v) {
+	node["x"].Get(v.x);
+	node["y"].Get(v.y);
+	node["z"].Get(v.z);
+	return node;
+}
+
+Node& operator<<(Node& node, const glm::vec3& v) {
+	node["x"].Set(v.x);
+	node["y"].Set(v.y);
+	node["z"].Set(v.z);
+	return node;
+}

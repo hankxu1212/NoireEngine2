@@ -67,6 +67,7 @@ private:
 	friend class LambertianMaterialPipeline;
 	friend class EnvironmentMaterialPipeline;
 	friend class MirrorMaterialPipeline;
+	friend class PBRMaterialPipeline;
 	friend class LinesPipeline;
 	friend class SkyboxPipeline;
 

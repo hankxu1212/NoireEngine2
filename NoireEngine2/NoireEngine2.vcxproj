@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.cpp" />
     <ClCompile Include="src\core\layers\LayerStack.cpp" />
     <ClCompile Include="src\renderer\utils\IBLUtilsApplication.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.cpp" />
@@ -247,6 +248,7 @@
     <ClCompile Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.hpp" />
     <ClInclude Include="src\core\layers\Layer.hpp" />
     <ClInclude Include="src\core\layers\LayerStack.hpp" />
     <ClInclude Include="src\renderer\utils\IBLUtilsApplication.h" />
@@ -425,7 +427,6 @@
     <None Include="src\core\resources\nodes\NodeConstView.inl" />
     <None Include="src\core\resources\nodes\NodeView.inl" />
     <None Include="src\Maekfile.js" />
-    <None Include="src\scenes\examples\test_env.s72" />
     <None Include="src\scenes\s72\viewer\s72-viewer.html" />
     <None Include="src\shaders\compute\lambertian_png.comp" />
     <None Include="src\shaders\environment.frag" />
@@ -441,6 +442,8 @@
     <None Include="src\shaders\lambertian.vert" />
     <None Include="src\shaders\mirror.frag" />
     <None Include="src\shaders\mirror.vert" />
+    <None Include="src\shaders\pbr.frag" />
+    <None Include="src\shaders\pbr.vert" />
     <None Include="src\shaders\skybox.frag" />
     <None Include="src\shaders\skybox.vert" />
     <None Include="src\shaders\glsl\world_uniform.glsl" />

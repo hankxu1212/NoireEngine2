@@ -3,6 +3,7 @@
 #include "MaterialPipelines.hpp"
 #include "backend/pipeline/ObjectPipeline.hpp"
 #include "backend/VulkanContext.hpp"
+#include "utils/Logger.hpp"
 
 MaterialPipeline::MaterialPipeline(ObjectPipeline* objectPipeline) :
 	p_ObjectPipeline(objectPipeline) {
@@ -36,7 +37,9 @@ std::unique_ptr<MaterialPipeline> MaterialPipeline::Create(Material::Workflow wo
 		return std::make_unique<EnvironmentMaterialPipeline>(objectPipeline);
 	case Material::Workflow::Mirror:
 		return std::make_unique<MirrorMaterialPipeline>(objectPipeline);
+	case Material::Workflow::PBR:
+		return std::make_unique<PBRMaterialPipeline>(objectPipeline);
 	default:
-		return std::make_unique<LambertianMaterialPipeline>(objectPipeline);
+		NE_ERROR("Did not find a pipeline of this workflow.");
 	}
 }

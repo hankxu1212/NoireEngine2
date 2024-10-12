@@ -8,6 +8,8 @@
 
 class MaterialPipeline;
 
+#define NUM_WORKFLOWS 4
+
 class Material : public Resource
 {
 public:

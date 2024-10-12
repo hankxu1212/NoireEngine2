@@ -541,3 +541,7 @@ Node& operator<<(Node& node, const std::unordered_multimap<T, K>& map) {
 	node.SetType(NodeType::Object);
 	return node;
 }
+
+// glm operators
+const Node& operator>>(const Node& node, glm::vec3& v);
+Node& operator<<(Node& node, const glm::vec3& v);

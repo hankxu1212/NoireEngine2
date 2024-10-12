@@ -6,6 +6,7 @@
 #include "LambertianMaterial.hpp"
 #include "EnvironmentMaterial.hpp"
 #include "MirrorMaterial.hpp"
+#include "PBRMaterial.hpp"
 
 Material* Material::Deserialize(const Scene::TValueMap& obj)
 {
@@ -15,7 +16,7 @@ Material* Material::Deserialize(const Scene::TValueMap& obj)
 	
 	auto pbrIt = obj.find("pbr");
 	if (pbrIt != obj.end())
-		return Material::CreateDefault().get();
+		return PBRMaterial::Deserialize(obj);
 
 	auto mirrorIt = obj.find("mirror");
 	if (mirrorIt != obj.end())

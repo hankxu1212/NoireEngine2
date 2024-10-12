@@ -4,7 +4,8 @@
 #include "core/resources/Files.hpp"
 #include "renderer/scene/SceneManager.hpp"
 
-#include "imgui/imgui.h"
+#include "editor/ImGuiExtension.hpp"
+
 #include <limits>
 
 void LambertianMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout)
@@ -122,7 +123,7 @@ void LambertianMaterial::Inspect()
 {
 	ImGui::PushID("###MaterialName");
 	ImGui::Columns(2);
-	ImGui::Text("%s", "Material Name");
+	ImGui::Text("Material Name");
 	ImGui::NextColumn();
 	ImGui::Text(m_CreateInfo.name.c_str());
 	ImGui::Columns(1);
@@ -140,33 +141,11 @@ void LambertianMaterial::Inspect()
 	ImGui::ColorEdit3("Albedo", (float*)&m_CreateInfo.albedo);
 	ImGui::PopID();
 
-	ImGui::PushID("###AlbedoTexture");
-	ImGui::Columns(2);
-	ImGui::Text("Albedo Texture");
-	ImGui::NextColumn();
-	ImGui::Text(m_CreateInfo.texturePath.c_str());
-	ImGui::Columns(1);
-	ImGui::PopID();
+	static const char* albedoIDs[]{ "###ALBEDOPATH",  "###ALBEDOID" };
+	ImGuiExt::InspectTexture(albedoIDs, "Albedo Texture", m_CreateInfo.texturePath.c_str(), &m_AlbedoMapId);
 
-	ImGui::DragInt("Albedo Texture ID", &m_AlbedoMapId, 1, -1, 4096);
-
-	ImGui::PushID("###NormalStrength");
-	ImGui::Columns(2);
-	ImGui::Text("Normal Strength");
-	ImGui::NextColumn();
-	ImGui::DragFloat("###NormalStrength", &m_NormalStrength, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-	ImGui::Columns(1);
-	ImGui::PopID();
-
-	ImGui::PushID("###NormalTexture");
-	ImGui::Columns(2);
-	ImGui::Text("Normal Texture");
-	ImGui::NextColumn();
-	ImGui::Text(m_CreateInfo.normalPath.c_str());
-	ImGui::Columns(1);
-	ImGui::PopID();
-
-	ImGui::DragInt("Normal Texture ID", &m_NormalMapId, 1, -1, 4096);
+	static const char* normalIDs[]{ "###NORMALPATH",  "###NORMALID", "###NORMALSTRENGTH" };
+	ImGuiExt::InspectTexture(normalIDs, "Normal Texture", m_CreateInfo.normalPath.c_str(), &m_NormalMapId, &m_NormalStrength);
 
 	ImGui::PushID("###EnvironmentLightingIntensity");
 	ImGui::Columns(2);
@@ -206,7 +185,6 @@ const Node& operator>>(const Node& node, LambertianMaterial::CreateInfo& info)
 	node["albedoTex"].Get(info.texturePath);
 	node["normalTex"].Get(info.normalPath);
 	node["displacementTex"].Get(info.displacementPath);
-	node["rootPath"].Get(info.rootPath);
 	return node;
 }
 
@@ -217,20 +195,5 @@ Node& operator<<(Node& node, const LambertianMaterial::CreateInfo& info)
 	node["albedoTex"].Set(info.texturePath);
 	node["normalTex"].Set(info.normalPath);
 	node["displacementTex"].Set(info.displacementPath);
-	node["rootPath"].Set(info.rootPath);
-	return node;
-}
-
-const Node& operator>>(const Node& node, glm::vec3& v) {
-	node["x"].Get(v.x);
-	node["y"].Get(v.y);
-	node["z"].Get(v.z);
-	return node;
-}
-
-Node& operator<<(Node& node, const glm::vec3& v) {
-	node["x"].Set(v.x);
-	node["y"].Set(v.y);
-	node["z"].Set(v.z);
 	return node;
 }

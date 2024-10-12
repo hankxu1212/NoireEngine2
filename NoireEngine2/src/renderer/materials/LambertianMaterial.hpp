@@ -13,41 +13,8 @@ public:
 		std::string texturePath = NE_NULL_STR;
 		std::string normalPath = NE_NULL_STR;
 		std::string displacementPath = NE_NULL_STR;
-		std::string rootPath;
 
 		CreateInfo() = default;
-
-		CreateInfo(const std::string& name,
-			const glm::vec3& albedo,
-			const std::string& texturePath = NE_NULL_STR,
-			const std::string& normalPath = NE_NULL_STR,
-			const std::string& displacementPath = NE_NULL_STR,
-			const std::string& rootPath = "")
-			: name(name),
-			albedo(albedo),
-			texturePath(texturePath),
-			normalPath(normalPath),
-			displacementPath(displacementPath),
-			rootPath(rootPath)
-		{}
-
-		CreateInfo(const CreateInfo& other)
-			: name(other.name),
-			albedo(other.albedo),
-			texturePath(other.texturePath),
-			normalPath(other.normalPath),
-			displacementPath(other.displacementPath),
-			rootPath(other.rootPath)
-		{}
-
-		CreateInfo(CreateInfo&& other) noexcept
-			: name(std::move(other.name)),
-			albedo(std::move(other.albedo)),
-			texturePath(std::move(other.texturePath)),
-			normalPath(std::move(other.normalPath)),
-			displacementPath(std::move(other.displacementPath)),
-			rootPath(std::move(other.rootPath))
-		{}
 	};
 
 	struct MaterialPush

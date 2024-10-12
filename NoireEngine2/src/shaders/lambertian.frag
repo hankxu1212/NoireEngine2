@@ -31,6 +31,7 @@ vec3 n;
 mat3 TBN;
 
 void main() {
+	// normal mapping
 	if (material.normalTexId >= 0)
 	{
 		n = texture(textures[material.normalTexId], inTexCoord).rgb;
@@ -43,7 +44,7 @@ void main() {
 
 	vec3 t = normalize(inTangent);
 	vec3 b = normalize(inBitangent);
-	TBN = mat3(n, t, b);
+	TBN = mat3(t, b, n);
 
 	LIGHTING_VAR_NORMAL = n;
 	LIGHTING_VAR_TBN = TBN;

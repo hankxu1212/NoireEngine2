@@ -23,50 +23,6 @@ public:
 
 	static bool DrawVec3(glm::vec3& v, const char* name, const char** labels, float columnWidth = 100, float sensitivity = 0.1f);
 
-	/*
-	static bool DrawVec2(float& x, float& y, const char* name, const char** labels, float columnWidth = 100, float sensitivity = 0.1f) {
-		bool valueChange = false;
-		PushID(name);
-		{
-			Columns(2);
-			SetColumnWidth(0, columnWidth);
-			Text("%s", name);
-			NextColumn();
-
-
-			PushMultiItemsWidths(2, CalcItemWidth());
-			PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 20, 0 });
-
-			// x
-			{
-				Text(labels[0]);
-				SameLine();
-				valueChange |= DragFloat("##X", &x, sensitivity, 0.0f, 0.0f, "%.2f");
-				PopItemWidth();
-				SameLine();
-			}
-
-			// z
-			{
-				Text(labels[1]);
-				SameLine();
-				valueChange |= DragFloat("##Y", &y, sensitivity, 0.0f, 0.0f, "%.2f");
-				PopItemWidth();
-			}
-			PopStyleVar();
-			Columns(1);
-		}
-		PopID();
-
-		return valueChange;
-	}
-
-
-	static bool DrawVec2(glm::vec2& v, const char* name, const char** labels, float columnWidth = 100, float sensitivity = 0.1f) {
-		return DrawVec2(v.x, v.y, name, labels, columnWidth, sensitivity);
-	}
-	*/
-
 	static bool DrawQuaternion(glm::quat& q, const char* name, const char** labels, float columnWidth = 100, float sensitivity = 0.1f);
 
 	template<typename ...Args>
@@ -77,4 +33,6 @@ public:
 		DragFloat(args...);
 		Columns(1);
 	}
+
+	static void InspectTexture(const char** imguiIDs, const char* label, const char* path, int* id, float* multiplier = nullptr);
 };

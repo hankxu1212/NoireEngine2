@@ -238,8 +238,8 @@ void ObjectPipeline::Rebuild()
 
 void ObjectPipeline::CreatePipeline()
 {
-	m_MaterialPipelines.resize(3);
-	for (int i = 0; i < 3; i++) {
+	m_MaterialPipelines.resize(NUM_WORKFLOWS);
+	for (int i = 0; i < NUM_WORKFLOWS; i++) {
 		m_MaterialPipelines[i] = MaterialPipeline::Create(Material::Workflow(i), this);
 	}
 
@@ -249,7 +249,7 @@ void ObjectPipeline::CreatePipeline()
 
 	CreateDescriptors();
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < NUM_WORKFLOWS; i++) {
 		m_MaterialPipelines[i]->Create();
 	}
 
