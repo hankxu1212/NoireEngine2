@@ -49,7 +49,6 @@ void main() {
 	LIGHTING_VAR_NORMAL = n;
 	LIGHTING_VAR_TBN = TBN;
 	LIGHTING_VAR_TANGENT_FRAG_POS = TBN * inPosition;
-	LIGHTING_VAR_TANGENT_VIEW_POS = TBN * vec3(scene.cameraPos);
 
 	//hemisphere sky + directional sun:
 	vec3 lightsSum = DirectLighting();

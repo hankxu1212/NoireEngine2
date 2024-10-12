@@ -2,7 +2,6 @@
 vec3 LIGHTING_VAR_NORMAL;
 mat3 LIGHTING_VAR_TBN;
 vec3 LIGHTING_VAR_TANGENT_FRAG_POS;
-vec3 LIGHTING_VAR_TANGENT_VIEW_POS;
 
 vec3 DirLight(int i);
 vec3 PointLight(int i);
@@ -30,7 +29,6 @@ vec3 PointLight(int i)
 {
 	vec3 tangentLightPos = LIGHTING_VAR_TBN * vec3(CURR_LIGHT.position);
 	vec3 lightDir = normalize(tangentLightPos - LIGHTING_VAR_TANGENT_FRAG_POS);
-	// vec3 viewDir = normalize(LIGHTING_VAR_TANGENT_VIEW_POS - LIGHTING_VAR_TANGENT_FRAG_POS);
 
 	float D = distance(vec3(CURR_LIGHT.position), inPosition); // distance to light
     
@@ -46,7 +44,6 @@ vec3 SpotLight(int i)
 {
 	vec3 tangentLightPos = LIGHTING_VAR_TBN * vec3(CURR_LIGHT.position);
 	vec3 lightDir = normalize(tangentLightPos - LIGHTING_VAR_TANGENT_FRAG_POS);
-	// vec3 viewDir = normalize(LIGHTING_VAR_TANGENT_VIEW_POS - LIGHTING_VAR_TANGENT_FRAG_POS);
 
 	float D = distance(vec3(CURR_LIGHT.position), inPosition); // distance to light
     

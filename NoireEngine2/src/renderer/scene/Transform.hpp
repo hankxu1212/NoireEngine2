@@ -46,6 +46,7 @@ public:
 
     // the transformation matrix in worldspace, and local to world operations
     glm::mat4 World() const;
+    glm::mat4 WorldDirty();
     glm::vec3 WorldLocation() const;
     glm::vec3 WorldScale() const;
     glm::quat WorldRotation() const;

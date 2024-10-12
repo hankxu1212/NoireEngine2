@@ -19,7 +19,7 @@ public:
 	virtual void HandleEvent(Event& event) {}
 
 	virtual const char* getName() override { return "Behaviour"; }
-	virtual const char* getClassName() const { return "<None>"; }
+	virtual const char* getClassName() const { return NE_NULL_STR; }
 
 	bool enabled;
 };

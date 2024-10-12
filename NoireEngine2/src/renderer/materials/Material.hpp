@@ -27,7 +27,7 @@ public:
 	virtual void Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout) {}
 
 	virtual void Inspect() {}
-	virtual void Debug() {}
+	virtual void Debug() { Inspect(); }
 
 	static Material* Deserialize(const Scene::TValueMap& obj);
 

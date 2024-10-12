@@ -16,8 +16,8 @@ void PBRMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipe
 		.normalTexId = m_NormalMapId,
 		.roughnessTexId = m_RoughnessMapId,
 		.metallicTexId = m_MetallicMapId,
-		.roughness = m_Roughness,
-		.metallic = m_Metallic,
+		.roughness = m_CreateInfo.roughness,
+		.metallic = m_CreateInfo.metallic,
 		.normalStrength = m_NormalStrength,
 		.environmentLightIntensity = m_EnvironmentLightInfluence
 	};
@@ -68,6 +68,28 @@ Material* PBRMaterial::Deserialize(const Scene::TValueMap& obj)
 					NE_INFO("Found displacement map on this entity:{}", createInfo.displacementPath);
 				}
 			}
+		}
+
+		// metallic
+		{
+			const auto& metallicVal = attributesMap.at("metalness");
+			if (const auto& metallicTex = metallicVal.as_texPath())
+			{
+				createInfo.metallicPath = metallicTex.value();
+			}
+			else
+				createInfo.metallic = metallicVal.as_float();
+		}
+
+		// roughness
+		{
+			const auto& roughnessVal = attributesMap.at("roughness");
+			if (const auto& roughTex = roughnessVal.as_texPath())
+			{
+				createInfo.roughnessPath = roughTex.value();
+			}
+			else
+				createInfo.roughness = roughnessVal.as_float();
 		}
 
 		return Create(createInfo).get();
@@ -138,7 +160,7 @@ void PBRMaterial::Inspect()
 	ImGui::Columns(2);
 	ImGui::Text("Workflow");
 	ImGui::NextColumn();
-	ImGui::Text("Lambertian");
+	ImGui::Text("PBR");
 	ImGui::Columns(1);
 	ImGui::PopID();
 
@@ -156,10 +178,10 @@ void PBRMaterial::Inspect()
 	ImGuiExt::InspectTexture(displaceIDs, "Displacement Texture", m_CreateInfo.displacementPath.c_str(), &m_DisplacementMapId);
 
 	static const char* roughIDs[]{ "###ROUGHPATH",  "###ROUGHID", "###ROUGHNESS" };
-	ImGuiExt::InspectTexture(roughIDs, "Roughness Texture", m_CreateInfo.roughnessPath.c_str(), &m_RoughnessMapId, &m_Roughness);
+	ImGuiExt::InspectTexture(roughIDs, "Roughness Texture", m_CreateInfo.roughnessPath.c_str(), &m_RoughnessMapId, &m_CreateInfo.roughness, 1);
 
 	static const char* metallicIDs[]{ "###METALLICPATH",  "###METALLICID", "###METALLIC" };
-	ImGuiExt::InspectTexture(metallicIDs, "Metallic Texture", m_CreateInfo.metallicPath.c_str(), &m_MetallicMapId, &m_Metallic);
+	ImGuiExt::InspectTexture(metallicIDs, "Metallic Texture", m_CreateInfo.metallicPath.c_str(), &m_MetallicMapId, &m_CreateInfo.metallic, 1);
 
 	ImGui::SeparatorText("Environmental Lighting");
 	ImGui::PushID("###EnvironmentLightingIntensity");
@@ -179,9 +201,7 @@ const Node& operator>>(const Node& node, PBRMaterial& material)
 	node["normalTexId"].Get(material.m_NormalMapId);
 	node["normalStrength"].Get(material.m_NormalStrength);
 	node["displacementTexId"].Get(material.m_DisplacementMapId);
-	node["roughnessTexId"].Get(material.m_Roughness);
 	node["roughnessTexId"].Get(material.m_RoughnessMapId);
-	node["metallicTexId"].Get(material.m_Metallic);
 	node["metallicTexId"].Get(material.m_MetallicMapId);
 	node["environmentInfluence"].Get(material.m_EnvironmentLightInfluence);
 	return node;
@@ -195,9 +215,7 @@ Node& operator<<(Node& node, const PBRMaterial& material)
 	node["normalTexId"].Set(material.m_NormalMapId);
 	node["normalStrength"].Set(material.m_NormalStrength);
 	node["displacementTexId"].Set(material.m_DisplacementMapId);
-	node["roughnessTexId"].Set(material.m_Roughness);
 	node["roughnessTexId"].Set(material.m_RoughnessMapId);
-	node["metallicTexId"].Set(material.m_Metallic);
 	node["metallicTexId"].Set(material.m_MetallicMapId);
 	node["environmentInfluence"].Set(material.m_EnvironmentLightInfluence);
 	return node;
@@ -212,6 +230,8 @@ const Node& operator>>(const Node& node, PBRMaterial::CreateInfo& info)
 	node["displacementTex"].Get(info.displacementPath);
 	node["roughnessTex"].Get(info.roughnessPath);
 	node["metallicTex"].Get(info.metallicPath);
+	node["metallic"].Get(info.metallic);
+	node["roughness"].Get(info.roughness);
 	return node;
 }
 
@@ -224,5 +244,7 @@ Node& operator<<(Node& node, const PBRMaterial::CreateInfo& info)
 	node["displacementTex"].Set(info.displacementPath);
 	node["roughnessTex"].Set(info.roughnessPath);
 	node["metallicTex"].Set(info.metallicPath);
+	node["metallic"].Set(info.metallic);
+	node["roughness"].Set(info.roughness);
 	return node;
 }

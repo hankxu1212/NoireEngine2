@@ -1048,6 +1048,7 @@
     <None Include="src\shaders\glsl\lighting.glsl" />
     <None Include="src\shaders\pbr.vert" />
     <None Include="src\shaders\pbr.frag" />
+    <None Include="src\shaders\glsl\pbr.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

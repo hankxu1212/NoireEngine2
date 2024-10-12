@@ -23,6 +23,10 @@ public:
 
 	static bool DrawVec3(glm::vec3& v, const char* name, const char** labels, float columnWidth = 100, float sensitivity = 0.1f);
 
+	static bool DrawVec2(float& x, float& y, const char* name, const char** labels, float columnWidth = 100, float sensitivity = 0.1f);
+
+	static bool DrawVec2(glm::vec2& v, const char* name, const char** labels, float columnWidth = 100, float sensitivity = 0.1f);
+
 	static bool DrawQuaternion(glm::quat& q, const char* name, const char** labels, float columnWidth = 100, float sensitivity = 0.1f);
 
 	template<typename ...Args>
@@ -34,5 +38,5 @@ public:
 		Columns(1);
 	}
 
-	static void InspectTexture(const char** imguiIDs, const char* label, const char* path, int* id, float* multiplier = nullptr);
+	static void InspectTexture(const char** imguiIDs, const char* label, const char* path, int* id, float* multiplier = nullptr, float max=FLT_MAX);
 };

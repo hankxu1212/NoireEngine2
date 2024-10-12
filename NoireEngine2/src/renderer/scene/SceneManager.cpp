@@ -21,9 +21,12 @@ void SceneManager::LoadDefault()
 	if (Application::Get().GetSpecification().InitialScene)
 		scene->Load(Application::GetSpecification().InitialScene.value());
 	else
-		//scene->Load("../scenes/SphereScene/SphereScene.s72");
-		scene->Load("../scenes/examples/Materials.s72");
+		scene->Load("../scenes/SphereScene/SphereScene.s72");
+		//scene->Load("../scenes/examples/Materials.s72");
 }
+
+//"displacementMap": { "src": "Dirt.displacement.png" },
+//"normalMap": { "src": "Dirt.normal.png" },
 
 void SceneManager::Update()
 {

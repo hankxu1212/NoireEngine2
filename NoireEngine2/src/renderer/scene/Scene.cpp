@@ -287,8 +287,16 @@ static void MakeEnvironment(Scene* scene, const Scene::TSceneMap& sceneMap)
 			continue;
 		}
 
-		const auto& name = environmentObjOpt.value().at("radiance").as_texPath().value();
-		scene->AddSkybox(name);
+		const auto& radiance = environmentObjOpt.value().at("radiance");
+		const auto& name = radiance.as_texPath().value();
+
+		Scene::SkyboxType type = Scene::SkyboxType::HDR;
+		if (auto& radianceObj = radiance.as_object()){
+			if (radianceObj.value().at("format").as_string().value() == "rgb")
+				type = Scene::SkyboxType::RGB;
+		}
+
+		scene->AddSkybox(name, type);
 	}
 }
 
@@ -539,6 +547,6 @@ void Scene::UpdateSceneInfo()
 	}
 	m_SceneInfo.numLights = i;
 
-	const glm::vec3& pos = GetRenderCam()->GetTransform()->position();
+	const glm::vec3& pos = GetRenderCam()->GetTransform()->WorldLocation();
 	m_SceneInfo.cameraPosition = {pos.x, pos.y, pos.z, 0};
 }

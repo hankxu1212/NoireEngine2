@@ -1,3 +1,6 @@
+#ifndef _INCLUDE_UTILS
+#define _INCLUDE_UTILS
+
 #define saturate(x) clamp(x, 0.0, 1.0)
 
 vec4 gamma_map(vec3 color, float gamma)
@@ -34,3 +37,5 @@ void ComputeTangentBitangent(vec3 normal, out vec3 tangent, out vec3 bitangent)
     tangent = normalize(cross(normal, reference));
     bitangent = normalize(cross(normal, tangent));
 }
+
+#endif

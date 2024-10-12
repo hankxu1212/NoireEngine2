@@ -99,6 +99,16 @@ glm::mat4 Transform::World() const {
     }
 }
 
+glm::mat4 Transform::WorldDirty()
+{
+    if (m_Parent) {
+        return m_Parent->WorldDirty() * LocalDirty();
+    }
+    else {
+        return LocalDirty();
+    }
+}
+
 glm::vec3 Transform::WorldLocation() const
 {
     if (m_Parent) {

@@ -1,13 +1,12 @@
 [
 	"s72-v2",
 	{
-
 		"type": "LIGHT",
 		"name": "Light",
 		"tint": [ 1, 1, 1 ],
-		"sphere": {
-			"radius": 0.1,
-			"power": 1000
+		"sun": {
+			"angle": 0.00918,
+			"strength": 10
 		}
 	},
 	{
@@ -38,8 +37,250 @@
 		"camera": "Camera"
 	},
 	{
+		"type": "NODE",
+		"name": "Sphere0",
+		"translation": [ 0, 0, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh0"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere1",
+		"translation": [ 1, 0, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh1"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere2",
+		"translation": [ 2, 0, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh2"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere3",
+		"translation": [ 3, 0, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh3"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere4",
+		"translation": [ 4, 0, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh4"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere5",
+		"translation": [ 0, 1, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh5"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere6",
+		"translation": [ 1, 1, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh6"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere7",
+		"translation": [ 2, 1, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh7"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere8",
+		"translation": [ 3, 1, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh8"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere9",
+		"translation": [ 4, 1, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh9"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere10",
+		"translation": [ 0, 2, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh10"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere11",
+		"translation": [ 1, 2, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh11"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere12",
+		"translation": [ 2, 2, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh12"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere13",
+		"translation": [ 3, 2, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh13"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere14",
+		"translation": [ 4, 2, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh14"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere15",
+		"translation": [ 0, 3, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh15"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere16",
+		"translation": [ 1, 3, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh16"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere17",
+		"translation": [ 2, 3, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh17"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere18",
+		"translation": [ 3, 3, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh18"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere19",
+		"translation": [ 4, 3, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh19"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere20",
+		"translation": [ 0, 4, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh20"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere21",
+		"translation": [ 1, 4, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh21"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere22",
+		"translation": [ 2, 4, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh22"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere23",
+		"translation": [ 3, 4, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh23"
+	},
+	{
+		"type": "NODE",
+		"name": "Sphere24",
+		"translation": [ 4, 4, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 0.3, 0.3, 0.3 ],
+		"mesh": "Sphere_mesh24"
+	},
+	{
+		"type": "SCENE",
+		"name": "F:\\gameDev\\Engines\\NoireEngine2\\NoireEngine2\\src\\scenes\\SphereScene\\SphereScene.blend",
+		"roots": [
+			"Light",
+			"Camera",
+			"Sphere0",
+			"Sphere1",
+			"Sphere2",
+			"Sphere3",
+			"Sphere4",
+			"Sphere5",
+			"Sphere6",
+			"Sphere7",
+			"Sphere8",
+			"Sphere9",
+			"Sphere10",
+			"Sphere11",
+			"Sphere12",
+			"Sphere13",
+			"Sphere14",
+			"Sphere15",
+			"Sphere16",
+			"Sphere17",
+			"Sphere18",
+			"Sphere19",
+			"Sphere20",
+			"Sphere21",
+			"Sphere22",
+			"Sphere23",
+			"Sphere24"
+		]
+	},
+	{
+		"type": "ENVIRONMENT",
+		"name": "Skybox",
+		"radiance": {
+			"src": "Skybox.png",
+			"type": "cube",
+			"format": "rgb"
+		}
+	},
+	{
 		"type": "MESH",
-		"name": "Sphere",
+		"name": "Sphere_mesh0",
 		"topology": "TRIANGLE_LIST",
 		"count": 2880,
 		"attributes": {
@@ -68,37 +309,1056 @@
 				"format": "R32G32_SFLOAT"
 			}
 		},
-		"material": "lambertian:Test"
+		"material": "pbr:0"
 	},
 	{
-		"type": "NODE",
-		"name": "Sphere",
-		"translation": [ 0, 0, 0 ],
-		"rotation": [ 0, 0, 0, 1 ],
-		"scale": [ 1.36908, 1.36908, 1.36908 ],
-		"mesh": "Sphere"
+		"type": "MESH",
+		"name": "Sphere_mesh1",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:1"
 	},
 	{
-		"type": "SCENE",
-		"name": "F:\\gameDev\\Engines\\NoireEngine2\\NoireEngine2\\src\\scenes\\SphereScene\\SphereScene.blend",
-		"roots": [ "Light", "Camera", "Sphere" ]
+		"type": "MESH",
+		"name": "Sphere_mesh2",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:2"
 	},
 	{
-		"type": "ENVIRONMENT",
-		"name": "ox_bridge_morning.png",
-		"radiance": {
-			"src": "ox_bridge_morning.png",
-			"type": "cube",
-			"format": "rgbe"
+		"type": "MESH",
+		"name": "Sphere_mesh3",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:3"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh4",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:4"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh5",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:5"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh6",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:6"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh7",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:7"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh8",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:8"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh9",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:9"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh10",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:10"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh11",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:11"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh12",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:12"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh13",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:13"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh14",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:14"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh15",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:15"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh16",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:16"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh17",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:17"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh18",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:18"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh19",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:19"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh20",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:20"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh21",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:21"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh22",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:22"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh23",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:23"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh24",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:24"
+	},
+	{
+		"type": "MESH",
+		"name": "Sphere_mesh25",
+		"topology": "TRIANGLE_LIST",
+		"count": 2880,
+		"attributes": {
+			"POSITION": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "SphereScene.Sphere.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:25"
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:0",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.0,
+			"roughness": 0.0
 		}
 	},
 	{
 		"type": "MATERIAL",
-		"name": "lambertian:Test",
-		"normalMap": { "src": "Dirt.normal.png" },
-		"displacementMap": { "src": "Dirt.displacement.png" },
-		"lambertian": {
-			"albedo": { "src": "Dirt.albedo.png" }
+		"name": "pbr:1",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.0,
+			"roughness": 0.2
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:2",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.0,
+			"roughness": 0.4
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:3",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.0,
+			"roughness": 0.6
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:4",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.0,
+			"roughness": 0.8
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:5",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.2,
+			"roughness": 0.0
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:6",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.2,
+			"roughness": 0.2
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:7",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.2,
+			"roughness": 0.4
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:8",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.2,
+			"roughness": 0.6
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:9",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.2,
+			"roughness": 0.8
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:10",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.4,
+			"roughness": 0.0
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:11",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.4,
+			"roughness": 0.2
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:12",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.4,
+			"roughness": 0.4
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:13",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.4,
+			"roughness": 0.6
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:14",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.4,
+			"roughness": 0.8
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:15",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.6,
+			"roughness": 0.0
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:16",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.6,
+			"roughness": 0.2
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:17",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.6,
+			"roughness": 0.4
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:18",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.6,
+			"roughness": 0.6
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:19",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.6,
+			"roughness": 0.8
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:20",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.8,
+			"roughness": 0.0
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:21",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.8,
+			"roughness": 0.2
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:22",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.8,
+			"roughness": 0.4
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:23",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.8,
+			"roughness": 0.6
+		}
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:24",
+		"pbr": {
+			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"metalness": 0.8,
+			"roughness": 0.8
 		}
 	}
 ]
