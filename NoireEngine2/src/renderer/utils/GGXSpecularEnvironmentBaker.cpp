@@ -9,6 +9,7 @@
 #include "math/color/Color.hpp"
 
 #include "glm/gtc/constants.hpp"
+#include <format>
 
 GGXSpecularEnvironmentBaker::GGXSpecularEnvironmentBaker(IBLUtilsApplicationSpecification* specs_) :
     specs(specs_)
@@ -17,14 +18,42 @@ GGXSpecularEnvironmentBaker::GGXSpecularEnvironmentBaker(IBLUtilsApplicationSpec
 
 void GGXSpecularEnvironmentBaker::Run()
 {
-    CreateComputePipeline();
-    Prepare();
-    ExecuteComputeShader();
-    SaveAsImage();
+    Setup();
 
+    glm::uvec2 dim = { inputImg->getExtent().width, inputImg->getExtent().width };
+
+    for (int i = 0; i < GGX_MIP_LEVELS; ++i) {
+        miplevel = i;
+
+        CreateComputePipeline(dim);
+        Prepare();
+        ExecuteComputeShader();
+        SaveAsImage(dim);
+        Cleanup();
+
+        dim /= 2;
+    }
     inputImg.reset();
-    storageImg.reset();
     m_DescriptorAllocator.Cleanup();
+}
+
+void GGXSpecularEnvironmentBaker::Setup()
+{
+    const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+
+    // Check if requested image format supports image storage operations required for storing pixel from the compute shader
+    VkFormatProperties formatProperties;
+    vkGetPhysicalDeviceFormatProperties(*VulkanContext::Get()->getPhysicalDevice(), format, &formatProperties);
+    assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT);
+
+    // make the input image
+    inputImg = std::make_shared<ImageCube>(Files::Path(specs->inFile), format,
+        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT, false);
+}
+
+void GGXSpecularEnvironmentBaker::Cleanup()
+{
+    storageImg.reset();
 
     if (m_PipelineLayout != VK_NULL_HANDLE) {
         vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_PipelineLayout, nullptr);
@@ -39,22 +68,14 @@ void GGXSpecularEnvironmentBaker::Run()
     vkDestroyFence(VulkanContext::GetDevice(), fence, nullptr);
 }
 
-void GGXSpecularEnvironmentBaker::CreateComputePipeline()
+void GGXSpecularEnvironmentBaker::CreateComputePipeline(glm::uvec2 dim)
 {
     const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
 
-    // Check if requested image format supports image storage operations required for storing pixel from the compute shader
-    VkFormatProperties formatProperties;
-    vkGetPhysicalDeviceFormatProperties(*VulkanContext::Get()->getPhysicalDevice(), format, &formatProperties);
-    assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT);
-
-    // make the input image
-    inputImg = std::make_shared<ImageCube>(Files::Path(specs->inFile), format,
-        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT, false);
-    VkDescriptorImageInfo inputTex = inputImg->GetDescriptorInfo();
-
-    storageImg = std::make_shared<ImageCube>(glm::vec2(specs->outdim, specs->outdim),
+    storageImg = std::make_shared<ImageCube>(dim,
         format, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT, false);
+
+    VkDescriptorImageInfo inputTex = inputImg->GetDescriptorInfo();
     VkDescriptorImageInfo storageTex = storageImg->GetDescriptorInfo();
 
     DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
@@ -79,7 +100,7 @@ void GGXSpecularEnvironmentBaker::Prepare()
 
     VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
 
-    std::string shaderName = "../spv/shaders/compute/ggx_hdr.comp.spv";
+    std::string shaderName = std::format("../spv/shaders/compute/ggx_hdr_{}.comp.spv", miplevel);
     NE_INFO("Executing compute shader:{}", shaderName);
     VulkanShader vertModule(shaderName, VulkanShader::ShaderStage::Compute);
 
@@ -114,9 +135,9 @@ void GGXSpecularEnvironmentBaker::ExecuteComputeShader()
     vkWaitForFences(VulkanContext::GetDevice(), 1, &fence, VK_TRUE, UINT64_MAX);
 }
 
-void GGXSpecularEnvironmentBaker::SaveAsImage()
+void GGXSpecularEnvironmentBaker::SaveAsImage(glm::uvec2 dim)
 {
-    std::string out = specs->outFile.substr(0, specs->outFile.length() - 4) + ".ggx.png";
-    storageImg->SaveAsPNG(out, { specs->outdim, specs->outdim * 6 });
+    std::string out = specs->outFile.substr(0, specs->outFile.length() - 4) + "." + std::to_string(miplevel) + ".png";
+    storageImg->SaveAsPNG(out, { dim.x, dim.y * 6 });
     NE_INFO("Written to:{}", Files::Path(out, false));
 }

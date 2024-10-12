@@ -14,13 +14,17 @@ public:
 
 	void Run();
 
-	void CreateComputePipeline();
+	void Setup();
+
+	void Cleanup();
+
+	void CreateComputePipeline(glm::uvec2 dim);
 
 	void Prepare();
 
 	void ExecuteComputeShader();
 
-	void SaveAsImage();
+	void SaveAsImage(glm::uvec2 dim);
 
 private:
 	VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
@@ -37,5 +41,7 @@ private:
 	VkFence fence;
 
 	IBLUtilsApplicationSpecification* specs;
+
+	int miplevel = 0;
 };
 

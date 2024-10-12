@@ -1,4 +1,5 @@
-#version 450
+#ifndef _INCLUDE_GGX_HDR
+#define _INCLUDE_GGX_HDR
 
 layout (local_size_x = 4, local_size_y = 4, local_size_z=1) in;
 
@@ -18,7 +19,7 @@ void main()
     // normal direction
     ivec3 inSize = ivec3(imageSize(inputImage), 6);
     ivec3 outSize = ivec3(imageSize(resultImage), 6);
-    float roughness = 1 * 0.2f;
+    float roughness = MIP_LEVEL * 0.2f;
     vec3 T,B;
 
     vec2 uv_in = gl_GlobalInvocationID.xy / vec2(outSize.xy);
@@ -51,3 +52,5 @@ void main()
 
     imageStore(resultImage, ivec3(gl_GlobalInvocationID.xyz), rgb_out);
 }
+
+#endif

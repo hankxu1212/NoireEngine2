@@ -1,0 +1,4 @@
+#version 450
+
+#define MIP_LEVEL 3
+#include "ggx_hdr.comp"

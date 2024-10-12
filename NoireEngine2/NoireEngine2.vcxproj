@@ -434,6 +434,12 @@
     <None Include="src\scenes\s72\viewer\s72-viewer.html" />
     <None Include="src\shaders\compute\ggx_brdf.comp" />
     <None Include="src\shaders\compute\ggx_hdr.comp" />
+    <None Include="src\shaders\compute\ggx_hdr_0.comp" />
+    <None Include="src\shaders\compute\ggx_hdr_1.comp" />
+    <None Include="src\shaders\compute\ggx_hdr_2.comp" />
+    <None Include="src\shaders\compute\ggx_hdr_3.comp" />
+    <None Include="src\shaders\compute\ggx_hdr_4.comp" />
+    <None Include="src\shaders\compute\ggx_hdr_5.comp" />
     <None Include="src\shaders\compute\lambertian_png.comp" />
     <None Include="src\shaders\environment.frag" />
     <None Include="src\shaders\environment.vert" />
