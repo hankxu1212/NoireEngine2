@@ -7,6 +7,7 @@
 #include "backend/buffers/Buffer.hpp"
 #include "renderer/materials/MaterialLibrary.hpp"
 #include "utils/Logger.hpp"
+#include "core/resources/Files.hpp"
 
 std::shared_ptr<ImageCube> ImageCube::Create(const Node& node) {
 	if (auto resource = Resources::Get()->Find<ImageCube>(node))
@@ -74,6 +75,24 @@ void ImageCube::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t b
 	CopyBufferToImage(bufferStaging.getBuffer(), image, extent, layerCount, baseArrayLayer);
 
 	bufferStaging.Destroy();
+}
+
+void ImageCube::SaveAsPNG(const std::string& out, const glm::uvec2 size)
+{
+	std::vector<uint8_t> allBytes;
+	for (int i = 0; i < 6; i++)
+	{
+		auto bitmap = getBitmap(0, i, 4);
+
+		size_t currOffset = allBytes.size();
+		allBytes.resize(allBytes.size() + bitmap->GetLength());
+		memcpy(allBytes.data() + currOffset, bitmap->data.get(), bitmap->GetLength());
+	}
+	if (allBytes.size() == 0) {
+		NE_WARN("Written 0 bytes");
+		return;
+	}
+	Bitmap::Write(Files::Path(out, false), allBytes.data(), size, 4);
 }
 
 const Node& operator>>(const Node& node, ImageCube& image) {

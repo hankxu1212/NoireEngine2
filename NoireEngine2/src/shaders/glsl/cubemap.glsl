@@ -20,7 +20,7 @@ vec3 CubeUVtoCartesian(int index, vec2 uv)
             xyz = vec3(uv.x, -uv.y, 1.0);   // POSITIVE Z
             break;
         case 5:
-            xyz = vec3(uv.x, -uv.y, -1.0);  // NEGATIVE Z
+            xyz = vec3(-uv.x, -uv.y, -1.0);  // NEGATIVE Z
             break;
     }
     

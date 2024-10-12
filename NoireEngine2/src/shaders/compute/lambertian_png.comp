@@ -41,6 +41,6 @@ void main()
         }
     }
 
-    irradiance /= samples;
+    irradiance /= vec3(samples);
     imageStore(resultImage, ivec3(gl_GlobalInvocationID.xyz), vec4(irradiance, 1));
 }

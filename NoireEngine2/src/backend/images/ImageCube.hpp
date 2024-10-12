@@ -28,7 +28,10 @@ public:
 	*/
 	void SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t baseArrayLayer);
 
+	void SaveAsPNG(const std::string& out, const glm::uvec2 size);
+
 	std::type_index getTypeIndex() const override { return typeid(ImageCube); }
+
 
 	std::filesystem::path filename;
 	bool anisotropic;

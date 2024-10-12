@@ -28,3 +28,11 @@ vec3 FresnelSchlick(vec3 F0, float cosTheta)
 {
 	return F0 + (vec3(1.0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
+
+// Schlick-GGX approximation of geometric attenuation function using Smith's method (IBL version).
+float GeometrySmith_IBL(float cosLi, float cosLo, float roughness)
+{
+	float r = roughness;
+	float k = (r * r) / 2.0; // Epic suggests using this roughness remapping for IBL lighting.
+	return SchlickG1(cosLi, k) * SchlickG1(cosLo, k);
+}

@@ -152,11 +152,14 @@ const scripting_objs = [
 
 const cube_application = [
 	maek.CPP('renderer/utils/IBLEntrypoint.cpp'),
+	maek.CPP('renderer/utils/LambertianEnvironmentBaker.cpp'),
+	maek.CPP('renderer/utils/GGXSpecularEnvironmentBaker.cpp'),
 ]
 
 const compute_shaders = [
 	maek.GLSLC("shaders/compute/lambertian_hdr.comp"),
 	maek.GLSLC("shaders/compute/lambertian_png.comp"),
+	maek.GLSLC("shaders/compute/ggx_hdr.comp"),
 ];
 cube_application.push(maek.CPP('renderer/utils/IBLUtilsApplication.cpp', undefined, { depends: [...compute_shaders] }));
 

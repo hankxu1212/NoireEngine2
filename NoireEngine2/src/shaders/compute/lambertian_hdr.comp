@@ -42,7 +42,7 @@ void main()
         }
     }
 
-    irradiance /= samples;
+    irradiance /= vec3(samples);
     vec4 rgb_out = float_f_to_rgbe(irradiance);
     imageStore(resultImage, ivec3(gl_GlobalInvocationID.xyz), rgb_out);
 }

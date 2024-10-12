@@ -64,7 +64,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NMakeBuildCommandLine>node src/Maekfile.js</NMakeBuildCommandLine>
-    <NMakeOutput>src/bin/main.exe</NMakeOutput>
+    <NMakeOutput>src/bin/cube.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src;vendor/glm;vendor;vendor/imgui;vendor/imgui/backends;vendor/imguizmo/</NMakeIncludeSearchPath>
     <AdditionalOptions>/std:c++20</AdditionalOptions>
@@ -89,6 +89,8 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\utils\GGXSpecularEnvironmentBaker.cpp" />
+    <ClCompile Include="src\renderer\utils\LambertianEnvironmentBaker.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.cpp" />
     <ClCompile Include="src\core\layers\LayerStack.cpp" />
     <ClCompile Include="src\renderer\utils\IBLUtilsApplication.cpp" />
@@ -248,10 +250,12 @@
     <ClCompile Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\utils\GGXSpecularEnvironmentBaker.hpp" />
+    <ClInclude Include="src\renderer\utils\LambertianEnvironmentBaker.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.hpp" />
     <ClInclude Include="src\core\layers\Layer.hpp" />
     <ClInclude Include="src\core\layers\LayerStack.hpp" />
-    <ClInclude Include="src\renderer\utils\IBLUtilsApplication.h" />
+    <ClInclude Include="src\renderer\utils\IBLUtilsApplication.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\EnvironmentMaterialPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipelines.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\MirrorMaterialPipeline.hpp" />
@@ -428,6 +432,8 @@
     <None Include="src\core\resources\nodes\NodeView.inl" />
     <None Include="src\Maekfile.js" />
     <None Include="src\scenes\s72\viewer\s72-viewer.html" />
+    <None Include="src\shaders\compute\ggx_brdf.comp" />
+    <None Include="src\shaders\compute\ggx_hdr.comp" />
     <None Include="src\shaders\compute\lambertian_png.comp" />
     <None Include="src\shaders\environment.frag" />
     <None Include="src\shaders\environment.vert" />

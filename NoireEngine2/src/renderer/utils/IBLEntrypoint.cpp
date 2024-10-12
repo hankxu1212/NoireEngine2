@@ -3,7 +3,7 @@
 #include <thread>
 
 #include "Application.hpp"
-#include "IBLUtilsApplication.h"
+#include "IBLUtilsApplication.hpp"
 
 [[maybe_unused]] static void Parse(ApplicationCommandLineArgs args, IBLUtilsApplicationSpecification& spec)
 {
@@ -35,11 +35,11 @@
 static IBLUtilsApplication* CreateApplication(ApplicationCommandLineArgs args)
 {
     IBLUtilsApplicationSpecification spec;
-    //spec.inFile = "../scenes/examples/ox_bridge_morning.png";
-    //spec.isGGX = false;
-    //spec.outFile = "../scenes/examples/AA.png";
+    spec.inFile = "../scenes/examples/ox_bridge_morning.png";
+    spec.isGGX = true;
+    spec.outFile = "../scenes/examples/test.png";
 
-    Parse(args, spec);
+    //Parse(args, spec);
 
     return new IBLUtilsApplication(spec);
 }

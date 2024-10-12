@@ -486,6 +486,12 @@
     <ClCompile Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\utils\LambertianEnvironmentBaker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\utils\GGXSpecularEnvironmentBaker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h">
@@ -995,7 +1001,7 @@
     <ClInclude Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\utils\IBLUtilsApplication.h">
+    <ClInclude Include="src\renderer\utils\IBLUtilsApplication.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\core\layers\Layer.hpp">
@@ -1005,6 +1011,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\utils\LambertianEnvironmentBaker.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\utils\GGXSpecularEnvironmentBaker.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1049,6 +1061,8 @@
     <None Include="src\shaders\pbr.vert" />
     <None Include="src\shaders\pbr.frag" />
     <None Include="src\shaders\glsl\pbr.glsl" />
+    <None Include="src\shaders\compute\ggx_hdr.comp" />
+    <None Include="src\shaders\compute\ggx_brdf.comp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

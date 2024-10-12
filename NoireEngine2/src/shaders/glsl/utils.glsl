@@ -31,11 +31,21 @@ vec4 gamma_map(vec3 color, float gamma)
 #define SQRT_THREE      1.73205080757        // Square root of 3
 #define EPSILON         1e-5                 // Small epsilon value for floating point comparisons
 
-void ComputeTangentBitangent(vec3 normal, out vec3 tangent, out vec3 bitangent)
+// Compute orthonormal basis for converting from tanget/shading space to world space.
+void ComputeTangentBitangent(const vec3 N, out vec3 T, out vec3 B)
 {
-    vec3 reference = (abs(normal.y) < 0.999) ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-    tangent = normalize(cross(normal, reference));
-    bitangent = normalize(cross(normal, tangent));
+	// Branchless select non-degenerate T.
+	T = cross(N, vec3(0.0, 1.0, 0.0));
+	T = mix(cross(N, vec3(1.0, 0.0, 0.0)), T, step(EPSILON, dot(T, T)));
+
+	T = normalize(T);
+	B = normalize(cross(N, T));
+}
+
+// Convert point from tangent/shading space to world space.
+vec3 TangentToWorld(const vec3 v, const vec3 T, const vec3 N, const vec3 B)
+{
+	return T * v.x + B * v.y + N * v.z;
 }
 
 #endif
