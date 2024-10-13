@@ -29,6 +29,12 @@ vec3 FresnelSchlick(vec3 F0, float cosTheta)
 	return F0 + (vec3(1.0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
+// variation of FresnelSchlick that takes into account roughness
+vec3 FresnelSchlickRoughness(vec3 F0, float cosTheta, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
 // Schlick-GGX approximation of geometric attenuation function using Smith's method (IBL version).
 float GeometrySmith_IBL(float cosLi, float cosLo, float roughness)
 {

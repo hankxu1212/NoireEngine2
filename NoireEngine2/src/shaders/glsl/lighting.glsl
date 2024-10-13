@@ -1,8 +1,4 @@
 // you need to define these functions to use a forward lighting pass
-vec3 LIGHTING_VAR_NORMAL;
-mat3 LIGHTING_VAR_TBN;
-vec3 LIGHTING_VAR_TANGENT_FRAG_POS;
-
 vec3 DirLight(int i);
 vec3 PointLight(int i);
 vec3 SpotLight(int i);
@@ -22,17 +18,16 @@ vec3 DirectLighting()
 
 vec3 DirLight(int i)
 {
-	return max(0.0, dot(LIGHTING_VAR_NORMAL,vec3(CURR_LIGHT.direction))) * CURR_LIGHT.intensity * vec3(CURR_LIGHT.color);
+	return max(0.0, dot(n,vec3(CURR_LIGHT.direction))) * CURR_LIGHT.intensity * vec3(CURR_LIGHT.color);
 }
 
 vec3 PointLight(int i)
 {
-	vec3 tangentLightPos = LIGHTING_VAR_TBN * vec3(CURR_LIGHT.position);
-	vec3 lightDir = normalize(tangentLightPos - LIGHTING_VAR_TANGENT_FRAG_POS);
+	vec3 lightDir = normalize(vec3(CURR_LIGHT.position) - inPosition);
 
 	float D = distance(vec3(CURR_LIGHT.position), inPosition); // distance to light
     
-	float cosTheta = saturate(dot(LIGHTING_VAR_NORMAL, lightDir));
+	float cosTheta = saturate(dot(n, lightDir));
 
 	float saturated = saturate(1 - pow(D / CURR_LIGHT.limit, 4));
 	float attenuation = saturated * saturated / (D * D + 1);
@@ -42,12 +37,11 @@ vec3 PointLight(int i)
 
 vec3 SpotLight(int i)
 {
-	vec3 tangentLightPos = LIGHTING_VAR_TBN * vec3(CURR_LIGHT.position);
-	vec3 lightDir = normalize(tangentLightPos - LIGHTING_VAR_TANGENT_FRAG_POS);
+	vec3 lightDir = normalize(vec3(CURR_LIGHT.position) - inPosition);
 
 	float D = distance(vec3(CURR_LIGHT.position), inPosition); // distance to light
     
-	float cosTheta = saturate(dot(LIGHTING_VAR_NORMAL, lightDir));
+	float cosTheta = saturate(dot(n, lightDir));
 
 	float saturated = saturate(1 - pow(D / CURR_LIGHT.limit, 4));
 	float attenuation = saturated * saturated / (D * D + 1);

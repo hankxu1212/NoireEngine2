@@ -69,5 +69,5 @@ private:
 	int								m_RoughnessMapId = -1;
 	int								m_MetallicMapId = -1;
 	float							m_NormalStrength = 1;
-	float							m_EnvironmentLightInfluence = 0.1f;
+	float							m_EnvironmentLightInfluence = 1;
 };

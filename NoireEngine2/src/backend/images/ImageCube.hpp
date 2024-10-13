@@ -22,6 +22,7 @@ public:
 
 	explicit ImageCube(const glm::vec2 extent, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage, bool usingHDR);
 	
+	void Load(std::unique_ptr<Bitmap> loadBitmap = nullptr);
 	/**
 	  * Sets the pixels of this image.
 	  * @param pixels The pixels to copy from.
@@ -46,6 +47,5 @@ private:
 	friend const Node& operator>>(const Node& node, ImageCube& image);
 	friend Node& operator<<(Node& node, const ImageCube& image);
 
-	void Load(std::unique_ptr<Bitmap> loadBitmap = nullptr);
 
 };

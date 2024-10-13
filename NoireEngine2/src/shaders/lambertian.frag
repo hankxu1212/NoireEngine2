@@ -5,13 +5,13 @@
 layout(location=0) in vec3 inPosition;
 layout(location=1) in vec3 inNormal;
 layout(location=2) in vec2 inTexCoord;
-layout(location=3) in vec3 inTangent;
-layout(location=4) in vec3 inBitangent;
 
 layout(location=0) out vec4 outColor;
 
 #include "glsl/world_uniform.glsl"
 #include "glsl/utils.glsl"
+
+vec3 n;
 #include "glsl/lighting.glsl"
 
 layout (set = 2, binding = 0) uniform sampler2D textures[];
@@ -26,29 +26,33 @@ layout( push_constant ) uniform constants
 	float environmentLightIntensity;
 } material;
 
-vec3 F0 = vec3(0.04);
-vec3 n;
-mat3 TBN;
+vec3 GetNormalFromMap()
+{
+    vec3 tangentNormal = texture(textures[material.normalTexId], inTexCoord).rgb * 2.0 - 1.0;
+
+    vec3 Q1  = dFdx(inPosition);
+    vec3 Q2  = dFdy(inPosition);
+    vec2 st1 = dFdx(inTexCoord);
+    vec2 st2 = dFdy(inTexCoord);
+
+    vec3 N  = normalize(inNormal);
+    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
+    vec3 B  = -normalize(cross(N, T));
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
+}
 
 void main() {
 	// normal mapping
 	if (material.normalTexId >= 0)
 	{
-		n = texture(textures[material.normalTexId], inTexCoord).rgb;
-		n = normalize(n * 2.0 - 1.0);  // this normal is in tangent space
+		n = GetNormalFromMap();
 		n.xy *= material.normalStrength;
 		n = normalize(n);
 	}
 	else
 		n = normalize(inNormal);
-
-	vec3 t = normalize(inTangent);
-	vec3 b = normalize(inBitangent);
-	TBN = mat3(t, b, n);
-
-	LIGHTING_VAR_NORMAL = n;
-	LIGHTING_VAR_TBN = TBN;
-	LIGHTING_VAR_TANGENT_FRAG_POS = TBN * inPosition;
 
 	//hemisphere sky + directional sun:
 	vec3 lightsSum = DirectLighting();

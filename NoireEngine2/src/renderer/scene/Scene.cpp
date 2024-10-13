@@ -453,7 +453,6 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path);
 		m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath);
 		// dont create mip maps. Will create manually
-		m_PrefilteredEnvMap = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path);
 		break;
 	case SkyboxType::RGB:
 		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path, false);
@@ -462,7 +461,10 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 		break;
 	}
 	
-	m_SpecularBRDF = Image2D::Create(Files::Path("../textures/material_textures/SpecularBRDF.png"));
+	m_SpecularBRDF = Image2D::Create(Files::Path("../textures/material_textures/SpecularBRDF_LUT.png"));
+	
+	m_PrefilteredEnvMap = std::make_shared<ImageCube>(sceneRootAbsolutePath.parent_path() / path);
+	m_PrefilteredEnvMap->Load();
 
 	// load prefiltered environment maps into the mip levels of the big environment map
 	{
