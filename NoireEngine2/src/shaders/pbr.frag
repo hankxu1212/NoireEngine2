@@ -69,92 +69,69 @@ void main() {
 	LIGHTING_VAR_TBN = mat3(t, b, n);
 	LIGHTING_VAR_TANGENT_FRAG_POS = LIGHTING_VAR_TBN * inPosition;
 
-	// Outgoing light direction (vector from world-space fragment position to the "eye").
-	vec3 Lo = normalize(vec3(scene.cameraPos) - LIGHTING_VAR_TANGENT_FRAG_POS);
-	
-	// Angle between surface normal and outgoing light direction.
-	float cosLo = max(0.0, dot(n, Lo));
-		
-	// Specular reflection vector.
-	vec3 Lr = 2.0 * cosLo * n - Lo;
-	
-	float metalness = material.metallic;
-	float roughness = material.roughness;
+	// light out
+    vec3 Lo = normalize(vec3(scene.cameraPos) - LIGHTING_VAR_TANGENT_FRAG_POS);
+    float cosLo = max(0.0, dot(n, Lo));
 
-	// Fresnel reflectance at normal incidence (for metals use albedo color).
-	vec3 F0 = mix(Fdielectric, albedo, metalness);
+    // specular reflection
+    vec3 R = 2.0 * cosLo * n - Lo;
 
-	vec3 directLighting = vec3(0);
-	for (int i = 0; i < min(MAX_LIGHTS_PER_OBJ, scene.numLights); ++i)
-	{
-		vec3 radiance = CalcLight(i, CURR_LIGHT.type);
-	
-		// Direct lighting calculation for analytical lights.
-		vec3 Li = normalize(vec3(CURR_LIGHT.position) - LIGHTING_VAR_TANGENT_FRAG_POS);
-	
-		// Half-vector between Li and Lo.
-		vec3 Lh = normalize(Li + Lo);
-	
-		// Calculate angles between surface normal and various light vectors.
-		float cosLi = max(0.0, dot(n, Li));
-		float cosLh = max(0.0, dot(n, Lh));
-	
-		// Calculate Fresnel term for direct lighting. 
-		vec3 F  = FresnelSchlick(F0, max(0.0, dot(Lh, Lo)));
-		// Calculate normal distribution for specular BRDF.
-		float D = DistributionGGX(cosLh, roughness);
-		// Calculate geometric attenuation for specular BRDF.
-		float G = GeometrySmith(cosLi, cosLo, roughness);
-	
-		// Diffuse scattering happens due to light being refracted multiple times by a dielectric medium.
-		// Metals on the other hand either reflect or absorb energy, so diffuse contribution is always zero.
-		// To be energy conserving we must scale diffuse BRDF contribution based on Fresnel factor & metalness.
-		vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
-	
-		vec3 diffuseBRDF = kd * albedo;
-	
-		// Cook-Torrance specular microfacet BRDF.
-		vec3 specularBRDF = (F * D * G) / max(EPSILON, 4.0 * cosLi * cosLo);
-	
-		// Total contribution for this light.
-		directLighting += (diffuseBRDF + specularBRDF) * radiance * cosLi;
-	}
+    float metalness = material.metallic;
+    float roughness = material.roughness;
 
+    // Fresnel
+    vec3 F0 = mix(Fdielectric, albedo, metalness);
 
-	// IDL
-	vec3 ambientLighting;
-	{
-		// diffuse irradiance
-		vec3 irradiance = texture(diffuseIrradiance, n).rgb;
-		// ambientLighting = environmentalLight * vec3(material.albedo);
-		// ambientLighting *= material.environmentLightIntensity;
+    vec3 directLighting = vec3(0);
+    for (int i = 0; i < min(MAX_LIGHTS_PER_OBJ, scene.numLights); ++i)
+    {
+        vec3 radiance = CalcLight(i, CURR_LIGHT.type);
+        
+        // Incident light direction.
+        vec3 Li = normalize(vec3(CURR_LIGHT.position) - LIGHTING_VAR_TANGENT_FRAG_POS);
+        vec3 Lh = normalize(Li + Lo);
 
-		// Calculate Fresnel term for ambient lighting.
-		// Since we use pre-filtered cubemap(s) and irradiance is coming from many directions
-		// use cosLo instead of angle with light's half-vector (cosLh above).
-		// See: https://seblagarde.wordpress.com/2011/08/17/hello-world/
-		vec3 F = FresnelSchlick(F0, cosLo);
+        // Cosines of angles between normal and light vectors.
+        float cosLi = max(0.0, dot(n, Li));
+        float cosLh = max(0.0, dot(n, Lh));
 
-		// Get diffuse contribution factor (as with direct lighting).
-		vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
+        vec3 F = FresnelSchlick(F0, max(0.0, dot(Lh, Lo)));
+        float D = DistributionGGX(cosLh, roughness);
+        float G = GeometrySmith(cosLi, cosLo, roughness);
 
-		// Irradiance map contains exitant radiance assuming Lambertian BRDF, no need to scale by 1/PI here either.
-		vec3 diffuseIBL = kd * albedo * irradiance;
+        // Diffuse BRDF based on Fresnel and metalness.
+        vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
+        vec3 diffuseBRDF = kd * albedo;
 
-		// Sample pre-filtered specular reflection environment at correct mipmap level.
-		int specularTextureLevels = textureQueryLevels(prefilterEnvMap);
-		vec3 specularIrradiance = textureLod(prefilterEnvMap, Lr, roughness * specularTextureLevels).rgb;
+        // Cook-Torrance specular BRDF.
+        vec3 specularBRDF = (F * D * G) / max(EPSILON, 4.0 * cosLi * cosLo);
 
-		// Split-sum approximation factors for Cook-Torrance specular BRDF.
-		vec2 specularBRDF = texture(specularBRDF, vec2(cosLo, roughness)).rg;
+        directLighting += (diffuseBRDF + specularBRDF) * radiance * cosLi;
+    }
 
-		// Total specular IBL contribution.
-		vec3 specularIBL = (F0 * specularBRDF.x + specularBRDF.y) * specularIrradiance;
+    // IBL: Ambient lighting calculation.
+    vec3 ambientLighting;
+    {
+        // lambertian diffuse irradiance
+        vec3 irradiance = texture(diffuseIrradiance, n).rgb;
 
-		// Total ambient lighting contribution.
-		ambientLighting = diffuseIBL + specularIBL;
-		ambientLighting *= material.environmentLightIntensity;
-	}
+        vec3 F = FresnelSchlick(F0, cosLo);
+
+        // Diffuse contribution for ambient light
+        vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
+        vec3 diffuseIBL = kd * albedo * irradiance;
+
+        // Specular IBL from pre-filtered environment map
+        int specularTextureLevels = textureQueryLevels(prefilterEnvMap);
+        vec3 specularIrradiance = textureLod(prefilterEnvMap, R, roughness * specularTextureLevels).rgb;
+
+        // Cook-Torrance specular split-sum approximation
+        vec2 specularBRDF = texture(specularBRDF, vec2(cosLo, roughness)).rg;
+        vec3 specularIBL = (F0 * specularBRDF.x + specularBRDF.y) * specularIrradiance;
+
+        ambientLighting = diffuseIBL + specularIBL;
+        ambientLighting *= material.environmentLightIntensity;
+    }
 
 	vec3 color = directLighting + ambientLighting;
 

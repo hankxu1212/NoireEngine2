@@ -138,7 +138,7 @@ void GGXSpecularEnvironmentBaker::ExecuteComputeShader()
 
 void GGXSpecularEnvironmentBaker::SaveAsImage(glm::uvec2 dim)
 {
-    std::string out = specs->outFile.substr(0, specs->outFile.length() - 4) + "." + std::to_string(miplevel) + ".png";
+    std::string out = specs->outFile.substr(0, specs->outFile.length() - 4) + ".ggx-" + std::to_string(miplevel) + ".png";
     storageImg->SaveAsPNG(out, { dim.x, dim.y * 6 });
     NE_INFO("Written to:{}", Files::Path(out, false));
 }

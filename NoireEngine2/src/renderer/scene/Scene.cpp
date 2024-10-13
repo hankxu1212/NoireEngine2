@@ -453,7 +453,7 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path);
 		m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath);
 		// dont create mip maps. Will create manually
-		m_PrefilteredEnvMap = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path, true, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, true, false);
+		m_PrefilteredEnvMap = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path);
 		break;
 	case SkyboxType::RGB:
 		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path, false);
@@ -466,11 +466,13 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 
 	// load prefiltered environment maps into the mip levels of the big environment map
 	{
+		m_PrefilteredEnvMap->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 		for (int i = 1; i < GGX_MIP_LEVELS; i++) {
 			std::string ggxPath = substr + ".ggx-" + std::to_string(i) + ".png";
 			Bitmap bitmap(sceneRootAbsolutePath.parent_path() / ggxPath, true); // load a raw bitmap
 			m_PrefilteredEnvMap->SetPixels(bitmap.data.get(), 6, 0, i); // copy bitmap as buffer into image mip level
 		}
+		m_PrefilteredEnvMap->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_PrefilteredEnvMap->getLayout(), VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 }
 

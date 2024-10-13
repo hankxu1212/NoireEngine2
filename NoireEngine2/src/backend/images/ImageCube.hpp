@@ -10,6 +10,8 @@ class Bitmap;
 
 class ImageCube : public Image, public Resource {
 public:
+	ImageCube() = default;
+
 	static std::shared_ptr<ImageCube> Create(const std::filesystem::path& filename, bool usingHDR = true, VkFilter filter = VK_FILTER_LINEAR,
 		VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, bool anisotropic = true, bool mipmap = true);
 
@@ -45,4 +47,5 @@ private:
 	friend Node& operator<<(Node& node, const ImageCube& image);
 
 	void Load(std::unique_ptr<Bitmap> loadBitmap = nullptr);
+
 };

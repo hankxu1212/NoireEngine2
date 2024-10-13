@@ -35,11 +35,7 @@
 static IBLUtilsApplication* CreateApplication(ApplicationCommandLineArgs args)
 {
     IBLUtilsApplicationSpecification spec;
-    spec.inFile = "../scenes/examples/ox_bridge_morning.png";
-    spec.isGGX = true;
-    spec.outFile = "../scenes/examples/test.png";
-
-    //Parse(args, spec);
+    Parse(args, spec);
 
     return new IBLUtilsApplication(spec);
 }

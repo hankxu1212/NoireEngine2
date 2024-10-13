@@ -338,6 +338,11 @@ void Image::TransitionImageLayout(const VkImage& image, VkFormat format, VkImage
 	commandBuffer.SubmitIdle();
 }
 
+void Image::TransitionLayout(VkImageLayout srcLayout, VkImageLayout dstLayout, VkImageAspectFlags aspect)
+{
+	TransitionImageLayout(image, format, srcLayout, dstLayout, aspect, mipLevels, 0, arrayLayers, 0);
+}
+
 void Image::InsertImageMemoryBarrier(const CommandBuffer& commandBuffer, const VkImage& image, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask,
 	VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,
 	VkImageAspectFlags imageAspect, uint32_t mipLevels, uint32_t baseMipLevel, uint32_t layerCount, uint32_t baseArrayLayer) 

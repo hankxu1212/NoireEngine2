@@ -19,7 +19,6 @@ void IBLUtilsApplication::Run()
     {
         GGXSpecularEnvironmentBaker baker(&specs);
         baker.Run();
-
         NE_INFO("Baking GGX importance sampled environmental map");
 
         EnvironmentBRDFBaker brdfBaker(&specs);
