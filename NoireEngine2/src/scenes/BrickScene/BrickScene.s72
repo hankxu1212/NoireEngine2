@@ -99,8 +99,8 @@
 		"normalMap": { "src": "Brick.normal.png" },
 		"pbr": {
 			"albedo": { "src": "Brick.albedo.png" },
-			"metalness": 0.8,
-			"roughness": { "src": "Brick.roughness.png" }
+			"metalness": { "src": "Brick.metallic.png" },
+			"roughness": 0.5
 		}
 	}
 ]

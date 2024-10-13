@@ -21,6 +21,7 @@ void SceneManager::LoadDefault()
 	if (Application::Get().GetSpecification().InitialScene)
 		scene->Load(Application::GetSpecification().InitialScene.value());
 	else
+		//scene->Load("../scenes/examples/sphereflake.s72");
 		//scene->Load("../scenes/SphereScene/SphereScene.s72");
 		//scene->Load("../scenes/examples/Materials.s72");
 		scene->Load("../scenes/BrickScene/BrickScene.s72");

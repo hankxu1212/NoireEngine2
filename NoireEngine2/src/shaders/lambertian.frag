@@ -5,6 +5,7 @@
 layout(location=0) in vec3 inPosition;
 layout(location=1) in vec3 inNormal;
 layout(location=2) in vec2 inTexCoord;
+layout(location=3) in vec4 inTangent;
 
 layout(location=0) out vec4 outColor;
 
@@ -26,51 +27,34 @@ layout( push_constant ) uniform constants
 	float environmentLightIntensity;
 } material;
 
-vec3 GetNormalFromMap()
-{
-    vec3 tangentNormal = texture(textures[material.normalTexId], inTexCoord).rgb * 2.0 - 1.0;
-
-    vec3 Q1  = dFdx(inPosition);
-    vec3 Q2  = dFdy(inPosition);
-    vec2 st1 = dFdx(inTexCoord);
-    vec2 st2 = dFdy(inTexCoord);
-
-    vec3 N  = normalize(inNormal);
-    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
-    vec3 B  = -normalize(cross(N, T));
-    mat3 TBN = mat3(T, B, N);
-
-    return normalize(TBN * tangentNormal);
-}
-
 void main() {
+    // calculate TBN
+    n = normalize(inNormal);
+    vec3 tangent = inTangent.xyz;
+    tangent = normalize(tangent - dot(tangent, n) * n);
+    vec3 bitangent = normalize(cross(n, inTangent.xyz) * inTangent.w);
+    mat3 TBN = mat3(tangent, bitangent, n);
+
 	// normal mapping
 	if (material.normalTexId >= 0)
 	{
-		n = GetNormalFromMap();
+        vec3 localNormal = 2.0 * textureLod(textures[material.normalTexId], inTexCoord, 0.0).rgb - 1.0;
+        n = TBN * localNormal;
 		n.xy *= material.normalStrength;
 		n = normalize(n);
 	}
-	else
-		n = normalize(inNormal);
 
-	//hemisphere sky + directional sun:
 	vec3 lightsSum = DirectLighting();
 
-	// IDL
-	vec3 ambientLighting;
-	{
-		vec3 environmentalLight = vec3(texture(lambertianIDL, n));
-		ambientLighting = environmentalLight * vec3(material.albedo);
-		ambientLighting *= material.environmentLightIntensity;
-	}
+	// sample diffuse irradiance
+	vec3 ambientLighting = texture(lambertianIDL, n).rgb * material.environmentLightIntensity;
 
 	// material
-	vec3 texColor = vec3(1);
+	vec3 texColor = material.albedo.rgb;
 	if (material.albedoTexId >= 0)
-		texColor = texture(textures[material.albedoTexId], inTexCoord).rgb;
+		texColor *= texture(textures[material.albedoTexId], inTexCoord).rgb;
 
-	vec3 color = vec3(material.albedo) * texColor * lightsSum + ambientLighting;
-
+	vec3 color = vec3(material.albedo) * texColor * (lightsSum + ambientLighting);
+	color = ACES(color);
 	outColor = gamma_map(color, 2.2f);
 }

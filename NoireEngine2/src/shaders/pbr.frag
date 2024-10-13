@@ -173,7 +173,7 @@ void main() {
 
 
 	vec3 color = directLighting + ambientLighting;
-    color = color * (1.0f / Uncharted2Tonemap(vec3(11.2f)));
-
+    // color = color * (1.0f / Uncharted2Tonemap(vec3(11.2f)));
+    color = ACES(color);
 	outColor = gamma_map(color, 2.2);
 }

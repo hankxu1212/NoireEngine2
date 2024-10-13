@@ -14,9 +14,8 @@ layout(location=0) out vec4 outColor;
 layout (set = 2, binding = 0) uniform sampler2D textures[];
 layout (set = 3, binding = 0) uniform samplerCube samplerCubeMap;
 
-vec3 n;
-float gamma = 2.2f;
-
 void main() {
-	outColor = gamma_map(vec3(texture(samplerCubeMap, inNormal)), gamma);
+	vec3 color = texture(samplerCubeMap, normalize(inNormal)).rgb;
+	color = ACES(color);
+	outColor = gamma_map(color, 2.2);
 }

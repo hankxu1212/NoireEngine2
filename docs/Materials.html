@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<!-- saved from url=(0069)http://graphics.cs.cmu.edu/courses/15-472-f24/A2/report-template.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>15-472-s24: A2 - Materials</title>
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;700&Anonymous+Pro&display=swap');
+
+html {
+	background:#505055;
+}
+
+body {
+	font-family: 'Quicksand', sans-serif;
+	color:#000;
+	background:#eeeee8;
+	font-size:15px;
+	margin: 1em auto 50vh auto;
+	padding: 1em 2em 1em 2em;
+	max-width:45em;
+	border-radius:4px;
+	box-shadow:0 0 10px #0008;
+}
+
+h1 { font-size: 20px; font-weight: 700; }
+h2 { font-size: 16px; font-weight: 700; }
+h3 { font-size: 16px; font-weight: 400; }
+h4 { font-size: 14px; font-weight: 400; }
+
+h1, h2, h3, h4 {
+	margin: 15px 0 0 -10px;
+}
+
+p {
+	margin: 5px 0 0 0;
+}
+
+.subtitle {
+	display:block;
+	font-size:16px;
+	font-weight:400;
+}
+
+.placeholder {
+	color:#800;
+	font-style:italic;
+}
+
+kbd {
+	display:inline-block;
+	background:#ccc;
+	color:#444;
+	font-style:normal;
+	font-weight:700;
+	border-radius:8px;
+	padding:1px 6px;
+	margin:1px;
+	border:1.5px solid #aaa;
+}
+
+code {
+	font-family: 'Anonymous Pro', monospace;
+	background: #222;
+	color:#fff;
+	border-radius:4px;
+	padding:2px 4px;
+	margin:1px;
+}
+
+code var {
+	color:#ef5;
+	font-style:italic;
+}
+
+.atag {
+	font-family: 'Calistoga', serif;
+	font-size:90%;
+	color:#000;
+	background:#b00;
+
+	display:inline-block;
+	padding:1px 4px;
+	border-radius: 4px;
+	line-height:120%;
+}
+.atag:before {
+	content:'»';
+}
+.atag.extra {
+	background:#b08;
+}
+.atag.creative {
+	/* thanks, shout.horse! */
+	background:linear-gradient(0.4turn, #ffe680, #916f6f);
+}
+
+</style>
+</head>
+				<body>
+					<h1>
+						A2: Materials
+						<span class="subtitle">by <span class="placeholder">Hank Xu (ninghuax)</span></span>
+					</h1>
+
+					<p class="placeholder">
+						Noire Engine 2's material system is quite straightforward: ObjectPipeline holds all the possible material workflows (Environment, Mirror, PBR, Lambertian),
+						and manages their pipelines as well. A MaterialPipeline binds only the neccesary descriptor sets, and the object pipeline renders the workflows sequentially, binding the respective
+						pipeline each time. Thus, a single material pipeline is only binded once every frame. Individual materials hold a CreateInfo information as they are deserialized, but developers can edit
+						the material instance's attributes as runtime inside the Editor. <br /><br />
+
+						Noire Engine 2 features a IBL + PBR material workflow with parallax occlusion mapping. Supporting up to 20 analytical realtime lights of either
+						Directional, Spot, or Point. Developers can load environment maps as RGB or HDR(RGBE), and the engine will convert them at initialization. The engine also provides a cubemap utility for baking analytical lambertian irradiance map,
+						analytical prefiltered environment ggx-roughness map, and importance sampled environmental BRDF on the GPU as compute shaders. <br /><br />
+
+						On top of A1, the Editor now supports a variety of debugging gizmos, including the default G, R, S binding similar to Blender, AABB bounds, and support for spot/point light gizmos. No finger picking is implemented sadly.
+					</p>
+
+					<h2>My Model <span class="atag creative">A2-create</span></h2>
+
+					<p class="placeholder">
+						A brick <img src="Brick.png" width="616" height="546">
+					</p>
+
+					<p class="placeholder">
+						I baked the albedo, height, metallic, and normal maps in Adobe Substance painter.
+						Mesh wise, its just a cube lol.
+					</p>
+
+					<h2>My Code</h2>
+
+					<h3>Loading lighting environments <span class="atag">A2-env</span></h3>
+
+					<p class="placeholder">
+						See <code>EnvironmentMaterial</code> and <code>EnvironmentMaterialPipeline</code>. Naming is similar for all materials.
+						Environment material is quite simple, I just load a cubemap (in RGB32_SFLOAT for HDR, RGB8_UNORM for RGB) in scene and sample it in the fragment shader.
+						Coordinate system is cubemap..?	You can see <code>shaders/glsl/cubemap.glsl</code> for converting between cubemap UV and cartesian coords.
+						HDR environment maps, once loaded by the engine, is converted into RGB in a pixel-by-pixel process on the CPU (no time for compute :( ).
+					</p>
+					<p class="placeholder">
+						<a href="https://drive.google.com/file/d/1PXj65atw0inloMlDUZoc_bZoE4YqwyeN/view?usp=drive_link">Environment and Mirror materials</a>
+					</p>
+
+					<h3>Tone mapping <span class="atag">A2-tone</span></h3>
+
+					<p class="placeholder">
+						I chose the ACES tone mapping, since it is commonly used for filmic effects. This is the one I use in production to make games as well.
+						I also tried out Uncharted2's tone mapping, not sure how I feel about it tho.
+
+						My viewer's fragment color space is always gamma corrected with gamma=2.2.
+					</p>
+
+					<p class="placeholder">
+						No Tone Mapping: <img src="TONE1.png" width="512" height="512">
+						ACES: <img src="TONE2.png" width="512" height="512">
+						Uncharted2: <img src="TONE3.png" width="512" height="512">
+					</p>
+
+					<p class="placeholder">
+						ACES tone mapping curve: <img src="ACES.png" width="600" height="350">
+					</p>
+
+					<h3>Lambertian material <span class="atag">A2-diffuse</span></h3>
+
+					<p class="placeholder">
+						The lambertian material samples irradiance from the environmental cubemap. <br />
+						<code>renderer/utils/LambertianEnvironmentBaker.*</code> Dispatches a compute shader and waits for it to finish. After that, writes all 6 faces to PNG.
+						The compute shader runs on all pixels of the output image, and integrates analytically.
+					</p>
+
+					<p class="placeholder">
+						Unit Cube with no analytical lights: <img src="LambertianCube.png" width="616" height="546">
+					</p>
+
+					<p class="placeholder">
+						RGB Skybox: <img src="Skybox.png" width="128" height="768">
+						Skybox Lambertian Irradiance: <img src="Skybox.lambertian.png" width="128" height="768">
+					</p>
+
+					<h3>Normal maps <span class="atag">A2-normal</span></h3>
+
+					<p class="placeholder">
+						I passed the tangent from vertex to frag shader (after multiplying it by the model matrix and the bitangent sign). All the TBN is handled in 
+						the frag shader (cuz i couldn't get it to work when I did it in vertex shader sadge).
+
+						In the frag shader, we sample from the normal texture, remap it, multiply it by the TBN matrix, and multiply its xy coords by a normal strength. Finally it is normalized.
+						In parallax occusion mapping, we use the skewed UV to sample from the normal map.
+					</p>
+					<p class="placeholder">
+						<a href=https://drive.google.com/file/d/1o_DaLTDpPf8_Y34zLmK85zbOStRVQDid/view?usp=drive_link>Normal Mapping</a>
+					</p>
+					Ah. sorry for the music.
+
+					<h3>PBR material <span class="atag">A2-pbr</span></h3>
+
+					<p class="placeholder">
+						See <code>shaders/compute/ggx/*</code> For a list of compute shaders for different mip levels. I tried to push constant and synchronize different calls and dispatch one after the other, but
+						I couldn't do it. So here it is -- 6 compute shaders, each defines a MIP_LEVEL constant lol. Anyways in the application you just dispatch 6 pipelines.<br><br>
+						Specular map is analytically integrated and multiplied by the GGX normal distribution function and cosine theta.
+					</p>
+
+					<p class="placeholder">
+						Mip 1: <img src="ox_bridge_morning.ggx-1.png" width="128" height="768">
+						Mip 2: <img src="ox_bridge_morning.ggx-2.png" width="128" height="768">
+						Mip 3: <img src="ox_bridge_morning.ggx-3.png" width="128" height="768">
+						Mip 4: <img src="ox_bridge_morning.ggx-4.png" width="128" height="768">
+						Mip 5: <img src="ox_bridge_morning.ggx-5.png" width="128" height="768">
+					</p>
+
+					Note: this is actually slightly different (an extra patch here and there) from what you guys had as the ox_bridge_morning env map. Can you guys take a look at the shader and lmk if I'm doing things correctly?
+
+					<p class="placeholder">
+						<a href=https://drive.google.com/file/d/15WNFShVjCtvtHtao-qGCX7kJUicycRRl/view?usp=drive_link>PBR Properties</a>
+					</p>
+
+					<h3>Displacement map <span class="atag extra">A2x-displacement</span></h3>
+					<p class="placeholder">
+						Parallax occlusion mapping is done on the tangent space. See <code>shaders/glsl/parallax.glsl</code>
+					</p>
+
+
+					<p class="placeholder">
+						<a href=https://drive.google.com/file/d/1cz5s1Tgh4FhQSZ4RF0ONK2Fpl2zvGKA8/view?usp=drive_link>Parallax Occlusion Mapping</a>
+					</p>
+
+					<h2>Performance Tests</h2>
+
+                    <p class="placeholder">
+                        CPU: Intel 07-12700K 3.60 GHz<br>
+                        GPU: NVIDIA GeForce RTX 3070 Ti <br>
+                        Memory: 32.0GB DDR5<br>
+                        OS Version: Windows 11 <br>
+                        Benchmark Monitor Resolution: 1920x1080<br />
+                    </p>
+
+					<h3>Material Performance</h3>
+					<p class="placeholder">
+						Mip 5: <img src="LoadNormal.png" width="700" height="455">
+						I tested on Sphereflakes.s72 with normal and displacement mapping, but found no noticable difference.
+						Not sure how to load test this exactly..
+					</p>
+
+					<h3>Texture vs Vertex Detail</h3>
+					<p class="placeholder">
+						Didn't have time to test this part.
+					</p>
+
+
+					<h2>Feedback</h2>
+					<p class="placeholder">
+						A2 kinda hard man
+					</p>
+
+
+
+				</body></html>
