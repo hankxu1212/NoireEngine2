@@ -179,14 +179,7 @@
     <ClCompile Include="src\renderer\scene\Transform.cpp" />
     <ClCompile Include="src\utils\UUID.cpp" />
     <ClCompile Include="src\renderer\scene\TransformMatrixStack.cpp" />
-    <ClCompile Include="tutorial\Helpers.cpp" />
-    <ClCompile Include="tutorial\main.cpp" />
     <ClCompile Include="src\renderer\vertices\PosColVertex.cpp" />
-    <ClCompile Include="tutorial\RTG.cpp" />
-    <ClCompile Include="tutorial\Tutorial-BackgroundPipeline.cpp" />
-    <ClCompile Include="tutorial\Tutorial-LinesPipeline.cpp" />
-    <ClCompile Include="tutorial\Tutorial-ObjectsPipeline.cpp" />
-    <ClCompile Include="tutorial\Tutorial.cpp" />
     <ClCompile Include="src\backend\shader\VulkanShader.cpp" />
     <ClCompile Include="src\renderer\vertices\Vertex.cpp" />
     <ClCompile Include="vendor\imguizmo\imguizmo\example\imgui.cpp" />
@@ -365,14 +358,7 @@
     <ClInclude Include="src\renderer\scene\Transform.hpp" />
     <ClInclude Include="src\utils\UUID.hpp" />
     <ClInclude Include="src\renderer\scene\TransformMatrixStack.hpp" />
-    <ClInclude Include="tutorial\Helpers.hpp" />
-    <ClInclude Include="tutorial\InputEvent.hpp" />
-    <ClInclude Include="tutorial\mat4.hpp" />
     <ClInclude Include="src\renderer\vertices\PosColVertex.hpp" />
-    <ClInclude Include="tutorial\refsol.hpp" />
-    <ClInclude Include="tutorial\RTG.hpp" />
-    <ClInclude Include="tutorial\Tutorial.hpp" />
-    <ClInclude Include="tutorial\VK.hpp" />
     <ClInclude Include="src\backend\shader\VulkanShader.h" />
     <ClInclude Include="src\renderer\vertices\Vertex.hpp" />
     <ClInclude Include="vendor\imguizmo\imguizmo\example\ImApp.h" />
@@ -459,13 +445,9 @@
     <None Include="src\shaders\skybox.frag" />
     <None Include="src\shaders\skybox.vert" />
     <None Include="src\shaders\glsl\world_uniform.glsl" />
-    <None Include="tutorial\background.frag" />
-    <None Include="tutorial\background.vert" />
     <None Include="src\shaders\lines.frag" />
     <None Include="src\shaders\lines.vert" />
     <None Include="tutorial\maek-cache.json" />
-    <None Include="tutorial\Maekfile.js" />
-    <None Include="tutorial\README.md" />
     <None Include="vendor\imgui\examples\example_glfw_wgpu\web\index.html" />
     <None Include="vendor\imgui\examples\libs\emscripten\shell_minimal.html" />
   </ItemGroup>

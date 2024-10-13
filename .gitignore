@@ -1,10 +1,9 @@
 maek-cache.json
 objs/
 spv/
-src/bin/main
-src/bin/main.exe
-src/bin/main.pdb
 
 .vs
 x64/
 *.obj
+*.exe
+*.pdb

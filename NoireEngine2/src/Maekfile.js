@@ -159,7 +159,6 @@ const cube_application = [
 const compute_shaders = [
 	maek.GLSLC("shaders/compute/lambertian_hdr.comp"),
 	maek.GLSLC("shaders/compute/lambertian_png.comp"),
-	maek.GLSLC("shaders/compute/ggx/ggx_hdr.comp"),
 	maek.GLSLC("shaders/compute/ggx/ggx_hdr_1.comp"),
 	maek.GLSLC("shaders/compute/ggx/ggx_hdr_2.comp"),
 	maek.GLSLC("shaders/compute/ggx/ggx_hdr_3.comp"),

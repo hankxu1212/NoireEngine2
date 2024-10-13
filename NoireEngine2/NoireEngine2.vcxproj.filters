@@ -78,28 +78,7 @@
     <ClCompile Include="src\backend\buffers\Buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tutorial\Helpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tutorial\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\renderer\vertices\PosColVertex.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tutorial\RTG.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tutorial\Tutorial.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tutorial\Tutorial-BackgroundPipeline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tutorial\Tutorial-LinesPipeline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tutorial\Tutorial-ObjectsPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\math\color\Color3.cpp">
@@ -611,28 +590,7 @@
     <ClInclude Include="src\backend\buffers\Buffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="tutorial\Helpers.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tutorial\InputEvent.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tutorial\mat4.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\renderer\vertices\PosColVertex.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tutorial\refsol.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tutorial\RTG.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tutorial\Tutorial.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tutorial\VK.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\math\color\Color.hpp">
@@ -1022,13 +980,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />
-    <None Include="tutorial\background.frag" />
-    <None Include="tutorial\background.vert" />
     <None Include="src\shaders\lines.frag" />
     <None Include="src\shaders\lines.vert" />
     <None Include="tutorial\maek-cache.json" />
-    <None Include="tutorial\Maekfile.js" />
-    <None Include="tutorial\README.md" />
     <None Include="src\core\resources\nodes\Node.inl">
       <Filter>Header Files</Filter>
     </None>
