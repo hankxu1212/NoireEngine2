@@ -1355,8 +1355,10 @@
 	{
 		"type": "MATERIAL",
 		"name": "pbr:24",
+		"displacementMap": { "src": "Brick.displacement.png" },
+		"normalMap": { "src": "Brick.normal.png" },
 		"pbr": {
-			"albedo": [ 0.0275185, 0.0275185, 0.0275185 ],
+			"albedo": { "src" : "Brick.albedo.png" },
 			"metalness": 0.8,
 			"roughness": 0.8
 		}

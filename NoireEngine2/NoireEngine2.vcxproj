@@ -433,6 +433,7 @@
     <None Include="src\shaders\glsl\cubemap.glsl" />
     <None Include="src\shaders\glsl\hdr.glsl" />
     <None Include="src\shaders\glsl\lighting.glsl" />
+    <None Include="src\shaders\glsl\parallax.glsl" />
     <None Include="src\shaders\glsl\pbr.glsl" />
     <None Include="src\shaders\glsl\random.glsl" />
     <None Include="src\shaders\glsl\sampling.glsl" />

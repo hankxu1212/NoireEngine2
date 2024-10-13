@@ -14,6 +14,8 @@ void PBRMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipe
 		.albedo = { m_CreateInfo.albedo.x, m_CreateInfo.albedo.y, m_CreateInfo.albedo.z, 0 },
 		.albedoTexId = m_AlbedoMapId,
 		.normalTexId = m_NormalMapId,
+		.displacementTexId = m_DisplacementMapId,
+		.heightScale = m_HeightScale,
 		.roughnessTexId = m_RoughnessMapId,
 		.metallicTexId = m_MetallicMapId,
 		.roughness = m_CreateInfo.roughness,
@@ -144,6 +146,12 @@ void PBRMaterial::Load()
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.normalPath);
 		m_NormalMapId = tex->getTextureId();
 	}
+	// todo: combine normal and displacement map
+	if (m_CreateInfo.displacementPath != NE_NULL_STR)
+	{
+		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.displacementPath);
+		m_DisplacementMapId = tex->getTextureId();
+	}
 }
 
 void PBRMaterial::Inspect()
@@ -174,8 +182,8 @@ void PBRMaterial::Inspect()
 	static const char* normalIDs[]{ "###NORMALPATH",  "###NORMALID", "###NORMALSTRENGTH"};
 	ImGuiExt::InspectTexture(normalIDs, "Normal Texture", m_CreateInfo.normalPath.c_str(), &m_NormalMapId, &m_NormalStrength);
 
-	static const char* displaceIDs[]{ "###DISPPATH",  "###DISPID" };
-	ImGuiExt::InspectTexture(displaceIDs, "Displacement Texture", m_CreateInfo.displacementPath.c_str(), &m_DisplacementMapId);
+	static const char* displaceIDs[]{ "###DISPPATH",  "###DISPID", "###DISPHEIGHT" };
+	ImGuiExt::InspectTexture(displaceIDs, "Displacement Texture", m_CreateInfo.displacementPath.c_str(), &m_DisplacementMapId, &m_HeightScale);
 
 	static const char* roughIDs[]{ "###ROUGHPATH",  "###ROUGHID", "###ROUGHNESS" };
 	ImGuiExt::InspectTexture(roughIDs, "Roughness Texture", m_CreateInfo.roughnessPath.c_str(), &m_RoughnessMapId, &m_CreateInfo.roughness, 1);

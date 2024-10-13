@@ -14,6 +14,7 @@ layout(location=0) out vec4 outColor;
 #include "glsl/utils.glsl"
 
 // Constant normal incidence Fresnel factor for all dielectrics.
+const vec3 Fdielectric = vec3(0.04);
 #include "glsl/pbr.glsl"
 
 vec3 n; // the lighting.glsl depends on this
@@ -29,11 +30,14 @@ layout (set = 3, binding = 1) uniform samplerCube diffuseIrradiance;
 layout (set = 3, binding = 2) uniform sampler2D specularBRDF;
 layout (set = 3, binding = 3) uniform samplerCube prefilterEnvMap;
 
+
 layout( push_constant ) uniform constants
 {
 	vec4 albedo;
 	int albedoTexId;
 	int normalTexId;
+    int displacementTexId;
+    float heightScale;
 	int roughnessTexId;
 	int metallicTexId;
 	float roughness;
@@ -42,12 +46,8 @@ layout( push_constant ) uniform constants
 	float environmentLightIntensity;
 } material;
 
-const vec3 Fdielectric = vec3(0.04);
-
-vec3 GetNormalFromMap()
+mat3 GetTangents()
 {
-    vec3 tangentNormal = texture(textures[material.normalTexId], inTexCoord).rgb * 2.0 - 1.0;
-
     vec3 Q1  = dFdx(inPosition);
     vec3 Q2  = dFdy(inPosition);
     vec2 st1 = dFdx(inTexCoord);
@@ -56,33 +56,48 @@ vec3 GetNormalFromMap()
     vec3 N  = normalize(inNormal);
     vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
     vec3 B  = -normalize(cross(N, T));
-    mat3 TBN = mat3(T, B, N);
-
-    return normalize(TBN * tangentNormal);
+    return mat3(T, B, N);
 }
 
+// parallax mappings
+vec2 UV; // uv after parallax mapping
+int numLayers = 16;
+#include "glsl/parallax.glsl"
+
 void main() {
+    mat3 TBN = GetTangents();
+    vec3 V = normalize(vec3(scene.cameraPos) - inPosition);
+
+    // parallax occlusion mapping
+    UV = inTexCoord;
+    // if (material.displacementTexId >= 0 && material.heightScale > 0){
+        // UV = ParallaxOcclusionMapping(inTexCoord, V);
+    // }
+
+
 	// normal mapping
+    n = normalize(inNormal);
 	if (material.normalTexId >= 0)
 	{
-		n = GetNormalFromMap();
+        vec3 tangentNormal = textureLod(textures[material.normalTexId], UV, 0.0).rgb * 2.0 - 1.0;
+		n = TBN * tangentNormal;
 		n.xy *= material.normalStrength;
 		n = normalize(n);
 	}
-	else
-		n = normalize(inNormal);
 
 	// albedo 
 	vec3 albedo = vec3(1);
 	if (material.albedoTexId >= 0)
-		albedo = texture(textures[material.albedoTexId], inTexCoord).rgb;
+		albedo = texture(textures[material.albedoTexId], UV).rgb;
 	albedo *= vec3(material.albedo);
+
+    if(UV.x > 1.0 || UV.y > 1.0 || UV.x < 0.0 || UV.y < 0.0)
+        discard;
 
     float metalness = material.metallic;
     float roughness = material.roughness;
 
 	// light out
-    vec3 V = normalize(vec3(scene.cameraPos) - inPosition);
     float cosLo = max(0.0, dot(n, V));
 
     // specular reflection

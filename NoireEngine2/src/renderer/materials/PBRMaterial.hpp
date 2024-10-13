@@ -26,6 +26,8 @@ public:
 		struct { float x, y, z, padding_; } albedo;
 		int albedoTexId;
 		int normalTexId;
+		int displacementTexId;
+		float heightScale;
 		int roughnessTexId;
 		int metallicTexId;
 		float roughness;
@@ -33,7 +35,7 @@ public:
 		float normalStrength;
 		float environmentLightIntensity;
 	};
-	static_assert(sizeof(MaterialPush) == 16 + 4 * 8);
+	static_assert(sizeof(MaterialPush) == 16 + 4 * 10);
 
 public:
 	PBRMaterial() = default;
@@ -66,6 +68,7 @@ private:
 	int								m_AlbedoMapId = -1;
 	int								m_NormalMapId = -1;
 	int								m_DisplacementMapId = -1;
+	float							m_HeightScale = 0.1f;
 	int								m_RoughnessMapId = -1;
 	int								m_MetallicMapId = -1;
 	float							m_NormalStrength = 1;
