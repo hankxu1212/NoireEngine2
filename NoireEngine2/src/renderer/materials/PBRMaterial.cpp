@@ -21,7 +21,7 @@ void PBRMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipe
 		.roughness = m_CreateInfo.roughness,
 		.metallic = m_CreateInfo.metallic,
 		.normalStrength = m_NormalStrength,
-		.environmentLightIntensity = m_EnvironmentLightInfluence
+		.environmentLightIntensity = m_EnvironmentLightInfluence,
 	};
 
 	vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,
@@ -136,21 +136,40 @@ std::shared_ptr<Material> PBRMaterial::Create(const Node& node)
 void PBRMaterial::Load()
 {
 	const auto& rootPath = SceneManager::Get()->getScene()->getRootPath();
+
+	// albedo
 	if (m_CreateInfo.texturePath != NE_NULL_STR)
 	{
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.texturePath);
 		m_AlbedoMapId = tex->getTextureId();
 	}
+
+	// normal
 	if (m_CreateInfo.normalPath != NE_NULL_STR)
 	{
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.normalPath);
 		m_NormalMapId = tex->getTextureId();
 	}
-	// todo: combine normal and displacement map
+
+	// TODO: combine normal and displacement map
 	if (m_CreateInfo.displacementPath != NE_NULL_STR)
 	{
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.displacementPath);
 		m_DisplacementMapId = tex->getTextureId();
+	}
+
+	// metallic
+	if (m_CreateInfo.metallicPath != NE_NULL_STR)
+	{
+		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.metallicPath);
+		m_MetallicMapId = tex->getTextureId();
+	}
+
+	// metallic
+	if (m_CreateInfo.roughnessPath != NE_NULL_STR)
+	{
+		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.roughnessPath);
+		m_RoughnessMapId = tex->getTextureId();
 	}
 }
 

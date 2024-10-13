@@ -7,6 +7,7 @@
 layout(location=0) in vec3 inPosition;
 layout(location=1) in vec3 inNormal;
 layout(location=2) in vec2 inTexCoord;
+layout(location=3) in vec4 inTangent;
 
 layout(location=0) out vec4 outColor;
 
@@ -46,56 +47,65 @@ layout( push_constant ) uniform constants
 	float environmentLightIntensity;
 } material;
 
-mat3 GetTangents()
-{
-    vec3 Q1  = dFdx(inPosition);
-    vec3 Q2  = dFdy(inPosition);
-    vec2 st1 = dFdx(inTexCoord);
-    vec2 st2 = dFdy(inTexCoord);
-
-    vec3 N  = normalize(inNormal);
-    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
-    vec3 B  = -normalize(cross(N, T));
-    return mat3(T, B, N);
-}
-
 // parallax mappings
-vec2 UV; // uv after parallax mapping
-int numLayers = 16;
+const int parallax_numLayers = 32;
+const float parallax_layerDepth = 1.0 / float(parallax_numLayers);
 #include "glsl/parallax.glsl"
 
 void main() {
-    mat3 TBN = GetTangents();
+    // calculate TBN
+    n = normalize(inNormal);
+    vec3 tangent = inTangent.xyz;
+    tangent = normalize(tangent - dot(tangent, n) * n);
+    vec3 bitangent = normalize(cross(n, inTangent.xyz) * inTangent.w);
+    mat3 TBN = mat3(tangent, bitangent, n);
+
+    // view direction
     vec3 V = normalize(vec3(scene.cameraPos) - inPosition);
 
-    // parallax occlusion mapping
-    UV = inTexCoord;
-    // if (material.displacementTexId >= 0 && material.heightScale > 0){
-        // UV = ParallaxOcclusionMapping(inTexCoord, V);
-    // }
+    // uv
+    vec2 UV = inTexCoord;
+    float height = 0;
 
+    // parallax occlusion mapping
+    mat3 invTBN = transpose(TBN);
+    vec3 tangentV = invTBN * V;
+    if (material.displacementTexId >= 0 && material.heightScale > 0){
+        // can use contact refinement parallax (ParallaxOcclusionMapping2), kinda broken tho
+        vec3 uvh = ParallaxOcclusionMapping(inTexCoord, tangentV);
+        UV = uvh.xy;
+        height = uvh.z;
+    }
 
 	// normal mapping
-    n = normalize(inNormal);
+    // Perform sampling before (potentially) discarding.
+	// This is to avoid implicit derivatives in non-uniform control flow.
 	if (material.normalTexId >= 0)
 	{
-        vec3 tangentNormal = textureLod(textures[material.normalTexId], UV, 0.0).rgb * 2.0 - 1.0;
-		n = TBN * tangentNormal;
+        vec3 localNormal = 2.0 * textureLod(textures[material.normalTexId], UV, 0.0).rgb - 1.0;
+        n = TBN * localNormal;
 		n.xy *= material.normalStrength;
 		n = normalize(n);
 	}
 
 	// albedo 
-	vec3 albedo = vec3(1);
+	vec3 albedo = vec3(material.albedo);
 	if (material.albedoTexId >= 0)
-		albedo = texture(textures[material.albedoTexId], UV).rgb;
-	albedo *= vec3(material.albedo);
+		albedo *= texture(textures[material.albedoTexId], UV).rgb;
 
     if(UV.x > 1.0 || UV.y > 1.0 || UV.x < 0.0 || UV.y < 0.0)
         discard;
 
-    float metalness = material.metallic;
+    // roughness
     float roughness = material.roughness;
+    if (material.roughnessTexId >= 0)
+        roughness = textureLod(textures[material.roughnessTexId], UV, 0.0).a;
+
+    // metallic
+    float metalness = material.metallic;
+    if (material.metallicTexId >= 0)
+        metalness = textureLod(textures[material.metallicTexId], UV, 0.0).a;
+
 
 	// light out
     float cosLo = max(0.0, dot(n, V));
@@ -110,7 +120,7 @@ void main() {
     for (int i = 0; i < min(MAX_LIGHTS_PER_OBJ, scene.numLights); ++i)
     {
         vec3 radiance = CalcLight(i, CURR_LIGHT.type);
-        
+
         // Incident light direction.
         vec3 Li = normalize(vec3(CURR_LIGHT.position) - inPosition);
         vec3 Lh = normalize(Li + V);

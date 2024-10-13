@@ -1,0 +1,106 @@
+[
+	"s72-v2",
+	{
+
+		"type": "LIGHT",
+		"name": "Light",
+		"tint": [ 1, 1, 1 ],
+		"sphere": {
+			"radius": 0.1,
+			"power": 1000
+		}
+	},
+	{
+		"type": "ENVIRONMENT",
+		"name": "Skybox",
+		"radiance": {
+			"src": "ox_bridge_morning.png",
+			"type": "cube",
+			"format": "rgbe"
+		}
+	},
+	{
+		"type": "NODE",
+		"name": "Light",
+		"translation": [ 1, -8, 1 ],
+		"rotation": [ 0.169076, 0.272171, 0.75588, 0.570948 ],
+		"scale": [ 1, 1, 1 ],
+		"light": "Light"
+	},
+	{
+
+		"type": "CAMERA",
+		"name": "Camera",
+		"perspective": {
+			"aspect": 1.77778,
+			"vfov": 0.47109,
+			"near": 0.1,
+			"far": 100
+		}
+	},
+	{
+		"type": "NODE",
+		"name": "Camera",
+		"translation": [ 7.35889, -6.92579, 4.95831 ],
+		"rotation": [ 0.483536, 0.208704, 0.336872, 0.780483 ],
+		"scale": [ 1, 1, 1 ],
+		"camera": "Camera"
+	},
+	{
+		"type": "MESH",
+		"name": "Cube",
+		"topology": "TRIANGLE_LIST",
+		"count": 36,
+		"attributes": {
+			"POSITION": {
+				"src": "BrickScene.Cube.pnTt.b72",
+				"offset": 0,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"NORMAL": {
+				"src": "BrickScene.Cube.pnTt.b72",
+				"offset": 12,
+				"stride": 48,
+				"format": "R32G32B32_SFLOAT"
+			},
+			"TANGENT": {
+				"src": "BrickScene.Cube.pnTt.b72",
+				"offset": 24,
+				"stride": 48,
+				"format": "R32G32B32A32_SFLOAT"
+			},
+			"TEXCOORD": {
+				"src": "BrickScene.Cube.pnTt.b72",
+				"offset": 40,
+				"stride": 48,
+				"format": "R32G32_SFLOAT"
+			}
+		},
+		"material": "pbr:test"
+	},
+	{
+		"type": "NODE",
+		"name": "Cube",
+		"translation": [ 0, 0, 0 ],
+		"rotation": [ 0, 0, 0, 1 ],
+		"scale": [ 4.34635, 1, 3.96019 ],
+		"mesh": "Cube"
+	},
+	{
+		"type": "SCENE",
+		"name": "F:\\gameDev\\Engines\\NoireEngine2\\NoireEngine2\\src\\scenes\\BrickScene\\BrickScene.blend",
+		"roots": [ "Light", "Camera", "Cube" ]
+	},
+	{
+		"type": "MATERIAL",
+		"name": "pbr:test",
+		"displacementMap": { "src": "Brick.displacement.png" },
+		"normalMap": { "src": "Brick.normal.png" },
+		"pbr": {
+			"albedo": { "src": "Brick.albedo.png" },
+			"metalness": 0.8,
+			"roughness": { "src": "Brick.roughness.png" }
+		}
+	}
+]
