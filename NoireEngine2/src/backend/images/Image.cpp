@@ -359,7 +359,7 @@ void Image::InsertImageMemoryBarrier(const CommandBuffer& commandBuffer, const V
 	vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 }
 
-void Image::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, const VkExtent3D& extent, uint32_t layerCount, uint32_t baseArrayLayer) 
+void Image::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, const VkExtent3D& extent, uint32_t layerCount, uint32_t baseArrayLayer, uint32_t miplevel) 
 {
 	CommandBuffer commandBuffer;
 
@@ -368,7 +368,7 @@ void Image::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, cons
 	region.bufferRowLength = 0;
 	region.bufferImageHeight = 0;
 	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.mipLevel = miplevel;
 	region.imageSubresource.baseArrayLayer = baseArrayLayer;
 	region.imageSubresource.layerCount = layerCount;
 	region.imageOffset = { 0, 0, 0 };

@@ -26,18 +26,16 @@ public:
 	  * @param layerCount The amount of layers contained in the pixels.
 	  * @param baseArrayLayer The first layer to copy into.
 	*/
-	void SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t baseArrayLayer);
+	void SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t baseArrayLayer, uint32_t miplevel=0);
 
 	void SaveAsPNG(const std::string& out, const glm::uvec2 size);
 
 	std::type_index getTypeIndex() const override { return typeid(ImageCube); }
 
-
 	std::filesystem::path filename;
 	bool anisotropic;
 	bool mipmap;
 	uint32_t components = 0;
-
 	bool isHDR = true;
 
 private:

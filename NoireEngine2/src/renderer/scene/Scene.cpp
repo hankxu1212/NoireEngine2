@@ -6,6 +6,7 @@
 #include "utils/Logger.hpp"
 #include "SceneManager.hpp"
 #include "renderer/object/Mesh.hpp"
+#include "core/Bitmap.hpp"
 
 #include <iostream>
 #include <unordered_map>
@@ -445,16 +446,6 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 	// path + .lambertian + .png
 	std::string substr = path.substr(0, path.length() - 4);
 	std::string lambertianPath = substr + ".lambertian.png";
-	std::array<std::string, GGX_MIP_LEVELS - 1> ggxRoughnessPaths;
-
-	for (int i = 0; i < GGX_MIP_LEVELS - 1; i++) {
-		ggxRoughnessPaths[i] = substr + ".ggx-" + std::to_string(i + 1) + ".png";
-	}
-
-	std::array<std::shared_ptr<ImageCube>, GGX_MIP_LEVELS - 1> m_PrefilteredEnvMaps;
-	for (int i = 0; i < GGX_MIP_LEVELS - 1; i++) {
-		m_PrefilteredEnvMaps[i] = ImageCube::Create(sceneRootAbsolutePath.parent_path() / ggxRoughnessPaths[i]);
-	}
 
 	switch (type)
 	{
@@ -462,19 +453,25 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path);
 		m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath);
 		// dont create mip maps. Will create manually
-		m_PrefilteredEnvMap = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path/*, true, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, true, false*/);
+		m_PrefilteredEnvMap = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path, true, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, true, false);
 		break;
 	case SkyboxType::RGB:
 		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path, false);
 		m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath, false);
-		//for (int i = 0; i < GGX_MIP_LEVELS - 1; i++) {
-			//m_PrefilteredEnvMaps[i] = ImageCube::Create(sceneRootAbsolutePath.parent_path() / ggxRoughnessPaths[i], false);
-		//}
 		NE_WARN("PNG environmental maps are currently not well supported. Be warned!");
 		break;
 	}
 	
 	m_SpecularBRDF = Image2D::Create(Files::Path("../textures/material_textures/SpecularBRDF.png"));
+
+	// load prefiltered environment maps into the mip levels of the big environment map
+	{
+		for (int i = 1; i < GGX_MIP_LEVELS; i++) {
+			std::string ggxPath = substr + ".ggx-" + std::to_string(i) + ".png";
+			Bitmap bitmap(sceneRootAbsolutePath.parent_path() / ggxPath, true); // load a raw bitmap
+			m_PrefilteredEnvMap->SetPixels(bitmap.data.get(), 6, 0, i); // copy bitmap as buffer into image mip level
+		}
+	}
 }
 
 void Scene::PushObjectInstance(ObjectInstance&& instance, uint32_t index)

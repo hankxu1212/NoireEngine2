@@ -62,9 +62,10 @@ ImageCube::ImageCube(const glm::vec2 extent, VkFormat format, VkImageLayout layo
 	Load();
 }
 
-void ImageCube::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t baseArrayLayer) 
+void ImageCube::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t baseArrayLayer, uint32_t miplevel) 
 {
-	Buffer bufferStaging(extent.width * extent.height * components * arrayLayers, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	VkExtent3D copyExtent = { extent.width >> miplevel, extent.height >> miplevel, extent.depth };
+	Buffer bufferStaging(copyExtent.width * copyExtent.height * components * arrayLayers, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 	void* data;
@@ -72,7 +73,9 @@ void ImageCube::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t b
 	memcpy(data, pixels, bufferStaging.getSize());
 	bufferStaging.UnmapMemory();
 
-	CopyBufferToImage(bufferStaging.getBuffer(), image, extent, layerCount, baseArrayLayer);
+	TransitionImageLayout(image, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, 0, arrayLayers, 0);
+	CopyBufferToImage(bufferStaging.getBuffer(), image, copyExtent, layerCount, baseArrayLayer, miplevel);
+	TransitionImageLayout(image, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, layout, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, 0, arrayLayers, 0);
 
 	bufferStaging.Destroy();
 }
@@ -119,28 +122,7 @@ Node& operator<<(Node& node, const ImageCube& image) {
 
 void ImageCube::Load(std::unique_ptr<Bitmap> loadBitmap) {
 	if (!filename.empty() && !loadBitmap) {
-		if (isHDR) {
-			auto rawBitmap = Bitmap(filename); // in rgbe format
-
-			// Reinterpret the data as an array of glm::u8vec4
-			glm::u8vec4* vec4_data = reinterpret_cast<glm::u8vec4*>(rawBitmap.data.get());
-
-			size_t num_vec4_elements = rawBitmap.GetLength() / sizeof(glm::u8vec4);  // Make sure to calculate the correct size
-
-			std::vector<glm::vec4> rgbData;
-
-			for (size_t i = 0; i < num_vec4_elements; ++i) {
-				glm::u8vec4 color = vec4_data[i];
-				rgbData.emplace_back(rgbe_to_float(color));
-			}
-
-			// make a new bitmap
-			loadBitmap = std::make_unique<Bitmap>(std::make_unique<uint8_t[]>(rgbData.size() * sizeof(glm::vec4)), rawBitmap.size, 16);
-			memcpy(loadBitmap->data.get(), rgbData.data(), rgbData.size() * sizeof(glm::vec4));
-		}
-		else { // load as png
-			loadBitmap = std::make_unique<Bitmap>(filename);
-		}
+		loadBitmap = std::make_unique<Bitmap>(filename, isHDR);
 	}
 
 	if (loadBitmap) {

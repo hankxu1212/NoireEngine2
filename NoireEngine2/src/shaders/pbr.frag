@@ -21,11 +21,11 @@ layout(location=0) out vec4 outColor;
 
 layout (set = 2, binding = 0) uniform sampler2D textures[];
 
-// IDL bindings
+// IDL
 #define GGX_MIP_LEVELS 6
 layout (set = 3, binding = 0) uniform samplerCube skybox;
-layout (set = 3, binding = 1) uniform samplerCube lambertianIDL;
-layout (set = 3, binding = 2) uniform sampler2D specularBRDFTex;
+layout (set = 3, binding = 1) uniform samplerCube diffuseIrradiance;
+layout (set = 3, binding = 2) uniform sampler2D specularBRDF;
 layout (set = 3, binding = 3) uniform samplerCube prefilterEnvMap;
 
 layout( push_constant ) uniform constants
@@ -125,7 +125,7 @@ void main() {
 	vec3 ambientLighting;
 	{
 		// diffuse irradiance
-		vec3 irradiance = texture(lambertianIDL, n).rgb;
+		vec3 irradiance = texture(diffuseIrradiance, n).rgb;
 		// ambientLighting = environmentalLight * vec3(material.albedo);
 		// ambientLighting *= material.environmentLightIntensity;
 
@@ -146,7 +146,7 @@ void main() {
 		vec3 specularIrradiance = textureLod(prefilterEnvMap, Lr, roughness * specularTextureLevels).rgb;
 
 		// Split-sum approximation factors for Cook-Torrance specular BRDF.
-		vec2 specularBRDF = texture(specularBRDFTex, vec2(cosLo, roughness)).rg;
+		vec2 specularBRDF = texture(specularBRDF, vec2(cosLo, roughness)).rg;
 
 		// Total specular IBL contribution.
 		vec3 specularIBL = (F0 * specularBRDF.x + specularBRDF.y) * specularIrradiance;
