@@ -1,6 +1,7 @@
 #include "IBLUtilsApplication.hpp"
 #include "LambertianEnvironmentBaker.hpp"
 #include "GGXSpecularEnvironmentBaker.hpp"
+#include "EnvironmentBRDFBaker.hpp"
 #include "utils/Logger.hpp"
 
 IBLUtilsApplication::IBLUtilsApplication(IBLUtilsApplicationSpecification& specs_)
@@ -18,7 +19,12 @@ void IBLUtilsApplication::Run()
     {
         GGXSpecularEnvironmentBaker baker(&specs);
         baker.Run();
+
         NE_INFO("Baking GGX importance sampled environmental map");
+
+        EnvironmentBRDFBaker brdfBaker(&specs);
+        brdfBaker.Run();
+        NE_INFO("Baking Cook-Torrance specular BRDF environmental map");
     }
     else
     {

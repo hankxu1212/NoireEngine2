@@ -64,7 +64,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NMakeBuildCommandLine>node src/Maekfile.js</NMakeBuildCommandLine>
-    <NMakeOutput>src/bin/cube.exe</NMakeOutput>
+    <NMakeOutput>src/bin/main.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath>vendor/glfw-3.4.bin.WIN64/include;$(VK_SDK_PATH)\Include;src;vendor/glm;vendor;vendor/imgui;vendor/imgui/backends;vendor/imguizmo/</NMakeIncludeSearchPath>
     <AdditionalOptions>/std:c++20</AdditionalOptions>
@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer\utils\EnvironmentBRDFBaker.cpp" />
     <ClCompile Include="src\renderer\utils\GGXSpecularEnvironmentBaker.cpp" />
     <ClCompile Include="src\renderer\utils\LambertianEnvironmentBaker.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.cpp" />
@@ -243,6 +244,7 @@
     <ClCompile Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\renderer\utils\EnvironmentBRDFBaker.hpp" />
     <ClInclude Include="src\renderer\utils\GGXSpecularEnvironmentBaker.hpp" />
     <ClInclude Include="src\renderer\utils\LambertianEnvironmentBaker.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.hpp" />

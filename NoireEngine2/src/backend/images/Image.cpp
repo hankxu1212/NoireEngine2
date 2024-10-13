@@ -26,10 +26,25 @@ Image::~Image() {
 void Image::Destroy()
 {
 	auto logicalDevice = VulkanContext::GetDevice();
-	vkDestroyImageView(logicalDevice, view, nullptr);
-	vkDestroySampler(logicalDevice, sampler, nullptr);
-	vkFreeMemory(logicalDevice, memory, nullptr);
-	vkDestroyImage(logicalDevice, image, nullptr);
+	if (view != VK_NULL_HANDLE) {
+		vkDestroyImageView(logicalDevice, view, nullptr);
+		view = VK_NULL_HANDLE;
+	}
+
+	if (sampler != VK_NULL_HANDLE) {
+		vkDestroySampler(logicalDevice, sampler, nullptr);
+		sampler = VK_NULL_HANDLE;
+	}
+	
+	if (memory != VK_NULL_HANDLE) {
+		vkFreeMemory(logicalDevice, memory, nullptr);
+		memory = VK_NULL_HANDLE;
+	}
+
+	if (image != VK_NULL_HANDLE) {
+		vkDestroyImage(logicalDevice, image, nullptr);
+		image = VK_NULL_HANDLE;
+	}
 }
 
 VkDescriptorImageInfo Image::GetDescriptorInfo() const

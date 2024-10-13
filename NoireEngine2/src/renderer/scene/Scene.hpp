@@ -20,6 +20,7 @@ class CameraComponent;
 
 #define MAX_NUM_TOTAL_LIGHTS 20
 #define MAX_WORKFLOWS 4
+#define GGX_MIP_LEVELS 6
 
 namespace Core {
 	class SceneNavigationCamera;
@@ -109,12 +110,6 @@ public:
 
 	void AddSkybox(const std::string& path, SkyboxType type = SkyboxType::HDR);
 
-	const std::shared_ptr<ImageCube>& getSkybox() const { return m_Skybox; }
-
-	const std::shared_ptr<ImageCube>& getSkyboxLambertian() const { return m_SkyboxLambertian; }
-
-	bool hasSkybox() const { return m_Skybox.get(); }
-
 public: // event functions. Do not create function definitions!
 	template<typename T>
 	void OnComponentAdded(Entity&, T&);
@@ -128,6 +123,7 @@ private:
 
 private:
 	friend class SceneManager;
+	friend class ObjectPipeline;
 
 	std::filesystem::path sceneRootAbsolutePath;
 
@@ -153,4 +149,6 @@ private:
 	// IBL
 	std::shared_ptr<ImageCube> m_Skybox;
 	std::shared_ptr<ImageCube> m_SkyboxLambertian; // cosine weighted convolution on the skybox image
+	std::shared_ptr<ImageCube> m_PrefilteredEnvMap;
+	std::shared_ptr<Image2D> m_SpecularBRDF;
 };

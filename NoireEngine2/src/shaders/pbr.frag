@@ -20,7 +20,13 @@ layout(location=0) out vec4 outColor;
 #include "glsl/lighting.glsl"
 
 layout (set = 2, binding = 0) uniform sampler2D textures[];
+
+// IDL bindings
+#define GGX_MIP_LEVELS 6
+layout (set = 3, binding = 0) uniform samplerCube skybox;
 layout (set = 3, binding = 1) uniform samplerCube lambertianIDL;
+layout (set = 3, binding = 2) uniform sampler2D specularBRDFTex;
+layout (set = 3, binding = 3) uniform samplerCube prefilterEnvMap;
 
 layout( push_constant ) uniform constants
 {
@@ -118,8 +124,35 @@ void main() {
 	// IDL
 	vec3 ambientLighting;
 	{
-		vec3 environmentalLight = vec3(texture(lambertianIDL, n));
-		ambientLighting = environmentalLight * vec3(material.albedo);
+		// diffuse irradiance
+		vec3 irradiance = texture(lambertianIDL, n).rgb;
+		// ambientLighting = environmentalLight * vec3(material.albedo);
+		// ambientLighting *= material.environmentLightIntensity;
+
+		// Calculate Fresnel term for ambient lighting.
+		// Since we use pre-filtered cubemap(s) and irradiance is coming from many directions
+		// use cosLo instead of angle with light's half-vector (cosLh above).
+		// See: https://seblagarde.wordpress.com/2011/08/17/hello-world/
+		vec3 F = FresnelSchlick(F0, cosLo);
+
+		// Get diffuse contribution factor (as with direct lighting).
+		vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
+
+		// Irradiance map contains exitant radiance assuming Lambertian BRDF, no need to scale by 1/PI here either.
+		vec3 diffuseIBL = kd * albedo * irradiance;
+
+		// Sample pre-filtered specular reflection environment at correct mipmap level.
+		int specularTextureLevels = textureQueryLevels(prefilterEnvMap);
+		vec3 specularIrradiance = textureLod(prefilterEnvMap, Lr, roughness * specularTextureLevels).rgb;
+
+		// Split-sum approximation factors for Cook-Torrance specular BRDF.
+		vec2 specularBRDF = texture(specularBRDFTex, vec2(cosLo, roughness)).rg;
+
+		// Total specular IBL contribution.
+		vec3 specularIBL = (F0 * specularBRDF.x + specularBRDF.y) * specularIrradiance;
+
+		// Total ambient lighting contribution.
+		ambientLighting = diffuseIBL + specularIBL;
 		ambientLighting *= material.environmentLightIntensity;
 	}
 

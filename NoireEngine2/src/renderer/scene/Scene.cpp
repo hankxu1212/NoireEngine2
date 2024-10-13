@@ -443,19 +443,38 @@ void Scene::Deserialize(const std::string& path)
 void Scene::AddSkybox(const std::string& path, SkyboxType type)
 {
 	// path + .lambertian + .png
-	std::string lambertianPath = path.substr(0, path.length() - 4) + ".lambertian.png";
+	std::string substr = path.substr(0, path.length() - 4);
+	std::string lambertianPath = substr + ".lambertian.png";
+	std::array<std::string, GGX_MIP_LEVELS - 1> ggxRoughnessPaths;
+
+	for (int i = 0; i < GGX_MIP_LEVELS - 1; i++) {
+		ggxRoughnessPaths[i] = substr + ".ggx-" + std::to_string(i + 1) + ".png";
+	}
+
+	std::array<std::shared_ptr<ImageCube>, GGX_MIP_LEVELS - 1> m_PrefilteredEnvMaps;
+	for (int i = 0; i < GGX_MIP_LEVELS - 1; i++) {
+		m_PrefilteredEnvMaps[i] = ImageCube::Create(sceneRootAbsolutePath.parent_path() / ggxRoughnessPaths[i]);
+	}
 
 	switch (type)
 	{
 	case SkyboxType::HDR:
 		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path);
 		m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath);
+		// dont create mip maps. Will create manually
+		m_PrefilteredEnvMap = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path/*, true, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, true, false*/);
 		break;
 	case SkyboxType::RGB:
 		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path, false);
 		m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath, false);
+		//for (int i = 0; i < GGX_MIP_LEVELS - 1; i++) {
+			//m_PrefilteredEnvMaps[i] = ImageCube::Create(sceneRootAbsolutePath.parent_path() / ggxRoughnessPaths[i], false);
+		//}
+		NE_WARN("PNG environmental maps are currently not well supported. Be warned!");
 		break;
 	}
+	
+	m_SpecularBRDF = Image2D::Create(Files::Path("../textures/material_textures/SpecularBRDF.png"));
 }
 
 void Scene::PushObjectInstance(ObjectInstance&& instance, uint32_t index)

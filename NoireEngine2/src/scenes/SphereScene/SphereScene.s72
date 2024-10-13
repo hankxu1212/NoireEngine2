@@ -273,9 +273,9 @@
 		"type": "ENVIRONMENT",
 		"name": "Skybox",
 		"radiance": {
-			"src": "Skybox.png",
+			"src": "ox_bridge_morning.png",
 			"type": "cube",
-			"format": "rgb"
+			"format": "rgbe"
 		}
 	},
 	{

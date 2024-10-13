@@ -214,21 +214,25 @@ void ObjectPipeline::CreateDescriptors()
 			, &variableDescriptorInfoAI);
 	}
 
-	// create skybox descriptors
-	Scene* scene = SceneManager::Get()->getScene();
-	if (!scene->hasSkybox())
-		scene->AddSkybox(DEFAULT_SKYBOX, Scene::SkyboxType::RGB);
+	{
+		// create environment descriptors
+		Scene* scene = SceneManager::Get()->getScene();
+		if (!scene->m_Skybox)
+			scene->AddSkybox(DEFAULT_SKYBOX, Scene::SkyboxType::RGB);
 
-	const auto& skybox = scene->getSkybox();
-	VkDescriptorImageInfo cubeMapInfo = skybox->GetDescriptorInfo();
+		VkDescriptorImageInfo cubeMapInfo = scene->m_Skybox->GetDescriptorInfo();
+		VkDescriptorImageInfo lambertianLUTInfo = scene->m_SkyboxLambertian->GetDescriptorInfo();
+		VkDescriptorImageInfo specularBRDFInfo = scene->m_SpecularBRDF->GetDescriptorInfo();
+		VkDescriptorImageInfo prefilteredEnvMapInfo = scene->m_PrefilteredEnvMap->GetDescriptorInfo();
 
-	const auto& skyboxLambertian = scene->getSkyboxLambertian();
-	VkDescriptorImageInfo lambertianLUTInfo = skyboxLambertian->GetDescriptorInfo();
-
-	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-		.BindImage(0, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.BindImage(1, &lambertianLUTInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.Build(set3_Cubemap, set3_CubemapLayout);
+		// first build lambertian LUT and specular BRDF info
+		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+			.BindImage(0, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.BindImage(1, &lambertianLUTInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.BindImage(2, &specularBRDFInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.BindImage(3, &prefilteredEnvMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.Build(set3_Cubemap, set3_CubemapLayout);
+	}
 }
 
 void ObjectPipeline::Rebuild()

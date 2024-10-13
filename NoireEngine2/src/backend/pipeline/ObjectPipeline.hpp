@@ -28,7 +28,7 @@ public:
 	virtual ~ObjectPipeline();
 
 	inline static size_t ObjectsDrawn, VerticesDrawn, NumDrawCalls;
-	inline static bool UseGizmos = true;
+	inline static bool UseGizmos = false;
 
 public:
 	void CreateRenderPass() override;

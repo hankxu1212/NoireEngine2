@@ -154,6 +154,7 @@ const cube_application = [
 	maek.CPP('renderer/utils/IBLEntrypoint.cpp'),
 	maek.CPP('renderer/utils/LambertianEnvironmentBaker.cpp'),
 	maek.CPP('renderer/utils/GGXSpecularEnvironmentBaker.cpp'),
+	maek.CPP('renderer/utils/EnvironmentBRDFBaker.cpp')
 ]
 
 const compute_shaders = [
@@ -164,6 +165,7 @@ const compute_shaders = [
 	maek.GLSLC("shaders/compute/ggx/ggx_hdr_3.comp"),
 	maek.GLSLC("shaders/compute/ggx/ggx_hdr_4.comp"),
 	maek.GLSLC("shaders/compute/ggx/ggx_hdr_5.comp"),
+	maek.GLSLC("shaders/compute/ggx/ggx_brdf.comp"),
 ];
 
 cube_application.push(maek.CPP('renderer/utils/IBLUtilsApplication.cpp', undefined, { depends: [...compute_shaders] }));

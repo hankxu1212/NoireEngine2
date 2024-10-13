@@ -1,14 +1,14 @@
 #ifndef _INCLUDE_GGX_HDR
 #define _INCLUDE_GGX_HDR
 
+#include "../../glsl/cubemap.glsl"
+#include "../../glsl/hdr.glsl"
+
 layout (local_size_x = 4, local_size_y = 4, local_size_z=1) in;
 
 // input and output are both interpreted as unsigend, normalized fixed point numbers
 layout (set=0, binding = 0, rgba8) uniform readonly imageCube inputImage;
 layout (set=0, binding = 1, rgba8) uniform imageCube resultImage;
-
-#include "../../glsl/cubemap.glsl"
-#include "../../glsl/hdr.glsl"
 
 const uint NumSamples = 128;
 const float InvNumSamples = 1.0 / float(NumSamples);
