@@ -34,12 +34,9 @@ vec4 gamma_map(vec3 color, float gamma)
 // Compute orthonormal basis for converting from tanget/shading space to world space.
 void ComputeTangentBitangent(const vec3 N, out vec3 T, out vec3 B)
 {
-	// Branchless select non-degenerate T.
-	T = cross(N, vec3(0.0, 1.0, 0.0));
-	T = mix(cross(N, vec3(1.0, 0.0, 0.0)), T, step(EPSILON, dot(T, T)));
-
-	T = normalize(T);
-	B = normalize(cross(N, T));
+	vec3 reference = (abs(N.y) < 0.999) ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    T = normalize(cross(N, reference));
+    B = normalize(cross(N, T));
 }
 
 // Convert point from tangent/shading space to world space.

@@ -20,9 +20,10 @@ void GGXSpecularEnvironmentBaker::Run()
 {
     Setup();
 
-    glm::uvec2 dim = { inputImg->getExtent().width, inputImg->getExtent().width };
+    glm::uvec2 dim = { inputImg->getExtent().width / 2, inputImg->getExtent().width / 2 };
 
-    for (int i = 0; i < GGX_MIP_LEVELS; ++i) {
+    // MIP_LEVEL = 0 is original image
+    for (int i = 1; i < GGX_MIP_LEVELS; ++i) {
         miplevel = i;
 
         CreateComputePipeline(dim);
@@ -100,7 +101,7 @@ void GGXSpecularEnvironmentBaker::Prepare()
 
     VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
 
-    std::string shaderName = std::format("../spv/shaders/compute/ggx_hdr_{}.comp.spv", miplevel);
+    std::string shaderName = std::format("../spv/shaders/compute/ggx/ggx_hdr_{}.comp.spv", miplevel);
     NE_INFO("Executing compute shader:{}", shaderName);
     VulkanShader vertModule(shaderName, VulkanShader::ShaderStage::Compute);
 

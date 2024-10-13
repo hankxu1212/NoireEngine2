@@ -3,6 +3,9 @@
 #include "backend/VulkanContext.hpp"
 #include "backend/images/ImageCube.hpp"
 
+// Epic uses 6 levels in its GGX pyramids, with 
+// roughness = level / 5 (so level 0 is roughness 0 is the original image, 
+// level 1 is roughness 1/5 ..., level 6 is roughness 1
 #define GGX_MIP_LEVELS 6
 
 struct IBLUtilsApplicationSpecification;

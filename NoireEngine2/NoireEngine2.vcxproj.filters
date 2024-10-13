@@ -1061,14 +1061,13 @@
     <None Include="src\shaders\pbr.vert" />
     <None Include="src\shaders\pbr.frag" />
     <None Include="src\shaders\glsl\pbr.glsl" />
-    <None Include="src\shaders\compute\ggx_hdr.comp" />
-    <None Include="src\shaders\compute\ggx_brdf.comp" />
-    <None Include="src\shaders\compute\ggx_hdr_1.comp" />
-    <None Include="src\shaders\compute\ggx_hdr_0.comp" />
-    <None Include="src\shaders\compute\ggx_hdr_2.comp" />
-    <None Include="src\shaders\compute\ggx_hdr_3.comp" />
-    <None Include="src\shaders\compute\ggx_hdr_4.comp" />
-    <None Include="src\shaders\compute\ggx_hdr_5.comp" />
+    <None Include="src\shaders\compute\ggx\ggx_hdr.comp" />
+    <None Include="src\shaders\compute\ggx\ggx_brdf.comp" />
+    <None Include="src\shaders\compute\ggx\ggx_hdr_1.comp" />
+    <None Include="src\shaders\compute\ggx\ggx_hdr_2.comp" />
+    <None Include="src\shaders\compute\ggx\ggx_hdr_3.comp" />
+    <None Include="src\shaders\compute\ggx\ggx_hdr_4.comp" />
+    <None Include="src\shaders\compute\ggx\ggx_hdr_5.comp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">
