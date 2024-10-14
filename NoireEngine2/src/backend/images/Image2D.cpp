@@ -4,6 +4,8 @@
 #include "core/Bitmap.hpp"
 #include "backend/buffers/Buffer.hpp"
 #include "renderer/materials/MaterialLibrary.hpp"
+#include "core/Timer.hpp"
+#include "utils/Logger.hpp"
 
 std::shared_ptr<Image2D> Image2D::Create(const Node& node) {
 	if (auto resource = Resources::Get()->Find<Image2D>(node))

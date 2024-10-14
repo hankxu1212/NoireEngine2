@@ -474,6 +474,9 @@
     <ClCompile Include="src\renderer\utils\EnvironmentBRDFBaker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\backend\pipeline\ShadowPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h">
@@ -983,6 +986,9 @@
     <ClInclude Include="src\renderer\utils\EnvironmentBRDFBaker.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\backend\pipeline\ShadowPipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />
@@ -1029,6 +1035,10 @@
     <None Include="src\shaders\compute\ggx\ggx_hdr_4.comp" />
     <None Include="src\shaders\compute\ggx\ggx_hdr_5.comp" />
     <None Include="src\shaders\glsl\parallax.glsl" />
+    <None Include="src\shaders\shadow\offscreen.frag" />
+    <None Include="src\shaders\shadow\offscreen.vert" />
+    <None Include="src\shaders\shadow\scene.frag" />
+    <None Include="src\shaders\shadow\scene.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

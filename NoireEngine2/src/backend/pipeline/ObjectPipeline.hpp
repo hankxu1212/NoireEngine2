@@ -4,13 +4,13 @@
 #include "backend/buffers/Buffer.hpp"
 #include "backend/images/Image2D.hpp"
 #include "renderer/object/ObjectInstance.hpp"
-#include "backend/images/ImageDepth.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
 #include "backend/renderpass/Renderpass.hpp"
 
 #include "backend/pipeline/material_pipeline/MaterialPipeline.hpp"
 #include "SkyboxPipeline.hpp"
 #include "LinesPipeline.hpp"
+#include "ShadowPipeline.hpp"
 
 #include <type_traits>
 #include "glm/glm.hpp"
@@ -46,7 +46,7 @@ private:
 	
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
 
-	void RenderPass(const Scene* scene, const CommandBuffer& commandBuffer);
+	void DrawScene(const Scene* scene, const CommandBuffer& commandBuffer);
 
 	struct Workspace
 	{
@@ -102,5 +102,6 @@ private: // material pipelines
 	std::vector<std::unique_ptr<MaterialPipeline>>	m_MaterialPipelines;
 	std::unique_ptr<LinesPipeline>					s_LinesPipeline;
 	std::unique_ptr<SkyboxPipeline>					s_SkyboxPipeline;
+	std::unique_ptr<ShadowPipeline>					s_ShadowPipeline;
 };
 

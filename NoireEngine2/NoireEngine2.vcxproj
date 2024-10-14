@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\pipeline\ShadowPipeline.cpp" />
     <ClCompile Include="src\renderer\utils\EnvironmentBRDFBaker.cpp" />
     <ClCompile Include="src\renderer\utils\GGXSpecularEnvironmentBaker.cpp" />
     <ClCompile Include="src\renderer\utils\LambertianEnvironmentBaker.cpp" />
@@ -244,6 +245,7 @@
     <ClCompile Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\pipeline\ShadowPipeline.hpp" />
     <ClInclude Include="src\renderer\utils\EnvironmentBRDFBaker.hpp" />
     <ClInclude Include="src\renderer\utils\GGXSpecularEnvironmentBaker.hpp" />
     <ClInclude Include="src\renderer\utils\LambertianEnvironmentBaker.hpp" />
@@ -445,6 +447,10 @@
     <None Include="src\shaders\mirror.vert" />
     <None Include="src\shaders\pbr.frag" />
     <None Include="src\shaders\pbr.vert" />
+    <None Include="src\shaders\shadow\offscreen.frag" />
+    <None Include="src\shaders\shadow\offscreen.vert" />
+    <None Include="src\shaders\shadow\scene.frag" />
+    <None Include="src\shaders\shadow\scene.vert" />
     <None Include="src\shaders\skybox.frag" />
     <None Include="src\shaders\skybox.vert" />
     <None Include="src\shaders\glsl\world_uniform.glsl" />

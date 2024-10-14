@@ -116,7 +116,7 @@ const vulkan_objs = [
 	maek.CPP('backend/pipeline/VulkanGraphicsPipelineBuilder.cpp'),
 ]
 
-function use_shaders(name, pipeline) {
+function use_vert_frag(name, pipeline) {
 	const shaders = [
 		maek.GLSLC(name + '.vert'),
 		maek.GLSLC(name + '.frag'),
@@ -124,12 +124,20 @@ function use_shaders(name, pipeline) {
 	vulkan_objs.push(maek.CPP(pipeline, undefined, { depends: [...shaders] }));
 }
 
-use_shaders('shaders/lambertian', 'backend/pipeline/material_pipeline/LambertianMaterialPipeline.cpp');
-use_shaders('shaders/lines', 'backend/pipeline/LinesPipeline.cpp');
-use_shaders('shaders/skybox', 'backend/pipeline/SkyboxPipeline.cpp');
-use_shaders('shaders/environment', 'backend/pipeline/material_pipeline/EnvironmentMaterialPipeline.cpp');
-use_shaders('shaders/mirror', 'backend/pipeline/material_pipeline/MirrorMaterialPipeline.cpp');
-use_shaders('shaders/pbr', 'backend/pipeline/material_pipeline/PBRMaterialPipeline.cpp');
+use_vert_frag('shaders/lambertian', 'backend/pipeline/material_pipeline/LambertianMaterialPipeline.cpp');
+use_vert_frag('shaders/lines', 'backend/pipeline/LinesPipeline.cpp');
+use_vert_frag('shaders/skybox', 'backend/pipeline/SkyboxPipeline.cpp');
+use_vert_frag('shaders/environment', 'backend/pipeline/material_pipeline/EnvironmentMaterialPipeline.cpp');
+use_vert_frag('shaders/mirror', 'backend/pipeline/material_pipeline/MirrorMaterialPipeline.cpp');
+use_vert_frag('shaders/pbr', 'backend/pipeline/material_pipeline/PBRMaterialPipeline.cpp');
+
+const shadow_shaders = [
+	maek.GLSLC('shaders/shadow/scene.vert'),
+	maek.GLSLC('shaders/shadow/scene.frag'),
+	maek.GLSLC('shaders/shadow/offscreen.vert'),
+	maek.GLSLC('shaders/shadow/offscreen.frag'),
+];
+vulkan_objs.push(maek.CPP('backend/pipeline/ShadowPipeline.cpp', undefined, { depends: [...shadow_shaders] }));
 
 const imgui_objs = [
 	maek.CPP('../vendor/imgui/imgui.cpp'),

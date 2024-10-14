@@ -1,7 +1,6 @@
 #pragma once
 
 #include "VulkanPipeline.hpp"
-#include "backend/images/ImageDepth.hpp"
 #include "backend/renderpass/Renderpass.hpp"
 
 #include "imgui/imgui.h"

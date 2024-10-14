@@ -73,9 +73,7 @@ void ImageCube::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t b
 	memcpy(data, pixels, bufferStaging.getSize());
 	bufferStaging.UnmapMemory();
 
-	//TransitionImageLayout(image, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, 0, arrayLayers, 0);
 	CopyBufferToImage(bufferStaging.getBuffer(), image, copyExtent, layerCount, baseArrayLayer, miplevel);
-	//TransitionImageLayout(image, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, layout, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, 0, arrayLayers, 0);
 
 	bufferStaging.Destroy();
 }

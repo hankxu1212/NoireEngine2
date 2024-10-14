@@ -248,8 +248,8 @@ void ObjectPipeline::CreatePipeline()
 	}
 
 	s_LinesPipeline = std::make_unique<LinesPipeline>(this);
-
 	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>(this);
+	s_ShadowPipeline = std::make_unique<ShadowPipeline>();
 
 	CreateDescriptors();
 
@@ -258,15 +258,24 @@ void ObjectPipeline::CreatePipeline()
 	}
 
 	s_LinesPipeline->CreatePipeline();
-
 	s_SkyboxPipeline->CreatePipeline();
+	s_ShadowPipeline->CreatePipeline();
 }
 
 void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
 	Prepare(scene, commandBuffer);
+	
 	m_Renderpass->Begin(commandBuffer);
-	RenderPass(scene, commandBuffer);
+	{
+		DrawScene(scene, commandBuffer);
+
+		// draw lines
+		if (UseGizmos)
+			s_LinesPipeline->Render(scene, commandBuffer);
+
+		s_SkyboxPipeline->Render(scene, commandBuffer);
+	}
 	m_Renderpass->End(commandBuffer);
 }
 
@@ -330,9 +339,8 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 
 	Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), workspace.Transforms_src.getSize());
 	
-	if (UseGizmos) {
+	if (UseGizmos)
 		s_LinesPipeline->Prepare(scene, commandBuffer);
-	}
 
 	s_SkyboxPipeline->Prepare(scene, commandBuffer);
 
@@ -378,7 +386,7 @@ VkDescriptorBufferInfo ObjectPipeline::CreateTransformStorageBuffer(Workspace& w
 }
 
 //draw with the objects pipeline:
-void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& commandBuffer)
+void ObjectPipeline::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 {
 	const auto& allInstances = scene->getObjectInstances();
 
@@ -399,15 +407,18 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 		if (workflowInstances.empty())
 			continue;
 
+		// bind pipeline
 		m_MaterialPipelines[workflowIndex]->BindPipeline(commandBuffer);
+
+		// bind descriptor sets
 		m_MaterialPipelines[workflowIndex]->BindDescriptors(commandBuffer);
 
-		uint32_t instanceCount = (uint32_t)workflowInstances.size();
-
+		// make draws into compact batches
 		std::vector<IndirectBatch> draws = CompactDraws(workflowInstances);
 		NumDrawCalls += draws.size();
 
 		//encode the draw data of each object into the indirect draw buffer
+		uint32_t instanceCount = (uint32_t)workflowInstances.size();
 		for (uint32_t i = 0; i < instanceCount; i++)
 		{
 			drawCommands[instanceIndex].indexCount = workflowInstances[i].mesh->getIndexCount();
@@ -420,6 +431,7 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 			VerticesDrawn += workflowInstances[i].mesh->getVertexCount();
 		}
 
+		// draw each batch
 		for (IndirectBatch& draw : draws)
 		{
 			VertexInput* vertexInputPtr = draw.mesh->getVertexInput();
@@ -431,21 +443,14 @@ void ObjectPipeline::RenderPass(const Scene* scene, const CommandBuffer& command
 			draw.mesh->Bind(commandBuffer);
 			draw.material->Push(commandBuffer, m_MaterialPipelines[workflowIndex]->m_PipelineLayout);
 
-			VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * sizeof(VkDrawIndexedIndirectCommand);
 			constexpr uint32_t stride = sizeof(VkDrawIndexedIndirectCommand);
+			VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * stride;
 
 			vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
 		}
 		offsetIndex += instanceCount;
 	}
 	ObjectsDrawn = instanceIndex;
-
-	// draw lines
-	if (UseGizmos) {
-		s_LinesPipeline->Render(scene, commandBuffer);
-	}
-
-	s_SkyboxPipeline->Render(scene, commandBuffer);
 }
 
 std::vector<ObjectPipeline::IndirectBatch> ObjectPipeline::CompactDraws(const std::vector<ObjectInstance>& objects)

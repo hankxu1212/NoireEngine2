@@ -3,6 +3,7 @@
 #include "backend/images/Image2D.hpp"
 #include "core/resources/Files.hpp"
 #include "renderer/scene/SceneManager.hpp"
+#include "core/Timer.hpp"
 
 #include "editor/ImGuiExtension.hpp"
 

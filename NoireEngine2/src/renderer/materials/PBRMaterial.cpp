@@ -3,6 +3,7 @@
 #include "backend/images/Image2D.hpp"
 #include "core/resources/Files.hpp"
 #include "renderer/scene/SceneManager.hpp"
+#include "core/Timer.hpp"
 
 #include "editor/ImGuiExtension.hpp"
 #include <limits>
@@ -171,6 +172,7 @@ void PBRMaterial::Load()
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.roughnessPath);
 		m_RoughnessMapId = tex->getTextureId();
 	}
+
 }
 
 void PBRMaterial::Inspect()

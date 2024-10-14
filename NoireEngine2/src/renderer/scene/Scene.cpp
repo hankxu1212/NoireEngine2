@@ -303,8 +303,6 @@ static void MakeEnvironment(Scene* scene, const Scene::TSceneMap& sceneMap)
 
 static Entity* MakeNode(Scene* scene, Scene::TSceneMap& sceneMap, const std::string& nodeName, Entity* parent)
 {
-	NE_DEBUG("Creating entity", Logger::CYAN, Logger::BOLD);
-
 	const Scene::TValueUMap& nodeMap = sceneMap[SceneNode::Node];
 
 	auto nodeIt = nodeMap.find(nodeName);
@@ -367,7 +365,7 @@ void Scene::Deserialize(const std::string& path)
 {
 	sceneRootAbsolutePath = Files::Path(path);
 
-	NE_INFO("Loading scene: {}", sceneRootAbsolutePath.string());
+	NE_DEBUG("Loading scene: " + sceneRootAbsolutePath.string(), Logger::CYAN, Logger::BOLD);
 
 	TSceneMap sceneMap; // entire scene map
 
@@ -447,6 +445,8 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 	std::string substr = path.substr(0, path.length() - 4);
 	std::string lambertianPath = substr + ".lambertian.png";
 
+	NE_DEBUG("Creating skybox: " + path, Logger::CYAN, Logger::BOLD);
+
 	switch (type)
 	{
 	case SkyboxType::HDR:
@@ -471,7 +471,7 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 		m_PrefilteredEnvMap->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 		for (int i = 1; i < GGX_MIP_LEVELS; i++) {
 			std::string ggxPath = substr + ".ggx-" + std::to_string(i) + ".png";
-			Bitmap bitmap(sceneRootAbsolutePath.parent_path() / ggxPath, true); // load a raw bitmap
+			Bitmap bitmap(sceneRootAbsolutePath.parent_path() / ggxPath, type==SkyboxType::HDR); // load a raw bitmap
 			m_PrefilteredEnvMap->SetPixels(bitmap.data.get(), 6, 0, i); // copy bitmap as buffer into image mip level
 		}
 		m_PrefilteredEnvMap->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_PrefilteredEnvMap->getLayout(), VK_IMAGE_ASPECT_COLOR_BIT);
