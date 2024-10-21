@@ -49,13 +49,16 @@ vec3 PointLightRadiance(int i)
 {
 	vec3 lightDir = normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
 
-	float D = distance(vec3(POINT_LIGHTS[i].position), inPosition); // distance to light
+	float D = distance(vec3(POINT_LIGHTS[i].position), inPosition);
     
 	float cosTheta = saturate(dot(n, lightDir));
 
-	float saturated = saturate(1 - pow(D / POINT_LIGHTS[i].limit, 4));
-	float attenuation = saturated * saturated / (D * D + 1);
-
+	float attenuation = 1;
+	if (D > POINT_LIGHTS[i].radius){
+		float saturated = saturate(1 - pow(D / POINT_LIGHTS[i].limit, 4));
+		attenuation = saturated * saturated / (D * D + 1);
+	}
+	
 	return cosTheta * POINT_LIGHTS[i].intensity * attenuation * vec3(POINT_LIGHTS[i].color);
 }
 
@@ -67,17 +70,20 @@ vec3 SpotLightRadiance(int i)
     
 	float cosTheta = saturate(dot(n, lightDir));
 
-	float saturated = saturate(1 - pow(D / SPOT_LIGHTS[i].limit, 4));
-	float attenuation = saturated * saturated / (D * D + 1);
+	float attenuation = 1;
+	if (D > SPOT_LIGHTS[i].radius){
+		float saturated = saturate(1 - pow(D / POINT_LIGHTS[i].limit, 4));
+		attenuation = saturated * saturated / (D * D + 1);
+	}
 
     // spotlight intensity
     float theta = dot(lightDir, vec3(normalize(SPOT_LIGHTS[i].direction)));
     float inner = cos(SPOT_LIGHTS[i].fov * (1 - SPOT_LIGHTS[i].blend) / 2);
     float outer = cos(SPOT_LIGHTS[i].fov / 2);
 	float epsilon = saturate(inner - outer);
-	float falloff = clamp((theta - outer) / epsilon, 0.0, 1.0);
+	float view = clamp((theta - outer) / epsilon, 0.0, 1.0);
 
-	return cosTheta * SPOT_LIGHTS[i].intensity * falloff * attenuation * vec3(SPOT_LIGHTS[i].color);
+	return cosTheta * SPOT_LIGHTS[i].intensity * view * attenuation * vec3(SPOT_LIGHTS[i].color);
 }
 
 vec3 DirectLighting()
