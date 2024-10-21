@@ -25,6 +25,7 @@
 #include "math/color/Color.hpp"
 
 Bitmap::Bitmap(const std::filesystem::path& filename, bool HDR) {
+	assert(Files::Exists(filename.string()));
 	if (HDR)
 		LoadHDR(filename);
 	else

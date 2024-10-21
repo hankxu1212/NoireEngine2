@@ -83,21 +83,20 @@ public:
 	
 	inline CameraComponent* debugCam() const;
 
-	struct SceneUniform 
+	struct alignas(16) SceneUniform 
 	{
-		LightUniform lights[MAX_NUM_TOTAL_LIGHTS];
-		alignas(16) uint32_t numLights;
-		alignas(16) struct { float x, y, z, _padding; } cameraPosition;
-
+		struct { float x, y, z, _padding; } cameraPosition;
 		// shadow stuff temporary
 		glm::mat4 depthBiasMVP;
 		glm::vec4 lightPos;
 		// Used for depth map visualization
 		float zNear;
 		float zFar;
+		uint32_t numDirLights;
+		uint32_t numPointLights;
+		uint32_t numSpotLights;
 	};
-
-	static_assert(sizeof(SceneUniform) == sizeof(LightUniform) * MAX_NUM_TOTAL_LIGHTS + 16 * 2 + 64 + 16 + 16);
+	static_assert(sizeof(SceneUniform) == 16 * 8);
 
 	inline const void* getSceneUniformPtr() const { return &m_SceneInfo; }
 
@@ -144,7 +143,7 @@ private:
 
 	TransformMatrixStack m_MatrixStack;
 
-	//types for descriptors:
+	// scene uiforms
 	SceneUniform m_SceneInfo;
 
 	std::vector<std::vector<ObjectInstance>> m_ObjectInstances;

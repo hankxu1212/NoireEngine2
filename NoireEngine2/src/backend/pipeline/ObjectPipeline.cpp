@@ -40,6 +40,12 @@ ObjectPipeline::~ObjectPipeline()
 		workspace.Transforms.Destroy();
 		workspace.World.Destroy();
 		workspace.World_src.Destroy();
+		
+		for (int i = 0; i < workspace.Lights.size(); i++)
+		{
+			workspace.Lights_src[i].Destroy();
+			workspace.Lights[i].Destroy();
+		}
 	}
 	workspaces.clear();
 
@@ -159,14 +165,18 @@ void ObjectPipeline::CreateDescriptors()
 			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
 			.Build(workspace.set0_World, set0_WorldLayout);
 
-		// build transform layout, no buffer allocation
+		// build transforms and lights storage buffers, no buffer allocation
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-			.Build(workspace.set1_Transforms, set1_TransformsLayout);
+			.AddBinding(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // dir lights
+			.AddBinding(2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // point lights
+			.AddBinding(3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // spot lights
+			.Build(workspace.set1_StorageBuffers, set1_StorageBuffersLayout);
 	}
 
-	// https://github.com/SaschaWillems/Vulkan/blob/master/examples/descriptorindexing/descriptorindexing.cpp#L127
-	{ // create set 2: textures
+	// create set 2: textures
+	{
+		// https://github.com/SaschaWillems/Vulkan/blob/master/examples/descriptorindexing/descriptorindexing.cpp#L127
 		// [POI] The fragment shader will be using an unsized array of samplers, which has to be marked with the VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT
 		std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
 			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
@@ -214,7 +224,8 @@ void ObjectPipeline::CreateDescriptors()
 			, &variableDescriptorInfoAI);
 	}
 
-	{ // create set 3: environment descriptors
+	// create set 3: environment descriptors
+	{
 		Scene* scene = SceneManager::Get()->getScene();
 		if (!scene->m_Skybox)
 			scene->AddSkybox(DEFAULT_SKYBOX, Scene::SkyboxType::RGB);
@@ -233,7 +244,8 @@ void ObjectPipeline::CreateDescriptors()
 			.Build(set3_Cubemap, set3_CubemapLayout);
 	}
 
-	{ // create set 4: shadow mapping
+	// create set 4: shadow mapping
+	{
 		VkDescriptorImageInfo shadowMapDescriptorInfo = s_ShadowPipeline->GetShadowImage()->GetDescriptorInfo();
 		shadowMapDescriptorInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
@@ -316,46 +328,164 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 		Buffer::CopyBuffer(commandBuffer, workspace.World_src.getBuffer(), workspace.World.getBuffer(), workspace.World_src.getSize());
 	}
 
-	const auto& sceneObjectInstances = scene->getObjectInstances();
 
 	//upload object transforms and allocate needed bytes
-	size_t needed_bytes = 0;
-	for (int i = 0; i < sceneObjectInstances.size(); ++i)
-		needed_bytes += sceneObjectInstances[i].size() * sizeof(ObjectInstance::TransformUniform);
-
-	// resize as neccesary
-	if (workspace.Transforms_src.getBuffer() == VK_NULL_HANDLE 
-		|| workspace.Transforms_src.getSize() < needed_bytes) 
 	{
-		//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
-		size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
+		const auto& sceneObjectInstances = scene->getObjectInstances();
 
-		workspace.Transforms_src.Destroy();
-		workspace.Transforms.Destroy();
+		size_t needed_bytes = 0;
+		for (int i = 0; i < sceneObjectInstances.size(); ++i)
+			needed_bytes += sceneObjectInstances[i].size() * sizeof(ObjectInstance::TransformUniform);
 
-		//update the descriptor set:
-		VkDescriptorBufferInfo Transforms_info = CreateTransformStorageBuffer(workspace, new_bytes);
+		// resize as neccesary
+		if (workspace.Transforms_src.getBuffer() == VK_NULL_HANDLE
+			|| workspace.Transforms_src.getSize() < needed_bytes)
+		{
+			//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
+			size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
 
-		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-			.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-			.Write(workspace.set1_Transforms);
-	}
+			workspace.Transforms_src.Destroy();
+			workspace.Transforms.Destroy();
 
-	assert(workspace.Transforms_src.getSize() == workspace.Transforms.getSize());
-	assert(workspace.Transforms_src.getSize() >= needed_bytes);
+			workspace.Transforms_src = Buffer(
+				new_bytes,
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //host-visible memory, coherent (no special sync needed)
+				Buffer::Mapped //get a pointer to the memory
+			);
+			workspace.Transforms = Buffer(
+				new_bytes,
+				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //going to use as storage buffer, also going to have GPU into this memory
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT //GPU-local memory
+			);
 
-	{ //copy transforms into Transforms_src:
-		assert(workspace.Transforms_src.data() != nullptr);
-		ObjectInstance::TransformUniform* out = reinterpret_cast<ObjectInstance::TransformUniform*>(workspace.Transforms_src.data());
-		for (int i = 0; i < sceneObjectInstances.size(); ++i) {
-			for (auto& inst : sceneObjectInstances[i]) {
-				*out = inst.m_TransformUniform;
-				++out;
+			//update the descriptor set:
+			VkDescriptorBufferInfo Transforms_info{
+				.buffer = workspace.Transforms.getBuffer(),
+				.offset = 0,
+				.range = workspace.Transforms.getSize(),
+			};
+
+			DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+				.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+				.Write(workspace.set1_StorageBuffers);
+
+			NE_INFO("Reallocated transform to {} bytes", needed_bytes);
+		}
+
+		assert(workspace.Transforms_src.getSize() == workspace.Transforms.getSize());
+		assert(workspace.Transforms_src.getSize() >= needed_bytes);
+
+		{ //copy transforms into Transforms_src:
+			assert(workspace.Transforms_src.data() != nullptr);
+			ObjectInstance::TransformUniform* out = reinterpret_cast<ObjectInstance::TransformUniform*>(workspace.Transforms_src.data());
+			for (int i = 0; i < sceneObjectInstances.size(); ++i) {
+				for (auto& inst : sceneObjectInstances[i]) {
+					*out = inst.m_TransformUniform;
+					++out;
+				}
 			}
 		}
+
+		Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), workspace.Transforms_src.getSize());
 	}
 
-	Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), workspace.Transforms_src.getSize());
+	// upload and allocated needed bytes for lights
+	{
+		const auto& lightInstances = scene->getLightInstances();
+
+		std::array<size_t, 3> neededBytesPerLightType = { 0 };
+		for (int i = 0; i < lightInstances.size(); ++i)
+		{
+			switch (lightInstances[i]->GetLightInfo().type)
+			{
+			case 0/*Light::Type::Directional*/:
+				neededBytesPerLightType[0] += sizeof(DirectionalLightUniform);
+				break;
+			case 1/*Light::Type::Point*/:
+				neededBytesPerLightType[1] += sizeof(PointLightUniform);
+				break;
+			case 2/*Light::Type::Spot*/:
+				neededBytesPerLightType[2] += sizeof(SpotLightUniform);
+				break;
+			}
+		}
+
+		// iterate over all types of lights and potentially reallocate
+		for (int i = 0; i < 3; i++)
+		{
+			Buffer& bufSrc = workspace.Lights_src[i];
+			Buffer& buf = workspace.Lights[i];
+			size_t neededBytes = neededBytesPerLightType[i];
+
+			// resize as neccesary
+			if (bufSrc.getBuffer() == VK_NULL_HANDLE
+				|| bufSrc.getSize() < neededBytes)
+			{
+				size_t new_bytes = ((neededBytes + 4096) / 4096) * 4096;
+
+				bufSrc.Destroy();
+				buf.Destroy();
+
+				bufSrc = Buffer(
+					new_bytes,
+					VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //host-visible memory, coherent (no special sync needed)
+					Buffer::Mapped //get a pointer to the memory
+				);
+				buf = Buffer(
+					new_bytes,
+					VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //going to use as storage buffer, also going to have GPU into this memory
+					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT //GPU-local memory
+				);
+
+				//update the descriptor set:
+				VkDescriptorBufferInfo LightInfo{
+					.buffer = buf.getBuffer(),
+					.offset = 0,
+					.range = buf.getSize(),
+				};
+
+				DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+					.BindBuffer(i + 1 /*cuz index 0 is transforms*/, &LightInfo, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
+					.Write(workspace.set1_StorageBuffers);
+
+				NE_INFO("Reallocated light type {} to {} bytes", i, neededBytes);
+			}
+
+			assert(bufSrc.getSize() == buf.getSize());
+			assert(bufSrc.getSize() >= neededBytes);
+
+		}
+
+		// copy into buffers
+		DirectionalLightUniform* directionalIt = reinterpret_cast<DirectionalLightUniform*>(workspace.Lights_src[0].data());
+		PointLightUniform* pointIt = reinterpret_cast<PointLightUniform*>(workspace.Lights_src[1].data());
+		SpotLightUniform* spotIt = reinterpret_cast<SpotLightUniform*>(workspace.Lights_src[2].data());
+
+		for (int i = 0; i < lightInstances.size(); ++i)
+		{
+			switch (lightInstances[i]->GetLightInfo().type)
+			{
+			case 0/*Light::Type::Directional*/:
+				*directionalIt = lightInstances[i]->GetLightUniformAs<DirectionalLightUniform>();
+				directionalIt++;
+				break;
+			case 1/*Light::Type::Point*/:
+				*pointIt = lightInstances[i]->GetLightUniformAs<PointLightUniform>();
+				pointIt++;
+				break;
+			case 2/*Light::Type::Spot*/:
+				*spotIt = lightInstances[i]->GetLightUniformAs<SpotLightUniform>();
+				spotIt++;
+				break;
+			}
+		}
+	
+		// copy all 3
+		for (int i = 0; i < 3; i++)
+			Buffer::CopyBuffer(commandBuffer, workspace.Lights_src[i].getBuffer(), workspace.Lights[i].getBuffer(), workspace.Lights_src[i].getSize());
+	}
 	
 	// prepare other pipelines
 
@@ -380,29 +510,6 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 			0, nullptr //imageMemoryBarriers (count, data)
 		);
 	}
-}
-
-VkDescriptorBufferInfo ObjectPipeline::CreateTransformStorageBuffer(Workspace& workspace, size_t new_bytes)
-{
-	workspace.Transforms_src = Buffer(
-		new_bytes,
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //going to have GPU copy from this memory
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //host-visible memory, coherent (no special sync needed)
-		Buffer::Mapped //get a pointer to the memory
-	);
-	workspace.Transforms = Buffer(
-		new_bytes,
-		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //going to use as storage buffer, also going to have GPU into this memory
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT //GPU-local memory
-	);
-	//update the descriptor set:
-	VkDescriptorBufferInfo Transforms_info{
-		.buffer = workspace.Transforms.getBuffer(),
-		.offset = 0,
-		.range = workspace.Transforms.getSize(),
-	};
-	std::cout << "Re-allocated object transforms buffers to " << new_bytes << " bytes." << std::endl;
-	return Transforms_info;
 }
 
 //draw with the objects pipeline:

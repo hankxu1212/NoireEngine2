@@ -1,4 +1,5 @@
-struct Transform {
+struct Transform 
+{
 	mat4 localToClip;
 	mat4 model;
 	mat4 modelNormal;

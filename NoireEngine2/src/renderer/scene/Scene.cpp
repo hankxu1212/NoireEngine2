@@ -447,22 +447,18 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 
 	NE_DEBUG("Creating skybox: " + path, Logger::CYAN, Logger::BOLD);
 
-	switch (type)
-	{
-	case SkyboxType::HDR:
-		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path);
-		m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath);
-		// dont create mip maps. Will create manually
-		break;
-	case SkyboxType::RGB:
-		m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path, false);
-		m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath, false);
-		NE_WARN("PNG environmental maps are currently not well supported. Be warned!");
-		break;
-	}
+	bool isHDR = type == SkyboxType::HDR;
+
+	// skybox itself
+	m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path, isHDR);
+
+	// diffuse irradiance
+	m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath, isHDR);
 	
+	// env brdf lookup table
 	m_SpecularBRDF = Image2D::Create(Files::Path("../textures/material_textures/SpecularBRDF_LUT.png"));
 	
+	// specular ggx
 	m_PrefilteredEnvMap = std::make_shared<ImageCube>(sceneRootAbsolutePath.parent_path() / path);
 	m_PrefilteredEnvMap->Load();
 
@@ -559,13 +555,25 @@ void Scene::InstantiateCoreScripts()
 
 void Scene::UpdateSceneInfo()
 {
-	int i = 0;
-	for (Light* light : m_SceneLights)
+	m_SceneInfo.numDirLights = 0;
+	m_SceneInfo.numPointLights = 0;
+	m_SceneInfo.numSpotLights = 0;
+
+	for (int i = 0; i < m_SceneLights.size(); ++i)
 	{
-		memcpy(&m_SceneInfo.lights[i], &light->GetLightUniform(), sizeof(LightUniform));
-		i++;
+		switch (m_SceneLights[i]->GetLightInfo().type)
+		{
+		case 0/*Light::Type::Directional*/:
+			m_SceneInfo.numDirLights++;
+			break;
+		case 1/*Light::Type::Point*/:
+			m_SceneInfo.numPointLights++;
+			break;
+		case 2/*Light::Type::Spot*/:
+			m_SceneInfo.numSpotLights++;
+			break;
+		}
 	}
-	m_SceneInfo.numLights = i;
 
 	const glm::vec3& pos = GetRenderCam()->GetTransform()->WorldLocation();
 	m_SceneInfo.cameraPosition = {pos.x, pos.y, pos.z, 0};

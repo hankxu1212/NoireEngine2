@@ -68,10 +68,12 @@ private:
 		//location for ObjectsPipeline::Transforms data: (streamed to GPU per-frame)
 		Buffer Transforms_src; //host coherent; mapped
 		Buffer Transforms; //device-local
-		VkDescriptorSet set1_Transforms; //references Transforms
-	};
 
-	VkDescriptorBufferInfo CreateTransformStorageBuffer(Workspace& workspace, size_t new_bytes);
+		std::array<Buffer, 3> Lights_src;
+		std::array<Buffer, 3> Lights;
+
+		VkDescriptorSet set1_StorageBuffers; //references Transforms and lights
+	};
 
 private:
 	friend class LambertianMaterialPipeline;
@@ -85,7 +87,7 @@ private:
 
 	VkDescriptorSetLayout set0_WorldLayout = VK_NULL_HANDLE;
 	
-	VkDescriptorSetLayout set1_TransformsLayout = VK_NULL_HANDLE;
+	VkDescriptorSetLayout set1_StorageBuffersLayout = VK_NULL_HANDLE;
 
 	VkDescriptorSetLayout set2_TexturesLayout = VK_NULL_HANDLE;
 	VkDescriptorSet set2_Textures;

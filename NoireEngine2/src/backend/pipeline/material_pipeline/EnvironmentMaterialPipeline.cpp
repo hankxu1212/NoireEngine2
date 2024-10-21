@@ -30,7 +30,7 @@ void EnvironmentMaterialPipeline::BindDescriptors(const CommandBuffer& commandBu
 	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
 	std::array< VkDescriptorSet, 4 > descriptor_sets{
 		workspace.set0_World,
-		workspace.set1_Transforms,
+		workspace.set1_StorageBuffers,
 		p_ObjectPipeline->set2_Textures,
 		p_ObjectPipeline->set3_Cubemap
 	};
@@ -70,7 +70,7 @@ void EnvironmentMaterialPipeline::CreatePipelineLayout()
 {
 	std::array< VkDescriptorSetLayout, 4 > layouts{
 		p_ObjectPipeline->set0_WorldLayout,
-		p_ObjectPipeline->set1_TransformsLayout,
+		p_ObjectPipeline->set1_StorageBuffersLayout,
 		p_ObjectPipeline->set2_TexturesLayout,
 		p_ObjectPipeline->set3_CubemapLayout
 	};

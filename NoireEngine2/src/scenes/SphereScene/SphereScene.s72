@@ -1360,7 +1360,7 @@
 		"pbr": {
 			"albedo": { "src": "Brick.albedo.png" },
 			"metalness": 0.8,
-			"roughness": { "src": "Brick.roughness.png" }
+			"roughness": 0.5
 		}
 	}
 ]

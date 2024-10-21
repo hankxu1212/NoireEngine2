@@ -9,11 +9,11 @@
 
 #include <variant>
 
-struct alignas(16) LightUniform 
+struct alignas(16) LightInfo 
 {
-	struct { float x, y, z, padding_; } color = { 1,1,1,0 };
-	struct { float x, y, z, padding_; } position;
-	struct { float x, y, z, padding_; } direction;
+	glm::vec4 color = { 1,1,1,0 };
+	glm::vec4 position;
+	glm::vec4 direction;
 	float radius = 1;
 	float limit = 10;
 	float intensity = 1; /* or power */
@@ -21,7 +21,40 @@ struct alignas(16) LightUniform
 	float blend = 0.5f;
 	uint32_t type = 0 /*Directional*/;
 };
-static_assert(sizeof(LightUniform) == 16 * 5);
+static_assert(sizeof(LightInfo) == 16 * 5);
+
+struct alignas(16) DirectionalLightUniform
+{
+	glm::vec4 color = { 1,1,1,0 };
+	glm::vec4 direction;
+	float angle;
+	float intensity = 1; /* or power */
+};
+static_assert(sizeof(DirectionalLightUniform) == 16 * 3);
+
+struct alignas(16) PointLightUniform
+{
+	glm::vec4 color = { 1,1,1,0 };
+	glm::vec4 position;
+	float intensity = 1; /* or power */
+	float radius = 1;
+	float limit = 10;
+};
+static_assert(sizeof(PointLightUniform) == 16 * 3);
+
+struct alignas(16) SpotLightUniform
+{
+	glm::vec4 color = { 1,1,1,0 };
+	glm::vec4 position;
+	glm::vec4 direction;
+	float intensity = 1; /* or power */
+	float radius = 1;
+	float limit = 10;
+	float fov = 0.349066f;
+	float blend = 0.5f;
+};
+static_assert(sizeof(SpotLightUniform) == 16 * 5);
+
 
 class Light : public Component
 {
@@ -42,11 +75,55 @@ public:
 
 	void Inspect() override;
 
-	_NODISCARD LightUniform& GetLightUniform() { return m_LightUniform; }
+	_NODISCARD LightInfo& GetLightInfo() { return m_Info; }
+
+	template<typename T>
+	_NODISCARD T GetLightUniformAs() const;
+
+	template<>
+	_NODISCARD DirectionalLightUniform GetLightUniformAs() const
+	{
+		DirectionalLightUniform uniform;
+		uniform.color = m_Info.color;
+		uniform.direction = m_Info.direction;
+		uniform.angle = 0.0f;
+		uniform.intensity = m_Info.intensity;
+
+		return uniform;
+	}
+
+	template<>
+	_NODISCARD PointLightUniform GetLightUniformAs() const
+	{
+		PointLightUniform uniform;
+		uniform.color = m_Info.color;
+		uniform.position = m_Info.position;
+		uniform.intensity = m_Info.intensity;
+		uniform.radius = m_Info.radius;
+		uniform.limit = m_Info.limit;
+
+		return uniform;
+	}
+
+	template<>
+	_NODISCARD SpotLightUniform GetLightUniformAs() const
+	{
+		SpotLightUniform uniform;
+		uniform.color = m_Info.color;
+		uniform.position = m_Info.position;
+		uniform.direction = m_Info.direction;
+		uniform.intensity = m_Info.intensity;
+		uniform.radius = m_Info.radius;
+		uniform.limit = m_Info.limit;
+		uniform.fov = m_Info.fov;
+		uniform.blend = m_Info.blend;
+
+		return uniform;
+	}
 
 	const char* getName() override { return "Light"; }
 
 private:
-	LightUniform m_LightUniform;
+	LightInfo m_Info;
 	GizmosInstance gizmos;
 };

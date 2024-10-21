@@ -18,7 +18,9 @@ layout(location=0) out vec4 outColor;
 const vec3 Fdielectric = vec3(0.04);
 #include "glsl/pbr.glsl"
 
-vec3 n; // the lighting.glsl depends on this
+// global variables so no need to pass ton of variables
+vec3 n, F0, V, albedo;
+float roughness, metalness, cosLo; 
 #include "glsl/lighting.glsl"
 #include "glsl/cubemap.glsl"
 
@@ -61,7 +63,7 @@ void main() {
     mat3 TBN = mat3(tangent, bitangent, n);
 
     // view direction
-    vec3 V = normalize(vec3(scene.cameraPos) - inPosition);
+    V = normalize(vec3(scene.cameraPos) - inPosition);
 
     // uv
     vec2 UV = inTexCoord;
@@ -89,7 +91,7 @@ void main() {
 	}
 
 	// albedo 
-	vec3 albedo = vec3(material.albedo);
+	albedo = vec3(material.albedo);
 	if (material.albedoTexId >= 0)
 		albedo *= texture(textures[material.albedoTexId], UV).rgb;
 
@@ -97,53 +99,29 @@ void main() {
         discard;
 
     // roughness
-    float roughness = material.roughness;
+    roughness = material.roughness;
     if (material.roughnessTexId >= 0)
         roughness = textureLod(textures[material.roughnessTexId], UV, 0.0).a;
 
     // metallic
-    float metalness = material.metallic;
+    metalness = material.metallic;
     if (material.metallicTexId >= 0)
         metalness = textureLod(textures[material.metallicTexId], UV, 0.0).a;
 
 
 	// light out
-    float cosLo = max(0.0, dot(n, V));
+    cosLo = max(0.0, dot(n, V));
 
     // specular reflection
     vec3 R = reflect(-V, n);
 
     // Fresnel
-    vec3 F0 = mix(Fdielectric, albedo, metalness);
+    F0 = mix(Fdielectric, albedo, metalness);
 
-    vec3 directLighting = vec3(0);
-    for (int i = 0; i < min(MAX_LIGHTS_PER_OBJ, scene.numLights); ++i)
-    {
-        vec3 radiance = CalcLight(i, CURR_LIGHT.type);
+    // direct analytical lighting
+    vec3 directLighting = DirectLightingPBR();
 
-        // Incident light direction.
-        vec3 Li = normalize(vec3(CURR_LIGHT.position) - inPosition);
-        vec3 Lh = normalize(Li + V);
-
-        // Cosines of angles between normal and light vectors.
-        float cosLi = max(0.0, dot(n, Li));
-        float cosLh = max(0.0, dot(n, Lh));
-
-        vec3 F = FresnelSchlickRoughness(F0, max(0.0, dot(Lh, V)), roughness);
-        float D = DistributionGGX(cosLh, roughness);
-        float G = GeometrySmith(cosLi, cosLo, roughness);
-
-        // Diffuse BRDF based on Fresnel and metalness.
-        vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
-        vec3 diffuseBRDF = kd * albedo;
-
-        // Cook-Torrance specular BRDF.
-        vec3 specularBRDF = (F * D * G) / max(EPSILON, 4.0 * cosLi * cosLo);
-
-        directLighting += (diffuseBRDF + specularBRDF) * radiance * cosLi;
-    }
-
-    // IBL: Ambient lighting calculation.
+    // IBL: ambient lighting
     vec3 ambientLighting;
     {
         // lambertian diffuse irradiance
