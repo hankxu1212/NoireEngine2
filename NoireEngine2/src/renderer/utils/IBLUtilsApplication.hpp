@@ -9,7 +9,7 @@ struct IBLUtilsApplicationSpecification
 	std::string inFile, outFile;
 	bool isGGX = false;
 	bool isHDR = true;
-	uint32_t outdim = 512;
+	uint32_t outdim = 128;
 };
 
 class IBLUtilsApplication

@@ -114,7 +114,7 @@ public:
 	// Skybox
 	enum class SkyboxType { HDR, RGB };
 
-	void AddSkybox(const std::string& path, SkyboxType type = SkyboxType::HDR);
+	void AddSkybox(const std::string& path, SkyboxType type = SkyboxType::HDR, bool isDefault=false);
 
 public: // event functions. Do not create function definitions!
 	template<typename T>

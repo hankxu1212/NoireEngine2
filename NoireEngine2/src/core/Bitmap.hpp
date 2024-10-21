@@ -21,5 +21,5 @@ public:
 
 	std::unique_ptr<uint8_t[]> data;
 	glm::uvec2 size;
-	uint32_t bytesPerPixel = 0;
+	uint32_t bytesPerPixel = 4;
 };

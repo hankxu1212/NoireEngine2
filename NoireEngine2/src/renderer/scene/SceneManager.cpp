@@ -22,10 +22,10 @@ void SceneManager::LoadDefault()
 		scene->Load(Application::GetSpecification().InitialScene.value());
 	else
 		//scene->Load("../scenes/examples/sphereflake.s72");
-		scene->Load("../scenes/SphereScene/SphereScene.s72");
+		//scene->Load("../scenes/SphereScene/SphereScene.s72");
 		//scene->Load("../scenes/examples/Materials.s72");
 		//scene->Load("../scenes/BrickScene/BrickScene.s72");
-		//scene->Load("../scenes/examples/lights-Mix.s72");
+		scene->Load("../scenes/examples/lights-Mix.s72");
 }
 
 void SceneManager::Update()

@@ -24,7 +24,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
 
-#define DEFAULT_SKYBOX "../textures/Skybox.png"
+#define DEFAULT_SKYBOX "../textures/material_textures/Skybox.png"
 
 ObjectPipeline::ObjectPipeline()
 {
@@ -228,7 +228,7 @@ void ObjectPipeline::CreateDescriptors()
 	{
 		Scene* scene = SceneManager::Get()->getScene();
 		if (!scene->m_Skybox)
-			scene->AddSkybox(DEFAULT_SKYBOX, Scene::SkyboxType::RGB);
+			scene->AddSkybox(DEFAULT_SKYBOX, Scene::SkyboxType::RGB, true);
 
 		VkDescriptorImageInfo cubeMapInfo = scene->m_Skybox->GetDescriptorInfo();
 		VkDescriptorImageInfo lambertianLUTInfo = scene->m_SkyboxLambertian->GetDescriptorInfo();

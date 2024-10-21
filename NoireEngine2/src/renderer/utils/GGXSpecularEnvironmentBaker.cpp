@@ -101,14 +101,42 @@ void GGXSpecularEnvironmentBaker::Prepare()
 
     VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
 
-    std::string shaderName = std::format("../spv/shaders/compute/ggx/ggx_hdr_{}.comp.spv", miplevel);
+    std::string shaderName = std::format("../spv/shaders/compute/ggx/ggx_prefilter_env.comp.spv", miplevel);
+
+    // specialization
+    struct SpecializationInfo {
+        int hdr, mip;
+    }; 
+    
+    struct SpecializationInfo specializationData
+    {
+        .hdr = specs->isHDR ? 1 : 0,
+        .mip = miplevel
+    };
+    
+    std::array<VkSpecializationMapEntry, 2> specializationMapEntries;
+    specializationMapEntries[0].constantID = 0;
+    specializationMapEntries[0].size = sizeof(specializationData.hdr);
+    specializationMapEntries[0].offset = 0;
+
+    specializationMapEntries[1].constantID = 1;
+    specializationMapEntries[1].size = sizeof(specializationData.mip);
+    specializationMapEntries[1].offset = offsetof(SpecializationInfo, mip);
+
+    VkSpecializationInfo specializationInfo{};
+    specializationInfo.dataSize = sizeof(SpecializationInfo);
+    specializationInfo.mapEntryCount = static_cast<uint32_t>(specializationMapEntries.size());
+    specializationInfo.pMapEntries = specializationMapEntries.data();
+    specializationInfo.pData = &specializationData;
+
     NE_INFO("Executing compute shader:{}", shaderName);
-    VulkanShader vertModule(shaderName, VulkanShader::ShaderStage::Compute);
+    VulkanShader shader(shaderName, VulkanShader::ShaderStage::Compute);
 
     VkComputePipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
     pipelineInfo.layout = m_PipelineLayout;
-    pipelineInfo.stage = vertModule.shaderStage();
+    pipelineInfo.stage = shader.shaderStage();
+    pipelineInfo.stage.pSpecializationInfo = &specializationInfo;
 
     if (vkCreateComputePipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create compute pipeline!");
@@ -131,6 +159,7 @@ void GGXSpecularEnvironmentBaker::ExecuteComputeShader()
     // dispatch compute
     vkCmdDispatch(cmd, storageImg->getExtent().width / 4, storageImg->getExtent().height / 4, 6);
 
+    // theres some wacky stuff with cpu sychronization
     cmd.Submit(nullptr, nullptr, fence);
 
     vkWaitForFences(VulkanContext::GetDevice(), 1, &fence, VK_TRUE, UINT64_MAX);

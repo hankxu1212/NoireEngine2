@@ -17,13 +17,13 @@ void IBLUtilsApplication::Run()
 {
     if (specs.isGGX)
     {
-        //GGXSpecularEnvironmentBaker baker(&specs);
-        //baker.Run();
-        //NE_INFO("Baking GGX importance sampled environmental map");
+        GGXSpecularEnvironmentBaker baker(&specs);
+        baker.Run();
+        NE_INFO("Baking GGX importance sampled environmental map");
 
-        EnvironmentBRDFBaker brdfBaker(&specs);
-        brdfBaker.Run();
-        NE_INFO("Baking Cook-Torrance specular BRDF environmental map");
+        //EnvironmentBRDFBaker brdfBaker(&specs);
+        //brdfBaker.Run();
+        //NE_INFO("Baking Cook-Torrance specular BRDF environmental map");
     }
     else
     {

@@ -1,5 +1,4 @@
-#ifndef _INCLUDE_GGX_HDR
-#define _INCLUDE_GGX_HDR
+#version 450
 
 #include "../../glsl/cubemap.glsl"
 #include "../../glsl/hdr.glsl"
@@ -10,17 +9,18 @@ layout (local_size_x = 4, local_size_y = 4, local_size_z=1) in;
 layout (set=0, binding = 0, rgba8) uniform readonly imageCube inputImage;
 layout (set=0, binding = 1, rgba8) uniform imageCube resultImage;
 
-const uint NumSamples = 1024 * 1024;
-const float InvNumSamples = 1.0 / float(NumSamples);
-#include "../../glsl/sampling.glsl"
 #include "../../glsl/pbr.glsl"
+
+// compile time specialization constants
+layout (constant_id = 0) const int IS_HDR = 1;
+layout (constant_id = 1) const int MIP_LEVEL = 0;
 
 void main()
 {
     // N direction
     ivec3 inSize = ivec3(imageSize(inputImage), 6);
     ivec3 outSize = ivec3(imageSize(resultImage), 6);
-    float roughness = MIP_LEVEL * 0.2f;
+    float roughness = MIP_LEVEL * 0.2;
 
     vec2 uv_in = gl_GlobalInvocationID.xy / vec2(outSize.xy);
     vec3 N = CubeUVtoCartesian(int(gl_GlobalInvocationID.z), uv_in);
@@ -42,9 +42,15 @@ void main()
                 float NoH = max(0.0, dot(N, H));
 
                 float ggxNDF = DistributionGGX(NoH, roughness);
-                
-                vec4 sampled_rgbe = imageLoad(inputImage, ivec3(i,j,z));
-                vec3 sampled_rgb = vec3(rgbe_f_to_float(sampled_rgbe));
+                vec3 sampled_rgb;
+                if (IS_HDR == 1){
+                    vec4 sampled_rgbe = imageLoad(inputImage, ivec3(i,j,z));
+                    sampled_rgb = vec3(rgbe_f_to_float(sampled_rgbe));
+                }
+                else
+                {
+                    sampled_rgb = imageLoad(inputImage, ivec3(i,j,z)).rgb;
+                }
                 irradiance += sampled_rgb * ggxNDF * NoL;
                 samples++;
             }
@@ -52,8 +58,11 @@ void main()
     }
 
     irradiance /= vec3(samples);
-    vec4 rgb_out = float_f_to_rgbe(irradiance);
+    vec4 rgb_out;
+    if (IS_HDR == 1)
+        rgb_out = float_f_to_rgbe(irradiance);
+    else
+        rgb_out = vec4(irradiance, 1);
+
     imageStore(resultImage, ivec3(gl_GlobalInvocationID.xyz), rgb_out);
 }
-
-#endif

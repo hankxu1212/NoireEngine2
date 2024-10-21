@@ -79,7 +79,21 @@ void LambertianEnvironmentBaker::Prepare()
 
     VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
 
-    std::string shaderName = specs->isHDR ? "../spv/shaders/compute/lambertian_hdr.comp.spv" : "../spv/shaders/compute/lambertian_png.comp.spv";
+    uint32_t HDR_CONST = specs->isHDR ? 1 : 0;
+
+    VkSpecializationMapEntry entry{
+        .constantID = 0,
+        .offset = 0,
+        .size = sizeof(uint32_t)
+    };
+    VkSpecializationInfo spec_info{
+       .mapEntryCount = 1,
+       .pMapEntries = &entry,
+       .dataSize = sizeof(uint32_t),
+       .pData = &HDR_CONST
+    };
+
+    std::string shaderName = "../spv/shaders/compute/lambertian_diffuse_irradiance.comp.spv";
     NE_INFO("Executing compute shader:{}", shaderName);
     VulkanShader vertModule(shaderName, VulkanShader::ShaderStage::Compute);
 
@@ -87,6 +101,7 @@ void LambertianEnvironmentBaker::Prepare()
     pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
     pipelineInfo.layout = m_PipelineLayout;
     pipelineInfo.stage = vertModule.shaderStage();
+    pipelineInfo.stage.pSpecializationInfo = &spec_info;
 
     if (vkCreateComputePipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create compute pipeline!");

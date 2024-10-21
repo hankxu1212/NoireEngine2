@@ -439,7 +439,7 @@ void Scene::Deserialize(const std::string& path)
 	}
 }
 
-void Scene::AddSkybox(const std::string& path, SkyboxType type)
+void Scene::AddSkybox(const std::string& path, SkyboxType type, bool isDefault)
 {
 	// path + .lambertian + .png
 	std::string substr = path.substr(0, path.length() - 4);
@@ -449,17 +449,24 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 
 	bool isHDR = type == SkyboxType::HDR;
 
+	auto FormatPath = [&](std::string path) -> const std::filesystem::path {
+		if (isDefault)
+			return Files::Path(path);
+		else
+			return sceneRootAbsolutePath.parent_path() / path;
+	};
+
 	// skybox itself
-	m_Skybox = ImageCube::Create(sceneRootAbsolutePath.parent_path() / path, isHDR);
+	m_Skybox = ImageCube::Create(FormatPath(path), isHDR);
 
 	// diffuse irradiance
-	m_SkyboxLambertian = ImageCube::Create(sceneRootAbsolutePath.parent_path() / lambertianPath, isHDR);
+	m_SkyboxLambertian = ImageCube::Create(FormatPath(lambertianPath), isHDR);
 	
 	// env brdf lookup table
 	m_SpecularBRDF = Image2D::Create(Files::Path("../textures/material_textures/SpecularBRDF_LUT.png"));
 	
 	// specular ggx
-	m_PrefilteredEnvMap = std::make_shared<ImageCube>(sceneRootAbsolutePath.parent_path() / path);
+	m_PrefilteredEnvMap = std::make_shared<ImageCube>(FormatPath(path), VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, true, true, isHDR);
 	m_PrefilteredEnvMap->Load();
 
 	// load prefiltered environment maps into the mip levels of the big environment map
@@ -467,7 +474,7 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type)
 		m_PrefilteredEnvMap->TransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
 		for (int i = 1; i < GGX_MIP_LEVELS; i++) {
 			std::string ggxPath = substr + ".ggx-" + std::to_string(i) + ".png";
-			Bitmap bitmap(sceneRootAbsolutePath.parent_path() / ggxPath, type==SkyboxType::HDR); // load a raw bitmap
+			Bitmap bitmap(FormatPath(ggxPath), isHDR); // load a raw bitmap
 			m_PrefilteredEnvMap->SetPixels(bitmap.data.get(), 6, 0, i); // copy bitmap as buffer into image mip level
 		}
 		m_PrefilteredEnvMap->TransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_PrefilteredEnvMap->getLayout(), VK_IMAGE_ASPECT_COLOR_BIT);

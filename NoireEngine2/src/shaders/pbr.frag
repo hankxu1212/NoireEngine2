@@ -24,6 +24,9 @@ float roughness, metalness, cosLo;
 #include "glsl/lighting.glsl"
 #include "glsl/cubemap.glsl"
 
+vec3 CalcPBRDirectLighting(vec3 radiance, vec3 Li);
+vec3 DirectLightingPBR();
+
 layout (set = 2, binding = 0) uniform sampler2D textures[];
 
 // IDL
@@ -108,7 +111,6 @@ void main() {
     if (material.metallicTexId >= 0)
         metalness = textureLod(textures[material.metallicTexId], UV, 0.0).a;
 
-
 	// light out
     cosLo = max(0.0, dot(n, V));
 
@@ -154,4 +156,54 @@ void main() {
     // color = color * (1.0f / Uncharted2Tonemap(vec3(11.2f)));
     color = ACES(color);
 	outColor = gamma_map(color, 2.2);
+}
+
+vec3 CalcPBRDirectLighting(vec3 radiance, vec3 Li)
+{
+	// Incident light direction.
+    vec3 Lh = normalize(Li + V);
+    
+    // Cosines of angles between normal and light vectors.
+    float cosLi = max(0.0, dot(n, Li));
+    float cosLh = max(0.0, dot(n, Lh));
+    
+    vec3 F = FresnelSchlickRoughness(F0, max(0.0, dot(Lh, V)), roughness);
+    float D = DistributionGGX(cosLh, roughness);
+    float G = GeometrySmith(cosLi, cosLo, roughness);
+    
+    // Diffuse BRDF based on Fresnel and metalness.
+    vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
+    vec3 diffuseBRDF = kd * albedo;
+    
+    // Cook-Torrance specular BRDF.
+    vec3 specularBRDF = (F * D * G) / max(EPSILON, 4.0 * cosLi * cosLo);
+    
+    return (diffuseBRDF + specularBRDF) * radiance * cosLi;
+}
+
+vec3 DirectLightingPBR()
+{
+	vec3 lightsSum = vec3(0);
+
+	for (int i = 0; i < scene.numDirLights; ++i)
+	{
+		vec3 radiance = DirLightRadiance(i);
+		lightsSum += CalcPBRDirectLighting(radiance, vec3(DIR_LIGHTS[i].direction));
+	}
+
+	for (int i = 0; i < scene.numPointLights; ++i)
+	{
+		vec3 radiance = PointLightRadiance(i);
+		vec3 Li = normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
+		lightsSum += CalcPBRDirectLighting(radiance, Li);
+	}
+
+	for (int i = 0; i < scene.numSpotLights; ++i)
+	{
+		vec3 radiance = SpotLightRadiance(i);
+		vec3 Li = normalize(vec3(SPOT_LIGHTS[i].position) - inPosition);
+		lightsSum += CalcPBRDirectLighting(radiance, Li);
+	}
+
+	return lightsSum;
 }

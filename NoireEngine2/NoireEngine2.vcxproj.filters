@@ -1022,18 +1022,12 @@
     <None Include="src\shaders\glsl\hdr.glsl" />
     <None Include="src\shaders\glsl\sampling.glsl" />
     <None Include="src\shaders\glsl\random.glsl" />
-    <None Include="src\shaders\compute\lambertian_png.comp" />
     <None Include="src\shaders\glsl\lighting.glsl" />
     <None Include="src\shaders\pbr.vert" />
     <None Include="src\shaders\pbr.frag" />
     <None Include="src\shaders\glsl\pbr.glsl" />
-    <None Include="src\shaders\compute\ggx\ggx_hdr.comp" />
+    <None Include="src\shaders\compute\ggx\ggx_prefilter_env.comp" />
     <None Include="src\shaders\compute\ggx\ggx_brdf.comp" />
-    <None Include="src\shaders\compute\ggx\ggx_hdr_1.comp" />
-    <None Include="src\shaders\compute\ggx\ggx_hdr_2.comp" />
-    <None Include="src\shaders\compute\ggx\ggx_hdr_3.comp" />
-    <None Include="src\shaders\compute\ggx\ggx_hdr_4.comp" />
-    <None Include="src\shaders\compute\ggx\ggx_hdr_5.comp" />
     <None Include="src\shaders\glsl\parallax.glsl" />
     <None Include="src\shaders\shadow\offscreen.frag" />
     <None Include="src\shaders\shadow\offscreen.vert" />
@@ -1087,6 +1081,6 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\shaders\compute\edgedetect.comp" />
-    <FxCompile Include="src\shaders\compute\lambertian_hdr.comp" />
+    <FxCompile Include="src\shaders\compute\lambertian_diffuse_irradiance.comp" />
   </ItemGroup>
 </Project>

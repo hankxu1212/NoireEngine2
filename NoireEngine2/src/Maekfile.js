@@ -161,14 +161,9 @@ const cube_application = [
 ]
 
 const compute_shaders = [
-	maek.GLSLC("shaders/compute/lambertian_hdr.comp"),
-	maek.GLSLC("shaders/compute/lambertian_png.comp"),
-	maek.GLSLC("shaders/compute/ggx/ggx_hdr_1.comp"),
-	maek.GLSLC("shaders/compute/ggx/ggx_hdr_2.comp"),
-	maek.GLSLC("shaders/compute/ggx/ggx_hdr_3.comp"),
-	maek.GLSLC("shaders/compute/ggx/ggx_hdr_4.comp"),
-	maek.GLSLC("shaders/compute/ggx/ggx_hdr_5.comp"),
+	maek.GLSLC("shaders/compute/lambertian_diffuse_irradiance.comp"),
 	maek.GLSLC("shaders/compute/ggx/ggx_brdf.comp"),
+	maek.GLSLC("shaders/compute/ggx/ggx_prefilter_env.comp"),
 ];
 
 cube_application.push(maek.CPP('renderer/utils/IBLUtilsApplication.cpp', undefined, { depends: [...compute_shaders] }));
