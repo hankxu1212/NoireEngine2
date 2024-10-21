@@ -41,6 +41,16 @@ public:
 
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
+	// for draw indirect
+	struct IndirectBatch
+	{
+		Mesh* mesh;
+		Material* material;
+		uint32_t firstInstanceIndex;
+		uint32_t count;
+	};
+	static std::vector<IndirectBatch> CompactDraws(const std::vector<ObjectInstance>& objects);
+
 private:
 	void CreateDescriptors();
 	
@@ -83,20 +93,12 @@ private:
 	VkDescriptorSetLayout set3_CubemapLayout = VK_NULL_HANDLE;
 	VkDescriptorSet set3_Cubemap = VK_NULL_HANDLE;
 
+	VkDescriptorSetLayout set4_ShadowMapLayout = VK_NULL_HANDLE;
+	VkDescriptorSet set4_ShadowMap = VK_NULL_HANDLE;
+
 	DescriptorAllocator						m_DescriptorAllocator;
 
 	std::unique_ptr<Renderpass>				m_Renderpass;
-
-	// for draw indirect
-	struct IndirectBatch
-	{
-		Mesh* mesh;
-		Material* material;
-		uint32_t firstInstanceIndex;
-		uint32_t count;
-	};
-
-	std::vector<IndirectBatch> CompactDraws(const std::vector<ObjectInstance>& objects);
 
 private: // material pipelines
 	std::vector<std::unique_ptr<MaterialPipeline>>	m_MaterialPipelines;

@@ -88,9 +88,16 @@ public:
 		LightUniform lights[MAX_NUM_TOTAL_LIGHTS];
 		alignas(16) uint32_t numLights;
 		alignas(16) struct { float x, y, z, _padding; } cameraPosition;
+
+		// shadow stuff temporary
+		glm::mat4 depthBiasMVP;
+		glm::vec4 lightPos;
+		// Used for depth map visualization
+		float zNear;
+		float zFar;
 	};
 
-	static_assert(sizeof(SceneUniform) == sizeof(LightUniform) * MAX_NUM_TOTAL_LIGHTS + 16 * 2);
+	static_assert(sizeof(SceneUniform) == sizeof(LightUniform) * MAX_NUM_TOTAL_LIGHTS + 16 * 2 + 64 + 16 + 16);
 
 	inline const void* getSceneUniformPtr() const { return &m_SceneInfo; }
 

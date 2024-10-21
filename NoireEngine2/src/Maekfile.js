@@ -131,13 +131,8 @@ use_vert_frag('shaders/environment', 'backend/pipeline/material_pipeline/Environ
 use_vert_frag('shaders/mirror', 'backend/pipeline/material_pipeline/MirrorMaterialPipeline.cpp');
 use_vert_frag('shaders/pbr', 'backend/pipeline/material_pipeline/PBRMaterialPipeline.cpp');
 
-const shadow_shaders = [
-	maek.GLSLC('shaders/shadow/scene.vert'),
-	maek.GLSLC('shaders/shadow/scene.frag'),
-	maek.GLSLC('shaders/shadow/offscreen.vert'),
-	maek.GLSLC('shaders/shadow/offscreen.frag'),
-];
-vulkan_objs.push(maek.CPP('backend/pipeline/ShadowPipeline.cpp', undefined, { depends: [...shadow_shaders] }));
+// shadow
+use_vert_frag('shaders/shadow/offscreen', 'backend/pipeline/ShadowPipeline.cpp');
 
 const imgui_objs = [
 	maek.CPP('../vendor/imgui/imgui.cpp'),

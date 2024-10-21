@@ -1037,8 +1037,6 @@
     <None Include="src\shaders\glsl\parallax.glsl" />
     <None Include="src\shaders\shadow\offscreen.frag" />
     <None Include="src\shaders\shadow\offscreen.vert" />
-    <None Include="src\shaders\shadow\scene.frag" />
-    <None Include="src\shaders\shadow\scene.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

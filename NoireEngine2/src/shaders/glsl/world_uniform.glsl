@@ -17,4 +17,11 @@ layout(set=0,binding=0,std140) uniform World {
 	Light lights[MAX_NUM_TOTAL_LIGHTS];
 	int numLights;
 	vec4 cameraPos;
+	
+	// shadow stuff temporary
+	mat4 lightSpace;
+	vec4 lightPos;
+	// Used for depth map visualization
+	float zNear;
+	float zFar;
 }scene;

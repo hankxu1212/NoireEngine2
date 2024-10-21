@@ -449,8 +449,6 @@
     <None Include="src\shaders\pbr.vert" />
     <None Include="src\shaders\shadow\offscreen.frag" />
     <None Include="src\shaders\shadow\offscreen.vert" />
-    <None Include="src\shaders\shadow\scene.frag" />
-    <None Include="src\shaders\shadow\scene.vert" />
     <None Include="src\shaders\skybox.frag" />
     <None Include="src\shaders\skybox.vert" />
     <None Include="src\shaders\glsl\world_uniform.glsl" />

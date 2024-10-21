@@ -4,6 +4,7 @@
 #include "math/Math.hpp"
 #include "backend/images/ImageDepth.hpp"
 #include "backend/buffers/Buffer.hpp"
+#include "backend/descriptor/DescriptorBuilder.hpp"
 
 class ShadowPipeline : public VulkanPipeline
 {
@@ -21,10 +22,7 @@ public:
 
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
-private:
-	VkPipeline			m_PipelineOffscreen;
-	VkPipeline			m_PipelineShadow;
-	VkPipelineLayout	m_PipelineLayout;
+	ImageDepth* GetShadowImage() { return m_DepthAttachment.get(); }
 
 	// Keep depth range as small as possible
 	// for better shadow map precision
@@ -41,37 +39,30 @@ private:
 
 	float lightFOV = 45.0f;
 
-	struct UniformDataScene {
-		glm::mat4 projection;
-		glm::mat4 view;
-		glm::mat4 model;
-		glm::mat4 depthBiasMVP;
-		glm::vec4 lightPos;
-		// Used for depth map visualization
-		float zNear;
-		float zFar;
-	} uniformDataScene;
+private:
+	VkPipeline			m_Pipeline;
+	VkPipelineLayout	m_PipelineLayout;
 
-	struct UniformDataOffscreen {
+
+	struct UniformDataOffscreen 
+	{
 		glm::mat4 depthMVP;
-	} uniformDataOffscreen;
+	} m_OffscreenUniform;
 
-	Buffer m_BufferScene;
-	Buffer m_BufferOffscreen;
+	Buffer m_BufferOffscreenUniform;
 
 	VkDescriptorSet set0_Offscreen;
-	VkDescriptorSet set0_OffscreenLayout;
+	VkDescriptorSetLayout set0_OffscreenLayout;
+
+	DescriptorAllocator m_Allocator;
 
 	struct OffscreenPass {
 		int32_t width, height;
 		VkFramebuffer frameBuffer;
 		VkRenderPass renderPass;
-		VkDescriptorImageInfo descriptor;
 	} offscreenPass{};
 
 	std::unique_ptr<ImageDepth> m_DepthAttachment;
-
-	const VkFormat offscreenDepthFormat{ VK_FORMAT_D16_UNORM };
 
 	// Shadow map dimension
 #if defined(__ANDROID__)
@@ -83,9 +74,16 @@ private:
 
 	void PrepareOffscreenFrameBuffer();
 	void PrepareUniformBuffers();
-	void UpdateUniforms();
-	void CreateDescriptors();
 
+	void UpdateUniforms();
 	void UpdateLight();
+
+	void CreateDescriptors();
+	void CreatePipelineLayout();
+	void CreateGraphicsPipeline();
+
+	void BindDescriptors(const CommandBuffer& cmdBuffer);
+
+	void BeginRenderPass(const CommandBuffer& cmdBuffer);
 };
 

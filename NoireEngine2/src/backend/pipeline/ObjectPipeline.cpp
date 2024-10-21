@@ -132,7 +132,7 @@ void ObjectPipeline::CreateDescriptors()
 {
 	workspaces.resize(VulkanContext::Get()->getFramesInFlight());
 
-	// create world and transform descriptor
+	// create set 0 and set 1: world and transform descriptor
 	for (Workspace& workspace : workspaces)
 	{
 		workspace.World_src = Buffer(
@@ -156,7 +156,7 @@ void ObjectPipeline::CreateDescriptors()
 
 		// build world buffer descriptor
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
 			.Build(workspace.set0_World, set0_WorldLayout);
 
 		// build transform layout, no buffer allocation
@@ -166,7 +166,7 @@ void ObjectPipeline::CreateDescriptors()
 	}
 
 	// https://github.com/SaschaWillems/Vulkan/blob/master/examples/descriptorindexing/descriptorindexing.cpp#L127
-	{ // create set 3: textures
+	{ // create set 2: textures
 		// [POI] The fragment shader will be using an unsized array of samplers, which has to be marked with the VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT
 		std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
 			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
@@ -214,8 +214,7 @@ void ObjectPipeline::CreateDescriptors()
 			, &variableDescriptorInfoAI);
 	}
 
-	{
-		// create environment descriptors
+	{ // create set 3: environment descriptors
 		Scene* scene = SceneManager::Get()->getScene();
 		if (!scene->m_Skybox)
 			scene->AddSkybox(DEFAULT_SKYBOX, Scene::SkyboxType::RGB);
@@ -233,6 +232,15 @@ void ObjectPipeline::CreateDescriptors()
 			.BindImage(3, &prefilteredEnvMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.Build(set3_Cubemap, set3_CubemapLayout);
 	}
+
+	{ // create set 4: shadow mapping
+		VkDescriptorImageInfo shadowMapDescriptorInfo = s_ShadowPipeline->GetShadowImage()->GetDescriptorInfo();
+		shadowMapDescriptorInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+			.BindImage(0, &shadowMapDescriptorInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.Build(set4_ShadowMap, set4_ShadowMapLayout);
+	}
 }
 
 void ObjectPipeline::Rebuild()
@@ -249,9 +257,15 @@ void ObjectPipeline::CreatePipeline()
 
 	s_LinesPipeline = std::make_unique<LinesPipeline>(this);
 	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>(this);
+	
+	// create shadow pipeline and initialize its shadow frame buffer pass
 	s_ShadowPipeline = std::make_unique<ShadowPipeline>();
+	s_ShadowPipeline->CreatePipeline();
 
+	// this relies on shadow pipeline's depth attachment
 	CreateDescriptors();
+
+	// the following pipelines rely on ObjectPipeline's descriptor sets
 
 	for (int i = 0; i < NUM_WORKFLOWS; i++) {
 		m_MaterialPipelines[i]->Create();
@@ -259,12 +273,14 @@ void ObjectPipeline::CreatePipeline()
 
 	s_LinesPipeline->CreatePipeline();
 	s_SkyboxPipeline->CreatePipeline();
-	s_ShadowPipeline->CreatePipeline();
 }
 
 void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
 	Prepare(scene, commandBuffer);
+
+	// render shadow pass
+	s_ShadowPipeline->Render(scene, commandBuffer);
 	
 	m_Renderpass->Begin(commandBuffer);
 	{
@@ -286,8 +302,10 @@ void ObjectPipeline::Update(const Scene* scene)
 
 void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	Workspace& workspace = workspaces[CURR_FRAME];
+	s_ShadowPipeline->Prepare(scene, commandBuffer);
 
+	Workspace& workspace = workspaces[CURR_FRAME];
+	
 	//upload world info:
 	{ 
 		//host-side copy into World_src:
@@ -339,6 +357,8 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 
 	Buffer::CopyBuffer(commandBuffer, workspace.Transforms_src.getBuffer(), workspace.Transforms.getBuffer(), workspace.Transforms_src.getSize());
 	
+	// prepare other pipelines
+
 	if (UseGizmos)
 		s_LinesPipeline->Prepare(scene, commandBuffer);
 

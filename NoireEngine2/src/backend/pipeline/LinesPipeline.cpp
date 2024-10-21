@@ -43,6 +43,7 @@ void LinesPipeline::CreatePipeline()
 	CreatePipelineLayout();
 	CreateGraphicsPipeline();
 }
+
 static uint32_t totalGizmosSize;
 
 void LinesPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
