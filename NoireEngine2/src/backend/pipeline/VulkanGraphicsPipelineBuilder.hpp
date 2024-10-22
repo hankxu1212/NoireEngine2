@@ -4,9 +4,8 @@
 #include <vector>
 #include "backend/VulkanContext.hpp"
 
-class VulkanGraphicsPipelineBuilder
+struct VulkanGraphicsPipelineBuilder
 {
-public:
     static VulkanGraphicsPipelineBuilder Start();
     VulkanGraphicsPipelineBuilder& SetDynamicStates(const std::vector<VkDynamicState>& dynamicStates);
     VulkanGraphicsPipelineBuilder& SetInputAssembly(VkPrimitiveTopology topology);
@@ -19,7 +18,6 @@ public:
     
     void Build(const std::string& vert, const std::string& frag, VkPipeline* pipeline, VkPipelineLayout layout, VkRenderPass renderpass, uint32_t subpass = 0);
 
-private:
     // Add members for pipeline creation information
     VkPipelineDynamicStateCreateInfo dynamicState{};
     const VkPipelineVertexInputStateCreateInfo* vertexInput = VK_NULL_HANDLE;

@@ -12,6 +12,7 @@ public:
 	ShadowPipeline();
 	~ShadowPipeline();
 
+	// creates as many render passes as there are shadow casters in the scene
 	void CreateRenderPass() override;
 
 	void Rebuild() override;
@@ -20,29 +21,20 @@ public:
 
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
 
+	// run a series of render passes on each shadow caster
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
-	ImageDepth* GetShadowImage() { return m_DepthAttachment.get(); }
-
-	// Keep depth range as small as possible
-	// for better shadow map precision
-	float zNear = 1.0f;
-	float zFar = 96.0f;
-
-	glm::vec3 lightPos = glm::vec3();
-
-	// Depth bias (and slope) are used to avoid shadowing artifacts
-	// Constant depth bias factor (always applied)
-	float depthBiasConstant = 1.25f;
-	// Slope depth bias factor, applied depending on polygon's slope
-	float depthBiasSlope = 1.75f;
-
-	float lightFOV = 45.0f;
+	struct OffscreenPass {
+		int32_t width, height;
+		VkFramebuffer frameBuffer;
+		VkRenderPass renderPass;
+		std::unique_ptr<ImageDepth> depthAttachment;
+		VkPipeline pipeline;
+	};
+	const std::vector<OffscreenPass>& getShadowPasses() const { return offscreenpasses; }
 
 private:
-	VkPipeline			m_Pipeline;
 	VkPipelineLayout	m_PipelineLayout;
-
 
 	struct UniformDataOffscreen 
 	{
@@ -56,13 +48,14 @@ private:
 
 	DescriptorAllocator m_Allocator;
 
-	struct OffscreenPass {
-		int32_t width, height;
-		VkFramebuffer frameBuffer;
-		VkRenderPass renderPass;
-	} offscreenPass{};
 
-	std::unique_ptr<ImageDepth> m_DepthAttachment;
+	std::vector<OffscreenPass> offscreenpasses;
+
+	// Depth bias (and slope) are used to avoid shadowing artifacts
+	// Constant depth bias factor (always applied)
+	float depthBiasConstant = 1.25f;
+	// Slope depth bias factor, applied depending on polygon's slope
+	float depthBiasSlope = 1.75f;
 
 	// Shadow map dimension
 #if defined(__ANDROID__)
@@ -72,18 +65,12 @@ private:
 	const uint32_t shadowMapize{ 2048 };
 #endif
 
-	void PrepareOffscreenFrameBuffer();
-	void PrepareUniformBuffers();
-
-	void UpdateUniforms();
-	void UpdateLight();
-
 	void CreateDescriptors();
 	void CreatePipelineLayout();
 	void CreateGraphicsPipeline();
 
-	void BindDescriptors(const CommandBuffer& cmdBuffer);
+	void UpdateAndBindDescriptors(const CommandBuffer& cmdBuffer, uint32_t index);
 
-	void BeginRenderPass(const CommandBuffer& cmdBuffer);
+	void BeginRenderPass(const CommandBuffer& cmdBuffer, uint32_t index);
 };
 

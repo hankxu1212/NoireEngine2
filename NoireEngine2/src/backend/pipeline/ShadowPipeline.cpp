@@ -2,6 +2,7 @@
 
 #include "backend/VulkanContext.hpp"
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
+#include "backend/shader/VulkanShader.h"
 
 #include "ObjectPipeline.hpp"
 
@@ -19,14 +20,22 @@ ShadowPipeline::ShadowPipeline()
 
 ShadowPipeline::~ShadowPipeline()
 {
-	if (offscreenPass.frameBuffer != VK_NULL_HANDLE) {
-		vkDestroyFramebuffer(VulkanContext::GetDevice(), offscreenPass.frameBuffer, nullptr);
-		offscreenPass.frameBuffer = VK_NULL_HANDLE;
-	}
+	for (int i = 0; i < offscreenpasses.size(); i++)
+	{
+		if (offscreenpasses[i].frameBuffer != VK_NULL_HANDLE) {
+			vkDestroyFramebuffer(VulkanContext::GetDevice(), offscreenpasses[i].frameBuffer, nullptr);
+			offscreenpasses[i].frameBuffer = VK_NULL_HANDLE;
+		}
 
-	if (offscreenPass.renderPass != VK_NULL_HANDLE) {
-		vkDestroyRenderPass(VulkanContext::GetDevice(), offscreenPass.renderPass, nullptr);
-		offscreenPass.renderPass = VK_NULL_HANDLE;
+		if (offscreenpasses[i].renderPass != VK_NULL_HANDLE) {
+			vkDestroyRenderPass(VulkanContext::GetDevice(), offscreenpasses[i].renderPass, nullptr);
+			offscreenpasses[i].renderPass = VK_NULL_HANDLE;
+		}
+
+		if (offscreenpasses[i].pipeline != VK_NULL_HANDLE) {
+			vkDestroyPipeline(VulkanContext::GetDevice(), offscreenpasses[i].pipeline, nullptr);
+			offscreenpasses[i].pipeline = VK_NULL_HANDLE;
+		}
 	}
 
 	m_BufferOffscreenUniform.Destroy();
@@ -37,68 +46,99 @@ ShadowPipeline::~ShadowPipeline()
 		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_PipelineLayout, nullptr);
 		m_PipelineLayout = VK_NULL_HANDLE;
 	}
-
-	if (m_Pipeline != VK_NULL_HANDLE) {
-		vkDestroyPipeline(VulkanContext::GetDevice(), m_Pipeline, nullptr);
-		m_Pipeline = VK_NULL_HANDLE;
-	}
 }
 
 // Set up a separate render pass for the offscreen frame buffer
 void ShadowPipeline::CreateRenderPass()
 {
-	VkAttachmentDescription attachmentDescription{};
-	attachmentDescription.format = VK_FORMAT_D16_UNORM;
-	attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-	attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;							// Clear depth at beginning of the render pass
-	attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;						// We will read from depth, so it's important to store the depth attachment results
-	attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;					// We don't care about initial layout of the attachment
-	attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;// Attachment will be transitioned to shader read at render pass end
+	// resize offscreen passes
+	const auto& lights = SceneManager::Get()->getScene()->getLightInstances();
+	offscreenpasses.resize(lights.size());
 
-	VkAttachmentReference depthReference = {};
-	depthReference.attachment = 0;
-	depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;			// Attachment will be used as depth/stencil during render pass
+	for (int i = 0; i < lights.size(); ++i)
+	{
+		offscreenpasses[i].width = shadowMapize;
+		offscreenpasses[i].height = shadowMapize;
 
-	VkSubpassDescription subpass = {};
-	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpass.colorAttachmentCount = 0;													// No color attachments
-	subpass.pDepthStencilAttachment = &depthReference;									// Reference to our depth attachment
+		offscreenpasses[i].depthAttachment = std::make_unique<ImageDepth>(glm::uvec2{ shadowMapize, shadowMapize }, VK_FORMAT_D16_UNORM);
 
-	// Use subpass dependencies for layout transitions
-	std::array<VkSubpassDependency, 2> dependencies;
+		// create render pass
+		{
+			VkAttachmentDescription attachmentDescription{};
+			attachmentDescription.format = VK_FORMAT_D16_UNORM;
+			attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+			attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;							// Clear depth at beginning of the render pass
+			attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;						// We will read from depth, so it's important to store the depth attachment results
+			attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;					// We don't care about initial layout of the attachment
+			attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;// Attachment will be transitioned to shader read at render pass end
 
-	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[0].dstSubpass = 0;
-	dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-	dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-	dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+			VkAttachmentReference depthReference = {};
+			depthReference.attachment = 0;
+			depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;			// Attachment will be used as depth/stencil during render pass
 
-	dependencies[1].srcSubpass = 0;
-	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-	dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+			VkSubpassDescription subpass = {};
+			subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+			subpass.colorAttachmentCount = 0;													// No color attachments
+			subpass.pDepthStencilAttachment = &depthReference;									// Reference to our depth attachment
 
-	VkRenderPassCreateInfo create_info{
-		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-		.attachmentCount = 1,
-		.pAttachments = &attachmentDescription,
-		.subpassCount = 1,
-		.pSubpasses = &subpass,
-		.dependencyCount = uint32_t(dependencies.size()),
-		.pDependencies = dependencies.data(),
-	};
+			// Use subpass dependencies for layout transitions
+			std::array<VkSubpassDependency, 2> dependencies;
 
-	VulkanContext::VK_CHECK(
-		vkCreateRenderPass(VulkanContext::GetDevice(), &create_info, nullptr, &offscreenPass.renderPass),
-		"[Vulkan] Create Render pass failed"
-	);
+			dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+			dependencies[0].dstSubpass = 0;
+			dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+			dependencies[1].srcSubpass = 0;
+			dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+			dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+			VkRenderPassCreateInfo create_info{
+				.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+				.attachmentCount = 1,
+				.pAttachments = &attachmentDescription,
+				.subpassCount = 1,
+				.pSubpasses = &subpass,
+				.dependencyCount = uint32_t(dependencies.size()),
+				.pDependencies = dependencies.data(),
+			};
+
+			VulkanContext::VK_CHECK(
+				vkCreateRenderPass(VulkanContext::GetDevice(), &create_info, nullptr, &offscreenpasses[i].renderPass),
+				"[Vulkan] Create Render pass failed"
+			);
+		}
+
+		// create frame buffer
+		{
+			VkImageView view = offscreenpasses[i].depthAttachment->getView();
+
+			VkFramebufferCreateInfo create_info
+			{
+				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+				.renderPass = offscreenpasses[i].renderPass,
+				.attachmentCount = 1,
+				.pAttachments = &view,
+				.width = uint32_t(offscreenpasses[i].width),
+				.height = uint32_t(offscreenpasses[i].height),
+				.layers = 1,
+			};
+
+			VulkanContext::VK_CHECK(
+				vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &offscreenpasses[i].frameBuffer),
+				"[vulkan] Creating frame buffer failed"
+			);
+		}
+	}
 }
 
 void ShadowPipeline::Rebuild()
@@ -107,8 +147,7 @@ void ShadowPipeline::Rebuild()
 
 void ShadowPipeline::CreatePipeline()
 {
-	PrepareOffscreenFrameBuffer();
-	PrepareUniformBuffers();
+	CreateRenderPass();
 	CreateDescriptors();
 	CreatePipelineLayout();
 	CreateGraphicsPipeline();
@@ -116,106 +155,74 @@ void ShadowPipeline::CreatePipeline()
 
 void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	UpdateLight();
-	UpdateUniforms();
-
-	auto uniformDataScene = (Scene::SceneUniform*)scene->getSceneUniformPtr();
-	uniformDataScene->lightPos = glm::vec4(lightPos, 1.0f);
-	uniformDataScene->depthBiasMVP = m_OffscreenUniform.depthMVP;
-	uniformDataScene->zNear = zNear;
-	uniformDataScene->zFar = zFar;
 }
 
 void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	BeginRenderPass(commandBuffer);
-
-	// bind pipeline and descriptor sets
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
-	BindDescriptors(commandBuffer);
-
-	// draw once
-	const auto& allInstances = scene->getObjectInstances();
-
-	VkDrawIndexedIndirectCommand* drawCommands = (VkDrawIndexedIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
-
-	//draw all instances in relation to a certain material:
-	uint32_t instanceIndex = 0;
-	uint32_t offsetIndex = 0;
-	VertexInput* previouslyBindedVertex = nullptr;
-
-	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
+	const auto& lights = SceneManager::Get()->getScene()->getLightInstances();
+	for (int lightIndex = 0; lightIndex < lights.size(); ++lightIndex)
 	{
-		auto& workflowInstances = allInstances[workflowIndex];
-		if (workflowInstances.empty())
-			continue;
-		
-		// make draws into compact batches
-		std::vector<ObjectPipeline::IndirectBatch> draws = ObjectPipeline::CompactDraws(workflowInstances);
+		BeginRenderPass(commandBuffer, lightIndex);
 
-		//encode the draw data of each object into the indirect draw buffer
-		uint32_t instanceCount = (uint32_t)workflowInstances.size();
-		for (uint32_t i = 0; i < instanceCount; i++)
-		{
-			drawCommands[instanceIndex].indexCount = workflowInstances[i].mesh->getIndexCount();
-			drawCommands[instanceIndex].instanceCount = 1;
-			drawCommands[instanceIndex].firstIndex = 0;
-			drawCommands[instanceIndex].vertexOffset = 0;
-			drawCommands[instanceIndex].firstInstance = instanceIndex;
-			instanceIndex++;
-		}
+		// bind pipeline and descriptor sets
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, offscreenpasses[lightIndex].pipeline);
+		UpdateAndBindDescriptors(commandBuffer, lightIndex);
 
-		// draw each batch
-		for (ObjectPipeline::IndirectBatch& draw : draws)
+		// draw once
+		const auto& allInstances = scene->getObjectInstances();
+
+		VkDrawIndexedIndirectCommand* drawCommands = (VkDrawIndexedIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
+
+		//draw all instances in relation to a certain material:
+		uint32_t instanceIndex = 0;
+		uint32_t offsetIndex = 0;
+		VertexInput* previouslyBindedVertex = nullptr;
+
+		for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
 		{
-			VertexInput* vertexInputPtr = draw.mesh->getVertexInput();
-			if (vertexInputPtr != previouslyBindedVertex) {
-				vertexInputPtr->Bind(commandBuffer);
-				previouslyBindedVertex = vertexInputPtr;
+			auto& workflowInstances = allInstances[workflowIndex];
+			if (workflowInstances.empty())
+				continue;
+
+			// make draws into compact batches
+			std::vector<ObjectPipeline::IndirectBatch> draws = ObjectPipeline::CompactDraws(workflowInstances);
+
+			//encode the draw data of each object into the indirect draw buffer
+			uint32_t instanceCount = (uint32_t)workflowInstances.size();
+			for (uint32_t i = 0; i < instanceCount; i++)
+			{
+				drawCommands[instanceIndex].indexCount = workflowInstances[i].mesh->getIndexCount();
+				drawCommands[instanceIndex].instanceCount = 1;
+				drawCommands[instanceIndex].firstIndex = 0;
+				drawCommands[instanceIndex].vertexOffset = 0;
+				drawCommands[instanceIndex].firstInstance = instanceIndex;
+				instanceIndex++;
 			}
 
-			draw.mesh->Bind(commandBuffer);
+			// draw each batch
+			for (ObjectPipeline::IndirectBatch& draw : draws)
+			{
+				VertexInput* vertexInputPtr = draw.mesh->getVertexInput();
+				if (vertexInputPtr != previouslyBindedVertex) {
+					vertexInputPtr->Bind(commandBuffer);
+					previouslyBindedVertex = vertexInputPtr;
+				}
 
-			constexpr uint32_t stride = sizeof(VkDrawIndexedIndirectCommand);
-			VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * stride;
+				draw.mesh->Bind(commandBuffer);
 
-			vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
+				constexpr uint32_t stride = sizeof(VkDrawIndexedIndirectCommand);
+				VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * stride;
+
+				vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
+			}
+			offsetIndex += instanceCount;
 		}
-		offsetIndex += instanceCount;
+
+		vkCmdEndRenderPass(commandBuffer);
 	}
-
-	vkCmdEndRenderPass(commandBuffer);
 }
 
-void ShadowPipeline::PrepareOffscreenFrameBuffer()
-{
-	offscreenPass.width = shadowMapize;
-	offscreenPass.height = shadowMapize;
-
-	m_DepthAttachment = std::make_unique<ImageDepth>(glm::uvec2{ shadowMapize, shadowMapize }, VK_FORMAT_D16_UNORM);
-
-	CreateRenderPass();
-
-	VkImageView view = m_DepthAttachment->getView();
-
-	VkFramebufferCreateInfo create_info
-	{
-		.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-		.renderPass = offscreenPass.renderPass,
-		.attachmentCount = 1,
-		.pAttachments = &view,
-		.width = uint32_t(offscreenPass.width),
-		.height = uint32_t(offscreenPass.height),
-		.layers = 1,
-	};
-
-	VulkanContext::VK_CHECK(
-		vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &offscreenPass.frameBuffer),
-		"[vulkan] Creating frame buffer failed"
-	);
-}
-
-void ShadowPipeline::PrepareUniformBuffers()
+void ShadowPipeline::CreateDescriptors()
 {
 	m_BufferOffscreenUniform = Buffer(
 		sizeof(UniformDataOffscreen),
@@ -224,26 +231,7 @@ void ShadowPipeline::PrepareUniformBuffers()
 		Buffer::Mapped
 	);
 
-	UpdateLight();
-	UpdateUniforms();
-}
-
-void ShadowPipeline::UpdateUniforms()
-{
-	// update offscreen
-	glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(lightFOV), 1.0f, zNear, zFar);
-	glm::mat4 depthViewMatrix = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0, 1, 0));
-	glm::mat4 depthModelMatrix = glm::mat4(1.0f);
-
-	m_OffscreenUniform.depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
-
-	memcpy(m_BufferOffscreenUniform.data(), &m_OffscreenUniform, sizeof(m_OffscreenUniform));
-}
-
-void ShadowPipeline::CreateDescriptors()
-{
 	// builds the uniform buffer
-
 	VkDescriptorBufferInfo bufferInfo
 	{
 		.buffer = m_BufferOffscreenUniform.getBuffer(),
@@ -288,18 +276,69 @@ void ShadowPipeline::CreateGraphicsPipeline()
 		},
 	};
 
-	VulkanGraphicsPipelineBuilder::Start()
+	VulkanGraphicsPipelineBuilder builder = VulkanGraphicsPipelineBuilder::Start()
 		.SetDynamicStates(dynamic_states)
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
-		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
-		.Build("../spv/shaders/shadow/offscreen.vert.spv", "../spv/shaders/shadow/offscreen.frag.spv", &m_Pipeline, m_PipelineLayout, offscreenPass.renderPass);
+		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data());
+
+
+	VulkanShader vertModule("../spv/shaders/shadow/offscreen.vert.spv", VulkanShader::ShaderStage::Vertex);
+	VulkanShader fragModule("../spv/shaders/shadow/offscreen.frag.spv", VulkanShader::ShaderStage::Frag);
+
+	std::array< VkPipelineShaderStageCreateInfo, 2 > stages{
+		vertModule.shaderStage(),
+		fragModule.shaderStage()
+	};
+
+	VkGraphicsPipelineCreateInfo create_info{
+		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+		.stageCount = uint32_t(stages.size()),
+		.pStages = stages.data(),
+		.pVertexInputState = builder.vertexInput,
+		.pInputAssemblyState = &builder.inputAssembly,
+		.pViewportState = &builder.viewportState,
+		.pRasterizationState = &builder.rasterizer,
+		.pMultisampleState = &builder.multisampling,
+		.pDepthStencilState = &builder.depthStencil,
+		.pColorBlendState = &builder.colorBlending,
+		.pDynamicState = &builder.dynamicState,
+		.layout = m_PipelineLayout,
+		.renderPass = VK_NULL_HANDLE,
+		.subpass = 0,
+	};
+	
+	const auto& lights = SceneManager::Get()->getScene()->getLightInstances();
+
+	// builds all pipelines
+	for (int i = 0; i < lights.size(); ++i)
+	{
+		create_info.renderPass = offscreenpasses[i].renderPass;
+		VulkanContext::VK_CHECK(
+			vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VulkanContext::Get()->getPipelineCache(), 1, &create_info, nullptr, &offscreenpasses[i].pipeline),
+			"[Vulkan] Create pipeline failed");
+	}
 }
 
-void ShadowPipeline::BindDescriptors(const CommandBuffer& commandBuffer)
+void ShadowPipeline::UpdateAndBindDescriptors(const CommandBuffer& commandBuffer, uint32_t index)
 {
+	const auto& lights = SceneManager::Get()->getScene()->getLightInstances();
+	auto& lightInfo = lights[index]->GetLightInfo();
+
+	// update offscreen uniform
+	glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(lightInfo.lightFOV), 1.0f, lightInfo.zNear, lightInfo.zFar);
+	glm::mat4 depthViewMatrix = glm::lookAt(glm::vec3(lightInfo.position), glm::vec3(lightInfo.direction), Vec3::Up);
+	m_OffscreenUniform.depthMVP = depthProjectionMatrix * depthViewMatrix;
+	
+	// set info lightspace
+	lightInfo.lightspace = m_OffscreenUniform.depthMVP;
+
+	memcpy(m_BufferOffscreenUniform.data(), &m_OffscreenUniform, sizeof(m_OffscreenUniform));
+
+	// bind descriptors
 	std::array< VkDescriptorSet, 1 > descriptor_sets{
 		set0_Offscreen,
 	};
+
 	vkCmdBindDescriptorSets(
 		commandBuffer, //command buffer
 		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
@@ -310,7 +349,7 @@ void ShadowPipeline::BindDescriptors(const CommandBuffer& commandBuffer)
 	);
 }
 
-void ShadowPipeline::BeginRenderPass(const CommandBuffer& commandBuffer)
+void ShadowPipeline::BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t index)
 {
 	static std::array< VkClearValue, 1 > clear_values{
 		VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
@@ -318,11 +357,11 @@ void ShadowPipeline::BeginRenderPass(const CommandBuffer& commandBuffer)
 
 	VkRenderPassBeginInfo begin_info{
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-		.renderPass = offscreenPass.renderPass,
-		.framebuffer = offscreenPass.frameBuffer,
+		.renderPass = offscreenpasses[index].renderPass,
+		.framebuffer = offscreenpasses[index].frameBuffer,
 		.renderArea{
 			.offset = {.x = 0, .y = 0},
-			.extent = {.width = (uint32_t)offscreenPass.width, .height = (uint32_t)offscreenPass.height},
+			.extent = {.width = (uint32_t)offscreenpasses[index].width, .height = (uint32_t)offscreenpasses[index].height},
 		},
 		.clearValueCount = 1,
 		.pClearValues = clear_values.data(),
@@ -332,15 +371,15 @@ void ShadowPipeline::BeginRenderPass(const CommandBuffer& commandBuffer)
 
 	VkRect2D scissor{
 		.offset = {.x = 0, .y = 0},
-		.extent = {.width = (uint32_t)offscreenPass.width, .height = (uint32_t)offscreenPass.height},
+		.extent = {.width = (uint32_t)offscreenpasses[index].width, .height = (uint32_t)offscreenpasses[index].height},
 	};
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 	VkViewport viewport{
 		.x = 0.0f,
 		.y = 0.0f,
-		.width = float(offscreenPass.width),
-		.height = float(offscreenPass.height),
+		.width = float(offscreenpasses[index].width),
+		.height = float(offscreenpasses[index].height),
 		.minDepth = 0.0f,
 		.maxDepth = 1.0f,
 	};
@@ -353,12 +392,4 @@ void ShadowPipeline::BeginRenderPass(const CommandBuffer& commandBuffer)
 		depthBiasConstant,
 		0.0f,
 		depthBiasSlope);
-}
-
-void ShadowPipeline::UpdateLight()
-{
-	// Animate the light source
-	lightPos.x = cos(glm::radians(Time::Now * 360.0f)) * 40.0f;
-	lightPos.y = -50.0f + sin(glm::radians(Time::Now * 360.0f)) * 20.0f;
-	lightPos.z = 25.0f + sin(glm::radians(Time::Now * 360.0f)) * 5.0f;
 }

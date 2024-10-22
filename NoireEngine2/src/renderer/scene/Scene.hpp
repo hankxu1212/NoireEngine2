@@ -86,17 +86,11 @@ public:
 	struct alignas(16) SceneUniform 
 	{
 		struct { float x, y, z, _padding; } cameraPosition;
-		// shadow stuff temporary
-		glm::mat4 depthBiasMVP;
-		glm::vec4 lightPos;
-		// Used for depth map visualization
-		float zNear;
-		float zFar;
 		uint32_t numDirLights;
 		uint32_t numPointLights;
 		uint32_t numSpotLights;
 	};
-	static_assert(sizeof(SceneUniform) == 16 * 8);
+	static_assert(sizeof(SceneUniform) == 16 * 2);
 
 	inline const void* getSceneUniformPtr() const { return &m_SceneInfo; }
 

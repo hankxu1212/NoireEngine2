@@ -26,6 +26,7 @@ layout(set=1, binding=2, std140) readonly buffer PointLights {
 
 struct SpotLight
 {
+	mat4 lightspace;
 	vec4 color;
 	vec4 position;
 	vec4 direction;
@@ -72,7 +73,7 @@ vec3 SpotLightRadiance(int i)
 
 	float attenuation = 1;
 	if (D > SPOT_LIGHTS[i].radius){
-		float saturated = saturate(1 - pow(D / POINT_LIGHTS[i].limit, 4));
+		float saturated = saturate(1 - pow(D / SPOT_LIGHTS[i].limit, 4));
 		attenuation = saturated * saturated / (D * D + 1);
 	}
 

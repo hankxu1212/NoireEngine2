@@ -56,6 +56,48 @@ void Light::Render(const glm::mat4& model)
 	}
 }
 
+template<>
+_NODISCARD DirectionalLightUniform Light::GetLightUniformAs() const
+{
+	DirectionalLightUniform uniform;
+	uniform.color = m_Info.color;
+	uniform.direction = m_Info.direction;
+	uniform.angle = 0.0f;
+	uniform.intensity = m_Info.intensity;
+
+	return uniform;
+}
+
+template<>
+_NODISCARD PointLightUniform Light::GetLightUniformAs() const
+{
+	PointLightUniform uniform;
+	uniform.color = m_Info.color;
+	uniform.position = m_Info.position;
+	uniform.intensity = m_Info.intensity;
+	uniform.radius = m_Info.radius;
+	uniform.limit = m_Info.limit;
+
+	return uniform;
+}
+
+template<>
+_NODISCARD SpotLightUniform Light::GetLightUniformAs() const
+{
+	SpotLightUniform uniform;
+	uniform.color = m_Info.color;
+	uniform.position = m_Info.position;
+	uniform.direction = m_Info.direction;
+	uniform.intensity = m_Info.intensity;
+	uniform.radius = m_Info.radius;
+	uniform.limit = m_Info.limit;
+	uniform.fov = m_Info.fov;
+	uniform.blend = m_Info.blend;
+	uniform.lightspace = m_Info.lightspace;
+
+	return uniform;
+}
+
 Light::Light(Type type, Color3 color, float intensity, float radius) :
 	Light(type, color, intensity)
 {

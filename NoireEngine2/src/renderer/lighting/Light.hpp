@@ -9,7 +9,7 @@
 
 #include <variant>
 
-struct alignas(16) LightInfo 
+struct LightInfo 
 {
 	glm::vec4 color = { 1,1,1,0 };
 	glm::vec4 position;
@@ -20,11 +20,18 @@ struct alignas(16) LightInfo
 	float fov = 0.349066f;
 	float blend = 0.5f;
 	uint32_t type = 0 /*Directional*/;
+
+	// shadow params
+	bool useShadows = true;
+	float zNear = 1.0f;
+	float zFar = 96.0f;
+	float lightFOV = 45.0f;
+	glm::mat4 lightspace; /*depthMVP*/
 };
-static_assert(sizeof(LightInfo) == 16 * 5);
 
 struct alignas(16) DirectionalLightUniform
 {
+	//glm::mat4 lightspace; /*depthMVP*/
 	glm::vec4 color = { 1,1,1,0 };
 	glm::vec4 direction;
 	float angle;
@@ -34,6 +41,7 @@ static_assert(sizeof(DirectionalLightUniform) == 16 * 3);
 
 struct alignas(16) PointLightUniform
 {
+	//glm::mat4 lightspace; /*depthMVP*/
 	glm::vec4 color = { 1,1,1,0 };
 	glm::vec4 position;
 	float intensity = 1; /* or power */
@@ -44,6 +52,7 @@ static_assert(sizeof(PointLightUniform) == 16 * 3);
 
 struct alignas(16) SpotLightUniform
 {
+	glm::mat4 lightspace; /*depthMVP*/
 	glm::vec4 color = { 1,1,1,0 };
 	glm::vec4 position;
 	glm::vec4 direction;
@@ -53,8 +62,7 @@ struct alignas(16) SpotLightUniform
 	float fov = 0.349066f;
 	float blend = 0.5f;
 };
-static_assert(sizeof(SpotLightUniform) == 16 * 5);
-
+static_assert(sizeof(SpotLightUniform) == 64 + 16 * 5);
 
 class Light : public Component
 {
@@ -79,47 +87,6 @@ public:
 
 	template<typename T>
 	_NODISCARD T GetLightUniformAs() const;
-
-	template<>
-	_NODISCARD DirectionalLightUniform GetLightUniformAs() const
-	{
-		DirectionalLightUniform uniform;
-		uniform.color = m_Info.color;
-		uniform.direction = m_Info.direction;
-		uniform.angle = 0.0f;
-		uniform.intensity = m_Info.intensity;
-
-		return uniform;
-	}
-
-	template<>
-	_NODISCARD PointLightUniform GetLightUniformAs() const
-	{
-		PointLightUniform uniform;
-		uniform.color = m_Info.color;
-		uniform.position = m_Info.position;
-		uniform.intensity = m_Info.intensity;
-		uniform.radius = m_Info.radius;
-		uniform.limit = m_Info.limit;
-
-		return uniform;
-	}
-
-	template<>
-	_NODISCARD SpotLightUniform GetLightUniformAs() const
-	{
-		SpotLightUniform uniform;
-		uniform.color = m_Info.color;
-		uniform.position = m_Info.position;
-		uniform.direction = m_Info.direction;
-		uniform.intensity = m_Info.intensity;
-		uniform.radius = m_Info.radius;
-		uniform.limit = m_Info.limit;
-		uniform.fov = m_Info.fov;
-		uniform.blend = m_Info.blend;
-
-		return uniform;
-	}
 
 	const char* getName() override { return "Light"; }
 

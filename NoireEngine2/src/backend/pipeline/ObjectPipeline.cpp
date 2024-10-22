@@ -174,9 +174,8 @@ void ObjectPipeline::CreateDescriptors()
 			.Build(workspace.set1_StorageBuffers, set1_StorageBuffersLayout);
 	}
 
-	// create set 2: textures
+	// create set 2: textures with descriptor indexing
 	{
-		// https://github.com/SaschaWillems/Vulkan/blob/master/examples/descriptorindexing/descriptorindexing.cpp#L127
 		// [POI] The fragment shader will be using an unsized array of samplers, which has to be marked with the VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT
 		std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
 			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
@@ -244,14 +243,54 @@ void ObjectPipeline::CreateDescriptors()
 			.Build(set3_Cubemap, set3_CubemapLayout);
 	}
 
-	// create set 4: shadow mapping
+	// create set 4: shadow mapping with descriptor indexing
 	{
-		VkDescriptorImageInfo shadowMapDescriptorInfo = s_ShadowPipeline->GetShadowImage()->GetDescriptorInfo();
-		shadowMapDescriptorInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+		const auto& shadowPasses = s_ShadowPipeline->getShadowPasses();
 
+		std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
+			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
+		};
+		VkDescriptorSetLayoutBindingFlagsCreateInfoEXT setLayoutBindingFlags{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT,
+			.bindingCount = 1,
+			.pBindingFlags = descriptorBindingFlags.data()
+		};
+
+		std::vector<uint32_t> variableDesciptorCounts = {
+			static_cast<uint32_t>(shadowPasses.size())
+		};
+
+		VkDescriptorSetVariableDescriptorCountAllocateInfoEXT variableDescriptorInfoAI =
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT,
+			.descriptorSetCount = static_cast<uint32_t>(variableDesciptorCounts.size()),
+			.pDescriptorCounts = variableDesciptorCounts.data(),
+		};
+
+		// grab all texture information
+		std::vector<VkDescriptorImageInfo> shadowDescriptors(shadowPasses.size());
+		for (uint32_t i = 0; i < shadowPasses.size(); ++i)
+		{
+			auto& depth = shadowPasses[i].depthAttachment;
+			shadowDescriptors[i].sampler = depth->getSampler();
+			shadowDescriptors[i].imageView = depth->getView();
+			shadowDescriptors[i].imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+		}
+
+		// actually build the descriptor set now
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-			.BindImage(0, &shadowMapDescriptorInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.Build(set4_ShadowMap, set4_ShadowMapLayout);
+			.BindImage(0, shadowDescriptors.data(),
+				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<uint32_t>(shadowPasses.size()))
+			.Build(set4_ShadowMap, set4_ShadowMapLayout, &setLayoutBindingFlags,
+#if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
+				// SRS - increase the per-stage descriptor samplers limit on macOS (maxPerStageDescriptorUpdateAfterBindSamplers > maxPerStageDescriptorSamplers)
+				VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
+#else
+				0 /*VkDescriptorSetLayoutCreateFlags*/
+#endif
+				, &variableDescriptorInfoAI);
+
+		NE_INFO("Found {} shadow maps.", shadowPasses.size());
 	}
 }
 
@@ -370,7 +409,7 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 				.BindBuffer(0, &Transforms_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 				.Write(workspace.set1_StorageBuffers);
 
-			NE_INFO("Reallocated transform to {} bytes", needed_bytes);
+			NE_INFO("Reallocated transform to {} bytes", new_bytes);
 		}
 
 		assert(workspace.Transforms_src.getSize() == workspace.Transforms.getSize());
@@ -419,8 +458,7 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 			size_t neededBytes = neededBytesPerLightType[i];
 
 			// resize as neccesary
-			if (bufSrc.getBuffer() == VK_NULL_HANDLE
-				|| bufSrc.getSize() < neededBytes)
+			if (bufSrc.getBuffer() == VK_NULL_HANDLE || bufSrc.getSize() < neededBytes)
 			{
 				size_t new_bytes = ((neededBytes + 4096) / 4096) * 4096;
 
@@ -450,7 +488,7 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 					.BindBuffer(i + 1 /*cuz index 0 is transforms*/, &LightInfo, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
 					.Write(workspace.set1_StorageBuffers);
 
-				NE_INFO("Reallocated light type {} to {} bytes", i, neededBytes);
+				NE_INFO("Reallocated light type {} to {} bytes", i, new_bytes);
 			}
 
 			assert(bufSrc.getSize() == buf.getSize());
