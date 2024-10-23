@@ -23,7 +23,6 @@ ImageDepth::ImageDepth(const glm::uvec2 extent, VkSampleCountFlagBits samples) :
 		usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 1, 1, VK_IMAGE_TYPE_2D);
 	CreateImageSampler(sampler, filter, addressMode, false, 1);
 	CreateImageView(image, view, VK_IMAGE_VIEW_TYPE_2D, format, VK_IMAGE_ASPECT_DEPTH_BIT, 1, 0, 1, 0);
-	TransitionImageLayout(image, format, VK_IMAGE_LAYOUT_UNDEFINED, layout, aspectMask, 1, 0, 1, 0);
 }
 
 ImageDepth::ImageDepth(const glm::uvec2 extent, VkFormat format) :
@@ -36,5 +35,4 @@ ImageDepth::ImageDepth(const glm::uvec2 extent, VkFormat format) :
 		usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 1, 1, VK_IMAGE_TYPE_2D);
 	CreateImageSampler(sampler, filter, addressMode, false, 1);
 	CreateImageView(image, view, VK_IMAGE_VIEW_TYPE_2D, format, VK_IMAGE_ASPECT_DEPTH_BIT, 1, 0, 1, 0);
-	//TransitionImageLayout(image, format, VK_IMAGE_LAYOUT_UNDEFINED, layout, VK_IMAGE_ASPECT_DEPTH_BIT, 1, 0, 1, 0);
 }

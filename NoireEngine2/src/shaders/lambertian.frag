@@ -35,43 +35,7 @@ const mat4 biasMat = mat4(
 	0.5, 0.5, 0.0, 1.0 );
 
 float shadowBias;
-
-#define ambient 0.1
-#define shadowPCFScale 1.5
-#define shadowPCFRange 1
-
-float texProjection(vec3 shadowCoord, vec2 off, int shadowMapIndex)
-{
-	float shadow = 1.0;
-	if ( shadowCoord.z > -1.0 && shadowCoord.z < 1.0 ) 
-	{
-		float dist = texture(shadowMaps[shadowMapIndex], shadowCoord.xy + off ).r;
-		if (shadowCoord.z - shadowBias >= dist) 
-			shadow = ambient;
-	}
-	return shadow;
-}
-
-float filterPCF(vec3 projCoords, int shadowMapIndex)
-{
-	vec2 stepSize = shadowPCFScale / textureSize(shadowMaps[shadowMapIndex], 0);
-
-	float shadow = 0.0;
-	int count = 0;
-	
-	for (int x = -shadowPCFRange; x <= shadowPCFRange; x++)
-	{
-		for (int y = -shadowPCFRange; y <= shadowPCFRange; y++)
-		{
-			shadow += texProjection(projCoords, vec2(x, y) * stepSize, shadowMapIndex);
-			count++;
-		}
-	}
-
-	return shadow / count;
-}
-
-const int enablePCF = 1;
+#include "glsl/shadows.glsl"
 
 void main() {
     // calculate TBN
@@ -106,10 +70,18 @@ void main() {
 	{
 		shadowBias = max(0.05 * (1.0 - dot(n, vec3(SPOT_LIGHTS[i].position) - inPosition)), 0.005);  
 		vec4 shadowCoord = biasMat * SPOT_LIGHTS[i].lightspace * vec4(inPosition, 1.0);
-
+		
 		// perform perspective divide
-		if (shadowCoord.w >= 0)
-			shadow *= filterPCF(shadowCoord.xyz / shadowCoord.w, i);
+		shadowCoord /= shadowCoord.w;
+
+		// when z/w goes outside the normalized range [-1, 1], they lie outside the view frustum
+		// similarly for x,y, they need to be in [0, 1]
+		if (abs(shadowCoord.z) <= 1
+			&& shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0
+			&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
+		{
+			shadow *= PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, i);
+		}
 	}
 
 	vec3 color = vec3(material.albedo) * texColor * (lightsSum + ambientLighting);
