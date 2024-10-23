@@ -82,6 +82,7 @@ private:
 	friend class PBRMaterialPipeline;
 	friend class LinesPipeline;
 	friend class SkyboxPipeline;
+	friend class ShadowPipeline;
 
 	std::vector<Workspace> workspaces;
 

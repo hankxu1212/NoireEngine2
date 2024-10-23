@@ -123,7 +123,6 @@ struct GizmosInstance
         for (int i = 0; i < segments; ++i) 
         {
             float angle = (2.0f * glm::pi<float>() * float(i)) / float(segments);
-
             glm::vec3 directionOnPlane = right * cos(angle) + up * sin(angle);
             glm::vec3 outerPoint = baseCenter + directionOnPlane * outerRadius;
 

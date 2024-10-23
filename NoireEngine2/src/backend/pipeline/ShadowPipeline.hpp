@@ -6,10 +6,12 @@
 #include "backend/buffers/Buffer.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
 
+class ObjectPipeline;
+
 class ShadowPipeline : public VulkanPipeline
 {
 public:
-	ShadowPipeline();
+	ShadowPipeline(ObjectPipeline* objectPipeline);
 	~ShadowPipeline();
 
 	// creates as many render passes as there are shadow casters in the scene
@@ -35,41 +37,32 @@ public:
 
 private:
 	VkPipelineLayout	m_PipelineLayout;
+	ObjectPipeline* p_ObjectPipeline = nullptr;
 
-	struct UniformDataOffscreen 
+	struct Push 
 	{
-		glm::mat4 depthMVP;
-	} m_OffscreenUniform;
+		int lightspaceID;
+	};
 
-	Buffer m_BufferOffscreenUniform;
+	struct Workspace
+	{
+		Buffer LightSpaces_Src;
+		Buffer LightSpaces;
 
-	VkDescriptorSet set0_Offscreen;
+		VkDescriptorSet set0_Offscreen;
+	};
+	std::vector<Workspace> workspaces;
+
 	VkDescriptorSetLayout set0_OffscreenLayout;
 
 	DescriptorAllocator m_Allocator;
 
-
 	std::vector<OffscreenPass> offscreenpasses;
 
-	// Depth bias (and slope) are used to avoid shadowing artifacts
-	// Constant depth bias factor (always applied)
-	float depthBiasConstant = 1.25f;
-	// Slope depth bias factor, applied depending on polygon's slope
-	float depthBiasSlope = 1.75f;
-
-	// Shadow map dimension
-#if defined(__ANDROID__)
-	// Use a smaller size on Android for performance reasons
-	const uint32_t shadowMapize{ 1024 };
-#else
-	const uint32_t shadowMapize{ 2048 };
-#endif
-
+	void CreateRenderPasses();
 	void CreateDescriptors();
 	void CreatePipelineLayout();
 	void CreateGraphicsPipeline();
-
-	void UpdateAndBindDescriptors(const CommandBuffer& cmdBuffer, uint32_t index);
 
 	void BeginRenderPass(const CommandBuffer& cmdBuffer, uint32_t index);
 };

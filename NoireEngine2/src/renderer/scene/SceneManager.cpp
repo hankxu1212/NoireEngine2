@@ -4,7 +4,7 @@
 #include "renderer/Camera.hpp"
 #include "Application.hpp"
 
-//A:\Blender\blender --background --python export - s72.py-- "F:\gameDev\Engines\NoireEngine2\NoireEngine2\src\scenes\examples\sources\manygameobjects.blend" "F:\gameDev\Engines\NoireEngine2\NoireEngine2\src\scenes\examples\manygameobjects.s72" --collection Collection
+//A:\Blender\blender --background --python export-s72.py -- "F:\gameDev\Engines\NoireEngine2\NoireEngine2\src\scenes\LightsScene\LightsScene.blend" "F:\gameDev\Engines\NoireEngine2\NoireEngine2\src\scenes\LightsScene\LightsScene.s72" --collection Collection
 
 SceneManager::SceneManager()
 {
@@ -25,7 +25,8 @@ void SceneManager::LoadDefault()
 		//scene->Load("../scenes/SphereScene/SphereScene.s72");
 		//scene->Load("../scenes/examples/Materials.s72");
 		//scene->Load("../scenes/BrickScene/BrickScene.s72");
-		scene->Load("../scenes/examples/lights-Mix.s72");
+		//scene->Load("../scenes/examples/lights-Mix.s72");
+		scene->Load("../scenes/LightsScene/LightsScene.s72");
 }
 
 void SceneManager::Update()

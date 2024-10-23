@@ -20,8 +20,25 @@ Light::Light(Type type, Color3 color, float intensity) :
 void Light::Update()
 {
 	Transform* transform = GetTransform();
-	memcpy(&m_Info.direction, glm::value_ptr(transform->Forward()), sizeof(glm::vec3));
-	memcpy(&m_Info.position, glm::value_ptr(transform->LocalDirty()[3]), sizeof(glm::vec3));
+	glm::vec3 dir = transform->Forward();
+	glm::vec3 pos = transform->WorldLocation();
+
+	m_Info.direction = glm::vec4(dir, 0);
+	m_Info.position = glm::vec4(pos, 0);
+
+	if (m_Info.type == (uint32_t)Type::Directional)
+	{
+		// depthProjectionMatrix = glm::perspective(glm::radians(m_Info.lightFOV), 1.0f, m_Info.zNear, m_Info.zFar);
+	}
+	else if (m_Info.type == (uint32_t)Type::Point)
+	{
+		// TODO: add
+	}
+	else {
+		glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(m_Info.fov), 1.0f, m_Info.zNear, m_Info.zFar);
+		glm::mat4 depthViewMatrix = glm::lookAt(pos, pos - dir, Vec3::Up);
+		m_Info.lightspace = depthProjectionMatrix * depthViewMatrix;
+	}
 }
 
 void Light::Render(const glm::mat4& model)
@@ -51,7 +68,11 @@ void Light::Render(const glm::mat4& model)
 			static_cast<uint8_t>(m_Info.color.z * 255),
 			255
 		};
-		gizmos.DrawSpotLight(pos, dir, m_Info.fov * (1 - m_Info.blend), m_Info.fov, m_Info.limit, c);
+		
+		float inner = glm::tan(glm::radians(m_Info.fov * (1 - m_Info.blend) * 0.5f)) * m_Info.limit;
+		float outer = glm::tan(glm::radians(m_Info.fov * 0.5f)) * m_Info.limit;
+
+		gizmos.DrawSpotLight(pos, dir, inner, outer, m_Info.limit, c);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
 }
@@ -179,7 +200,7 @@ void Light::Inspect()
 			ImGui::Columns(2);
 			ImGui::Text("FOV");
 			ImGui::NextColumn();
-			ImGui::DragFloat("###FOV", &m_Info.fov, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("###FOV", &m_Info.fov, 0.5f, 0.0f, 180, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 			ImGui::Columns(1);
 
 			ImGui::Columns(2);

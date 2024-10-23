@@ -81,10 +81,6 @@ void LinesPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
 	}
 }
 
-void* OffsetPointer(void* ptr, size_t offset) {
-	return static_cast<void*>(static_cast<std::byte*>(ptr) + offset);
-}
-
 void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
 {
 	Workspace& workspace = workspaces[CURR_FRAME];
@@ -127,7 +123,7 @@ void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuff
 		for (int i = 0; i < gizmos.size(); ++i) {
 			auto size = gizmos[i]->m_LinesVertices.size() * sizeof(PosColVertex);
 			std::memcpy(
-				OffsetPointer(workspace.LinesVerticesSrc.data(), offset),
+				PTR_ADD(workspace.LinesVerticesSrc.data(), offset),
 				gizmos[i]->m_LinesVertices.data(), 
 				size
 			);

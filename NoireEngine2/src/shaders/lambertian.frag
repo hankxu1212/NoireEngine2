@@ -28,49 +28,47 @@ layout( push_constant ) uniform constants
 	float environmentLightIntensity;
 } material;
 
-#define ambient 0.1
-
 const mat4 biasMat = mat4( 
 	0.5, 0.0, 0.0, 0.0,
 	0.0, 0.5, 0.0, 0.0,
 	0.0, 0.0, 1.0, 0.0,
 	0.5, 0.5, 0.0, 1.0 );
 
-float textureProj(vec4 shadowCoord, vec2 off, int shadowMapIndex)
+float shadowBias;
+
+#define ambient 0.1
+#define shadowPCFScale 1.5
+#define shadowPCFRange 1
+
+float texProjection(vec3 shadowCoord, vec2 off, int shadowMapIndex)
 {
 	float shadow = 1.0;
 	if ( shadowCoord.z > -1.0 && shadowCoord.z < 1.0 ) 
 	{
-		float dist = texture( shadowMaps[shadowMapIndex], shadowCoord.st + off ).r;
-		if ( shadowCoord.w > 0.0 && dist < shadowCoord.z ) 
-		{
+		float dist = texture(shadowMaps[shadowMapIndex], shadowCoord.xy + off ).r;
+		if (shadowCoord.z - shadowBias >= dist) 
 			shadow = ambient;
-		}
 	}
 	return shadow;
 }
 
-float filterPCF(vec4 sc, int shadowMapIndex)
+float filterPCF(vec3 projCoords, int shadowMapIndex)
 {
-	ivec2 texDim = textureSize(shadowMaps[shadowMapIndex], 0);
-	float scale = 1.5;
-	float dx = scale * 1.0 / float(texDim.x);
-	float dy = scale * 1.0 / float(texDim.y);
+	vec2 stepSize = shadowPCFScale / textureSize(shadowMaps[shadowMapIndex], 0);
 
-	float shadowFactor = 0.0;
+	float shadow = 0.0;
 	int count = 0;
-	int range = 1;
 	
-	for (int x = -range; x <= range; x++)
+	for (int x = -shadowPCFRange; x <= shadowPCFRange; x++)
 	{
-		for (int y = -range; y <= range; y++)
+		for (int y = -shadowPCFRange; y <= shadowPCFRange; y++)
 		{
-			shadowFactor += textureProj(sc, vec2(dx*x, dy*y), shadowMapIndex);
+			shadow += texProjection(projCoords, vec2(x, y) * stepSize, shadowMapIndex);
 			count++;
 		}
-	
 	}
-	return shadowFactor / count;
+
+	return shadow / count;
 }
 
 const int enablePCF = 1;
@@ -103,11 +101,15 @@ void main() {
 		texColor *= texture(textures[material.albedoTexId], inTexCoord).rgb;
 
 	// shadow calculation
-	float shadow = 0;
+	float shadow = 1;
 	for (int i = 0; i < scene.numSpotLights; ++i)
 	{
+		shadowBias = max(0.05 * (1.0 - dot(n, vec3(SPOT_LIGHTS[i].position) - inPosition)), 0.005);  
 		vec4 shadowCoord = biasMat * SPOT_LIGHTS[i].lightspace * vec4(inPosition, 1.0);
-		shadow += filterPCF(shadowCoord / shadowCoord.w, i);
+
+		// perform perspective divide
+		if (shadowCoord.w >= 0)
+			shadow *= filterPCF(shadowCoord.xyz / shadowCoord.w, i);
 	}
 
 	vec3 color = vec3(material.albedo) * texColor * (lightsSum + ambientLighting);

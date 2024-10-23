@@ -227,7 +227,7 @@ static void MakeLight(Entity* newEntity, const Scene::TValueMap& obj, const Scen
 		const auto& lightObj = dict.at("spot").as_object().value();
 
 		float power = lightObj.at("power").as_float();
-		float fov = lightObj.at("fov").as_float();
+		float fov = glm::degrees(lightObj.at("fov").as_float());
 		float radius = lightObj.at("radius").as_float();
 		float blend = lightObj.at("blend").as_float();
 

@@ -309,14 +309,15 @@ void ObjectPipeline::CreatePipeline()
 	s_LinesPipeline = std::make_unique<LinesPipeline>(this);
 	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>(this);
 	
-	// create shadow pipeline and initialize its shadow frame buffer pass
-	s_ShadowPipeline = std::make_unique<ShadowPipeline>();
-	s_ShadowPipeline->CreatePipeline();
+	// create shadow pipeline and initialize its shadow frame buffer and render pass
+	s_ShadowPipeline = std::make_unique<ShadowPipeline>(this);
+	s_ShadowPipeline->CreateRenderPass();
 
 	// this relies on shadow pipeline's depth attachment
 	CreateDescriptors();
 
 	// the following pipelines rely on ObjectPipeline's descriptor sets
+	s_ShadowPipeline->CreatePipeline();
 
 	for (int i = 0; i < NUM_WORKFLOWS; i++) {
 		m_MaterialPipelines[i]->Create();
@@ -366,7 +367,6 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 		assert(workspace.World_src.getSize() == workspace.World.getSize());
 		Buffer::CopyBuffer(commandBuffer, workspace.World_src.getBuffer(), workspace.World.getBuffer(), workspace.World_src.getSize());
 	}
-
 
 	//upload object transforms and allocate needed bytes
 	{

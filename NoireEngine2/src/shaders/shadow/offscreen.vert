@@ -2,12 +2,18 @@
 
 layout (location = 0) in vec3 inPos;
 
-layout (binding = 0) uniform UBO 
+layout( push_constant ) uniform constants
 {
-	mat4 depthMVP;
-} ubo;
+	int lightspaceID;
+};
+
+layout(set=0, binding=0, std140) readonly buffer Lightspaces {
+	mat4 LIGHTSPACES[];
+};
+
+#include "../glsl/transform_uniform.glsl"
 
 void main()
 {
-	gl_Position =  ubo.depthMVP * vec4(inPos, 1.0);
+	gl_Position = LIGHTSPACES[lightspaceID] * TRANSFORMS[gl_InstanceIndex].model * vec4(inPos, 1.0);
 }

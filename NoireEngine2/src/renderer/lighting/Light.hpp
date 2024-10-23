@@ -15,7 +15,7 @@ struct LightInfo
 	glm::vec4 position;
 	glm::vec4 direction;
 	float radius = 1;
-	float limit = 10;
+	float limit = 100;
 	float intensity = 1; /* or power */
 	float fov = 0.349066f;
 	float blend = 0.5f;
@@ -31,36 +31,36 @@ struct LightInfo
 
 struct alignas(16) DirectionalLightUniform
 {
-	//glm::mat4 lightspace; /*depthMVP*/
-	glm::vec4 color = { 1,1,1,0 };
+	glm::mat4 lightspace; /*depthMVP*/
+	glm::vec4 color;
 	glm::vec4 direction;
 	float angle;
-	float intensity = 1; /* or power */
+	float intensity; /* or power */
 };
-static_assert(sizeof(DirectionalLightUniform) == 16 * 3);
+static_assert(sizeof(DirectionalLightUniform) == 64 + 16 * 3);
 
 struct alignas(16) PointLightUniform
 {
-	//glm::mat4 lightspace; /*depthMVP*/
-	glm::vec4 color = { 1,1,1,0 };
+	glm::mat4 lightspace; /*depthMVP*/
+	glm::vec4 color;
 	glm::vec4 position;
-	float intensity = 1; /* or power */
-	float radius = 1;
-	float limit = 10;
+	float intensity; /* or power */
+	float radius;
+	float limit;
 };
-static_assert(sizeof(PointLightUniform) == 16 * 3);
+static_assert(sizeof(PointLightUniform) == 64 + 16 * 3);
 
 struct alignas(16) SpotLightUniform
 {
 	glm::mat4 lightspace; /*depthMVP*/
-	glm::vec4 color = { 1,1,1,0 };
+	glm::vec4 color;
 	glm::vec4 position;
 	glm::vec4 direction;
-	float intensity = 1; /* or power */
-	float radius = 1;
-	float limit = 10;
-	float fov = 0.349066f;
-	float blend = 0.5f;
+	float intensity; /* or power */
+	float radius;
+	float limit;
+	float fov;
+	float blend;
 };
 static_assert(sizeof(SpotLightUniform) == 64 + 16 * 5);
 
