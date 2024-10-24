@@ -25,7 +25,6 @@ struct LightInfo
 	bool useShadows = true;
 	float zNear = 1.0f;
 	float zFar = 96.0f;
-	float lightFOV = 45.0f;
 	glm::mat4 lightspace; /*depthMVP*/
 };
 

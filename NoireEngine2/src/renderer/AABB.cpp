@@ -2,16 +2,24 @@
 
 void AABB::Update(const glm::mat4& model)
 {
-    auto& T = model[3];
-    min = T;
-    max = T;
-    for (int i = 0; i < 3; ++i)
-    {
-        for (int j = 0; j < 3; ++j) {
-            auto a = model[i][j] * originMin[j];
-            auto b = model[i][j] * originMax[j];
-            min[i] += a < b ? a : b;
-            max[i] += a < b ? b : a;
-        }
+    // Get the 8 corners of the local AABB
+    std::array<glm::vec3, 8> corners = {
+        glm::vec3(originMin.x, originMin.y, originMin.z),
+        glm::vec3(originMax.x, originMin.y, originMin.z),
+        glm::vec3(originMin.x, originMax.y, originMin.z),
+        glm::vec3(originMax.x, originMax.y, originMin.z),
+        glm::vec3(originMin.x, originMin.y, originMax.z),
+        glm::vec3(originMax.x, originMin.y, originMax.z),
+        glm::vec3(originMin.x, originMax.y, originMax.z),
+        glm::vec3(originMax.x, originMax.y, originMax.z),
+    };
+
+    // Transform all corners
+    min = glm::vec3(FLT_MAX);
+    max = glm::vec3(-FLT_MAX);
+    for (const auto& corner : corners) {
+        glm::vec3 transformedCorner = glm::vec3(model * glm::vec4(corner, 1.0f));
+        min = glm::min(min, transformedCorner);
+        max = glm::max(max, transformedCorner);
     }
 }

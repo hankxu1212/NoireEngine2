@@ -184,11 +184,6 @@ void ImGuiPipeline::CreatePipeline()
     };
 
     ImGui_ImplVulkan_Init(&init_info);
-
-    // Upload Fonts: now uncessary as of 2023-11-10
-    //CommandBuffer command_buffer;
-    //ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
-    //command_buffer.SubmitIdle();
 }
 
 void ImGuiPipeline::Update(const Scene* scene)

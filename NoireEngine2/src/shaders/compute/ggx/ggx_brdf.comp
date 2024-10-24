@@ -35,7 +35,7 @@ void main()
 	float DFG2 = 0;
 
 	for(uint i=0; i<NumSamples; ++i) {
-		vec2 u  = SampleHammersley(i);
+		vec2 u  = SampleHammersley(i, InvNumSamples);
 
 		// Sample directly in tangent/shading space since we don't care about reference frame as long as it's consistent.
 		vec3 Lh = SampleGGX(u.x, u.y, roughness);

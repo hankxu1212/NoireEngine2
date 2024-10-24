@@ -36,6 +36,8 @@ layout (set = 3, binding = 1) uniform samplerCube diffuseIrradiance;
 layout (set = 3, binding = 2) uniform sampler2D specularBRDF;
 layout (set = 3, binding = 3) uniform samplerCube prefilterEnvMap;
 
+// shadowmapping
+layout (set = 4, binding = 0) uniform sampler2D shadowMaps[]; // shadow maps, indexed
 
 layout( push_constant ) uniform constants
 {
@@ -56,6 +58,8 @@ layout( push_constant ) uniform constants
 const int parallax_numLayers = 32;
 const float parallax_layerDepth = 1.0 / float(parallax_numLayers);
 #include "glsl/parallax.glsl"
+
+#include "glsl/shadows.glsl"
 
 void main() {
     // calculate TBN
@@ -153,6 +157,11 @@ void main() {
 
 
 	vec3 color = directLighting + ambientLighting;
+
+    // shadow calculation
+	float shadow = CalculateShadow();
+    color *= shadow;
+
     // color = color * (1.0f / Uncharted2Tonemap(vec3(11.2f)));
     color = ACES(color);
 	outColor = gamma_map(color, 2.2);
@@ -185,20 +194,20 @@ vec3 DirectLightingPBR()
 {
 	vec3 lightsSum = vec3(0);
 
-	for (int i = 0; i < scene.numDirLights; ++i)
+	for (int i = 0; i < scene.numLights[0]; ++i)
 	{
 		vec3 radiance = DirLightRadiance(i);
 		lightsSum += CalcPBRDirectLighting(radiance, vec3(DIR_LIGHTS[i].direction));
 	}
 
-	for (int i = 0; i < scene.numPointLights; ++i)
+	for (int i = 0; i < scene.numLights[1]; ++i)
 	{
 		vec3 radiance = PointLightRadiance(i);
 		vec3 Li = normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
 		lightsSum += CalcPBRDirectLighting(radiance, Li);
 	}
 
-	for (int i = 0; i < scene.numSpotLights; ++i)
+	for (int i = 0; i < scene.numLights[2]; ++i)
 	{
 		vec3 radiance = SpotLightRadiance(i);
 		vec3 Li = normalize(vec3(SPOT_LIGHTS[i].position) - inPosition);

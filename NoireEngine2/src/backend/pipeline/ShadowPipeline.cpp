@@ -90,9 +90,9 @@ void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 {
 	Workspace& workspace = workspaces[CURR_FRAME];
 
-	const auto& lights = SceneManager::Get()->getScene()->getLightInstances();
+	const auto& shadowLights = SceneManager::Get()->getScene()->getShadowInstances();
 	
-	size_t needed_bytes = lights.size() * sizeof(Push);
+	size_t needed_bytes = shadowLights.size() * sizeof(Push);
 
 	// resize as neccesary
 	if (workspace.LightSpaces_Src.getBuffer() == VK_NULL_HANDLE
@@ -137,9 +137,9 @@ void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 		assert(workspace.LightSpaces_Src.data() != nullptr);
 
 		size_t offset = 0;
-		for (int i = 0; i < lights.size(); ++i) 
+		for (int i = 0; i < shadowLights.size(); ++i) 
 		{
-			auto& lightInfo = lights[i]->GetLightInfo();
+			auto& lightInfo = shadowLights[i]->GetLightInfo();
 			memcpy(PTR_ADD(workspace.LightSpaces_Src.data(), offset), glm::value_ptr(lightInfo.lightspace), sizeof(glm::mat4));
 			offset += sizeof(glm::mat4);
 		}
@@ -150,7 +150,7 @@ void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 
 void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	const auto& lights = SceneManager::Get()->getScene()->getLightInstances();
+	const auto& lights = SceneManager::Get()->getScene()->getShadowInstances();
 
 	// bind descriptors
 	std::array< VkDescriptorSet, 2 > descriptor_sets{
@@ -238,7 +238,7 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 void ShadowPipeline::CreateRenderPasses()
 {
 	// resize offscreen passes
-	const auto& lights = SceneManager::Get()->getScene()->getLightInstances();
+	const auto& lights = SceneManager::Get()->getScene()->getShadowInstances();
 	VkAttachmentDescription attachmentDescription{};
 	attachmentDescription.format = VK_FORMAT_D16_UNORM;
 	attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -400,7 +400,7 @@ void ShadowPipeline::CreateGraphicsPipeline()
 		.subpass = 0,
 	};
 	
-	const auto& lights = SceneManager::Get()->getScene()->getLightInstances();
+	const auto& lights = SceneManager::Get()->getScene()->getShadowInstances();
 
 	// builds all pipelines
 	for (int i = 0; i < lights.size(); ++i)

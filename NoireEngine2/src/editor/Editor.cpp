@@ -413,6 +413,7 @@ void Editor::ShowGizmos()
     Entity* selectedEntity = s_HierarchyPanel->getSelectedEntity();
     if (selectedEntity && m_GizmoType != -1)
     {
+        ImGuizmo::SetOrthographic(true);
         ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
 
         // Editor camera
@@ -420,12 +421,8 @@ void Editor::ShowGizmos()
         glm::mat4& cameraView = sceneCamera->GetViewMatrixUnsafe();
         glm::mat4& cameraProjection = sceneCamera->GetProjectionMatrixUnsafe();
 
-        auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
-        auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
-        auto viewportOffset = ImGui::GetWindowPos();
-        glm::vec4 viewportBounds = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y,
-                             viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
-        ImGuizmo::SetRect(viewportBounds.x, viewportBounds.y, viewportBounds.z - viewportBounds.x, viewportBounds.w - viewportBounds.y);
+        auto content = ImGui::GetContentRegionAvail();
+        ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, content.x, content.y);
 
         // Entity transform
         glm::mat4 transformMat = selectedEntity->transform()->LocalDirty();

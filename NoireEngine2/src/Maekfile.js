@@ -262,7 +262,7 @@ function custom_flags_and_rules() {
 			`/I../vendor/`,
 			`/I../vendor/imgui/`,
 			`/I../vendor/imguizmo/`,
-			'/O2'
+			//'/O2'
 		];
 
 	} else if (maek.OS === 'macos') {

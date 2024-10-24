@@ -28,13 +28,6 @@ layout( push_constant ) uniform constants
 	float environmentLightIntensity;
 } material;
 
-const mat4 biasMat = mat4( 
-	0.5, 0.0, 0.0, 0.0,
-	0.0, 0.5, 0.0, 0.0,
-	0.0, 0.0, 1.0, 0.0,
-	0.5, 0.5, 0.0, 1.0 );
-
-float shadowBias;
 #include "glsl/shadows.glsl"
 
 void main() {
@@ -65,24 +58,7 @@ void main() {
 		texColor *= texture(textures[material.albedoTexId], inTexCoord).rgb;
 
 	// shadow calculation
-	float shadow = 1;
-	for (int i = 0; i < scene.numSpotLights; ++i)
-	{
-		shadowBias = max(0.05 * (1.0 - dot(n, vec3(SPOT_LIGHTS[i].position) - inPosition)), 0.005);  
-		vec4 shadowCoord = biasMat * SPOT_LIGHTS[i].lightspace * vec4(inPosition, 1.0);
-		
-		// perform perspective divide
-		shadowCoord /= shadowCoord.w;
-
-		// when z/w goes outside the normalized range [-1, 1], they lie outside the view frustum
-		// similarly for x,y, they need to be in [0, 1]
-		if (abs(shadowCoord.z) <= 1
-			&& shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0
-			&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
-		{
-			shadow *= PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, i);
-		}
-	}
+	float shadow = CalculateShadow();
 
 	vec3 color = vec3(material.albedo) * texColor * (lightsSum + ambientLighting);
 	color *= shadow;

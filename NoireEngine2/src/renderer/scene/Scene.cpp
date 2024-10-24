@@ -26,8 +26,10 @@ void Scene::Load(const std::string& path)
 
 	Deserialize(path);
 	InstantiateCoreScripts();
+	UpdateSceneInfo();
 
 	m_ObjectInstances.resize(MAX_WORKFLOWS);
+
 }
 
 Scene::~Scene()
@@ -206,8 +208,8 @@ static void MakeLight(Entity* newEntity, const Scene::TValueMap& obj, const Scen
 		float strength = lightObj.at("strength").as_float();
 		newEntity->AddComponent<Light>(Light::Type::Directional, color, strength);
 		
-		float angle = lightObj.at("angle").as_float();
-		newEntity->transform()->SetRotation(glm::quat(glm::vec3(std::sin(angle), std::cos(angle), 0)));
+		//float angle = lightObj.at("angle").as_float();
+		//newEntity->transform()->SetRotation(glm::quat(glm::vec3(std::sin(angle), std::cos(angle), 0)));
 	}
 	else if (dict.find("sphere") != dict.end())
 	{
@@ -562,26 +564,41 @@ void Scene::InstantiateCoreScripts()
 
 void Scene::UpdateSceneInfo()
 {
-	m_SceneInfo.numDirLights = 0;
-	m_SceneInfo.numPointLights = 0;
-	m_SceneInfo.numSpotLights = 0;
+	m_SceneInfo.numLights[0] = 0;
+	m_SceneInfo.numLights[1] = 0;
+	m_SceneInfo.numLights[2] = 0;
 
 	for (int i = 0; i < m_SceneLights.size(); ++i)
 	{
-		switch (m_SceneLights[i]->GetLightInfo().type)
-		{
-		case 0/*Light::Type::Directional*/:
-			m_SceneInfo.numDirLights++;
-			break;
-		case 1/*Light::Type::Point*/:
-			m_SceneInfo.numPointLights++;
-			break;
-		case 2/*Light::Type::Spot*/:
-			m_SceneInfo.numSpotLights++;
-			break;
-		}
+		uint32_t type = m_SceneLights[i]->GetLightInfo().type;
+		m_SceneInfo.numLights[type]++;
 	}
+
+	UpdateShadowCasters();
 
 	const glm::vec3& pos = GetRenderCam()->GetTransform()->WorldLocation();
 	m_SceneInfo.cameraPosition = {pos.x, pos.y, pos.z, 0};
+}
+
+void Scene::UpdateShadowCasters()
+{
+	if (!shadowCastersDirty)
+		return;
+
+	m_SceneInfo.numShadowCasters[0] = 0;
+	m_SceneInfo.numShadowCasters[1] = 0;
+	m_SceneInfo.numShadowCasters[2] = 0;
+
+	m_ShadowCasters.clear();
+	for (auto& light : m_SceneLights)
+	{
+		uint32_t type = light->GetLightInfo().type;
+		if (light->GetLightInfo().useShadows && type != 1)
+		{
+			m_SceneInfo.numShadowCasters[type]++;
+			m_ShadowCasters.emplace_back(light);
+		}
+	}
+
+	shadowCastersDirty = false;
 }

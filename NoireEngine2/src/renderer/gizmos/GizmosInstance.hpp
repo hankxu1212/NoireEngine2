@@ -131,6 +131,23 @@ struct GizmosInstance
         }
     }
 
+    // Function to draw a directional light gizmo
+    void DrawDirectionalLight(const glm::vec3& lightDir, const glm::vec3& position, Color4_4 color = Color4_4::White, float arrowLength = 5.0f) 
+    {
+        m_LinesVertices.clear();
+
+        glm::vec3 normalizedLightDir = glm::normalize(lightDir);
+
+        // Calculate the end point of the arrow based on the direction and length
+        glm::vec3 arrowEnd = position + (normalizedLightDir * arrowLength);
+
+        // Draw the main arrow shaft
+        AddEdge({ position, color }, { arrowEnd, color });
+
+        // Draw arrowhead (optional, for better visual)
+        DrawArrowHead(arrowEnd, normalizedLightDir, arrowLength * 0.2f, color); // Make the arrowhead 20% of the arrow length
+    }
+
     // Helper function to draw a circle in a specific plane defined by right and up vectors
     void DrawCircle(const glm::vec3& center, float radius, const glm::vec3& right, const glm::vec3& up, int segments, Color4_4 color = Color4_4::White)
     {
@@ -146,6 +163,30 @@ struct GizmosInstance
             AddEdge({ point1, color }, { point2, color });
         }
     }
+
+    // Helper function to draw an arrowhead
+    void DrawArrowHead(const glm::vec3& tip, const glm::vec3& direction, float size, Color4_4 color = Color4_4::White)
+    {
+        // Create two perpendicular vectors for the arrowhead
+        glm::vec3 right = glm::normalize(glm::cross(direction, glm::vec3(0, 1, 0)));
+        if (glm::length(right) < 0.01f) {
+            right = glm::normalize(glm::cross(direction, glm::vec3(1, 0, 0))); // Handle edge case where direction is almost vertical
+        }
+        glm::vec3 up = glm::normalize(glm::cross(right, direction));
+
+        // Calculate the points for the arrowhead
+        glm::vec3 arrowLeft = tip - (direction * size) + (right * size * 0.5f);
+        glm::vec3 arrowRight = tip - (direction * size) - (right * size * 0.5f);
+        glm::vec3 arrowUp = tip - (direction * size) + (up * size * 0.5f);
+        glm::vec3 arrowDown = tip - (direction * size) - (up * size * 0.5f);
+
+        // Add lines for the arrowhead
+        AddEdge({ tip, color }, {arrowLeft, color });
+        AddEdge({ tip, color }, {arrowRight, color });
+        AddEdge({ tip, color }, {arrowUp, color });
+        AddEdge({ tip, color }, { arrowDown, color });
+    }
+
 
     // Helper function to add edges
     void AddEdge(const PosColVertex& start, const PosColVertex& end)

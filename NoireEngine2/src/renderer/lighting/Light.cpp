@@ -26,18 +26,23 @@ void Light::Update()
 	m_Info.direction = glm::vec4(dir, 0);
 	m_Info.position = glm::vec4(pos, 0);
 
-	if (m_Info.type == (uint32_t)Type::Directional)
+	if (m_Info.useShadows) 
 	{
-		// depthProjectionMatrix = glm::perspective(glm::radians(m_Info.lightFOV), 1.0f, m_Info.zNear, m_Info.zFar);
-	}
-	else if (m_Info.type == (uint32_t)Type::Point)
-	{
-		// TODO: add
-	}
-	else {
-		glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(m_Info.fov), 1.0f, m_Info.zNear, m_Info.zFar);
-		glm::mat4 depthViewMatrix = glm::lookAt(pos, pos - dir, Vec3::Up);
-		m_Info.lightspace = depthProjectionMatrix * depthViewMatrix;
+		if (m_Info.type == (uint32_t)Type::Directional)
+		{
+			glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, m_Info.zNear, m_Info.zFar);
+			glm::mat4 depthViewMatrix = glm::lookAt(pos, pos - dir, Vec3::Up);
+			m_Info.lightspace = depthProjectionMatrix * depthViewMatrix;
+		}
+		else if (m_Info.type == (uint32_t)Type::Point)
+		{
+			// TODO: add
+		}
+		else {
+			glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(m_Info.fov), 1.0f, m_Info.zNear, m_Info.zFar);
+			glm::mat4 depthViewMatrix = glm::lookAt(pos, pos - dir, Vec3::Up);
+			m_Info.lightspace = depthProjectionMatrix * depthViewMatrix;
+		}
 	}
 }
 
@@ -46,15 +51,16 @@ void Light::Render(const glm::mat4& model)
 	if (!ObjectPipeline::UseGizmos || !useGizmos)
 		return;
 
+	Color4_4 c{
+		static_cast<uint8_t>(m_Info.color.x * 255),
+		static_cast<uint8_t>(m_Info.color.y * 255),
+		static_cast<uint8_t>(m_Info.color.z * 255),
+		255
+	};
+
 	if (m_Info.type == (uint32_t)Type::Point) 
 	{
 		auto& pos = GetTransform()->position();
-		Color4_4 c{ 
-			static_cast<uint8_t>(m_Info.color.x * 255), 
-			static_cast<uint8_t>(m_Info.color.y * 255), 
-			static_cast<uint8_t>(m_Info.color.z * 255), 
-			255 
-		};
 		gizmos.DrawWireSphere(m_Info.limit, pos, c);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
@@ -62,17 +68,18 @@ void Light::Render(const glm::mat4& model)
 	{
 		auto& pos = GetTransform()->position();
 		auto dir = GetTransform()->Back();
-		Color4_4 c{
-			static_cast<uint8_t>(m_Info.color.x * 255),
-			static_cast<uint8_t>(m_Info.color.y * 255),
-			static_cast<uint8_t>(m_Info.color.z * 255),
-			255
-		};
 		
 		float inner = glm::tan(glm::radians(m_Info.fov * (1 - m_Info.blend) * 0.5f)) * m_Info.limit;
 		float outer = glm::tan(glm::radians(m_Info.fov * 0.5f)) * m_Info.limit;
 
 		gizmos.DrawSpotLight(pos, dir, inner, outer, m_Info.limit, c);
+		GetScene()->PushGizmosInstance(&gizmos);
+	}
+	else
+	{
+		auto& pos = GetTransform()->position();
+		auto dir = GetTransform()->Back();
+		gizmos.DrawDirectionalLight(dir, pos, c);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
 }
@@ -85,6 +92,7 @@ _NODISCARD DirectionalLightUniform Light::GetLightUniformAs() const
 	uniform.direction = m_Info.direction;
 	uniform.angle = 0.0f;
 	uniform.intensity = m_Info.intensity;
+	uniform.lightspace = m_Info.lightspace;
 
 	return uniform;
 }
@@ -98,6 +106,7 @@ _NODISCARD PointLightUniform Light::GetLightUniformAs() const
 	uniform.intensity = m_Info.intensity;
 	uniform.radius = m_Info.radius;
 	uniform.limit = m_Info.limit;
+	uniform.lightspace = m_Info.lightspace;
 
 	return uniform;
 }

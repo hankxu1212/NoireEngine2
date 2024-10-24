@@ -86,11 +86,10 @@ public:
 	struct alignas(16) SceneUniform 
 	{
 		struct { float x, y, z, _padding; } cameraPosition;
-		uint32_t numDirLights;
-		uint32_t numPointLights;
-		uint32_t numSpotLights;
+		alignas(16) glm::uvec3 numLights;
+		alignas(16) glm::uvec3 numShadowCasters;
 	};
-	static_assert(sizeof(SceneUniform) == 16 * 2);
+	static_assert(sizeof(SceneUniform) == 16 * 3);
 
 	inline const void* getSceneUniformPtr() const { return &m_SceneInfo; }
 
@@ -101,6 +100,7 @@ public:
 	inline const std::vector<GizmosInstance*>& getGizmosInstances() const { return m_GizmosInstances; }
 
 	inline const std::vector<Light*>& getLightInstances() const { return m_SceneLights; }
+	inline const std::vector<Light*>& getShadowInstances() const { return m_ShadowCasters; }
 
 	inline const std::filesystem::path& getRootPath() const { return sceneRootAbsolutePath; }
 
@@ -120,6 +120,7 @@ public: // event functions. Do not create function definitions!
 private:
 	void InstantiateCoreScripts();
 	void UpdateSceneInfo();
+	void UpdateShadowCasters();
 
 private:
 	friend class SceneManager;
@@ -145,6 +146,8 @@ private:
 
 	// a list of lights
 	std::vector<Light*> m_SceneLights;
+	std::vector<Light*> m_ShadowCasters;
+	bool shadowCastersDirty = true;
 
 	// IBL
 	std::shared_ptr<ImageCube> m_Skybox;

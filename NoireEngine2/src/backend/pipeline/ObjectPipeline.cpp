@@ -246,7 +246,7 @@ void ObjectPipeline::CreateDescriptors()
 	// create set 4: shadow mapping with descriptor indexing
 	{
 		const auto& shadowPasses = s_ShadowPipeline->getShadowPasses();
-
+		NE_INFO("Found {} shadow maps.", shadowPasses.size());
 		std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
 			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
 		};
@@ -278,19 +278,22 @@ void ObjectPipeline::CreateDescriptors()
 		}
 
 		// actually build the descriptor set now
-		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-			.BindImage(0, shadowDescriptors.data(),
-				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<uint32_t>(shadowPasses.size()))
-			.Build(set4_ShadowMap, set4_ShadowMapLayout, &setLayoutBindingFlags,
+		DescriptorBuilder builder = DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator);
+		
+		if (shadowPasses.size() > 0)
+			builder.BindImage(0, shadowDescriptors.data(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<uint32_t>(shadowPasses.size()));
+		else
+			builder.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+		builder.Build(set4_ShadowMap, set4_ShadowMapLayout, &setLayoutBindingFlags,
 #if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
 				// SRS - increase the per-stage descriptor samplers limit on macOS (maxPerStageDescriptorUpdateAfterBindSamplers > maxPerStageDescriptorSamplers)
 				VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT
 #else
 				0 /*VkDescriptorSetLayoutCreateFlags*/
 #endif
-				, &variableDescriptorInfoAI);
-
-		NE_INFO("Found {} shadow maps.", shadowPasses.size());
+			, &variableDescriptorInfoAI);
 	}
 }
 

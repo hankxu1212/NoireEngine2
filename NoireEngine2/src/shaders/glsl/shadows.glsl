@@ -4,6 +4,12 @@
 
 #define ambient 0.1
 
+const mat4 biasMat = mat4( 
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0 );
+
 //////////////////////////////////////////////////////////////////////////
 // Computes PCF for directional light given 
 // `uv` the shadow coords
@@ -62,4 +68,66 @@ float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex)
 	// percentage-close filtering
 	float uvRadius = penumbraWidth * uvLightSize * nearClip / currentDepth;
 	return PCF(uv, currentDepth, uvRadius, pcfSamples, bias, shadowMapIndex);
+}
+
+float DirLightShadow(int i)
+{
+	const float shadowBias = 0.002;
+	vec4 shadowCoord = biasMat * DIR_LIGHTS[i].lightspace * vec4(inPosition, 1.0);
+		
+	// perform perspective divide
+	shadowCoord /= shadowCoord.w;
+
+	// when z/w goes outside the normalized range [-1, 1], they lie outside the view frustum
+	// similarly for x,y, they need to be in [0, 1]
+	float shadow = 1;
+	if (abs(shadowCoord.z) <= 1
+		&& shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0
+		&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
+	{
+		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, i);
+	}
+	return shadow;
+}
+
+float PointLightShadow(int i)
+{
+	return 1;
+}
+
+float SpotLightShadow(int i)
+{
+	float shadowBias = max(0.05 * (1.0 - dot(n, vec3(SPOT_LIGHTS[i].position) - inPosition)), 0.005);  
+	vec4 shadowCoord = biasMat * SPOT_LIGHTS[i].lightspace * vec4(inPosition, 1.0);
+	
+	// perform perspective divide
+	shadowCoord /= shadowCoord.w;
+
+	// when z/w goes outside the normalized range [-1, 1], they lie outside the view frustum
+	// similarly for x,y, they need to be in [0, 1]
+	float shadow = 1;
+	if (abs(shadowCoord.z) <= 1
+		&& shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0
+		&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
+	{
+		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, i);
+	}
+	return shadow;
+}
+
+float CalculateShadow()
+{
+	// shadow calculation
+	float shadow = 1;
+
+	for (int i = 0; i < scene.numShadowCasters[0]; ++i)
+		shadow *= DirLightShadow(i);
+
+	for (int i = 0; i < scene.numShadowCasters[1]; ++i)
+		shadow *= PointLightShadow(i);
+
+	for (int i = 0; i < scene.numShadowCasters[2]; ++i)
+		shadow *= SpotLightShadow(i);
+
+	return shadow;
 }

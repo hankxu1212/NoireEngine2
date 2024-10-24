@@ -95,13 +95,13 @@ vec3 DirectLighting()
 {
 	vec3 lightsSum = vec3(0);
 
-	for (int i = 0; i < scene.numDirLights; ++i)
+	for (int i = 0; i < scene.numLights[0]; ++i)
 		lightsSum += DirLightRadiance(i);
 
-	for (int i = 0; i < scene.numPointLights; ++i)
+	for (int i = 0; i < scene.numLights[1]; ++i)
 		lightsSum += PointLightRadiance(i);
 
-	for (int i = 0; i < scene.numSpotLights; ++i)
+	for (int i = 0; i < scene.numLights[2]; ++i)
 		lightsSum += SpotLightRadiance(i);
 
 	return lightsSum;

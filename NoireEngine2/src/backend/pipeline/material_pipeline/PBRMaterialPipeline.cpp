@@ -19,11 +19,12 @@ void PBRMaterialPipeline::Create()
 void PBRMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer)
 {
 	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
-	std::array< VkDescriptorSet, 4 > descriptor_sets{
+	std::array< VkDescriptorSet, 5 > descriptor_sets{
 		workspace.set0_World,
 		workspace.set1_StorageBuffers,
 		p_ObjectPipeline->set2_Textures,
-		p_ObjectPipeline->set3_Cubemap
+		p_ObjectPipeline->set3_Cubemap,
+		p_ObjectPipeline->set4_ShadowMap
 	};
 	vkCmdBindDescriptorSets(
 		commandBuffer, //command buffer
@@ -37,11 +38,12 @@ void PBRMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer)
 
 void PBRMaterialPipeline::CreatePipelineLayout()
 {
-	std::array< VkDescriptorSetLayout, 4 > layouts{
+	std::array< VkDescriptorSetLayout, 5 > layouts{
 		p_ObjectPipeline->set0_WorldLayout,
 		p_ObjectPipeline->set1_StorageBuffersLayout,
 		p_ObjectPipeline->set2_TexturesLayout,
 		p_ObjectPipeline->set3_CubemapLayout,
+		p_ObjectPipeline->set4_ShadowMapLayout,
 	};
 
 	VkPushConstantRange range{
