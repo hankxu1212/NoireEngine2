@@ -36,21 +36,21 @@ ShadowPipeline::ShadowPipeline(ObjectPipeline* objectPipeline) :
 
 ShadowPipeline::~ShadowPipeline()
 {
-	for (int i = 0; i < offscreenpasses.size(); i++)
+	for (int i = 0; i < m_ShadowMapPasses.size(); i++)
 	{
-		if (offscreenpasses[i].frameBuffer != VK_NULL_HANDLE) {
-			vkDestroyFramebuffer(VulkanContext::GetDevice(), offscreenpasses[i].frameBuffer, nullptr);
-			offscreenpasses[i].frameBuffer = VK_NULL_HANDLE;
+		if (m_ShadowMapPasses[i].frameBuffer != VK_NULL_HANDLE) {
+			vkDestroyFramebuffer(VulkanContext::GetDevice(), m_ShadowMapPasses[i].frameBuffer, nullptr);
+			m_ShadowMapPasses[i].frameBuffer = VK_NULL_HANDLE;
 		}
 
-		if (offscreenpasses[i].renderPass != VK_NULL_HANDLE) {
-			vkDestroyRenderPass(VulkanContext::GetDevice(), offscreenpasses[i].renderPass, nullptr);
-			offscreenpasses[i].renderPass = VK_NULL_HANDLE;
+		if (m_ShadowMapPasses[i].renderPass != VK_NULL_HANDLE) {
+			vkDestroyRenderPass(VulkanContext::GetDevice(), m_ShadowMapPasses[i].renderPass, nullptr);
+			m_ShadowMapPasses[i].renderPass = VK_NULL_HANDLE;
 		}
 
-		if (offscreenpasses[i].pipeline != VK_NULL_HANDLE) {
-			vkDestroyPipeline(VulkanContext::GetDevice(), offscreenpasses[i].pipeline, nullptr);
-			offscreenpasses[i].pipeline = VK_NULL_HANDLE;
+		if (m_ShadowMapPasses[i].pipeline != VK_NULL_HANDLE) {
+			vkDestroyPipeline(VulkanContext::GetDevice(), m_ShadowMapPasses[i].pipeline, nullptr);
+			m_ShadowMapPasses[i].pipeline = VK_NULL_HANDLE;
 		}
 	}
 
@@ -92,7 +92,7 @@ void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 
 	const auto& shadowLights = SceneManager::Get()->getScene()->getShadowInstances();
 	
-	size_t needed_bytes = shadowLights.size() * sizeof(Push);
+	size_t needed_bytes = shadowLights.size() * sizeof(glm::mat4);
 
 	// resize as neccesary
 	if (workspace.LightSpaces_Src.getBuffer() == VK_NULL_HANDLE
@@ -133,24 +133,24 @@ void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 	assert(workspace.LightSpaces_Src.getSize() == workspace.LightSpaces.getSize());
 	assert(workspace.LightSpaces_Src.getSize() >= needed_bytes);
 
+	size_t copy_size = 0;
 	{ //copy LightSpaces into LightSpaces_Src:
 		assert(workspace.LightSpaces_Src.data() != nullptr);
 
-		size_t offset = 0;
 		for (int i = 0; i < shadowLights.size(); ++i) 
 		{
 			auto& lightInfo = shadowLights[i]->GetLightInfo();
-			memcpy(PTR_ADD(workspace.LightSpaces_Src.data(), offset), glm::value_ptr(lightInfo.lightspace), sizeof(glm::mat4));
-			offset += sizeof(glm::mat4);
+			memcpy(PTR_ADD(workspace.LightSpaces_Src.data(), copy_size), glm::value_ptr(lightInfo.lightspace), sizeof(glm::mat4));
+			copy_size += sizeof(glm::mat4);
 		}
 	}
 
-	Buffer::CopyBuffer(commandBuffer, workspace.LightSpaces_Src.getBuffer(), workspace.LightSpaces.getBuffer(), workspace.LightSpaces_Src.getSize());
+	Buffer::CopyBuffer(commandBuffer, workspace.LightSpaces_Src.getBuffer(), workspace.LightSpaces.getBuffer(), copy_size);
 }
 
 void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	const auto& lights = SceneManager::Get()->getScene()->getShadowInstances();
+	const auto& shadowLights = SceneManager::Get()->getScene()->getShadowInstances();
 
 	// bind descriptors
 	std::array< VkDescriptorSet, 2 > descriptor_sets{
@@ -168,12 +168,12 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 	);
 
 	// render each shadow map
-	for (int lightIndex = 0; lightIndex < lights.size(); ++lightIndex)
+	for (int lightIndex = 0; lightIndex < shadowLights.size(); ++lightIndex)
 	{
 		BeginRenderPass(commandBuffer, lightIndex);
 
 		// bind pipeline
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, offscreenpasses[lightIndex].pipeline);
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ShadowMapPasses[lightIndex].pipeline);
 
 		// push constant
 		Push push{
@@ -238,7 +238,7 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 void ShadowPipeline::CreateRenderPasses()
 {
 	// resize offscreen passes
-	const auto& lights = SceneManager::Get()->getScene()->getShadowInstances();
+	const auto& shadowLights = SceneManager::Get()->getScene()->getShadowInstances();
 	VkAttachmentDescription attachmentDescription{};
 	attachmentDescription.format = VK_FORMAT_D16_UNORM;
 	attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -287,38 +287,38 @@ void ShadowPipeline::CreateRenderPasses()
 		.pDependencies = dependencies.data(),
 	};
 
-	offscreenpasses.resize(lights.size());
+	m_ShadowMapPasses.resize(shadowLights.size());
 
-	for (int i = 0; i < lights.size(); ++i)
+	for (int i = 0; i < shadowLights.size(); ++i)
 	{
-		offscreenpasses[i].width = shadowMapize;
-		offscreenpasses[i].height = shadowMapize;
+		m_ShadowMapPasses[i].width = shadowMapize;
+		m_ShadowMapPasses[i].height = shadowMapize;
 
-		offscreenpasses[i].depthAttachment = std::make_unique<ImageDepth>(glm::uvec2{ shadowMapize, shadowMapize }, VK_FORMAT_D16_UNORM);
+		m_ShadowMapPasses[i].depthAttachment = std::make_unique<ImageDepth>(glm::uvec2{ shadowMapize, shadowMapize }, VK_FORMAT_D16_UNORM);
 
 		// create render pass
 		VulkanContext::VK_CHECK(
-			vkCreateRenderPass(VulkanContext::GetDevice(), &renderpassCreateInfo, nullptr, &offscreenpasses[i].renderPass),
+			vkCreateRenderPass(VulkanContext::GetDevice(), &renderpassCreateInfo, nullptr, &m_ShadowMapPasses[i].renderPass),
 			"[Vulkan] Create Render pass failed"
 		);
 
 		// create frame buffer
 		{
-			VkImageView view = offscreenpasses[i].depthAttachment->getView();
+			VkImageView view = m_ShadowMapPasses[i].depthAttachment->getView();
 
 			VkFramebufferCreateInfo create_info
 			{
 				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-				.renderPass = offscreenpasses[i].renderPass,
+				.renderPass = m_ShadowMapPasses[i].renderPass,
 				.attachmentCount = 1,
 				.pAttachments = &view,
-				.width = uint32_t(offscreenpasses[i].width),
-				.height = uint32_t(offscreenpasses[i].height),
+				.width = uint32_t(m_ShadowMapPasses[i].width),
+				.height = uint32_t(m_ShadowMapPasses[i].height),
 				.layers = 1,
 			};
 
 			VulkanContext::VK_CHECK(
-				vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &offscreenpasses[i].frameBuffer),
+				vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_ShadowMapPasses[i].frameBuffer),
 				"[vulkan] Creating frame buffer failed"
 			);
 		}
@@ -400,14 +400,14 @@ void ShadowPipeline::CreateGraphicsPipeline()
 		.subpass = 0,
 	};
 	
-	const auto& lights = SceneManager::Get()->getScene()->getShadowInstances();
+	const auto& shadowLights = SceneManager::Get()->getScene()->getShadowInstances();
 
 	// builds all pipelines
-	for (int i = 0; i < lights.size(); ++i)
+	for (int i = 0; i < shadowLights.size(); ++i)
 	{
-		create_info.renderPass = offscreenpasses[i].renderPass;
+		create_info.renderPass = m_ShadowMapPasses[i].renderPass;
 		VulkanContext::VK_CHECK(
-			vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VulkanContext::Get()->getPipelineCache(), 1, &create_info, nullptr, &offscreenpasses[i].pipeline),
+			vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VulkanContext::Get()->getPipelineCache(), 1, &create_info, nullptr, &m_ShadowMapPasses[i].pipeline),
 			"[Vulkan] Create pipeline failed");
 	}
 }
@@ -420,11 +420,11 @@ void ShadowPipeline::BeginRenderPass(const CommandBuffer& commandBuffer, uint32_
 
 	VkRenderPassBeginInfo begin_info{
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-		.renderPass = offscreenpasses[index].renderPass,
-		.framebuffer = offscreenpasses[index].frameBuffer,
+		.renderPass = m_ShadowMapPasses[index].renderPass,
+		.framebuffer = m_ShadowMapPasses[index].frameBuffer,
 		.renderArea{
 			.offset = {.x = 0, .y = 0},
-			.extent = {.width = (uint32_t)offscreenpasses[index].width, .height = (uint32_t)offscreenpasses[index].height},
+			.extent = {.width = (uint32_t)m_ShadowMapPasses[index].width, .height = (uint32_t)m_ShadowMapPasses[index].height},
 		},
 		.clearValueCount = 1,
 		.pClearValues = clear_values.data(),
@@ -434,15 +434,15 @@ void ShadowPipeline::BeginRenderPass(const CommandBuffer& commandBuffer, uint32_
 
 	VkRect2D scissor{
 		.offset = {.x = 0, .y = 0},
-		.extent = {.width = (uint32_t)offscreenpasses[index].width, .height = (uint32_t)offscreenpasses[index].height},
+		.extent = {.width = (uint32_t)m_ShadowMapPasses[index].width, .height = (uint32_t)m_ShadowMapPasses[index].height},
 	};
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 	VkViewport viewport{
 		.x = 0.0f,
 		.y = 0.0f,
-		.width = float(offscreenpasses[index].width),
-		.height = float(offscreenpasses[index].height),
+		.width = float(m_ShadowMapPasses[index].width),
+		.height = float(m_ShadowMapPasses[index].height),
 		.minDepth = 0.0f,
 		.maxDepth = 1.0f,
 	};

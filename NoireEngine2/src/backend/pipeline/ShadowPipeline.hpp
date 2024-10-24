@@ -5,6 +5,7 @@
 #include "backend/images/ImageDepth.hpp"
 #include "backend/buffers/Buffer.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
+#include <array>
 
 class ObjectPipeline;
 
@@ -29,20 +30,41 @@ public:
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
 	// Resources of the depth map generation pass
-	struct DepthPass {
+	struct CascadePass
+	{
 		VkRenderPass renderPass;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline pipeline;
-	} depthPass;
+	} m_CascadePass;
 
-	struct OffscreenPass {
+	// Contains all resources required for a single shadow map cascade
+	struct Cascade
+	{
+		VkFramebuffer frameBuffer;
+		std::unique_ptr<ImageDepth> depthAttachment;
+		glm::mat4 viewProjMatrix;
+		float splitDepth;
+	};
+
+	Buffer m_CascadeViewProjMatrices;
+
+	//struct UBOFS {
+	//	float cascadeSplits[4];
+	//	glm::mat4 inverseViewMat;
+	//	glm::vec3 lightDir;
+	//	float _pad;
+	//	int32_t colorCascades;
+	//} uboFS;
+
+	// naive shadowmap pass, used for spotlights
+	struct ShadowMapPass {
 		int32_t width, height;
 		VkFramebuffer frameBuffer;
 		VkRenderPass renderPass;
 		std::unique_ptr<ImageDepth> depthAttachment;
 		VkPipeline pipeline;
 	};
-	const std::vector<OffscreenPass>& getShadowPasses() const { return offscreenpasses; }
+	const std::vector<ShadowMapPass>& getShadowPasses() const { return m_ShadowMapPasses; }
 
 private:
 	int32_t displayDepthMapCascadeIndex = 0;
@@ -75,7 +97,11 @@ private:
 
 	DescriptorAllocator m_Allocator;
 
-	std::vector<OffscreenPass> offscreenpasses;
+	// all naive shadowmap passes
+	std::vector<ShadowMapPass> m_ShadowMapPasses;
+
+	// all cascade shadowmap passes
+	std::array<Cascade, SHADOW_MAP_CASCADE_COUNT> cascades;
 
 	void CreateRenderPasses();
 	void CreateDescriptors();
