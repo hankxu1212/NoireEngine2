@@ -8,6 +8,8 @@
 
 class ObjectPipeline;
 
+#define SHADOW_MAP_CASCADE_COUNT 4
+
 class ShadowPipeline : public VulkanPipeline
 {
 public:
@@ -26,6 +28,13 @@ public:
 	// run a series of render passes on each shadow caster
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
+	// Resources of the depth map generation pass
+	struct DepthPass {
+		VkRenderPass renderPass;
+		VkPipelineLayout pipelineLayout;
+		VkPipeline pipeline;
+	} depthPass;
+
 	struct OffscreenPass {
 		int32_t width, height;
 		VkFramebuffer frameBuffer;
@@ -36,12 +45,21 @@ public:
 	const std::vector<OffscreenPass>& getShadowPasses() const { return offscreenpasses; }
 
 private:
+	int32_t displayDepthMapCascadeIndex = 0;
+	float cascadeSplitLambda = 0.95f;
+
 	VkPipelineLayout	m_PipelineLayout;
 	ObjectPipeline* p_ObjectPipeline = nullptr;
 
 	struct Push 
 	{
 		int lightspaceID;
+	};
+
+	// For simplicity all pipelines use the same push constant block layout
+	struct CascadePush {
+		glm::vec4 position;
+		uint32_t cascadeIndex;
 	};
 
 	struct Workspace

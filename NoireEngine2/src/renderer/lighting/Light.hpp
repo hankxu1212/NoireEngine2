@@ -34,7 +34,8 @@ struct alignas(16) DirectionalLightUniform
 	glm::vec4 color;
 	glm::vec4 direction;
 	float angle;
-	float intensity; /* or power */
+	float intensity;
+	uint32_t shadowOffset;
 };
 static_assert(sizeof(DirectionalLightUniform) == 64 + 16 * 3);
 
@@ -43,9 +44,10 @@ struct alignas(16) PointLightUniform
 	glm::mat4 lightspace; /*depthMVP*/
 	glm::vec4 color;
 	glm::vec4 position;
-	float intensity; /* or power */
+	float intensity;
 	float radius;
 	float limit;
+	uint32_t shadowOffset;
 };
 static_assert(sizeof(PointLightUniform) == 64 + 16 * 3);
 
@@ -55,11 +57,12 @@ struct alignas(16) SpotLightUniform
 	glm::vec4 color;
 	glm::vec4 position;
 	glm::vec4 direction;
-	float intensity; /* or power */
+	float intensity;
 	float radius;
 	float limit;
 	float fov;
 	float blend;
+	uint32_t shadowOffset;
 };
 static_assert(sizeof(SpotLightUniform) == 64 + 16 * 5);
 

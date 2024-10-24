@@ -11,6 +11,17 @@ layout(location=3) in vec4 inTangent;
 
 layout(location=0) out vec4 outColor;
 
+layout (set = 2, binding = 0) uniform sampler2D textures[];
+
+// IDL
+#define GGX_MIP_LEVELS 6
+layout (set = 3, binding = 0) uniform samplerCube skybox;
+layout (set = 3, binding = 1) uniform samplerCube diffuseIrradiance;
+layout (set = 3, binding = 2) uniform sampler2D specularBRDF;
+layout (set = 3, binding = 3) uniform samplerCube prefilterEnvMap;
+// shadowmapping
+layout (set = 4, binding = 0) uniform sampler2D shadowMaps[]; // shadow maps, indexed
+
 #include "glsl/world_uniform.glsl"
 #include "glsl/utils.glsl"
 
@@ -27,17 +38,6 @@ float roughness, metalness, cosLo;
 vec3 CalcPBRDirectLighting(vec3 radiance, vec3 Li);
 vec3 DirectLightingPBR();
 
-layout (set = 2, binding = 0) uniform sampler2D textures[];
-
-// IDL
-#define GGX_MIP_LEVELS 6
-layout (set = 3, binding = 0) uniform samplerCube skybox;
-layout (set = 3, binding = 1) uniform samplerCube diffuseIrradiance;
-layout (set = 3, binding = 2) uniform sampler2D specularBRDF;
-layout (set = 3, binding = 3) uniform samplerCube prefilterEnvMap;
-
-// shadowmapping
-layout (set = 4, binding = 0) uniform sampler2D shadowMaps[]; // shadow maps, indexed
 
 layout( push_constant ) uniform constants
 {
@@ -59,9 +59,8 @@ const int parallax_numLayers = 32;
 const float parallax_layerDepth = 1.0 / float(parallax_numLayers);
 #include "glsl/parallax.glsl"
 
-#include "glsl/shadows.glsl"
-
-void main() {
+void main() 
+{
     // calculate TBN
     n = normalize(inNormal);
     vec3 tangent = inTangent.xyz;
@@ -159,8 +158,8 @@ void main() {
 	vec3 color = directLighting + ambientLighting;
 
     // shadow calculation
-	float shadow = CalculateShadow();
-    color *= shadow;
+	// float shadow = CalculateShadow();
+    // color *= shadow;
 
     // color = color * (1.0f / Uncharted2Tonemap(vec3(11.2f)));
     color = ACES(color);

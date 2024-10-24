@@ -6,6 +6,7 @@ struct DirLight
 	vec4 direction;
 	float angle;
 	float intensity;
+	int shadowOffset;
 };
 
 layout(set=1, binding=1, std140) readonly buffer DirLights {
@@ -20,6 +21,7 @@ struct PointLight
 	float intensity;
 	float radius;
 	float limit;
+	int shadowOffset;
 };
 
 layout(set=1, binding=2, std140) readonly buffer PointLights {
@@ -37,6 +39,7 @@ struct SpotLight
 	float limit;
 	float fov;
 	float blend;
+	int shadowOffset;
 };
 
 layout(set=1, binding=3, std140) readonly buffer SpotLights {
@@ -91,18 +94,38 @@ vec3 SpotLightRadiance(int i)
 	return cosTheta * SPOT_LIGHTS[i].intensity * falloff * coneAttenuation * vec3(SPOT_LIGHTS[i].color);
 }
 
+#include "shadows.glsl"
+
 vec3 DirectLighting()
 {
 	vec3 lightsSum = vec3(0);
+		
+	int shadowMapOffsetId = 0;
 
 	for (int i = 0; i < scene.numLights[0]; ++i)
-		lightsSum += DirLightRadiance(i);
+	{
+		vec3 radiance = DirLightRadiance(i);
+		if (DIR_LIGHTS[i].shadowOffset == 1)
+		{
+			radiance *= DirLightShadow(i, shadowMapOffsetId);
+			shadowMapOffsetId += DIR_LIGHTS[i].shadowOffset;
+		}
+		lightsSum += radiance;
+	}
 
 	for (int i = 0; i < scene.numLights[1]; ++i)
 		lightsSum += PointLightRadiance(i);
 
 	for (int i = 0; i < scene.numLights[2]; ++i)
-		lightsSum += SpotLightRadiance(i);
+	{
+		vec3 radiance = SpotLightRadiance(i);
+		if (SPOT_LIGHTS[i].shadowOffset == 1)
+		{
+			radiance *= SpotLightShadow(i, shadowMapOffsetId);
+			shadowMapOffsetId += SPOT_LIGHTS[i].shadowOffset;
+		}
+		lightsSum += radiance;
+	}
 
 	return lightsSum;
 }

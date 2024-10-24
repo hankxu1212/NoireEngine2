@@ -585,17 +585,12 @@ void Scene::UpdateShadowCasters()
 	if (!shadowCastersDirty)
 		return;
 
-	m_SceneInfo.numShadowCasters[0] = 0;
-	m_SceneInfo.numShadowCasters[1] = 0;
-	m_SceneInfo.numShadowCasters[2] = 0;
-
 	m_ShadowCasters.clear();
 	for (auto& light : m_SceneLights)
 	{
 		uint32_t type = light->GetLightInfo().type;
 		if (light->GetLightInfo().useShadows && type != 1)
 		{
-			m_SceneInfo.numShadowCasters[type]++;
 			m_ShadowCasters.emplace_back(light);
 		}
 	}

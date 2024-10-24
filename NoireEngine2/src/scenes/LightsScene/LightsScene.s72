@@ -21,26 +21,6 @@
 },
 {
 
-	"type":"LIGHT",
-	"name":"Light",
-	"tint":[1, 1, 1],
-	"spot":{
-		"radius":0,
-		"power":1000,
-		"fov":1.1205,
-		"blend":0.15
-	}
-},
-{
-	"type":"NODE",
-	"name":"Light",
-	"translation":[11.4533,2.07463,3.48844],
-	"rotation":[0.252911,0.441189,0.744765,0.432103],
-	"scale":[1,1,1],
-	"light":"Light"
-},
-{
-
 	"type":"CAMERA",
 	"name":"Camera",
 	"perspective":{
@@ -141,26 +121,44 @@
 {
 
 	"type":"LIGHT",
+	"name":"Light.002",
+	"tint":[0.219152, 0, 0.706255],
+	"sun":{
+		"angle":0.199337,
+		"strength":1
+	}
+},
+{
+	"type":"NODE",
+	"name":"Light.002",
+	"translation":[13.6998,6.30181,7.53951],
+	"rotation":[0.238356,0.430304,0.761608,0.421875],
+	"scale":[1,1,1],
+	"light":"Light.002"
+},
+{
+
+	"type":"LIGHT",
 	"name":"Light.001",
-	"tint":[1, 1, 1],
+	"tint":[0.855946, 1, 0.388561],
 	"spot":{
-		"radius":6.57,
-		"power":2744.6,
-		"fov":1.309,
-		"blend":0.15
+		"radius":1.9,
+		"power":100000,
+		"fov":1.36728,
+		"blend":0.821985
 	}
 },
 {
 	"type":"NODE",
 	"name":"Light.001",
-	"translation":[-10.3087,16.0271,7.53951],
-	"rotation":[0.214068,-0.46135,-0.860858,0.0159409],
+	"translation":[-14.4279,14.3209,7.53951],
+	"rotation":[0.183497,-0.456403,-0.807802,0.324777],
 	"scale":[1,1,1],
 	"light":"Light.001"
 },
 {
 	"type":"SCENE",
 	"name":"F:\\gameDev\\Engines\\NoireEngine2\\NoireEngine2\\src\\scenes\\LightsScene\\LightsScene.blend",
-	"roots":["Cube", "Light", "Camera", "Plane", "Icosphere", "Cube.001", "Cube.002", "Light.001"]
+	"roots":["Cube", "Camera", "Plane", "Icosphere", "Cube.001", "Cube.002", "Light.002", "Light.001"]
 }
 ]

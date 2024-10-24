@@ -88,12 +88,12 @@ template<>
 _NODISCARD DirectionalLightUniform Light::GetLightUniformAs() const
 {
 	DirectionalLightUniform uniform;
+	uniform.lightspace = m_Info.lightspace;
 	uniform.color = m_Info.color;
 	uniform.direction = m_Info.direction;
 	uniform.angle = 0.0f;
 	uniform.intensity = m_Info.intensity;
-	uniform.lightspace = m_Info.lightspace;
-
+	uniform.shadowOffset = m_Info.useShadows ? 1 : 0;
 	return uniform;
 }
 
@@ -101,13 +101,13 @@ template<>
 _NODISCARD PointLightUniform Light::GetLightUniformAs() const
 {
 	PointLightUniform uniform;
+	uniform.lightspace = m_Info.lightspace;
 	uniform.color = m_Info.color;
 	uniform.position = m_Info.position;
 	uniform.intensity = m_Info.intensity;
 	uniform.radius = m_Info.radius;
 	uniform.limit = m_Info.limit;
-	uniform.lightspace = m_Info.lightspace;
-
+	uniform.shadowOffset = 0;
 	return uniform;
 }
 
@@ -115,6 +115,7 @@ template<>
 _NODISCARD SpotLightUniform Light::GetLightUniformAs() const
 {
 	SpotLightUniform uniform;
+	uniform.lightspace = m_Info.lightspace;
 	uniform.color = m_Info.color;
 	uniform.position = m_Info.position;
 	uniform.direction = m_Info.direction;
@@ -123,8 +124,7 @@ _NODISCARD SpotLightUniform Light::GetLightUniformAs() const
 	uniform.limit = m_Info.limit;
 	uniform.fov = m_Info.fov;
 	uniform.blend = m_Info.blend;
-	uniform.lightspace = m_Info.lightspace;
-
+	uniform.shadowOffset = m_Info.useShadows ? 1 : 0;
 	return uniform;
 }
 

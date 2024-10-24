@@ -9,15 +9,15 @@ layout(location=3) in vec4 inTangent;
 
 layout(location=0) out vec4 outColor;
 
+layout (set = 2, binding = 0) uniform sampler2D textures[]; // global texture array, indexed
+layout (set = 3, binding = 1) uniform samplerCube lambertianIDL;
+layout (set = 4, binding = 0) uniform sampler2D shadowMaps[]; // shadow maps, indexed
+
 #include "glsl/world_uniform.glsl"
 #include "glsl/utils.glsl"
 
 vec3 n;
 #include "glsl/lighting.glsl"
-
-layout (set = 2, binding = 0) uniform sampler2D textures[]; // global texture array, indexed
-layout (set = 3, binding = 1) uniform samplerCube lambertianIDL;
-layout (set = 4, binding = 0) uniform sampler2D shadowMaps[]; // shadow maps, indexed
 
 layout( push_constant ) uniform constants
 {
@@ -27,8 +27,6 @@ layout( push_constant ) uniform constants
 	float normalStrength;
 	float environmentLightIntensity;
 } material;
-
-#include "glsl/shadows.glsl"
 
 void main() {
     // calculate TBN
@@ -47,8 +45,6 @@ void main() {
 		n = normalize(n);
 	}
 
-	vec3 lightsSum = DirectLighting();
-
 	// sample diffuse irradiance
 	vec3 ambientLighting = texture(lambertianIDL, n).rgb * material.environmentLightIntensity;
 
@@ -57,11 +53,10 @@ void main() {
 	if (material.albedoTexId >= 0)
 		texColor *= texture(textures[material.albedoTexId], inTexCoord).rgb;
 
-	// shadow calculation
-	float shadow = CalculateShadow();
+	// direct lighting and shadows
+	vec3 directLighting = DirectLighting();
 
-	vec3 color = vec3(material.albedo) * texColor * (lightsSum + ambientLighting);
-	color *= shadow;
+	vec3 color = vec3(material.albedo) * texColor * (directLighting + ambientLighting);
 	
 	color = ACES(color);
 	outColor = gamma_map(color, 2.2f);

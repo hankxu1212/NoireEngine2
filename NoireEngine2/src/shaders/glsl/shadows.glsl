@@ -70,10 +70,10 @@ float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex)
 	return PCF(uv, currentDepth, uvRadius, pcfSamples, bias, shadowMapIndex);
 }
 
-float DirLightShadow(int i)
+float DirLightShadow(int lightId, int shadowMapId)
 {
 	const float shadowBias = 0.002;
-	vec4 shadowCoord = biasMat * DIR_LIGHTS[i].lightspace * vec4(inPosition, 1.0);
+	vec4 shadowCoord = biasMat * DIR_LIGHTS[lightId].lightspace * vec4(inPosition, 1.0);
 		
 	// perform perspective divide
 	shadowCoord /= shadowCoord.w;
@@ -85,20 +85,20 @@ float DirLightShadow(int i)
 		&& shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0
 		&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
 	{
-		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, i);
+		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, shadowMapId);
 	}
 	return shadow;
 }
 
-float PointLightShadow(int i)
+float PointLightShadow(int lightId, int shadowMapId)
 {
 	return 1;
 }
 
-float SpotLightShadow(int i)
+float SpotLightShadow(int lightId, int shadowMapId)
 {
-	float shadowBias = max(0.05 * (1.0 - dot(n, vec3(SPOT_LIGHTS[i].position) - inPosition)), 0.005);  
-	vec4 shadowCoord = biasMat * SPOT_LIGHTS[i].lightspace * vec4(inPosition, 1.0);
+	float shadowBias = max(0.05 * (1.0 - dot(n, vec3(SPOT_LIGHTS[lightId].position) - inPosition)), 0.005);  
+	vec4 shadowCoord = biasMat * SPOT_LIGHTS[lightId].lightspace * vec4(inPosition, 1.0);
 	
 	// perform perspective divide
 	shadowCoord /= shadowCoord.w;
@@ -110,24 +110,7 @@ float SpotLightShadow(int i)
 		&& shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0
 		&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
 	{
-		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, i);
+		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, shadowMapId);
 	}
-	return shadow;
-}
-
-float CalculateShadow()
-{
-	// shadow calculation
-	float shadow = 1;
-
-	for (int i = 0; i < scene.numShadowCasters[0]; ++i)
-		shadow *= DirLightShadow(i);
-
-	for (int i = 0; i < scene.numShadowCasters[1]; ++i)
-		shadow *= PointLightShadow(i);
-
-	for (int i = 0; i < scene.numShadowCasters[2]; ++i)
-		shadow *= SpotLightShadow(i);
-
 	return shadow;
 }

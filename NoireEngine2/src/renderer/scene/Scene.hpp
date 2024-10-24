@@ -87,9 +87,8 @@ public:
 	{
 		struct { float x, y, z, _padding; } cameraPosition;
 		alignas(16) glm::uvec3 numLights;
-		alignas(16) glm::uvec3 numShadowCasters;
 	};
-	static_assert(sizeof(SceneUniform) == 16 * 3);
+	static_assert(sizeof(SceneUniform) == 16 * 2);
 
 	inline const void* getSceneUniformPtr() const { return &m_SceneInfo; }
 
