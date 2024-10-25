@@ -30,13 +30,13 @@ Camera::Camera(Type type_, bool orthographic_, float np, float fp, float fov, fl
 void Camera::Update(const Transform& t)
 {
 	viewMatrix = glm::lookAt(t.position(), t.position() - t.Forward(), t.Up());
-
+	
 	if (orthographic) {
 		projectionMatrix = glm::ortho(
-			-aspectRatio * orthographicScale,
-			aspectRatio * orthographicScale,
-			-orthographicScale,
-			orthographicScale,
+			-aspectRatio * orthographicScale * 0.5f,
+			aspectRatio * orthographicScale * 0.5f,
+			-orthographicScale * 0.5f,
+			orthographicScale * 0.5f,
 			nearClipPlane, farClipPlane);
 	}
 	else

@@ -4,6 +4,7 @@ struct DirLight
 	mat4 lightspaces[4];
 	vec4 color;
 	vec4 direction;
+	vec4 splitDepths;
 	float angle;
 	float intensity;
 	int shadowOffset;
@@ -65,11 +66,11 @@ float CalculateFallOff(float D, float limit, float radius)
 
 vec3 PointLightRadiance(int i)
 {
-	vec3 lightDir = -normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
+	vec3 lightDir = normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
 
 	float D = distance(vec3(POINT_LIGHTS[i].position), inPosition);
     
-	float cosTheta = saturate(dot(n, lightDir));
+	float cosTheta = max(dot(n, lightDir), 0.0);
 
 	float falloff = CalculateFallOff(D, POINT_LIGHTS[i].limit, POINT_LIGHTS[i].radius);
 
@@ -78,23 +79,22 @@ vec3 PointLightRadiance(int i)
 
 vec3 SpotLightRadiance(int i)
 {
-	vec3 lightDir = -normalize(vec3(SPOT_LIGHTS[i].position) - inPosition);
-	vec3 spotlightDirection = normalize(vec3(SPOT_LIGHTS[i].direction));
+	vec3 lightDir = normalize(vec3(SPOT_LIGHTS[i].position) - inPosition);
 
-	float D = distance(vec3(SPOT_LIGHTS[i].position), inPosition); // distance to light
+	float D = distance(vec3(SPOT_LIGHTS[i].position), inPosition);
+    
+	float cosTheta = max(dot(n, lightDir), 0.0);
 
 	float falloff = CalculateFallOff(D, SPOT_LIGHTS[i].limit, SPOT_LIGHTS[i].radius);
 
-	float cosTheta = saturate(dot(lightDir, spotlightDirection));
+	float cosAngle = saturate(dot(lightDir, -vec3(SPOT_LIGHTS[i].direction)));
 	float fov = radians(SPOT_LIGHTS[i].fov);
 
 	// Inner and outer angles (in radians)
     float cosThetaInner = cos(fov * (1.0 - SPOT_LIGHTS[i].blend) * 0.5);
     float cosThetaOuter = cos(fov * 0.5);
-
-    // Compute attenuation based on the angle
-    float coneAttenuation = clamp((cosTheta - cosThetaOuter) / saturate(cosThetaInner - cosThetaOuter), 0.0, 1.0);
-
+	float coneAttenuation = clamp((cosAngle - cosThetaOuter) / saturate(cosThetaInner - cosThetaOuter), 0.0, 1.0);
+	
 	return cosTheta * SPOT_LIGHTS[i].intensity * falloff * coneAttenuation * vec3(SPOT_LIGHTS[i].color);
 }
 
@@ -109,7 +109,7 @@ vec3 DirectLighting()
 	for (int i = 0; i < scene.numLights[0]; ++i)
 	{
 		vec3 radiance = DirLightRadiance(i);
-		if (DIR_LIGHTS[i].shadowOffset == 1)
+		if (DIR_LIGHTS[i].shadowOffset > 0)
 		{
 			radiance *= DirLightShadow(i, shadowMapOffsetId);
 			shadowMapOffsetId += DIR_LIGHTS[i].shadowOffset;
@@ -120,7 +120,7 @@ vec3 DirectLighting()
 	for (int i = 0; i < scene.numLights[1]; ++i)
 	{
 		vec3 radiance = PointLightRadiance(i);
-		if (POINT_LIGHTS[i].shadowOffset == 1)
+		if (POINT_LIGHTS[i].shadowOffset > 0)
 		{
 			radiance *= PointLightShadow(i, shadowMapOffsetId);
 			shadowMapOffsetId += POINT_LIGHTS[i].shadowOffset;
@@ -131,7 +131,7 @@ vec3 DirectLighting()
 	for (int i = 0; i < scene.numLights[2]; ++i)
 	{
 		vec3 radiance = SpotLightRadiance(i);
-		if (SPOT_LIGHTS[i].shadowOffset == 1)
+		if (SPOT_LIGHTS[i].shadowOffset > 0)
 		{
 			radiance *= SpotLightShadow(i, shadowMapOffsetId);
 			shadowMapOffsetId += SPOT_LIGHTS[i].shadowOffset;

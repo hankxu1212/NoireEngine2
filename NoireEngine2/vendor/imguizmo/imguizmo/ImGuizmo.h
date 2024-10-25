@@ -145,7 +145,7 @@ namespace IMGUIZMO_NAMESPACE
    IMGUI_API bool IsUsingAny();
 
    // enable/disable the gizmo. Stay in the state until next call to Enable.
-   // gizmo is rendered with gray half transparent color when disabled
+   // gizmo is rendered with gray half transparent m_Color when disabled
    IMGUI_API void Enable(bool enable);
 
    // helper functions for manualy editing translation/rotation/scale with an input float
@@ -167,7 +167,7 @@ namespace IMGUIZMO_NAMESPACE
    // default is false
    IMGUI_API void SetOrthographic(bool isOrthographic);
 
-   // Render a cube with face color corresponding to face normal. Usefull for debug/tests
+   // Render a cube with face m_Color corresponding to face normal. Usefull for debug/tests
    IMGUI_API void DrawCubes(const float* view, const float* projection, const float* matrices, int matrixCount);
    IMGUI_API void DrawGrid(const float* view, const float* projection, const float* matrix, const float gridSize);
 
@@ -255,13 +255,13 @@ namespace IMGUIZMO_NAMESPACE
    // When false, they always stay along the positive world/local axis
    IMGUI_API void AllowAxisFlip(bool value);
 
-   // Configure the limit where axis are hidden
+   // Configure the m_Limit where axis are hidden
    IMGUI_API void SetAxisLimit(float value);
    // Set an axis mask to permanently hide a given axis (true -> hidden, false -> shown)
    IMGUI_API void SetAxisMask(bool x, bool y, bool z);
-   // Configure the limit where planes are hiden
+   // Configure the m_Limit where planes are hiden
    IMGUI_API void SetPlaneLimit(float value);
-   // from a x,y,z point in space and using Manipulation view/projection matrix, check if mouse is in pixel radius distance of that projected point
+   // from a x,y,z point in space and using Manipulation view/projection matrix, check if mouse is in pixel m_Radius distance of that projected point
    IMGUI_API bool IsOver(float* position, float pixelRadius);
 
    enum COLOR

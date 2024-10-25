@@ -344,7 +344,7 @@ static bool ImGui_ImplDX9_CheckFormatSupport(IDirect3DDevice9* pDevice, D3DFORMA
         pd3d->Release();
         return false;
     }
-    // Font texture should support linear filter, color blend and write to render-target
+    // Font texture should support linear filter, m_Color m_Blend and write to render-target
     bool support = (pd3d->CheckDeviceFormat(param.AdapterOrdinal, param.DeviceType, mode.Format, D3DUSAGE_DYNAMIC | D3DUSAGE_QUERY_FILTER | D3DUSAGE_QUERY_POSTPIXELSHADER_BLENDING, D3DRTYPE_TEXTURE, format)) == D3D_OK;
     pd3d->Release();
     return support;

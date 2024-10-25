@@ -564,6 +564,7 @@ void Scene::InstantiateCoreScripts()
 
 void Scene::UpdateSceneInfo()
 {
+	// update lights
 	m_SceneInfo.numLights[0] = 0;
 	m_SceneInfo.numLights[1] = 0;
 	m_SceneInfo.numLights[2] = 0;
@@ -579,6 +580,8 @@ void Scene::UpdateSceneInfo()
 	m_SceneInfo.shadowPCFSamples = ShadowPipeline::PCFSamples;
 	UpdateShadowCasters();
 
+	// update camera
+	m_SceneInfo.cameraView = GetRenderCam()->camera()->getViewMatrix();
 	const glm::vec3& pos = GetRenderCam()->GetTransform()->WorldLocation();
 	m_SceneInfo.cameraPosition = {pos.x, pos.y, pos.z, 0};
 }
@@ -591,13 +594,13 @@ void Scene::UpdateShadowCasters()
 	m_ShadowCasters.clear();
 
 	// shadow casters must follow the order: Directional, Point, Spot.
-	// otherwise the lightspaces mess up. this took too long to debug
+	// otherwise the m_Lightspaces mess up. this took too long to debug
 	// furthermore, the order of which the light is pushed must respect the order of the lights in scene
 	for (uint32_t i = 0; i < 3; i++) 
 	{
 		for (auto& light : m_SceneLights)
 		{
-			if (light->useShadows && light->type == i)
+			if (light->m_UseShadows && light->type == i)
 				m_ShadowCasters.emplace_back(light);
 		}
 	}

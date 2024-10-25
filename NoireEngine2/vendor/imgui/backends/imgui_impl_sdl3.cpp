@@ -417,7 +417,7 @@ bool ImGui_ImplSDL3_ProcessEvent(const SDL_Event* event)
             return true;
         }
         // - In some cases, when detaching a window from main viewport SDL may send SDL_WINDOWEVENT_ENTER one frame too late,
-        //   causing SDL_WINDOWEVENT_LEAVE on previous frame to interrupt drag operation by clear mouse position. This is why
+        //   causing SDL_WINDOWEVENT_LEAVE on previous frame to interrupt drag operation by clear mouse m_Position. This is why
         //   we delay process the SDL_WINDOWEVENT_LEAVE events by one frame. See issue #5012 for details.
         // FIXME: Unconfirmed whether this is still needed with SDL3.
         case SDL_EVENT_WINDOW_MOUSE_LEAVE:
@@ -478,7 +478,7 @@ static bool ImGui_ImplSDL3_Init(SDL_Window* window, SDL_Renderer* renderer, void
     IM_ASSERT(io.BackendPlatformUserData == nullptr && "Already initialized a platform backend!");
     IM_UNUSED(sdl_gl_context); // Unused in this branch
 
-    // Check and store if we are on a SDL backend that supports global mouse position
+    // Check and store if we are on a SDL backend that supports global mouse m_Position
     // ("wayland" and "rpi" don't support it, but we chose to use a white-list instead of a black-list)
     bool mouse_can_use_global_state = false;
 #if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE
@@ -638,7 +638,7 @@ static void ImGui_ImplSDL3_UpdateMouseData()
 #endif
     if (is_app_focused)
     {
-        // (Optional) Set OS mouse position from Dear ImGui if requested (rarely used, only when ImGuiConfigFlags_NavEnableSetMousePos is enabled by user)
+        // (Optional) Set OS mouse m_Position from Dear ImGui if requested (rarely used, only when ImGuiConfigFlags_NavEnableSetMousePos is enabled by user)
         if (io.WantSetMousePos)
         {
 #if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE
@@ -649,11 +649,11 @@ static void ImGui_ImplSDL3_UpdateMouseData()
                 SDL_WarpMouseInWindow(bd->Window, io.MousePos.x, io.MousePos.y);
         }
 
-        // (Optional) Fallback to provide mouse position when focused (SDL_EVENT_MOUSE_MOTION already provides this when hovered or captured)
+        // (Optional) Fallback to provide mouse m_Position when focused (SDL_EVENT_MOUSE_MOTION already provides this when hovered or captured)
         if (bd->MouseCanUseGlobalState && bd->MouseButtonsDown == 0)
         {
-            // Single-viewport mode: mouse position in client window coordinates (io.MousePos is (0,0) when the mouse is on the upper-left corner of the app window)
-            // Multi-viewport mode: mouse position in OS absolute coordinates (io.MousePos is (0,0) when the mouse is on the upper-left of the primary monitor)
+            // Single-viewport mode: mouse m_Position in client window coordinates (io.MousePos is (0,0) when the mouse is on the upper-left corner of the app window)
+            // Multi-viewport mode: mouse m_Position in OS absolute coordinates (io.MousePos is (0,0) when the mouse is on the upper-left of the primary monitor)
             float mouse_x, mouse_y;
             int window_x, window_y;
             SDL_GetGlobalMouseState(&mouse_x, &mouse_y);

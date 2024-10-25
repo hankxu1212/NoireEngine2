@@ -23,13 +23,14 @@ const float depthBiasConstant = 1.25f;
 // Slope depth bias factor, applied depending on polygon's slope
 const float depthBiasSlope = 1.75f;
 
-// Shadow map dimension
 #if defined(__ANDROID__)
-	// Use a smaller size on Android for performance reasons
-const uint32_t shadowMapize{ 1024 };
+#define SHADOWMAP_DIM 1024
+#define CASCADED_SHADOWMAP_DIM 2048
 #else
-const uint32_t shadowMapize{ 2048 };
+#define SHADOWMAP_DIM 2048
+#define CASCADED_SHADOWMAP_DIM 4096
 #endif
+
 
 ShadowPipeline::ShadowPipeline(ObjectPipeline* objectPipeline) :
 	p_ObjectPipeline(objectPipeline)
@@ -43,6 +44,18 @@ ShadowPipeline::~ShadowPipeline()
 		if (m_ShadowMapPasses[i].frameBuffer != VK_NULL_HANDLE) {
 			vkDestroyFramebuffer(VulkanContext::GetDevice(), m_ShadowMapPasses[i].frameBuffer, nullptr);
 			m_ShadowMapPasses[i].frameBuffer = VK_NULL_HANDLE;
+		}
+	}
+
+	for (int i = 0; i < m_CascadePasses.size(); i++)
+	{
+		for (int j = 0; j < SHADOW_MAP_CASCADE_COUNT; ++j) 
+		{
+			auto& frameBuf = m_CascadePasses[i].cascades[j].frameBuffer;
+			if (frameBuf != VK_NULL_HANDLE) {
+				vkDestroyFramebuffer(VulkanContext::GetDevice(), frameBuf, nullptr);
+				frameBuf = VK_NULL_HANDLE;
+			}
 		}
 	}
 
@@ -79,6 +92,7 @@ void ShadowPipeline::CreateRenderPass()
 
 void ShadowPipeline::Rebuild()
 {
+	// TODO: do this shit bruh, but maybe not needed?
 }
 
 void ShadowPipeline::CreatePipeline()
@@ -93,8 +107,22 @@ void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 	Workspace& workspace = workspaces[CURR_FRAME];
 
 	const auto& shadowLights = SceneManager::Get()->getScene()->getShadowInstances();
-	
-	size_t needed_bytes = shadowLights.size() * sizeof(glm::mat4);
+	size_t needed_bytes = 0;
+	for (int i = 0; i < shadowLights.size(); ++i)
+	{
+		switch (shadowLights[i]->type)
+		{
+		case 0:
+			needed_bytes += 4 * sizeof(glm::mat4);
+			break;
+		case 1: // TODO: make into 6 for omnidirectional lights
+			needed_bytes += 1 * sizeof(glm::mat4);
+			break;
+		case 2:
+			needed_bytes += 1 * sizeof(glm::mat4);
+			break;
+		}
+	}
 
 	// resize as neccesary
 	if (workspace.LightSpaces_Src.getBuffer() == VK_NULL_HANDLE
@@ -135,18 +163,32 @@ void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 	assert(workspace.LightSpaces_Src.getSize() == workspace.LightSpaces.getSize());
 	assert(workspace.LightSpaces_Src.getSize() >= needed_bytes);
 
-	{ //copy LightSpaces into LightSpaces_Src:
-		size_t offset = 0;
+	//copy LightSpaces into LightSpaces_Src:
+	size_t offset = 0;
+	{
 		assert(workspace.LightSpaces_Src.data() != nullptr);
 
 		for (int i = 0; i < shadowLights.size(); ++i) 
 		{
-			memcpy(PTR_ADD(workspace.LightSpaces_Src.data(), offset), glm::value_ptr(shadowLights[i]->lightspaces[0]), sizeof(glm::mat4));
-			offset += sizeof(glm::mat4);
+			switch (shadowLights[i]->type)
+			{
+			case 0:
+				memcpy(PTR_ADD(workspace.LightSpaces_Src.data(), offset), shadowLights[i]->m_Lightspaces.data(), SHADOW_MAP_CASCADE_COUNT * sizeof(glm::mat4));
+				offset += SHADOW_MAP_CASCADE_COUNT * sizeof(glm::mat4);
+				break;
+			case 1: // TODO: make into 6 for omnidirectional lights
+				memcpy(PTR_ADD(workspace.LightSpaces_Src.data(), offset), glm::value_ptr(shadowLights[i]->m_Lightspaces[0]), sizeof(glm::mat4));
+				offset += sizeof(glm::mat4);
+				break;
+			case 2:
+				memcpy(PTR_ADD(workspace.LightSpaces_Src.data(), offset), glm::value_ptr(shadowLights[i]->m_Lightspaces[0]), sizeof(glm::mat4));
+				offset += sizeof(glm::mat4);
+				break;
+			}
 		}
 	}
 
-	Buffer::CopyBuffer(commandBuffer, workspace.LightSpaces_Src.getBuffer(), workspace.LightSpaces.getBuffer(), shadowLights.size() * sizeof(glm::mat4));
+	Buffer::CopyBuffer(commandBuffer, workspace.LightSpaces_Src.getBuffer(), workspace.LightSpaces.getBuffer(), offset);
 }
 
 void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
@@ -168,11 +210,9 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 		0, nullptr //dynamic offsets count, ptr
 	);
 
-	// render each shadow map
-	for (int lightIndex = 0; lightIndex < shadowLights.size(); ++lightIndex)
+	// bind and draw scene
+	auto DrawOnce = [&](int lightIndex)
 	{
-		ShadowMap_BeginRenderPass(commandBuffer, lightIndex);
-
 		// bind pipeline
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ShadowMapPipeline);
 
@@ -181,7 +221,7 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 			.lightspaceID = lightIndex
 		};
 		vkCmdPushConstants(commandBuffer, m_ShadowMapPassPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Push), &push);
-		
+
 		// draw once
 		const auto& allInstances = scene->getObjectInstances();
 
@@ -233,6 +273,38 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 		}
 
 		vkCmdEndRenderPass(commandBuffer);
+	};
+	
+	// the following is a fucking messy indexing pile garbage, but its elegant in the way that it requires
+	// no extra storage buffers, no extra pipelines, layouts, or descriptorsets.
+	// everything is done on a single pipeline
+
+	uint32_t passIndices[3] = {0}; // which pass are we executing
+	int lightspaceMatrixID = 0; // offset of the lightspace matrix in the shader storage buffer
+	// render each shadow map
+	for (int lightIndex = 0; lightIndex < shadowLights.size(); ++lightIndex)
+	{
+		uint32_t type = shadowLights[lightIndex]->type;
+		if (type == 0)
+		{
+			for (uint32_t cascadeIndex = 0; cascadeIndex < SHADOW_MAP_CASCADE_COUNT; ++cascadeIndex) 
+			{
+				Cascade_BeginRenderPass(commandBuffer, passIndices[type], cascadeIndex);
+				DrawOnce(lightspaceMatrixID);
+				lightspaceMatrixID++;
+			}
+		}
+		else if(type == 1)
+		{
+			// TODO: fix this
+		}
+		else
+		{
+			ShadowMap_BeginRenderPass(commandBuffer, passIndices[type]);
+			DrawOnce(lightspaceMatrixID);
+			lightspaceMatrixID++;
+		}
+		passIndices[type]++;
 	}
 }
 
@@ -256,7 +328,7 @@ void ShadowPipeline::ShadowMap_CreateRenderPasses()
 
 	VkSubpassDescription subpass = {};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpass.colorAttachmentCount = 0;													// No color attachments
+	subpass.colorAttachmentCount = 0;													// No m_Color attachments
 	subpass.pDepthStencilAttachment = &depthReference;									// Reference to our depth attachment
 
 	// Use subpass dependencies for layout transitions
@@ -288,21 +360,26 @@ void ShadowPipeline::ShadowMap_CreateRenderPasses()
 		.pDependencies = dependencies.data(),
 	};
 
-	// create render pass
+	// create shadow render pass
 	VulkanContext::VK_CHECK(
 		vkCreateRenderPass(VulkanContext::GetDevice(), &renderpassCreateInfo, nullptr, &m_ShadowMapRenderPass),
 		"[Vulkan] Create Render pass failed"
 	);
 
-	m_ShadowMapPasses.resize(shadowLights.size());
+	uint32_t numShadowCasters[3] = { 0 };
+	for (auto shadowLight : shadowLights)
+		numShadowCasters[shadowLight->type]++;
 
-	// create frame buffers and image views
-	for (int i = 0; i < shadowLights.size(); ++i)
+	m_CascadePasses.resize(numShadowCasters[0]);
+	m_ShadowMapPasses.resize(numShadowCasters[2]);
+
+	// create frame buffers and image views for naive shadowpass (spotlights)
+	for (uint32_t i = 0; i < numShadowCasters[2]; ++i)
 	{
-		m_ShadowMapPasses[i].width = shadowMapize;
-		m_ShadowMapPasses[i].height = shadowMapize;
+		m_ShadowMapPasses[i].width = SHADOWMAP_DIM;
+		m_ShadowMapPasses[i].height = SHADOWMAP_DIM;
 
-		m_ShadowMapPasses[i].depthAttachment = std::make_unique<ImageDepth>(glm::uvec2{ shadowMapize, shadowMapize }, VK_FORMAT_D16_UNORM);
+		m_ShadowMapPasses[i].depthAttachment = std::make_unique<ImageDepth>(glm::uvec2{ SHADOWMAP_DIM, SHADOWMAP_DIM }, VK_FORMAT_D16_UNORM);
 
 		VkImageView view = m_ShadowMapPasses[i].depthAttachment->getView();
 
@@ -312,8 +389,8 @@ void ShadowPipeline::ShadowMap_CreateRenderPasses()
 			.renderPass = m_ShadowMapRenderPass,
 			.attachmentCount = 1,
 			.pAttachments = &view,
-			.width = uint32_t(m_ShadowMapPasses[i].width),
-			.height = uint32_t(m_ShadowMapPasses[i].height),
+			.width = m_ShadowMapPasses[i].width,
+			.height = m_ShadowMapPasses[i].height,
 			.layers = 1,
 		};
 
@@ -321,6 +398,34 @@ void ShadowPipeline::ShadowMap_CreateRenderPasses()
 			vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_ShadowMapPasses[i].frameBuffer),
 			"[vulkan] Creating frame buffer failed"
 		);
+	}
+
+	// create cascade passes
+	for (uint32_t i = 0; i < numShadowCasters[0]; ++i)
+	{
+		m_CascadePasses[i].width = CASCADED_SHADOWMAP_DIM;
+		m_CascadePasses[i].height = CASCADED_SHADOWMAP_DIM;
+		for (uint32_t cascadeIndex = 0; cascadeIndex < SHADOW_MAP_CASCADE_COUNT; cascadeIndex++) {
+
+			m_CascadePasses[i].cascades[cascadeIndex].depthAttachment = std::make_unique<ImageDepth>(glm::uvec2{ CASCADED_SHADOWMAP_DIM, CASCADED_SHADOWMAP_DIM }, VK_FORMAT_D16_UNORM);
+			VkImageView view = m_CascadePasses[i].cascades[cascadeIndex].depthAttachment->getView();
+
+			VkFramebufferCreateInfo create_info
+			{
+				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+				.renderPass = m_ShadowMapRenderPass,
+				.attachmentCount = 1,
+				.pAttachments = &view,
+				.width = m_CascadePasses[i].width,
+				.height = m_CascadePasses[i].height,
+				.layers = 1,
+			};
+
+			VulkanContext::VK_CHECK(
+				vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_CascadePasses[i].cascades[cascadeIndex].frameBuffer),
+				"[vulkan] Creating frame buffer failed"
+			);
+		}
 	}
 }
 
@@ -376,7 +481,7 @@ void ShadowPipeline::ShadowMap_CreateGraphicsPipeline()
 		.Build("../spv/shaders/shadow/shadowmapping.vert.spv", "../spv/shaders/shadow/shadowmapping.frag.spv", &m_ShadowMapPipeline, m_ShadowMapPassPipelineLayout, m_ShadowMapRenderPass);
 }
 
-void ShadowPipeline::ShadowMap_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t index)
+void ShadowPipeline::ShadowMap_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t passIndex)
 {
 	static std::array< VkClearValue, 1 > clear_values{
 		VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
@@ -385,10 +490,10 @@ void ShadowPipeline::ShadowMap_BeginRenderPass(const CommandBuffer& commandBuffe
 	VkRenderPassBeginInfo begin_info{
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 		.renderPass = m_ShadowMapRenderPass,
-		.framebuffer = m_ShadowMapPasses[index].frameBuffer,
+		.framebuffer = m_ShadowMapPasses[passIndex].frameBuffer,
 		.renderArea{
 			.offset = {.x = 0, .y = 0},
-			.extent = {.width = (uint32_t)m_ShadowMapPasses[index].width, .height = (uint32_t)m_ShadowMapPasses[index].height},
+			.extent = {.width = (uint32_t)m_ShadowMapPasses[passIndex].width, .height = (uint32_t)m_ShadowMapPasses[passIndex].height},
 		},
 		.clearValueCount = 1,
 		.pClearValues = clear_values.data(),
@@ -398,15 +503,15 @@ void ShadowPipeline::ShadowMap_BeginRenderPass(const CommandBuffer& commandBuffe
 
 	VkRect2D scissor{
 		.offset = {.x = 0, .y = 0},
-		.extent = {.width = (uint32_t)m_ShadowMapPasses[index].width, .height = (uint32_t)m_ShadowMapPasses[index].height},
+		.extent = {.width = (uint32_t)m_ShadowMapPasses[passIndex].width, .height = (uint32_t)m_ShadowMapPasses[passIndex].height},
 	};
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 	VkViewport viewport{
 		.x = 0.0f,
 		.y = 0.0f,
-		.width = float(m_ShadowMapPasses[index].width),
-		.height = float(m_ShadowMapPasses[index].height),
+		.width = float(m_ShadowMapPasses[passIndex].width),
+		.height = float(m_ShadowMapPasses[passIndex].height),
 		.minDepth = 0.0f,
 		.maxDepth = 1.0f,
 	};
@@ -421,117 +526,48 @@ void ShadowPipeline::ShadowMap_BeginRenderPass(const CommandBuffer& commandBuffe
 		depthBiasSlope);
 }
 
-void ShadowPipeline::Cascade_CreateRenderPasses()
+void ShadowPipeline::Cascade_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t passIndex, uint32_t cascadeIndex)
 {
-	m_ShadowCascadePasses.resize(1); // TODO: add more
-}
+	static std::array< VkClearValue, 1 > clear_values{
+		VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
+	};
 
-void ShadowPipeline::Cascade_CreateDescriptors()
-{
-}
+	VkRenderPassBeginInfo begin_info{
+		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+		.renderPass = m_ShadowMapRenderPass,
+		.framebuffer = m_CascadePasses[passIndex].cascades[cascadeIndex].frameBuffer,
+		.renderArea{
+			.offset = {.x = 0, .y = 0},
+			.extent = {
+				.width = m_CascadePasses[passIndex].width, 
+				.height = m_CascadePasses[passIndex].height
+			},
+		},
+		.clearValueCount = 1,
+		.pClearValues = clear_values.data(),
+	};
 
-void ShadowPipeline::Cascade_CreatePipelineLayout()
-{
-}
+	vkCmdBeginRenderPass(commandBuffer, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-void ShadowPipeline::Cascade_CreateGraphicsPipeline()
-{
-}
+	VkRect2D scissor{
+		.offset = {.x = 0, .y = 0},
+		.extent = {.width = m_CascadePasses[passIndex].width, .height = m_CascadePasses[passIndex].height},
+	};
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-void ShadowPipeline::Cascade_BeginRenderPass(const CommandBuffer& cmdBuffer, uint32_t index)
-{
-}
+	VkViewport viewport{
+		.x = 0.0f,
+		.y = 0.0f,
+		.width = float(m_CascadePasses[passIndex].width),
+		.height = float(m_CascadePasses[passIndex].height),
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f,
+	};
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-// Calculate frustum split depths and matrices for the shadow map cascades
-// Based on https://johanmedestrom.wordpress.com/2016/03/18/opengl-cascaded-shadow-maps/
-void ShadowPipeline::Cascade_UpdateCascades()
-{
-	Camera* camera = VIEW_CAM;
-	float cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
-
-	const float nearClip = camera->nearClipPlane;
-	const float farClip = camera->farClipPlane;
-	const float clipRange = farClip - nearClip;
-
-	float minZ = nearClip;
-	float maxZ = nearClip + clipRange;
-
-	float range = maxZ - minZ;
-	float ratio = maxZ / minZ;
-
-	// Calculate split depths based on view camera frustum
-	// Based on method presented in https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
-	for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
-		float p = (i + 1) / static_cast<float>(SHADOW_MAP_CASCADE_COUNT);
-		float log = minZ * std::pow(ratio, p);
-		float uniform = minZ + range * p;
-		float d = cascadeSplitLambda * (log - uniform) + uniform;
-		cascadeSplits[i] = (d - nearClip) / clipRange;
-	}
-
-	const auto& shadowLights = SceneManager::Get()->getScene()->getShadowInstances();
-
-	// Calculate orthographic projection matrix for each cascade
-	float lastSplitDist = 0.0;
-	for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
-		float splitDist = cascadeSplits[i];
-
-		glm::vec3 frustumCorners[8] = {
-			glm::vec3(-1.0f,  1.0f, 0.0f),
-			glm::vec3(1.0f,  1.0f, 0.0f),
-			glm::vec3(1.0f, -1.0f, 0.0f),
-			glm::vec3(-1.0f, -1.0f, 0.0f),
-			glm::vec3(-1.0f,  1.0f,  1.0f),
-			glm::vec3(1.0f,  1.0f,  1.0f),
-			glm::vec3(1.0f, -1.0f,  1.0f),
-			glm::vec3(-1.0f, -1.0f,  1.0f),
-		};
-
-		// Project frustum corners into world space
-		glm::mat4 invCam = glm::inverse(camera->getWorldToClipMatrix());
-		for (uint32_t j = 0; j < 8; j++) {
-			glm::vec4 invCorner = invCam * glm::vec4(frustumCorners[j], 1.0f);
-			frustumCorners[j] = invCorner / invCorner.w;
-		}
-
-		for (uint32_t j = 0; j < 4; j++) {
-			glm::vec3 dist = frustumCorners[j + 4] - frustumCorners[j];
-			frustumCorners[j + 4] = frustumCorners[j] + (dist * splitDist);
-			frustumCorners[j] = frustumCorners[j] + (dist * lastSplitDist);
-		}
-
-		// Get frustum center
-		glm::vec3 frustumCenter = glm::vec3(0.0f);
-		for (uint32_t j = 0; j < 8; j++) {
-			frustumCenter += frustumCorners[j];
-		}
-		frustumCenter /= 8.0f;
-
-		float radius = 0.0f;
-		for (uint32_t j = 0; j < 8; j++) {
-			float distance = length(frustumCorners[j] - frustumCenter);
-			radius = max(radius, distance);
-		}
-		radius = std::ceil(radius * 16.0f) / 16.0f;
-
-		glm::vec3 maxExtents = glm::vec3(radius);
-		glm::vec3 minExtents = -maxExtents;
-
-		glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
-
-		for (int lightIndex = 0; lightIndex < shadowLights.size(); ++lightIndex) {
-			Light* light = shadowLights[lightIndex];
-			if (light->type == 0) // only do this for directional lights
-			{
-				glm::vec3 lightDir = normalize(-light->position);
-				glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, Vec3::Up);
-
-				// Store split distance and matrix in cascade
-				// TODO: replace this withwhatever type it is, dont assume [0]
-				m_ShadowCascadePasses[0].cascades[i].splitDepth = (nearClip + splitDist * clipRange) * -1.0f;
-				m_ShadowCascadePasses[0].cascades[i].viewProjMatrix = lightOrthoMatrix * lightViewMatrix;
-			}
-		}
-		lastSplitDist = cascadeSplits[i];
-	}
+	vkCmdSetDepthBias(
+		commandBuffer,
+		depthBiasConstant,
+		0.0f,
+		depthBiasSlope);
 }

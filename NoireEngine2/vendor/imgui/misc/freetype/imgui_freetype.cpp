@@ -12,7 +12,7 @@
 //  2021/08/23: fixed crash when FT_Render_Glyph() fails to render a glyph and returns NULL.
 //  2021/03/05: added ImGuiFreeTypeBuilderFlags_Bitmap to load bitmap glyphs.
 //  2021/03/02: set 'atlas->TexPixelsUseColors = true' to help some backends with deciding of a preferred texture format.
-//  2021/01/28: added support for color-layered glyphs via ImGuiFreeTypeBuilderFlags_LoadColor (require Freetype 2.10+).
+//  2021/01/28: added support for m_Color-layered glyphs via ImGuiFreeTypeBuilderFlags_LoadColor (require Freetype 2.10+).
 //  2021/01/26: simplified integration by using '#define IMGUI_ENABLE_FREETYPE'. renamed ImGuiFreeType::XXX flags to ImGuiFreeTypeBuilderFlags_XXX for consistency with other API. removed ImGuiFreeType::BuildFontAtlas().
 //  2020/06/04: fix for rare case where FT_Get_Char_Index() succeed but FT_Load_Glyph() fails.
 //  2019/02/09: added RasterizerFlags::Monochrome flag to disable font anti-aliasing (combine with ::MonoHinting for best results!)
@@ -132,7 +132,7 @@ namespace
     {
         int         Width;              // Glyph's width in pixels.
         int         Height;             // Glyph's height in pixels.
-        FT_Int      OffsetX;            // The distance from the origin ("pen position") to the left of the glyph.
+        FT_Int      OffsetX;            // The distance from the origin ("pen m_Position") to the left of the glyph.
         FT_Int      OffsetY;            // The distance from the origin to the top of the glyph. This is usually a value < 0.
         float       AdvanceX;           // The distance from the origin to the origin of the next glyph. This is usually a value > 0.
         bool        IsColored;          // The glyph is colored
@@ -412,7 +412,7 @@ struct ImFontBuildSrcGlyphFT
 struct ImFontBuildSrcDataFT
 {
     FreeTypeFont        Font;
-    stbrp_rect*         Rects;              // Rectangle to pack. We first fill in their size and the packer will give us their position.
+    stbrp_rect*         Rects;              // Rectangle to pack. We first fill in their size and the packer will give us their m_Position.
     const ImWchar*      SrcRanges;          // Ranges as requested by user (user is allowed to request too much, e.g. 0x0020..0xFFFF)
     int                 DstIndex;           // Index into atlas->Fonts[] and dst_tmp_array[]
     int                 GlyphsHighest;      // Highest requested codepoint

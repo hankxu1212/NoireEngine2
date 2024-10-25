@@ -442,8 +442,6 @@
     <None Include="src\shaders\mirror.vert" />
     <None Include="src\shaders\pbr.frag" />
     <None Include="src\shaders\pbr.vert" />
-    <None Include="src\shaders\shadow\shadowcascade.frag" />
-    <None Include="src\shaders\shadow\shadowcascade.vert" />
     <None Include="src\shaders\shadow\shadowmapping.frag" />
     <None Include="src\shaders\shadow\shadowmapping.vert" />
     <None Include="src\shaders\skybox.frag" />

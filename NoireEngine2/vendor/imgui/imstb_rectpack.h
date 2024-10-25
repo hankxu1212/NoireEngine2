@@ -287,7 +287,7 @@ STBRP_DEF void stbrp_init_target(stbrp_context *context, int width, int height, 
    context->extra[1].next = NULL;
 }
 
-// find minimum y position if it starts at x1
+// find minimum y m_Position if it starts at x1
 static int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, int x0, int width, int *pwaste)
 {
    stbrp_node *node = first;
@@ -390,7 +390,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, int widt
 
    best_x = (best == NULL) ? 0 : (*best)->x;
 
-   // if doing best-fit (BF), we also have to try aligning right edge to each node position
+   // if doing best-fit (BF), we also have to try aligning right edge to each node m_Position
    //
    // e.g, if fitting
    //
@@ -418,7 +418,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, int widt
          int xpos = tail->x - width;
          int y,waste;
          STBRP_ASSERT(xpos >= 0);
-         // find the left position that matches this
+         // find the left m_Position that matches this
          while (node->next->x <= xpos) {
             prev = &node->next;
             node = node->next;
@@ -448,7 +448,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, int widt
 
 static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, int width, int height)
 {
-   // find best position according to heuristic
+   // find best m_Position according to heuristic
    stbrp__findresult res = stbrp__skyline_find_best_pos(context, width, height);
    stbrp_node *node, *cur;
 

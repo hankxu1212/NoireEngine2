@@ -117,7 +117,7 @@ static void ImGui_ImplDX11_SetupRenderState(ImDrawData* draw_data, ID3D11DeviceC
     ctx->DSSetShader(nullptr, nullptr, 0); // In theory we should backup and restore this as well.. very infrequently used..
     ctx->CSSetShader(nullptr, nullptr, 0); // In theory we should backup and restore this as well.. very infrequently used..
 
-    // Setup blend state
+    // Setup m_Blend state
     const float blend_factor[4] = { 0.f, 0.f, 0.f, 0.f };
     ctx->OMSetBlendState(bd->pBlendState, blend_factor, 0xffffffff);
     ctx->OMSetDepthStencilState(bd->pDepthStencilState, 0);

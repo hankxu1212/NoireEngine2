@@ -51,14 +51,14 @@ enum FitOnScreen
 struct Options
 {
     ImRect mMinimap{{0.75f, 0.8f, 0.99f, 0.99f}}; // rectangle coordinates of minimap
-    ImU32 mBackgroundColor{ IM_COL32(40, 40, 40, 255) }; // full background color
-    ImU32 mGridColor{ IM_COL32(0, 0, 0, 60) }; // grid lines color
-    ImU32 mGridColor2{ IM_COL32(0, 0, 0, 160) }; // grid lines color every 10th
-    ImU32 mSelectedNodeBorderColor{ IM_COL32(255, 130, 30, 255) }; // node border color when it's selected
-    ImU32 mNodeBorderColor{ IM_COL32(100, 100, 100, 0) }; // node border color when it's not selected
-    ImU32 mQuadSelection{ IM_COL32(255, 32, 32, 64) }; // quad selection inside color
-    ImU32 mQuadSelectionBorder{ IM_COL32(255, 32, 32, 255) }; // quad selection border color
-    ImU32 mDefaultSlotColor{ IM_COL32(128, 128, 128, 255) }; // when no color is provided in node template, use this value
+    ImU32 mBackgroundColor{ IM_COL32(40, 40, 40, 255) }; // full background m_Color
+    ImU32 mGridColor{ IM_COL32(0, 0, 0, 60) }; // grid lines m_Color
+    ImU32 mGridColor2{ IM_COL32(0, 0, 0, 160) }; // grid lines m_Color every 10th
+    ImU32 mSelectedNodeBorderColor{ IM_COL32(255, 130, 30, 255) }; // node border m_Color when it's selected
+    ImU32 mNodeBorderColor{ IM_COL32(100, 100, 100, 0) }; // node border m_Color when it's not selected
+    ImU32 mQuadSelection{ IM_COL32(255, 32, 32, 64) }; // quad selection inside m_Color
+    ImU32 mQuadSelectionBorder{ IM_COL32(255, 32, 32, 255) }; // quad selection border m_Color
+    ImU32 mDefaultSlotColor{ IM_COL32(128, 128, 128, 255) }; // when no m_Color is provided in node template, use this value
     ImU32 mFrameFocus{ IM_COL32(64, 128, 255, 255) }; // rectangle border when graph editor has focus
     float mLineThickness{ 5 }; // links width in pixels when zoom value is 1
     float mGridSize{ 64.f }; // background grid size in pixels when zoom value is 1
@@ -67,7 +67,7 @@ struct Options
     float mZoomLerpFactor{ 0.25f }; // the smaller, the smoother
     float mBorderSelectionThickness{ 6.f }; // thickness of selection border around nodes
     float mBorderThickness{ 6.f }; // thickness of selection border around nodes
-    float mNodeSlotRadius{ 8.f }; // circle radius for inputs and outputs
+    float mNodeSlotRadius{ 8.f }; // circle m_Radius for inputs and outputs
     float mNodeSlotHoverFactor{ 1.2f }; // increase size when hovering
     float mMinZoom{ 0.2f }, mMaxZoom { 1.1f };
     float mSnap{ 5.f };
@@ -77,10 +77,10 @@ struct Options
     bool mDrawIONameOnHover{ true }; // only draw node input/output when hovering
 };
 
-// View state: scroll position and zoom factor
+// View state: scroll m_Position and zoom factor
 struct ViewState
 {
-    ImVec2 mPosition{0.0f, 0.0f}; // scroll position
+    ImVec2 mPosition{0.0f, 0.0f}; // scroll m_Position
     float mFactor{ 1.0f }; // current zoom factor
     float mFactorTarget{ 1.0f }; // targeted zoom factor interpolated using Options.mZoomLerpFactor
 };
@@ -92,10 +92,10 @@ struct Template
     ImU32 mBackgroundColorOver;
     ImU8 mInputCount;
     const char** mInputNames; // can be nullptr. No text displayed.
-    ImU32* mInputColors; // can be nullptr, default slot color will be used.
+    ImU32* mInputColors; // can be nullptr, default slot m_Color will be used.
     ImU8 mOutputCount;
     const char** mOutputNames; // can be nullptr. No text displayed.
-    ImU32* mOutputColors; // can be nullptr, default slot color will be used.
+    ImU32* mOutputColors; // can be nullptr, default slot m_Color will be used.
 };
 
 struct Node
@@ -127,7 +127,7 @@ struct Delegate
     // user is responsible for clipping
     virtual void CustomDraw(ImDrawList* drawList, ImRect rectangle, NodeIndex nodeIndex) = 0;
     
-    // use mouse position to open context menu
+    // use mouse m_Position to open context menu
     // if nodeIndex != -1, right click happens on the specified node
     virtual void RightClick(NodeIndex nodeIndex, SlotIndex slotIndexInput, SlotIndex slotIndexOutput) = 0;
 

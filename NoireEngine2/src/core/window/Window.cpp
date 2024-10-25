@@ -9,14 +9,14 @@
 static uint8_t s_GLFWWindowCount = 0;
 
 static void glfwSetWindowCenter(GLFWwindow* window) {
-	// Get window position and size
+	// Get window m_Position and size
 	int window_x, window_y;
 	glfwGetWindowPos(window, &window_x, &window_y);
 
 	int window_width, window_height;
 	glfwGetWindowSize(window, &window_width, &window_height);
 
-	// Halve the window size and use it to adjust the window position to the center of the window
+	// Halve the window size and use it to adjust the window m_Position to the center of the window
 	window_width /= 2;
 	window_height /= 2;
 
@@ -37,7 +37,7 @@ static void glfwSetWindowCenter(GLFWwindow* window) {
 	int owner_x = 0, owner_y = 0, owner_width = 0, owner_height = 0;
 
 	for (int i = 0; i < monitors_length; i++) {
-		// Get the monitor position
+		// Get the monitor m_Position
 		int monitor_x, monitor_y;
 		glfwGetMonitorPos(monitors[i], &monitor_x, &monitor_y);
 
@@ -68,7 +68,7 @@ static void glfwSetWindowCenter(GLFWwindow* window) {
 	}
 
 	if (owner != NULL) {
-		// Set the window position to the center of the owner monitor
+		// Set the window m_Position to the center of the owner monitor
 		glfwSetWindowPos(window, owner_x + (owner_width >> 1) - window_width, owner_y + (owner_height >> 1) - window_height);
 	}
 }

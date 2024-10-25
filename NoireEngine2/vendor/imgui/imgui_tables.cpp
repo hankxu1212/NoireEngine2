@@ -53,7 +53,7 @@ Index of this file:
 //    | - TableDrawDefaultContextMenu()         - draw right-click context menu contents
 //-----------------------------------------------------------------------------
 // - TableHeadersRow() or TableHeader()         user submit a headers row (optional)
-//    | TableSortSpecsClickColumn()             - when left-clicked: alter sort order and sort direction
+//    | TableSortSpecsClickColumn()             - when left-clicked: alter sort order and sort m_Direction
 //    | TableOpenContextMenu()                  - when right-clicked: trigger opening of the default context menu
 // - TableGetSortSpecs()                        user queries updated sort specs (optional, generally after submitting headers)
 // - TableNextRow()                             user begin into a new row (also automatically called by TableHeadersRow())
@@ -93,7 +93,7 @@ Index of this file:
 // Outer size is also affected by the NoHostExtendX/NoHostExtendY flags.
 // Important to note how the two flags have slightly different behaviors!
 //   - ImGuiTableFlags_NoHostExtendX -> Make outer width auto-fit to columns (overriding outer_size.x value). Only available when ScrollX/ScrollY are disabled and Stretch columns are not used.
-//   - ImGuiTableFlags_NoHostExtendY -> Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit). Only available when ScrollX/ScrollY is disabled. Data below the limit will be clipped and not visible.
+//   - ImGuiTableFlags_NoHostExtendY -> Make outer height stop exactly at outer_size.y (prevent auto-extending table past the m_Limit). Only available when ScrollX/ScrollY is disabled. Data below the m_Limit will be clipped and not visible.
 // In theory ImGuiTableFlags_NoHostExtendY could be the default and any non-scrolling tables with outer_size.y != 0.0f would use exact height.
 // This would be consistent but perhaps less useful and more confusing (as vertically clipped items are not useful and not easily noticeable).
 //-----------------------------------------------------------------------------
@@ -258,7 +258,7 @@ static const int TABLE_DRAW_CHANNEL_BG2_FROZEN = 1;
 static const int TABLE_DRAW_CHANNEL_NOCLIP = 2;                     // When using ImGuiTableFlags_NoClip (this becomes the last visible channel)
 static const float TABLE_BORDER_SIZE                     = 1.0f;    // FIXME-TABLE: Currently hard-coded because of clipping assumptions with outer borders rendering.
 static const float TABLE_RESIZE_SEPARATOR_HALF_THICKNESS = 4.0f;    // Extend outside inner borders.
-static const float TABLE_RESIZE_SEPARATOR_FEEDBACK_TIMER = 0.06f;   // Delay/timer before making the hover feedback (color+cursor) visible because tables/columns tends to be more cramped.
+static const float TABLE_RESIZE_SEPARATOR_FEEDBACK_TIMER = 0.06f;   // Delay/timer before making the hover feedback (m_Color+cursor) visible because tables/columns tends to be more cramped.
 
 // Helper
 inline ImGuiTableFlags TableFixFlags(ImGuiTableFlags flags, ImGuiWindow* outer_window)
@@ -1030,7 +1030,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
         if (g.IO.MousePos.y >= table->OuterRect.Min.y && g.IO.MousePos.y <= table->OuterRect.Min.y + table->AngledHeadersHeight)
             mouse_skewed_x += ImTrunc((table->OuterRect.Min.y + table->AngledHeadersHeight - g.IO.MousePos.y) * table->AngledHeadersSlope);
 
-    // [Part 6] Setup final position, offset, skip/clip states and clipping rectangles, detect hovered column
+    // [Part 6] Setup final m_Position, offset, skip/clip states and clipping rectangles, detect hovered column
     // Process columns in their visible orders as we are comparing the visible order and adjusting host_clip_rect while looping.
     int visible_n = 0;
     bool has_at_least_one_column_requesting_output = false;
@@ -1070,10 +1070,10 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
             continue;
         }
 
-        // Lock start position
+        // Lock start m_Position
         column->MinX = offset_x;
 
-        // Lock width based on start position and minimum/maximum width for this position
+        // Lock width based on start m_Position and minimum/maximum width for this m_Position
         column->WidthMax = TableCalcMaxColumnWidth(table, column_n);
         column->WidthGiven = ImMin(column->WidthGiven, column->WidthMax);
         column->WidthGiven = ImMax(column->WidthGiven, ImMin(column->WidthRequest, table->MinColumnWidth));
@@ -1193,7 +1193,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
 
     table->IsActiveIdAliveBeforeTable = (g.ActiveIdIsAlive != 0);
 
-    // [Part 8] Lock actual OuterRect/WorkRect right-most position.
+    // [Part 8] Lock actual OuterRect/WorkRect right-most m_Position.
     // This is done late to handle the case of fixed-columns tables not claiming more widths that they need.
     // Because of this we are careful with uses of WorkRect and InnerClipRect before this point.
     if (table->RightMostStretchedColumn != -1)
@@ -1629,7 +1629,7 @@ void ImGui::TableSetupScrollFreeze(int columns, int rows)
     IM_ASSERT(table != NULL && "Need to call TableSetupColumn() after BeginTable()!");
     IM_ASSERT(table->IsLayoutLocked == false && "Need to call TableSetupColumn() before first row!");
     IM_ASSERT(columns >= 0 && columns < IMGUI_TABLE_MAX_COLUMNS);
-    IM_ASSERT(rows >= 0 && rows < 128); // Arbitrary limit
+    IM_ASSERT(rows >= 0 && rows < 128); // Arbitrary m_Limit
 
     table->FreezeColumnsRequest = (table->Flags & ImGuiTableFlags_ScrollX) ? (ImGuiTableColumnIdx)ImMin(columns, table->ColumnsCount) : 0;
     table->FreezeColumnsCount = (table->InnerWindow->Scroll.x != 0.0f) ? table->FreezeColumnsRequest : 0;
@@ -1894,7 +1894,7 @@ void ImGui::TableBeginRow(ImGuiTable* table)
     window->DC.IsSameLine = window->DC.IsSetPos = false;
     window->DC.CursorMaxPos.y = next_y1;
 
-    // Making the header BG color non-transparent will allow us to overlay it multiple times when handling smooth dragging.
+    // Making the header BG m_Color non-transparent will allow us to overlay it multiple times when handling smooth dragging.
     if (table->RowFlags & ImGuiTableRowFlags_Headers)
     {
         TableSetBgColor(ImGuiTableBgTarget_RowBg0, GetColorU32(ImGuiCol_TableHeaderBg));
@@ -1938,7 +1938,7 @@ void ImGui::TableEndRow(ImGuiTable* table)
         if (table->HoveredColumnBody != -1 && g.IO.MousePos.y >= bg_y1 && g.IO.MousePos.y < bg_y2 && table_instance->HoveredRowNext < 0)
             table_instance->HoveredRowNext = table->CurrentRow;
 
-        // Decide of background color for the row
+        // Decide of background m_Color for the row
         ImU32 bg_col0 = 0;
         ImU32 bg_col1 = 0;
         if (table->RowBgColor[0] != IM_COL32_DISABLE)
@@ -1948,7 +1948,7 @@ void ImGui::TableEndRow(ImGuiTable* table)
         if (table->RowBgColor[1] != IM_COL32_DISABLE)
             bg_col1 = table->RowBgColor[1];
 
-        // Decide of top border color
+        // Decide of top border m_Color
         ImU32 top_border_col = 0;
         const float border_size = TABLE_BORDER_SIZE;
         if (table->CurrentRow > 0 && (table->Flags & ImGuiTableFlags_BordersInnerH))
@@ -1977,7 +1977,7 @@ void ImGui::TableEndRow(ImGuiTable* table)
                 window->DrawList->AddRectFilled(row_rect.Min, row_rect.Max, bg_col1);
         }
 
-        // Draw cell background color
+        // Draw cell background m_Color
         if (draw_cell_bg_color)
         {
             ImGuiTableCellData* cell_data_end = &table->RowCellData[table->RowCellDataCurrent];
@@ -2006,7 +2006,7 @@ void ImGui::TableEndRow(ImGuiTable* table)
 
     // End frozen rows (when we are past the last frozen row line, teleport cursor and alter clipping rectangle)
     // We need to do that in TableEndRow() instead of TableBeginRow() so the list clipper can mark end of row and
-    // get the new cursor position.
+    // get the new cursor m_Position.
     if (unfreeze_rows_request)
     {
         for (int column_n = 0; column_n < table->ColumnsCount; column_n++)
@@ -2122,7 +2122,7 @@ void ImGui::TableBeginCell(ImGuiTable* table, int column_n)
     ImGuiWindow* window = table->InnerWindow;
     table->CurrentColumn = column_n;
 
-    // Start position is roughly ~~ CellRect.Min + CellPadding + Indent
+    // Start m_Position is roughly ~~ CellRect.Min + CellPadding + Indent
     float start_x = column->WorkMinX;
     if (column->Flags & ImGuiTableColumnFlags_IndentEnable)
         start_x += table->RowIndentOffsetX; // ~~ += window.DC.Indent.x - table->HostIndentX, except we locked it for the row.
@@ -2178,7 +2178,7 @@ void ImGui::TableEndCell(ImGuiTable* table)
     if (window->DC.IsSetPos)
         ErrorCheckUsingSetCursorPosToExtendParentBoundaries();
 
-    // Report maximum position so we can infer content size per column.
+    // Report maximum m_Position so we can infer content size per column.
     float* p_max_pos_x;
     if (table->RowFlags & ImGuiTableRowFlags_Headers)
         p_max_pos_x = &column->ContentMaxXHeadersUsed;  // Useful in case user submit contents in header row that is not a TableHeader() call
@@ -2497,8 +2497,8 @@ void ImGui::TableSetupDrawChannels(ImGuiTable* table)
 //   [ .. ]  or no scroll   [ 2. ]  and v-scroll   [ .. ]  and h-scroll   [ 23 ]  and v+h-scroll
 //
 // Each column itself can use 1 channel (row freeze disabled) or 2 channels (row freeze enabled).
-// When the contents of a column didn't stray off its limit, we move its channels into the corresponding group
-// based on its position (within frozen rows/columns groups or not).
+// When the contents of a column didn't stray off its m_Limit, we move its channels into the corresponding group
+// based on its m_Position (within frozen rows/columns groups or not).
 // At the end of the operation our 1-4 groups will each have a ImDrawCmd using the same ClipRect.
 // This function assume that each column are pointing to a distinct draw channel,
 // otherwise merge_group->ChannelsCount will not match set bit count of merge_group->ChannelsMask.
@@ -2559,7 +2559,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
                 continue;
 
             // Find out the width of this merge group and check if it will fit in our column
-            // (note that we assume that rendering didn't stray on the left direction. we should need a CursorMinPos to detect it)
+            // (note that we assume that rendering didn't stray on the left m_Direction. we should need a CursorMinPos to detect it)
             if (!(column->Flags & ImGuiTableColumnFlags_NoClip))
             {
                 float content_max_x;
@@ -2818,7 +2818,7 @@ static inline ImGuiSortDirection TableGetColumnAvailSortDirection(ImGuiTableColu
     return (ImGuiSortDirection)((column->SortDirectionsAvailList >> (n << 1)) & 0x03);
 }
 
-// Fix sort direction if currently set on a value which is unavailable (e.g. activating NoSortAscending/NoSortDescending)
+// Fix sort m_Direction if currently set on a value which is unavailable (e.g. activating NoSortAscending/NoSortDescending)
 void ImGui::TableFixColumnSortDirection(ImGuiTable* table, ImGuiTableColumn* column)
 {
     if (column->SortOrder == -1 || (column->SortDirectionsAvailMask & (1 << column->SortDirection)) != 0)
@@ -2827,8 +2827,8 @@ void ImGui::TableFixColumnSortDirection(ImGuiTable* table, ImGuiTableColumn* col
     table->IsSortSpecsDirty = true;
 }
 
-// Calculate next sort direction that would be set after clicking the column
-// - If the PreferSortDescending flag is set, we will default to a Descending direction on the first click.
+// Calculate next sort m_Direction that would be set after clicking the column
+// - If the PreferSortDescending flag is set, we will default to a Descending m_Direction on the first click.
 // - Note that the PreferSortAscending flag is never checked, it is essentially the default and therefore a no-op.
 IM_STATIC_ASSERT(ImGuiSortDirection_None == 0 && ImGuiSortDirection_Ascending == 1 && ImGuiSortDirection_Descending == 2);
 ImGuiSortDirection ImGui::TableGetColumnNextSortDirection(ImGuiTableColumn* column)
@@ -3019,7 +3019,7 @@ float ImGui::TableGetHeaderAngledMaxLabelWidth()
 // The intent is that advanced users willing to create customized headers would not need to use this helper
 // and can create their own! For example: TableHeader() may be preceded by Checkbox() or other custom widgets.
 // See 'Demo->Tables->Custom headers' for a demonstration of implementing a custom version of this.
-// This code is intentionally written to not make much use of internal functions, to give you better direction
+// This code is intentionally written to not make much use of internal functions, to give you better m_Direction
 // if you need to write your own.
 // FIXME-TABLE: TableOpenContextMenu() and TableGetHeaderRowHeight() are not public.
 void ImGui::TableHeadersRow()
@@ -3133,7 +3133,7 @@ void ImGui::TableHeader(const char* label)
     }
     else
     {
-        // Submit single cell bg color in the case we didn't submit a full header row
+        // Submit single cell bg m_Color in the case we didn't submit a full header row
         if ((table->RowFlags & ImGuiTableRowFlags_Headers) == 0)
             TableSetBgColor(ImGuiTableBgTarget_CellBg, GetColorU32(ImGuiCol_TableHeaderBg), table->CurrentColumn);
     }
@@ -3279,7 +3279,7 @@ void ImGui::TableAngledHeadersRowEx(ImGuiID row_id, float angle, float max_label
         clip_rect_min_x = ImMax(clip_rect_min_x, table->Columns[table->FreezeColumnsCount - 1].MaxX);
     TableSetBgColor(ImGuiTableBgTarget_RowBg0, 0); // Cancel
     PushClipRect(table->BgClipRect.Min, table->BgClipRect.Max, false); // Span all columns
-    draw_list->AddRectFilled(ImVec2(table->BgClipRect.Min.x, row_r.Min.y), ImVec2(table->BgClipRect.Max.x, row_r.Max.y), GetColorU32(ImGuiCol_TableHeaderBg, 0.25f)); // FIXME-STYLE: Change row background with an arbitrary color.
+    draw_list->AddRectFilled(ImVec2(table->BgClipRect.Min.x, row_r.Min.y), ImVec2(table->BgClipRect.Max.x, row_r.Max.y), GetColorU32(ImGuiCol_TableHeaderBg, 0.25f)); // FIXME-STYLE: Change row background with an arbitrary m_Color.
     PushClipRect(ImVec2(clip_rect_min_x, table->BgClipRect.Min.y), table->BgClipRect.Max, true); // Span all columns
 
     ButtonBehavior(row_r, row_id, NULL, NULL);

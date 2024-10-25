@@ -1884,7 +1884,7 @@ stbi_inline static int stbi__jpeg_get_bit(stbi__jpeg *j)
    return k & 0x80000000;
 }
 
-// given a value that's at position X in the zigzag stream,
+// given a value that's at m_Position X in the zigzag stream,
 // where does it appear in the 8x8 matrix coded as row-major?
 static stbi_uc stbi__jpeg_dezigzag[64+15] =
 {
@@ -2874,7 +2874,7 @@ static int stbi__process_marker(stbi__jpeg *z, int m)
             stbi__get8(z->s); // version
             stbi__get16be(z->s); // flags0
             stbi__get16be(z->s); // flags1
-            z->app14_color_transform = stbi__get8(z->s); // color transform
+            z->app14_color_transform = stbi__get8(z->s); // m_Color transform
             L -= 6;
          }
       }
@@ -3373,7 +3373,7 @@ static void stbi__YCbCr_to_RGB_simd(stbi_uc *out, stbi_uc const *y, stbi_uc cons
          __m128i crw = _mm_unpacklo_epi8(_mm_setzero_si128(), cr_biased);
          __m128i cbw = _mm_unpacklo_epi8(_mm_setzero_si128(), cb_biased);
 
-         // color transform
+         // m_Color transform
          __m128i yws = _mm_srli_epi16(yw, 4);
          __m128i cr0 = _mm_mulhi_epi16(cr_const0, crw);
          __m128i cb0 = _mm_mulhi_epi16(cb_const0, cbw);
@@ -3430,7 +3430,7 @@ static void stbi__YCbCr_to_RGB_simd(stbi_uc *out, stbi_uc const *y, stbi_uc cons
          int16x8_t crw = vshll_n_s8(cr_biased, 7);
          int16x8_t cbw = vshll_n_s8(cb_biased, 7);
 
-         // color transform
+         // m_Color transform
          int16x8_t cr0 = vqdmulhq_s16(crw, cr_const0);
          int16x8_t cb0 = vqdmulhq_s16(cbw, cb_const0);
          int16x8_t cr1 = vqdmulhq_s16(crw, cr_const1);
@@ -3542,7 +3542,7 @@ static stbi_uc *load_jpeg_image(stbi__jpeg *z, int *out_x, int *out_y, int *comp
    else
       decode_n = z->s->img_n;
 
-   // resample and color-convert
+   // resample and m_Color-convert
    {
       int k;
       unsigned int i,j;
@@ -4538,7 +4538,7 @@ static int stbi__compute_transparency(stbi__png *z, stbi_uc tc[3], int out_n)
    stbi__uint32 i, pixel_count = s->img_x * s->img_y;
    stbi_uc *p = z->out;
 
-   // compute color-based transparency, assuming we've
+   // compute m_Color-based transparency, assuming we've
    // already got 255 as the alpha value in the output
    STBI_ASSERT(out_n == 2 || out_n == 4);
 
@@ -4563,7 +4563,7 @@ static int stbi__compute_transparency16(stbi__png *z, stbi__uint16 tc[3], int ou
    stbi__uint32 i, pixel_count = s->img_x * s->img_y;
    stbi__uint16 *p = (stbi__uint16*) z->out;
 
-   // compute color-based transparency, assuming we've
+   // compute m_Color-based transparency, assuming we've
    // already got 65535 as the alpha value in the output
    STBI_ASSERT(out_n == 2 || out_n == 4);
 
@@ -5056,9 +5056,9 @@ static void *stbi__bmp_parse_header(stbi__context *s, stbi__bmp_data *info)
          info->mg = stbi__get32le(s);
          info->mb = stbi__get32le(s);
          info->ma = stbi__get32le(s);
-         stbi__get32le(s); // discard color space
+         stbi__get32le(s); // discard m_Color space
          for (i=0; i < 12; ++i)
-            stbi__get32le(s); // discard color space parameters
+            stbi__get32le(s); // discard m_Color space parameters
          if (hsz == 124) {
             stbi__get32le(s); // discard rendering intent
             stbi__get32le(s); // discard offset of profile data
@@ -5166,7 +5166,7 @@ static void *stbi__bmp_load(stbi__context *s, int *x, int *y, int *comp, int req
       }
       if (!easy) {
          if (!mr || !mg || !mb) { STBI_FREE(out); return stbi__errpuc("bad masks", "Corrupt BMP"); }
-         // right shift amt to put high bit in position #7
+         // right shift amt to put high bit in m_Position #7
          rshift = stbi__high_bit(mr)-7; rcount = stbi__bitcount(mr);
          gshift = stbi__high_bit(mg)-7; gcount = stbi__bitcount(mg);
          bshift = stbi__high_bit(mb)-7; bcount = stbi__bitcount(mb);
@@ -5266,7 +5266,7 @@ static int stbi__tga_info(stbi__context *s, int *x, int *y, int *comp)
             return 0;
         }
         stbi__skip(s,4);       // skip index of first colormap entry and number of entries
-        sz = stbi__get8(s);    //   check bits per palette color entry
+        sz = stbi__get8(s);    //   check bits per palette m_Color entry
         if ( (sz != 8) && (sz != 15) && (sz != 16) && (sz != 24) && (sz != 32) ) {
             stbi__rewind(s);
             return 0;
@@ -5319,13 +5319,13 @@ static int stbi__tga_test(stbi__context *s)
    int res = 0;
    int sz, tga_color_type;
    stbi__get8(s);      //   discard Offset
-   tga_color_type = stbi__get8(s);   //   color type
+   tga_color_type = stbi__get8(s);   //   m_Color type
    if ( tga_color_type > 1 ) goto errorEnd;   //   only RGB or indexed allowed
    sz = stbi__get8(s);   //   image type
    if ( tga_color_type == 1 ) { // colormapped (paletted) image
       if (sz != 1 && sz != 9) goto errorEnd; // colortype 1 demands image type 1 or 9
       stbi__skip(s,4);       // skip index of first colormap entry and number of entries
-      sz = stbi__get8(s);    //   check bits per palette color entry
+      sz = stbi__get8(s);    //   check bits per palette m_Color entry
       if ( (sz != 8) && (sz != 15) && (sz != 16) && (sz != 24) && (sz != 32) ) goto errorEnd;
       stbi__skip(s,4);       // skip image x and y origin
    } else { // "normal" image w/o colormap
@@ -5419,7 +5419,7 @@ static void *stbi__tga_load(stbi__context *s, int *x, int *y, int *comp, int req
    tga_data = (unsigned char*)stbi__malloc_mad3(tga_width, tga_height, tga_comp, 0);
    if (!tga_data) return stbi__errpuc("outofmem", "Out of memory");
 
-   // skip to the data's starting position (offset usually = 0)
+   // skip to the data's starting m_Position (offset usually = 0)
    stbi__skip(s, tga_offset );
 
    if ( !tga_indexed && !tga_is_RLE && !tga_rgb16 ) {
@@ -5644,20 +5644,20 @@ static void *stbi__psd_load(stbi__context *s, int *x, int *y, int *comp, int req
    if (bitdepth != 8 && bitdepth != 16)
       return stbi__errpuc("unsupported bit depth", "PSD bit depth is not 8 or 16 bit");
 
-   // Make sure the color mode is RGB.
+   // Make sure the m_Color mode is RGB.
    // Valid options are:
    //   0: Bitmap
    //   1: Grayscale
-   //   2: Indexed color
-   //   3: RGB color
-   //   4: CMYK color
+   //   2: Indexed m_Color
+   //   3: RGB m_Color
+   //   4: CMYK m_Color
    //   7: Multichannel
    //   8: Duotone
-   //   9: Lab color
+   //   9: Lab m_Color
    if (stbi__get16be(s) != 3)
       return stbi__errpuc("wrong color format", "PSD is not in RGB color format");
 
-   // Skip the Mode Data.  (It's the palette for indexed color; other info for other modes.)
+   // Skip the Mode Data.  (It's the palette for indexed m_Color; other info for other modes.)
    stbi__skip(s,stbi__get32be(s) );
 
    // Skip the image resources.  (resolution, pen tool paths, etc)
@@ -7048,7 +7048,7 @@ STBIDEF int stbi_info_from_callbacks(stbi_io_callbacks const *c, void *user, int
               remove duplicate typedef
       1.36  (2014-06-03)
               convert to header file single-file library
-              if de-iphone isn't set, load iphone images color-swapped instead of returning NULL
+              if de-iphone isn't set, load iphone images m_Color-swapped instead of returning NULL
       1.35  (2014-05-27)
               various warnings
               fix broken STBI_SIMD path

@@ -9,8 +9,10 @@ layout(location=0) out vec3 outPosition;
 layout(location=1) out vec3 outNormal;
 layout(location=2) out vec2 outTexCoord;
 layout(location=3) out vec4 outTangent;
+layout(location=4) out vec3 outViewPos;
 
 #include "glsl/transform_uniform.glsl"
+#include "glsl/world_uniform.glsl"
 
 void main() {
 	gl_Position = TRANSFORMS[gl_InstanceIndex].localToClip * vec4(inPosition, 1.0);
@@ -23,4 +25,6 @@ void main() {
 
 	mat3 model = mat3(TRANSFORMS[gl_InstanceIndex].model);
 	outTangent = vec4(normalize(model * inTangent.xyz), inTangent.w);
+
+	outViewPos = (scene.view * vec4(inPosition, 1.0)).xyz;
 }

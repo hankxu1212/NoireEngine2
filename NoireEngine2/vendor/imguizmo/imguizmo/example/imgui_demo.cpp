@@ -442,7 +442,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
     if (unsaved_document)   window_flags |= ImGuiWindowFlags_UnsavedDocument;
     if (no_close)           p_open = NULL; // Don't pass our bool* to Begin
 
-    // We specify a default position/size in case there's no data in the .ini file.
+    // We specify a default m_Position/size in case there's no data in the .ini file.
     // We only do it to make the demo applications a little more welcoming, but typically this isn't required.
     const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + 650, main_viewport->WorkPos.y + 20), ImGuiCond_FirstUseEver);
@@ -1226,7 +1226,7 @@ static void ShowDemoWindowWidgets(ImGuiDemoWindowData* demo_data)
                 else
                     ImGui::Text("aaaaaaaa bbbbbbbb, c cccccccc,dddddddd. d eeeeeeee   ffffffff. gggggggg!hhhhhhhh");
 
-                // Draw actual text bounding box, following by marker of our expected limit (should not overlap!)
+                // Draw actual text bounding box, following by marker of our expected m_Limit (should not overlap!)
                 draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
                 draw_list->AddRectFilled(marker_min, marker_max, IM_COL32(255, 0, 255, 255));
                 ImGui::PopTextWrapPos();
@@ -2120,7 +2120,7 @@ static void ShowDemoWindowWidgets(ImGuiDemoWindowData* demo_data)
             ImGui::ColorPicker4("##picker", (float*)&color, misc_flags | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview);
             ImGui::SameLine();
 
-            ImGui::BeginGroup(); // Lock X position
+            ImGui::BeginGroup(); // Lock X m_Position
             ImGui::Text("Current");
             ImGui::ColorButton("##current", color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_AlphaPreviewHalf, ImVec2(60, 40));
             ImGui::Text("Previous");
@@ -3745,7 +3745,7 @@ static void ShowDemoWindowMultiSelect(ImGuiDemoWindowData* demo_data)
                         // (If we used PushID(index) instead, focus wouldn't be restored correctly after deletion).
                         ImGui::PushID(item_id);
 
-                        // Emit a color button, to test that Shift+LeftArrow landing on an item that is not part
+                        // Emit a m_Color button, to test that Shift+LeftArrow landing on an item that is not part
                         // of the selection scope doesn't erroneously alter our selection.
                         if (show_color_button)
                         {
@@ -3937,7 +3937,7 @@ static void ShowDemoWindowLayout()
             ImGui::EndChild();
         }
 
-        // Child 4: auto-resizing height with a limit
+        // Child 4: auto-resizing height with a m_Limit
         ImGui::SeparatorText("Auto-resize with constraints");
         {
             static int draw_lines = 3;
@@ -3958,9 +3958,9 @@ static void ShowDemoWindowLayout()
 
         // Demonstrate a few extra things
         // - Changing ImGuiCol_ChildBg (which is transparent black in default styles)
-        // - Using SetCursorPos() to position child window (the child window is an item from the POV of parent window)
-        //   You can also call SetNextWindowPos() to position the child window. The parent window will effectively
-        //   layout from this position.
+        // - Using SetCursorPos() to m_Position child window (the child window is an item from the POV of parent window)
+        //   You can also call SetNextWindowPos() to m_Position the child window. The parent window will effectively
+        //   layout from this m_Position.
         // - Using ImGui::GetItemRectMin/Max() to query the "item" state (because the child window is an item from
         //   the POV of the parent window). See 'Demo->Querying Status (Edited/Active/Hovered etc.)' for details.
         {
@@ -4102,7 +4102,7 @@ static void ShowDemoWindowLayout()
         ImGui::SmallButton("Like this one"); ImGui::SameLine();
         ImGui::Text("can fit within a text block.");
 
-        // Aligned to arbitrary position. Easy/cheap column.
+        // Aligned to arbitrary m_Position. Easy/cheap column.
         IMGUI_DEMO_MARKER("Layout/Basic Horizontal Layout/SameLine (with offset)");
         ImGui::Text("Aligned");
         ImGui::SameLine(150); ImGui::Text("x=150");
@@ -4162,7 +4162,7 @@ static void ShowDemoWindowLayout()
             ImGui::PushID(n);
             ImGui::Button("Box", button_sz);
             float last_button_x2 = ImGui::GetItemRectMax().x;
-            float next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_sz.x; // Expected position if next button was on same line
+            float next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_sz.x; // Expected m_Position if next button was on same line
             if (n + 1 < buttons_count && next_button_x2 < window_visible_x2)
                 ImGui::SameLine();
             ImGui::PopID();
@@ -4474,7 +4474,7 @@ static void ShowDemoWindowLayout()
         {
             // Display random stuff. For the sake of this trivial demo we are using basic Button() + SameLine()
             // If you want to create your own time line for a real application you may be better off manipulating
-            // the cursor position yourself, aka using SetCursorPos/SetCursorScreenPos to position the widgets
+            // the cursor m_Position yourself, aka using SetCursorPos/SetCursorScreenPos to m_Position the widgets
             // yourself. You may also want to use the lower-level ImDrawList API.
             int num_buttons = 10 + ((line & 1) ? line * 9 : line * 3);
             for (int n = 0; n < num_buttons; n++)
@@ -6244,8 +6244,8 @@ static void ShowDemoWindowTables()
             {
                 ImGui::TableNextRow();
 
-                // Demonstrate setting a row background color with 'ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBgX, ...)'
-                // We use a transparent color so we can see the one behind in case our target is RowBg1 and RowBg0 was already targeted by the ImGuiTableFlags_RowBg flag.
+                // Demonstrate setting a row background m_Color with 'ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBgX, ...)'
+                // We use a transparent m_Color so we can see the one behind in case our target is RowBg1 and RowBg0 was already targeted by the ImGuiTableFlags_RowBg flag.
                 if (row_bg_type != 0)
                 {
                     ImU32 row_bg_color = ImGui::GetColorU32(row_bg_type == 1 ? ImVec4(0.7f, 0.3f, 0.3f, 0.65f) : ImVec4(0.2f + row * 0.1f, 0.2f, 0.2f, 0.65f)); // Flat or Gradient?
@@ -6259,8 +6259,8 @@ static void ShowDemoWindowTables()
                     ImGui::Text("%c%c", 'A' + row, '0' + column);
 
                     // Change background of Cells B1->C2
-                    // Demonstrate setting a cell background color with 'ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ...)'
-                    // (the CellBg color will be blended over the RowBg and ColumnBg colors)
+                    // Demonstrate setting a cell background m_Color with 'ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ...)'
+                    // (the CellBg m_Color will be blended over the RowBg and ColumnBg colors)
                     // We can also pass a column number as a third parameter to TableSetBgColor() and do this outside the column loop.
                     if (row >= 1 && row <= 2 && column >= 1 && column <= 2 && cell_bg_type == 1)
                     {
@@ -6419,7 +6419,7 @@ static void ShowDemoWindowTables()
             // (A different approach is also possible:
             //    - Specify ImGuiTableColumnFlags_NoHeaderLabel in some TableSetupColumn() call.
             //    - Call TableHeadersRow() normally. This will submit TableHeader() with no name.
-            //    - Then call TableSetColumnIndex() to position yourself in the column and submit your stuff e.g. Checkbox().)
+            //    - Then call TableSetColumnIndex() to m_Position yourself in the column and submit your stuff e.g. Checkbox().)
             ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
             for (int column = 0; column < COLUMNS_COUNT; column++)
             {
@@ -8380,7 +8380,7 @@ struct ExampleAppConsole
                 ImGui::EndPopup();
             }
 
-            // Display every line as a separate entry so we can change their color or add custom widgets.
+            // Display every line as a separate entry so we can change their m_Color or add custom widgets.
             // If you only want raw text you can use ImGui::TextUnformatted(log.begin(), log.end());
             // NB- if you have thousands of entries this approach may be too inefficient and may require user-side clipping
             // to only process visible items. The clipper will automatically measure the height of your first item and then
@@ -8413,7 +8413,7 @@ struct ExampleAppConsole
                     continue;
 
                 // Normally you would store more information in your item than just a string.
-                // (e.g. make Items[] an array of structure, store color/type etc.)
+                // (e.g. make Items[] an array of structure, store m_Color/type etc.)
                 ImVec4 color;
                 bool has_color = false;
                 if (strstr(item, "[error]")) { color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f); has_color = true; }
@@ -8597,7 +8597,7 @@ struct ExampleAppConsole
                             HistoryPos = -1;
                 }
 
-                // A better implementation would preserve the data on the current input line along with cursor position.
+                // A better implementation would preserve the data on the current input line along with cursor m_Position.
                 if (prev_history_pos != HistoryPos)
                 {
                     const char* history_str = (HistoryPos >= 0) ? History[HistoryPos] : "";
@@ -8885,7 +8885,7 @@ struct ExampleAppPropertyEditor
         // Right side: draw properties
         ImGui::SameLine();
 
-        ImGui::BeginGroup(); // Lock X position
+        ImGui::BeginGroup(); // Lock X m_Position
         if (ExampleTreeNode* node = VisibleNode)
         {
             ImGui::Text("%s", node->Name);
@@ -9476,7 +9476,7 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             // Here we demonstrate that this can be replaced by simple offsetting + custom drawing + PushClipRect/PopClipRect() calls.
             // To use a child window instead we could use, e.g:
             //      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));      // Disable padding
-            //      ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(50, 50, 50, 255));  // Set a background color
+            //      ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(50, 50, 50, 255));  // Set a background m_Color
             //      ImGui::BeginChild("canvas", ImVec2(0.0f, 0.0f), ImGuiChildFlags_Borders, ImGuiWindowFlags_NoMove);
             //      ImGui::PopStyleColor();
             //      ImGui::PopStyleVar();
@@ -9490,7 +9490,7 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             if (canvas_sz.y < 50.0f) canvas_sz.y = 50.0f;
             ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
 
-            // Draw border and background color
+            // Draw border and background m_Color
             ImGuiIO& io = ImGui::GetIO();
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
             draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255));
@@ -10136,7 +10136,7 @@ struct ExampleAssetsBrowser
             const float avail_width = ImGui::GetContentRegionAvail().x;
             UpdateLayoutSizes(avail_width);
 
-            // Calculate and store start position.
+            // Calculate and store start m_Position.
             ImVec2 start_pos = ImGui::GetCursorScreenPos();
             start_pos = ImVec2(start_pos.x + LayoutOuterPadding, start_pos.y + LayoutOuterPadding);
             ImGui::SetCursorScreenPos(start_pos);
@@ -10170,7 +10170,7 @@ struct ExampleAssetsBrowser
             RequestDelete = false;
 
             // Push LayoutSelectableSpacing (which is LayoutItemSpacing minus hit-spacing, if we decide to have hit gaps between items)
-            // Altering style ItemSpacing may seem unnecessary as we position every items using SetCursorScreenPos()...
+            // Altering style ItemSpacing may seem unnecessary as we m_Position every items using SetCursorScreenPos()...
             // But it is necessary for two reasons:
             // - Selectables uses it by default to visually fill the space between two items.
             // - The vertical spacing would be measured by Clipper to calculate line height if we didn't provide it explicitly (here we do).
@@ -10210,7 +10210,7 @@ struct ExampleAssetsBrowser
                         ImGui::Selectable("", item_is_selected, ImGuiSelectableFlags_None, LayoutItemSize);
 
                         // Update our selection state immediately (without waiting for EndMultiSelect() requests)
-                        // because we use this to alter the color of our text/icon.
+                        // because we use this to alter the m_Color of our text/icon.
                         if (ImGui::IsItemToggledSelection())
                             item_is_selected = !item_is_selected;
 
@@ -10251,7 +10251,7 @@ struct ExampleAssetsBrowser
                         {
                             ImVec2 box_min(pos.x - 1, pos.y - 1);
                             ImVec2 box_max(box_min.x + LayoutItemSize.x + 2, box_min.y + LayoutItemSize.y + 2); // Dubious
-                            draw_list->AddRectFilled(box_min, box_max, icon_bg_color); // Background color
+                            draw_list->AddRectFilled(box_min, box_max, icon_bg_color); // Background m_Color
                             if (ShowTypeOverlay && item_data->Type != 0)
                             {
                                 ImU32 type_col = icon_type_overlay_colors[item_data->Type % IM_ARRAYSIZE(icon_type_overlay_colors)];
@@ -10310,8 +10310,8 @@ struct ExampleAssetsBrowser
                     UpdateLayoutSizes(avail_width);
 
                     // Manipulate scroll to that we will land at the same Y location of currently hovered item.
-                    // - Calculate next frame position of item under mouse
-                    // - Set new scroll position to be used in next ImGui::BeginChild() call.
+                    // - Calculate next frame m_Position of item under mouse
+                    // - Set new scroll m_Position to be used in next ImGui::BeginChild() call.
                     float hovered_item_rel_pos_y = ((float)(hovered_item_idx / LayoutColumnCount) + fmodf(hovered_item_ny, 1.0f)) * LayoutItemStep.y;
                     hovered_item_rel_pos_y += ImGui::GetStyle().WindowPadding.y;
                     float mouse_local_y = io.MousePos.y - ImGui::GetWindowPos().y;

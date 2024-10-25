@@ -16,12 +16,13 @@ struct alignas(16) DirectionalLightUniform
 	std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT> lightspaces; /*depthMVP*/
 	glm::vec4 color;
 	glm::vec4 direction;
+	glm::vec4 splitDepths;
 	float angle;
 	float intensity;
 	uint32_t shadowOffset;
 	float shadowStrength;
 };
-static_assert(sizeof(DirectionalLightUniform) == 64 * 4 + 16 * 3);
+static_assert(sizeof(DirectionalLightUniform) == 64 * 4 + 16 * 4);
 
 struct alignas(16) PointLightUniform
 {
@@ -79,23 +80,28 @@ public:
 
 	const char* getName() override { return "Light"; }
 
-	glm::vec4 color = { 1,1,1,0 };
-	glm::vec4 position;
-	glm::vec4 direction;
-	float radius = 1;
-	float limit = 100;
-	float intensity = 1; /* or power */
-	float fov = 0.349066f;
-	float blend = 0.5f;
+	glm::vec4 m_Color = { 1,1,1,0 };
+	glm::vec4 m_Position;
+	glm::vec4 m_Direction;
+	float m_Radius = 1;
+	float m_Limit = 100;
+	float m_Intensity = 1; /* or power */
+	float m_Fov = 0.349066f;
+	float m_Blend = 0.5f;
 	uint32_t type = 0 /*Directional*/;
 
 	// shadow params
-	bool useShadows = true;
-	float zNear = 1.0f;
-	float zFar = 96.0f;
-	std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT> lightspaces; /*depthMVP*/
-	float oneMinusShadowStrength = 0;
+	bool m_UseShadows = true;
+	float m_NearClip = 1.0f;
+	float m_FarClip = 96.0f;
+	std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT> m_Lightspaces; /*depthMVP*/
+	float m_ShadowAttenuation = 0;
+	glm::vec4 m_CascadeSplitDepths;
 
 private:
+	void UpdateDirectionalLightCascades();
+	
 	GizmosInstance gizmos;
+
+
 };

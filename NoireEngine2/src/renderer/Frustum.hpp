@@ -19,15 +19,15 @@ public:
 
     /**
      * Gets if a point contained in the frustum.
-     * @param position The point.
+     * @param m_Position The point.
      * @return If the point is contained.
      */
     bool PointInFrustum(const glm::vec3& position) const;
 
     /**
      * Gets if a sphere contained in the frustum.
-     * @param position The spheres position.
-     * @param radius The spheres radius.
+     * @param m_Position The spheres m_Position.
+     * @param m_Radius The spheres m_Radius.
      * @return If the sphere is contained.
      */
     bool SphereInFrustum(const glm::vec3& position, float radius) const;

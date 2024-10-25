@@ -845,14 +845,14 @@ namespace IMGUIZMO_NAMESPACE
       vec_t startOfSegment = start;
       const matrix_t& mvp = localCoordinates ? gContext.mMVPLocal : gContext.mMVP;
       startOfSegment.TransformPoint(mvp);
-      if (fabsf(startOfSegment.w) > FLT_EPSILON) // check for axis aligned with camera direction
+      if (fabsf(startOfSegment.w) > FLT_EPSILON) // check for axis aligned with camera m_Direction
       {
          startOfSegment *= 1.f / startOfSegment.w;
       }
 
       vec_t endOfSegment = end;
       endOfSegment.TransformPoint(mvp);
-      if (fabsf(endOfSegment.w) > FLT_EPSILON) // check for axis aligned with camera direction
+      if (fabsf(endOfSegment.w) > FLT_EPSILON) // check for axis aligned with camera m_Direction
       {
          endOfSegment *= 1.f / endOfSegment.w;
       }
@@ -872,7 +872,7 @@ namespace IMGUIZMO_NAMESPACE
       for (unsigned int i = 0; i < 3; i++)
       {
          pts[i].TransformPoint(gContext.mMVP);
-         if (fabsf(pts[i].w) > FLT_EPSILON) // check for axis aligned with camera direction
+         if (fabsf(pts[i].w) > FLT_EPSILON) // check for axis aligned with camera m_Direction
          {
             pts[i] *= 1.f / pts[i].w;
          }
@@ -1093,7 +1093,7 @@ namespace IMGUIZMO_NAMESPACE
 
        gContext.mReversed = (nearPos.z/nearPos.w) > (farPos.z / farPos.w);
 
-      // compute scale from the size of camera right vector projected on screen at the matrix position
+      // compute scale from the size of camera right vector projected on screen at the matrix m_Position
       vec_t pointRight = viewInverse.v.right;
       pointRight.TransformPoint(gContext.mViewProjection);
       gContext.mScreenFactor = gContext.mGizmoSizeClipSpace / (pointRight.x / pointRight.w - gContext.mMVP.v.position.x / gContext.mMVP.v.position.w);
@@ -1449,7 +1449,7 @@ namespace IMGUIZMO_NAMESPACE
          drawList->AddLine(ImVec2(sourcePosOnScreen.x + dif.x, sourcePosOnScreen.y + dif.y), ImVec2(destinationPosOnScreen.x - dif.x, destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
          */
          char tmps[512];
-         //vec_t deltaInfo = gContext.mModel.v.position - gContext.mMatrixOrigin;
+         //vec_t deltaInfo = gContext.mModel.v.m_Position - gContext.mMatrixOrigin;
          int componentInfoIndex = (type - MT_SCALE_X) * 3;
          ImFormatString(tmps, sizeof(tmps), scaleInfoMask[type - MT_SCALE_X], scaleDisplay[translationInfoIndex[componentInfoIndex]]);
          drawList->AddText(ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15), GetColorU32(TEXT_SHADOW), tmps);
@@ -1534,7 +1534,7 @@ namespace IMGUIZMO_NAMESPACE
          drawList->AddLine(ImVec2(sourcePosOnScreen.x + dif.x, sourcePosOnScreen.y + dif.y), ImVec2(destinationPosOnScreen.x - dif.x, destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
          */
          char tmps[512];
-         //vec_t deltaInfo = gContext.mModel.v.position - gContext.mMatrixOrigin;
+         //vec_t deltaInfo = gContext.mModel.v.m_Position - gContext.mMatrixOrigin;
          int componentInfoIndex = (type - MT_SCALE_X) * 3;
          ImFormatString(tmps, sizeof(tmps), scaleInfoMask[type - MT_SCALE_X], scaleDisplay[translationInfoIndex[componentInfoIndex]]);
          drawList->AddText(ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15), GetColorU32(TEXT_SHADOW), tmps);
@@ -1839,7 +1839,7 @@ namespace IMGUIZMO_NAMESPACE
             matrix_t scale;
             scale.SetToIdentity();
 
-            // compute projected mouse position on plan
+            // compute projected mouse m_Position on plan
             const float len = IntersectRayPlane(gContext.mRayOrigin, gContext.mRayVector, gContext.mBoundsPlan);
             vec_t newPos = gContext.mRayOrigin + gContext.mRayVector * len;
 
@@ -2832,7 +2832,7 @@ namespace IMGUIZMO_NAMESPACE
          }
          return -1;
          });
-      // draw face with lighter color
+      // draw face with lighter m_Color
       for (int iFace = 0; iFace < cubeFaceCount; iFace++)
       {
          const CubeFace& cubeFace = faces[iFace];
@@ -3018,7 +3018,7 @@ namespace IMGUIZMO_NAMESPACE
                IM_ASSERT(boxCoordInt < 27);
                boxes[boxCoordInt] |= insidePanel && (!isDraging) && gContext.mbMouseOver;
 
-               // draw face with lighter color
+               // draw face with lighter m_Color
                if (iPass)
                {
                   ImU32 directionColor = GetColorU32(DIRECTION_X + normalIndex);
@@ -3062,7 +3062,7 @@ namespace IMGUIZMO_NAMESPACE
       {
          if (isClicking)
          {
-            // apply new view direction
+            // apply new view m_Direction
             int cx = overBox / 9;
             int cy = (overBox - cx * 9) / 3;
             int cz = overBox % 3;

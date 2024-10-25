@@ -238,15 +238,15 @@ typedef void		(*uSynergyScreenActiveCallback)(uSynergyCookie cookie, uSynergyBoo
 /**
 @brief Mouse callback
 
-This callback is called when a mouse events happens. The mouse X and Y position,
+This callback is called when a mouse events happens. The mouse X and Y m_Position,
 wheel and button state is communicated in the message. It's up to the user to
 interpret if this is a mouse up, down, double-click or other message.
 
 @param cookie		Cookie supplied in the Synergy context
-@param x			Mouse X position
-@param y			Mouse Y position
-@param wheelX		Mouse wheel X position
-@param wheelY		Mouse wheel Y position
+@param x			Mouse X m_Position
+@param y			Mouse Y m_Position
+@param wheelX		Mouse wheel X m_Position
+@param wheelY		Mouse wheel Y m_Position
 @param buttonLeft	Left button pressed status, 0 for released, 1 for pressed
 @param buttonMiddle	Middle button pressed status, 0 for released, 1 for pressed
 @param buttonRight	Right button pressed status, 0 for released, 1 for pressed
@@ -281,10 +281,10 @@ represent the most current joystick state.
 @param cookie		Cookie supplied in the Synergy context
 @param joyNum		Joystick number, always in the range [0 ... USYNERGY_NUM_JOYSTICKS>
 @param buttons		Button pressed mask
-@param leftStickX	Left stick X position, in range [-127 ... 127]
-@param leftStickY	Left stick Y position, in range [-127 ... 127]
-@param rightStickX	Right stick X position, in range [-127 ... 127]
-@param rightStickY	Right stick Y position, in range [-127 ... 127]
+@param leftStickX	Left stick X m_Position, in range [-127 ... 127]
+@param leftStickY	Left stick Y m_Position, in range [-127 ... 127]
+@param rightStickX	Right stick X m_Position, in range [-127 ... 127]
+@param rightStickY	Right stick Y m_Position, in range [-127 ... 127]
 **/
 typedef void		(*uSynergyJoystickCallback)(uSynergyCookie cookie, uint8_t joyNum, uint16_t buttons, int8_t leftStickX, int8_t leftStickY, int8_t rightStickX, int8_t rightStickY);
 
@@ -346,14 +346,14 @@ typedef struct
 	int								m_receiveOfs;									/* Receive buffer offset */
 	uint8_t							m_replyBuffer[USYNERGY_REPLY_BUFFER_SIZE];		/* Reply buffer */
 	uint8_t*						m_replyCur;										/* Write offset into reply buffer */
-	uint16_t						m_mouseX;										/* Mouse X position */
-	uint16_t						m_mouseY;										/* Mouse Y position */
-	int16_t							m_mouseWheelX;									/* Mouse wheel X position */
-	int16_t							m_mouseWheelY;									/* Mouse wheel Y position */
+	uint16_t						m_mouseX;										/* Mouse X m_Position */
+	uint16_t						m_mouseY;										/* Mouse Y m_Position */
+	int16_t							m_mouseWheelX;									/* Mouse wheel X m_Position */
+	int16_t							m_mouseWheelY;									/* Mouse wheel Y m_Position */
 	uSynergyBool					m_mouseButtonLeft;								/* Mouse left button */
 	uSynergyBool					m_mouseButtonRight;								/* Mouse right button */
 	uSynergyBool					m_mouseButtonMiddle;							/* Mouse middle button */
-	int8_t							m_joystickSticks[USYNERGY_NUM_JOYSTICKS][4];	/* Joystick stick position in 2 axes for 2 sticks */
+	int8_t							m_joystickSticks[USYNERGY_NUM_JOYSTICKS][4];	/* Joystick stick m_Position in 2 axes for 2 sticks */
 	uint16_t						m_joystickButtons[USYNERGY_NUM_JOYSTICKS];		/* Joystick button state */
 } uSynergyContext;
 

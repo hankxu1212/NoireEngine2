@@ -68,10 +68,32 @@ float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex, float li
 	return PCF(uv, currentDepth, uvRadius, scene.pcfSamples, bias, shadowMapIndex);
 }
 
+float textureProj(vec4 shadowCoord, vec2 offset, int cascadeIndex)
+{
+	float shadow = 1.0;
+	float bias = 0.0005;
+
+	float dist = texture(shadowMaps[cascadeIndex], shadowCoord.st + offset).r;
+	if (dist < shadowCoord.z - bias) {
+		shadow = ambient;
+	}
+	return shadow;
+}
+
 float DirLightShadow(int lightId, int shadowMapId)
 {
-	const float shadowBias = 0.005;
-	vec4 shadowCoord = biasMat * DIR_LIGHTS[lightId].lightspaces[0] * vec4(inPosition, 1.0);
+	// Get cascade index for the current fragment's view position
+	int cascadeIndex = 0;
+	for(int i = 0; i < DIR_LIGHTS[lightId].shadowOffset - 1; ++i) {
+		if(inViewPos.z <= DIR_LIGHTS[lightId].splitDepths[i]) {	
+			cascadeIndex = i + 1;
+		}
+	}
+
+	int cascadedShadowMapID = shadowMapId + cascadeIndex;
+
+	const float shadowBias = 0.0005;
+	vec4 shadowCoord = biasMat * DIR_LIGHTS[lightId].lightspaces[cascadedShadowMapID] * vec4(inPosition, 1.0);
 		
 	// perform perspective divide
 	shadowCoord /= shadowCoord.w;
@@ -83,7 +105,8 @@ float DirLightShadow(int lightId, int shadowMapId)
 		&& shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0
 		&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
 	{
-		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, shadowMapId, 0.1) * DIR_LIGHTS[lightId].shadowStrength;
+		// shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, cascadedShadowMapID, shadowBias) * DIR_LIGHTS[lightId].shadowStrength;
+		shadow = textureProj(shadowCoord, vec2(0), cascadedShadowMapID);
 	}
 	return shadow;
 }
@@ -95,7 +118,8 @@ float PointLightShadow(int lightId, int shadowMapId)
 
 float SpotLightShadow(int lightId, int shadowMapId)
 {
-	float shadowBias = max(0.05 * (1.0 - dot(n, vec3(SPOT_LIGHTS[lightId].position) - inPosition)), 0.005);  
+	float shadowBias = 0.0005;
+
 	vec4 shadowCoord = biasMat * SPOT_LIGHTS[lightId].lightspace * vec4(inPosition, 1.0);
 	
 	// perform perspective divide

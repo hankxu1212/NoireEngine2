@@ -246,7 +246,11 @@ void ObjectPipeline::CreateDescriptors()
 	// create set 4: shadow mapping with descriptor indexing
 	{
 		const auto& shadowPasses = s_ShadowPipeline->getShadowPasses();
+		const auto& cascadePasses = s_ShadowPipeline->getCascadePasses();
+
 		NE_INFO("Found {} shadow maps.", shadowPasses.size());
+		NE_INFO("Found {} cascaded shadow maps.", cascadePasses.size());
+
 		std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
 			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
 		};
@@ -256,8 +260,12 @@ void ObjectPipeline::CreateDescriptors()
 			.pBindingFlags = descriptorBindingFlags.data()
 		};
 
+		// TODO: dont forget to add omni sources here
+		uint32_t combinedShadowPassSize = static_cast<uint32_t>(shadowPasses.size() + cascadePasses.size() * SHADOW_MAP_CASCADE_COUNT);
+
+		// combine all shadow passes
 		std::vector<uint32_t> variableDesciptorCounts = {
-			static_cast<uint32_t>(shadowPasses.size())
+			combinedShadowPassSize
 		};
 
 		VkDescriptorSetVariableDescriptorCountAllocateInfoEXT variableDescriptorInfoAI =
@@ -268,21 +276,36 @@ void ObjectPipeline::CreateDescriptors()
 		};
 
 		// grab all texture information
-		std::vector<VkDescriptorImageInfo> shadowDescriptors(shadowPasses.size());
+		std::vector<VkDescriptorImageInfo> shadowDescriptors;
+
+		// push cascades first, since directional light is always first
+		for (uint32_t i = 0; i < cascadePasses.size(); ++i)
+		{
+			for (int cascadeIndex = 0; cascadeIndex < SHADOW_MAP_CASCADE_COUNT; ++cascadeIndex) {
+				auto& depth = cascadePasses[i].cascades[cascadeIndex].depthAttachment;
+				shadowDescriptors.emplace_back(VkDescriptorImageInfo{
+					depth->getSampler(), depth->getView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+				});
+			}
+		}
+
+		// TODO: add omni point light shadowpasses here
+
+		// push spotlight shadowpasses here
 		for (uint32_t i = 0; i < shadowPasses.size(); ++i)
 		{
 			auto& depth = shadowPasses[i].depthAttachment;
-			shadowDescriptors[i].sampler = depth->getSampler();
-			shadowDescriptors[i].imageView = depth->getView();
-			shadowDescriptors[i].imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			shadowDescriptors.emplace_back(VkDescriptorImageInfo {
+				depth->getSampler(), depth->getView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+			});
 		}
 
 		// actually build the descriptor set now
 		DescriptorBuilder builder = DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator);
 		
-		if (shadowPasses.size() > 0)
+		if (combinedShadowPassSize > 0)
 			builder.BindImage(0, shadowDescriptors.data(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<uint32_t>(shadowPasses.size()));
+				VK_SHADER_STAGE_FRAGMENT_BIT, combinedShadowPassSize);
 		else
 			builder.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 
@@ -496,7 +519,6 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 
 			assert(bufSrc.getSize() == buf.getSize());
 			assert(bufSrc.getSize() >= neededBytes);
-
 		}
 
 		// copy into buffers

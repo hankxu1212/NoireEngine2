@@ -438,7 +438,7 @@ struct MySequence : public ImSequencer::SequenceInterface
    {
       MySequenceItem& item = myItems[index];
       if (color)
-         *color = 0xFFAA8080; // same color for everyone, return color based on type
+         *color = 0xFFAA8080; // same m_Color for everyone, return m_Color based on type
       if (start)
          *start = &item.mFrameStart;
       if (end)

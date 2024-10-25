@@ -445,7 +445,7 @@ void Editor::ShowGizmos()
 
         cameraProjection[1][1] *= -1; // invert to opengl y-up
         ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-            (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::WORLD, glm::value_ptr(transformMat),
+            (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transformMat),
             nullptr, snap ? snapValues : nullptr);
         cameraProjection[1][1] *= -1; // invert back
 

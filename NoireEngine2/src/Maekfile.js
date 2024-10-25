@@ -135,8 +135,6 @@ use_vert_frag('shaders/pbr', 'backend/pipeline/material_pipeline/PBRMaterialPipe
 const shadowmapping_shaders = [
 	maek.GLSLC('shaders/shadow/shadowmapping.vert'),
 	maek.GLSLC('shaders/shadow/shadowmapping.frag'),
-	maek.GLSLC('shaders/shadow/shadowcascade.vert'),
-	maek.GLSLC('shaders/shadow/shadowcascade.frag'),
 ];
 vulkan_objs.push(maek.CPP('backend/pipeline/ShadowPipeline.cpp', undefined, { depends: [...shadowmapping_shaders] }));
 

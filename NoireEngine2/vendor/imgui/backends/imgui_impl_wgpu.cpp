@@ -349,7 +349,7 @@ static void ImGui_ImplWGPU_SetupRenderState(ImDrawData* draw_data, WGPURenderPas
     wgpuRenderPassEncoderSetPipeline(ctx, bd->pipelineState);
     wgpuRenderPassEncoderSetBindGroup(ctx, 0, bd->renderResources.CommonBindGroup, 0, nullptr);
 
-    // Setup blend factor
+    // Setup m_Blend factor
     WGPUColor blend_color = { 0.f, 0.f, 0.f, 0.f };
     wgpuRenderPassEncoderSetBlendConstant(ctx, &blend_color);
 }

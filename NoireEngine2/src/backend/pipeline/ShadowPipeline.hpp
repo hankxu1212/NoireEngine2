@@ -34,19 +34,18 @@ public:
 	{
 		VkFramebuffer frameBuffer;
 		std::unique_ptr<ImageDepth> depthAttachment;
-		glm::mat4 viewProjMatrix;
-		float splitDepth;
 	};
 
 	// a cascade pass has multiple cascades
 	struct CascadePass
 	{
-		int32_t width, height;
+		uint32_t width, height;
 		std::array<Cascade, SHADOW_MAP_CASCADE_COUNT> cascades;
 	};
+	const std::vector<CascadePass>& getCascadePasses() const { return m_CascadePasses; }
 
 	//struct UBOFS {
-	//	float cascadeSplits[4];
+	//	float m_CascadeSplitDepths[4];
 	//	glm::mat4 inverseViewMat;
 	//	glm::vec3 lightDir;
 	//	float _pad;
@@ -56,7 +55,7 @@ public:
 	// naive shadowmap pass, used for spotlights
 	struct ShadowMapPass 
 	{
-		int32_t width, height;
+		uint32_t width, height;
 		VkFramebuffer frameBuffer;
 		std::unique_ptr<ImageDepth> depthAttachment;
 	};
@@ -99,31 +98,14 @@ private:
 	void ShadowMap_CreateDescriptors();
 	void ShadowMap_CreatePipelineLayout();
 	void ShadowMap_CreateGraphicsPipeline();
-	void ShadowMap_BeginRenderPass(const CommandBuffer& cmdBuffer, uint32_t index);
+	void ShadowMap_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t passIndex);
 
 	// Shadow cascading ////////////////////////////////////////////
-
-	VkRenderPass		m_CascadeRenderPass;
-	VkPipelineLayout	m_CascadePassPipelineLayout;
-	VkPipeline			m_CascadePipeline;
-
-	int32_t displayDepthMapCascadeIndex = 0;
-	float cascadeSplitLambda = 0.95f;
 	
-	struct CascadePush 
-	{
-		glm::vec4 position;
-		uint32_t cascadeIndex;
-	};
-
 	// cascades will push SHADOW_MAP_CASCADE_COUNT lightspace matrices into the lightspace buffer, instead of 1
-	std::vector<CascadePass> m_ShadowCascadePasses;
+	std::vector<CascadePass> m_CascadePasses;
 
-	void Cascade_CreateRenderPasses();
-	void Cascade_CreateDescriptors();
-	void Cascade_CreatePipelineLayout();
-	void Cascade_CreateGraphicsPipeline();
-	void Cascade_BeginRenderPass(const CommandBuffer& cmdBuffer, uint32_t index);
+	void Cascade_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t passIndex, uint32_t cascadeIndex);
 	void Cascade_UpdateCascades();
 };
 

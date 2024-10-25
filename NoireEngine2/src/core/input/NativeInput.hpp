@@ -42,7 +42,7 @@ public:
 
 	/**
 	 * Returns the Vec1(float) output from input key bindings.
-	 * Representing a 1D direction.
+	 * Representing a 1D m_Direction.
 	 *
 	 * \param inputKeys the key bindings (2 in total)
 	 * \return the vec1 output, normalized
@@ -51,7 +51,7 @@ public:
 
 	/**
 	 * Returns the Vec2 output from input key bindings.
-	 * Representing a 2D direction.
+	 * Representing a 2D m_Direction.
 	 *
 	 * \param inputKeys the key bindings (4 in total)
 	 * \return the vec2 output, normalized
@@ -60,7 +60,7 @@ public:
 
 	/**
 	 * Returns the Vec3 output from input key bindings.
-	 * Representing a 3D direction.
+	 * Representing a 3D m_Direction.
 	 *
 	 * \param inputKeys the key bindings (6 in total)
 	 * \return the vec3 output, normalized

@@ -809,9 +809,9 @@ typedef struct GLFWcursor GLFWcursor;
  */
 typedef void (* GLFWerrorfun)(int,const char*);
 
-/*! @brief The function signature for window position callbacks.
+/*! @brief The function signature for window m_Position callbacks.
  *
- *  This is the function signature for window position callback functions.
+ *  This is the function signature for window m_Position callback functions.
  *
  *  @param[in] window The window that was moved.
  *  @param[in] xpos The new x-coordinate, in screen coordinates, of the
@@ -952,9 +952,9 @@ typedef void (* GLFWframebuffersizefun)(GLFWwindow*,int,int);
  */
 typedef void (* GLFWmousebuttonfun)(GLFWwindow*,int,int,int);
 
-/*! @brief The function signature for cursor position callbacks.
+/*! @brief The function signature for cursor m_Position callbacks.
  *
- *  This is the function signature for cursor position callback functions.
+ *  This is the function signature for cursor m_Position callback functions.
  *
  *  @param[in] window The window that received the event.
  *  @param[in] xpos The new cursor x-coordinate, relative to the left edge of
@@ -1411,13 +1411,13 @@ GLFWAPI GLFWmonitor** glfwGetMonitors(int* count);
  */
 GLFWAPI GLFWmonitor* glfwGetPrimaryMonitor(void);
 
-/*! @brief Returns the position of the monitor's viewport on the virtual screen.
+/*! @brief Returns the m_Position of the monitor's viewport on the virtual screen.
  *
- *  This function returns the position, in screen coordinates, of the upper-left
+ *  This function returns the m_Position, in screen coordinates, of the upper-left
  *  corner of the specified monitor.
  *
- *  Any or all of the position arguments may be `NULL`.  If an error occurs, all
- *  non-`NULL` position arguments will be set to zero.
+ *  Any or all of the m_Position arguments may be `NULL`.  If an error occurs, all
+ *  non-`NULL` m_Position arguments will be set to zero.
  *
  *  @param[in] monitor The monitor to query.
  *  @param[out] xpos Where to store the monitor x-coordinate, or `NULL`.
@@ -1522,7 +1522,7 @@ GLFWAPI GLFWmonitorfun glfwSetMonitorCallback(GLFWmonitorfun cbfun);
 /*! @brief Returns the available video modes for the specified monitor.
  *
  *  This function returns an array of all video modes supported by the specified
- *  monitor.  The returned array is sorted in ascending order, first by color
+ *  monitor.  The returned array is sorted in ascending order, first by m_Color
  *  bit depth (the sum of all channel depths) and then by resolution area (the
  *  product of width and height).
  *
@@ -1736,9 +1736,9 @@ GLFWAPI void glfwWindowHint(int hint, int value);
  *  or _borderless full screen_ windows, see @ref window_windowed_full_screen.
  *
  *  By default, newly created windows use the placement recommended by the
- *  window system.  To create the window at a specific position, make it
+ *  window system.  To create the window at a specific m_Position, make it
  *  initially invisible using the [GLFW_VISIBLE](@ref window_hints_wnd) window
- *  hint, set its [position](@ref window_pos) and then [show](@ref window_hide)
+ *  hint, set its [m_Position](@ref window_pos) and then [show](@ref window_hide)
  *  it.
  *
  *  As long as at least one full screen window is not iconified, the screensaver
@@ -1806,7 +1806,7 @@ GLFWAPI void glfwWindowHint(int hint, int value);
  *
  *  @remark @x11 Due to the asynchronous nature of X11, it may take a moment for
  *  a window to reach its requested state.  This means you may not be able to
- *  query the final size, position or other attributes directly after window
+ *  query the final size, m_Position or other attributes directly after window
  *  creation.
  *
  *  @reentrancy This function must not be called from a callback.
@@ -1957,13 +1957,13 @@ GLFWAPI void glfwSetWindowTitle(GLFWwindow* window, const char* title);
  */
 GLFWAPI void glfwSetWindowIcon(GLFWwindow* window, int count, const GLFWimage* images);
 
-/*! @brief Retrieves the position of the client area of the specified window.
+/*! @brief Retrieves the m_Position of the client area of the specified window.
  *
- *  This function retrieves the position, in screen coordinates, of the
+ *  This function retrieves the m_Position, in screen coordinates, of the
  *  upper-left corner of the client area of the specified window.
  *
- *  Any or all of the position arguments may be `NULL`.  If an error occurs, all
- *  non-`NULL` position arguments will be set to zero.
+ *  Any or all of the m_Position arguments may be `NULL`.  If an error occurs, all
+ *  non-`NULL` m_Position arguments will be set to zero.
  *
  *  @param[in] window The window to query.
  *  @param[out] xpos Where to store the x-coordinate of the upper-left corner of
@@ -1985,9 +1985,9 @@ GLFWAPI void glfwSetWindowIcon(GLFWwindow* window, int count, const GLFWimage* i
  */
 GLFWAPI void glfwGetWindowPos(GLFWwindow* window, int* xpos, int* ypos);
 
-/*! @brief Sets the position of the client area of the specified window.
+/*! @brief Sets the m_Position of the client area of the specified window.
  *
- *  This function sets the position, in screen coordinates, of the upper-left
+ *  This function sets the m_Position, in screen coordinates, of the upper-left
  *  corner of the client area of the specified windowed mode window.  If the
  *  window is a full screen window, this function does nothing.
  *
@@ -2095,7 +2095,7 @@ GLFWAPI void glfwSetWindowSizeLimits(GLFWwindow* window, int minwidth, int minhe
  *  is specified as 16 and 9, respectively.
  *
  *  If the numerator and denominator is set to `GLFW_DONT_CARE` then the aspect
- *  ratio limit is disabled.
+ *  ratio m_Limit is disabled.
  *
  *  The aspect ratio is applied immediately to a windowed mode window and may
  *  cause it to be resized.
@@ -2404,9 +2404,9 @@ GLFWAPI GLFWmonitor* glfwGetWindowMonitor(GLFWwindow* window);
  *
  *  When setting a monitor, this function updates the width, height and refresh
  *  rate of the desired video mode and switches to the video mode closest to it.
- *  The window position is ignored when setting a monitor.
+ *  The window m_Position is ignored when setting a monitor.
  *
- *  When the monitor is `NULL`, the position, width and height are used to
+ *  When the monitor is `NULL`, the m_Position, width and height are used to
  *  place the window client area.  The refresh rate is ignored when no monitor
  *  is specified.
  *
@@ -2522,11 +2522,11 @@ GLFWAPI void glfwSetWindowUserPointer(GLFWwindow* window, void* pointer);
  */
 GLFWAPI void* glfwGetWindowUserPointer(GLFWwindow* window);
 
-/*! @brief Sets the position callback for the specified window.
+/*! @brief Sets the m_Position callback for the specified window.
  *
- *  This function sets the position callback of the specified window, which is
+ *  This function sets the m_Position callback of the specified window, which is
  *  called when the window is moved.  The callback is provided with the screen
- *  position of the upper-left corner of the client area of the window.
+ *  m_Position of the upper-left corner of the client area of the window.
  *
  *  @param[in] window The window whose callback to set.
  *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
@@ -3053,23 +3053,23 @@ GLFWAPI int glfwGetKey(GLFWwindow* window, int key);
  */
 GLFWAPI int glfwGetMouseButton(GLFWwindow* window, int button);
 
-/*! @brief Retrieves the position of the cursor relative to the client area of
+/*! @brief Retrieves the m_Position of the cursor relative to the client area of
  *  the window.
  *
- *  This function returns the position of the cursor, in screen coordinates,
+ *  This function returns the m_Position of the cursor, in screen coordinates,
  *  relative to the upper-left corner of the client area of the specified
  *  window.
  *
  *  If the cursor is disabled (with `GLFW_CURSOR_DISABLED`) then the cursor
- *  position is unbounded and limited only by the minimum and maximum values of
+ *  m_Position is unbounded and limited only by the minimum and maximum values of
  *  a `double`.
  *
  *  The coordinate can be converted to their integer equivalents with the
  *  `floor` function.  Casting directly to an integer type works for positive
  *  coordinates, but fails for negative ones.
  *
- *  Any or all of the position arguments may be `NULL`.  If an error occurs, all
- *  non-`NULL` position arguments will be set to zero.
+ *  Any or all of the m_Position arguments may be `NULL`.  If an error occurs, all
+ *  non-`NULL` m_Position arguments will be set to zero.
  *
  *  @param[in] window The desired window.
  *  @param[out] xpos Where to store the cursor x-coordinate, relative to the
@@ -3091,10 +3091,10 @@ GLFWAPI int glfwGetMouseButton(GLFWwindow* window, int button);
  */
 GLFWAPI void glfwGetCursorPos(GLFWwindow* window, double* xpos, double* ypos);
 
-/*! @brief Sets the position of the cursor, relative to the client area of the
+/*! @brief Sets the m_Position of the cursor, relative to the client area of the
  *  window.
  *
- *  This function sets the position, in screen coordinates, of the cursor
+ *  This function sets the m_Position, in screen coordinates, of the cursor
  *  relative to the upper-left corner of the client area of the specified
  *  window.  The window must have input focus.  If the window does not have
  *  input focus when this function is called, it fails silently.
@@ -3104,7 +3104,7 @@ GLFWAPI void glfwGetCursorPos(GLFWwindow* window, double* xpos, double* ypos);
  *  cursor, transparently re-centers it and provides unconstrained cursor
  *  motion.  See @ref glfwSetInputMode for more information.
  *
- *  If the cursor mode is `GLFW_CURSOR_DISABLED` then the cursor position is
+ *  If the cursor mode is `GLFW_CURSOR_DISABLED` then the cursor m_Position is
  *  unconstrained and limited only by the minimum and maximum values of
  *  a `double`.
  *
@@ -3119,7 +3119,7 @@ GLFWAPI void glfwGetCursorPos(GLFWwindow* window, double* xpos, double* ypos);
  *
  *  @remark @x11 Due to the asynchronous nature of X11, it may take a moment for
  *  the window focus event to arrive.  This means you may not be able to set the
- *  cursor position directly after window creation.
+ *  cursor m_Position directly after window creation.
  *
  *  @thread_safety This function must only be called from the main thread.
  *
@@ -3392,11 +3392,11 @@ GLFWAPI GLFWcharmodsfun glfwSetCharModsCallback(GLFWwindow* window, GLFWcharmods
  */
 GLFWAPI GLFWmousebuttonfun glfwSetMouseButtonCallback(GLFWwindow* window, GLFWmousebuttonfun cbfun);
 
-/*! @brief Sets the cursor position callback.
+/*! @brief Sets the cursor m_Position callback.
  *
- *  This function sets the cursor position callback of the specified window,
+ *  This function sets the cursor m_Position callback of the specified window,
  *  which is called when the cursor is moved.  The callback is provided with the
- *  position, in screen coordinates, relative to the upper-left corner of the
+ *  m_Position, in screen coordinates, relative to the upper-left corner of the
  *  client area of the window.
  *
  *  @param[in] window The window whose callback to set.
@@ -3728,9 +3728,9 @@ GLFWAPI double glfwGetTime(void);
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_INVALID_VALUE.
  *
- *  @remark The upper limit of the timer is calculated as
+ *  @remark The upper m_Limit of the timer is calculated as
  *  floor((2<sup>64</sup> - 1) / 10<sup>9</sup>) and is due to implementations
- *  storing nanoseconds in 64 bits.  The limit may be increased in the future.
+ *  storing nanoseconds in 64 bits.  The m_Limit may be increased in the future.
  *
  *  @thread_safety This function may be called from any thread.  Writing of the
  *  internal timer offset is not atomic.

@@ -3526,13 +3526,13 @@ namespace ImApp
          {
              if (io.WantMoveMouse)
              {
-                 glfwSetCursorPos(g_Window, (double)io.MousePos.x, (double)io.MousePos.y);   // Set mouse position if requested by io.WantMoveMouse flag (used when io.NavMovesTrue is enabled by user and using directional navigation)
+                 glfwSetCursorPos(g_Window, (double)io.MousePos.x, (double)io.MousePos.y);   // Set mouse m_Position if requested by io.WantMoveMouse flag (used when io.NavMovesTrue is enabled by user and using directional navigation)
              }
              else
              {
                  double mouse_x, mouse_y;
                  glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
-                 io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);   // Get mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
+                 io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);   // Get mouse m_Position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
              }
          }
          else
