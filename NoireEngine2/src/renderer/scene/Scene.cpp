@@ -574,6 +574,9 @@ void Scene::UpdateSceneInfo()
 		m_SceneInfo.numLights[type]++;
 	}
 
+	// shadows
+	m_SceneInfo.shadowOccluderSamples = ShadowPipeline::PCSSOccluderSamples;
+	m_SceneInfo.shadowPCFSamples = ShadowPipeline::PCFSamples;
 	UpdateShadowCasters();
 
 	const glm::vec3& pos = GetRenderCam()->GetTransform()->WorldLocation();
@@ -598,7 +601,6 @@ void Scene::UpdateShadowCasters()
 				m_ShadowCasters.emplace_back(light);
 		}
 	}
-
 
 	shadowCastersDirty = false;
 }

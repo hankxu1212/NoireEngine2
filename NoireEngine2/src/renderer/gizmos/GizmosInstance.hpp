@@ -108,23 +108,24 @@ struct GizmosInstance
 
         constexpr uint32_t segments = 3;
 
-        glm::vec3 right = glm::normalize(glm::cross(direction, glm::vec3(0, 1, 0)));
-        glm::vec3 up = glm::cross(right, direction);
+        glm::vec3 right = glm::normalize(glm::cross(direction, Vec3::Up));
+        glm::vec3 up = glm::normalize(glm::cross(right, direction));
 
         // Base position at the end of the cone (range away from the light position)
-        glm::vec3 baseCenter = position + direction * range;
+        constexpr float coneRange = 5;
+        glm::vec3 coneCenter = position + direction * coneRange;
+        // Draw the inner and outer circles
+        DrawCircle(coneCenter, innerRadius, right, up, 20, color);
+        DrawCircle(coneCenter, outerRadius, right, up, 20, color);
 
-        // Draw the inner circle at the base of the spotlight
-        DrawCircle(baseCenter, innerRadius, right, up, 20, color);
-
-        // Draw the outer circle at the base of the spotlight
-        DrawCircle(baseCenter, outerRadius, right, up, 20, color);
+        // Add an edge to `range/limit` like blender
+        AddEdge({position, color}, { position + direction * range, color});
 
         for (int i = 0; i < segments; ++i) 
         {
             float angle = (2.0f * glm::pi<float>() * float(i)) / float(segments);
             glm::vec3 directionOnPlane = right * cos(angle) + up * sin(angle);
-            glm::vec3 outerPoint = baseCenter + directionOnPlane * outerRadius;
+            glm::vec3 outerPoint = coneCenter + directionOnPlane * outerRadius;
 
             // Add lines from the position of the spotlight to the inner circle
             AddEdge({ position, color }, { outerPoint, color });

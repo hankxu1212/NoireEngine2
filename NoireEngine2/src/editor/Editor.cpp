@@ -305,6 +305,23 @@ void Editor::ShowStats()
         ImGui::Columns(1);
         ImGui::Separator(); // -----------------------------------------------------
 
+        ImGui::Text("Shadows");
+        ImGui::Separator(); // -----------------------------------------------------
+
+        ImGui::Columns(2);
+        ImGui::Text("PCF Samples");
+        ImGui::NextColumn();
+        ImGui::DragInt("##PCFSAMPLES", (int*)&ShadowPipeline::PCFSamples, 1, 1, 64);
+        ImGui::Columns(1);
+        ImGui::Separator(); // -----------------------------------------------------
+
+        ImGui::Columns(2);
+        ImGui::Text("PCSS Occluder Samples");
+        ImGui::NextColumn();
+        ImGui::DragInt("##PCSSOCCLUDERSAMPLES", (int*)&ShadowPipeline::PCSSOccluderSamples, 1, 1, 64);
+        ImGui::Columns(1);
+        ImGui::Separator(); // -----------------------------------------------------
+
         // rendering stats
         ImGui::Text("Rendering Information");
         ImGui::Separator(); // -----------------------------------------------------

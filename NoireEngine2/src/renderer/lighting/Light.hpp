@@ -67,6 +67,7 @@ struct alignas(16) SpotLightUniform
 	float blend;
 	uint32_t shadowOffset;
 	float shadowStrength;
+	float nearClip;
 };
 static_assert(sizeof(SpotLightUniform) == 64 + 16 * 3 + 16 * 2);
 

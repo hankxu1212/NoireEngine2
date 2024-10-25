@@ -43,6 +43,7 @@ struct SpotLight
 	float blend;
 	int shadowOffset;
 	float shadowStrength;
+	float nearClip;
 };
 
 layout(set=1, binding=3, std140) readonly buffer SpotLights {

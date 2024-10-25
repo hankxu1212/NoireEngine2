@@ -55,10 +55,8 @@ float FindOccluderDistance(vec2 uv, float currentDepth, float uvLightSize, float
 float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex, float lightSize)
 {
 	const float nearClip = 1;
-	const int occluderSamples = 32;
-	const int pcfSamples = 32;
-
-	float occluderDistance = FindOccluderDistance(uv, currentDepth, lightSize, nearClip, occluderSamples, bias, shadowMapIndex);
+	
+	float occluderDistance = FindOccluderDistance(uv, currentDepth, lightSize, nearClip, scene.occluderSamples, bias, shadowMapIndex);
 	if (occluderDistance == -1)
 		return 1;
 
@@ -67,7 +65,7 @@ float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex, float li
 
 	// percentage-close filtering
 	float uvRadius = penumbraWidth * lightSize * nearClip / currentDepth;
-	return PCF(uv, currentDepth, uvRadius, pcfSamples, bias, shadowMapIndex);
+	return PCF(uv, currentDepth, uvRadius, scene.pcfSamples, bias, shadowMapIndex);
 }
 
 float DirLightShadow(int lightId, int shadowMapId)

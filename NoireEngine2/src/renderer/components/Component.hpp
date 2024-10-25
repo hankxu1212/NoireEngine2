@@ -24,5 +24,5 @@ public:
 	Entity* entity;
 
 protected:
-	bool useGizmos = true;
+	bool useGizmos = false;
 };

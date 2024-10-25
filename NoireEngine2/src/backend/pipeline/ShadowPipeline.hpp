@@ -62,6 +62,10 @@ public:
 	};
 	const std::vector<ShadowMapPass>& getShadowPasses() const { return m_ShadowMapPasses; }
 
+	// to be used in gizmos UI
+	static inline uint32_t PCFSamples = 32;
+	static inline uint32_t PCSSOccluderSamples = 32;
+
 private:
 	// Global pipeline variables ////////////////////////////////////////////
 	ObjectPipeline*		p_ObjectPipeline = nullptr;

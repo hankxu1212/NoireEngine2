@@ -8,6 +8,7 @@
 Light::Light(Type type)
 {
 	m_Info.type = (uint32_t)type;
+	useGizmos = true;
 }
 
 Light::Light(Type type, Color3 color, float intensity) :
@@ -17,10 +18,36 @@ Light::Light(Type type, Color3 color, float intensity) :
 	m_Info.intensity = intensity;
 }
 
+Light::Light(Type type, Color3 color, float intensity, float radius) :
+	Light(type, color, intensity)
+{
+	m_Info.radius = radius;
+}
+
+Light::Light(Type type, Color3 color, float intensity, float radius, float limit) :
+	Light(type, color, intensity, radius)
+{
+	m_Info.limit = limit;
+}
+
+Light::Light(Type type, Color3 color, float intensity, float radius, float fov, float blend) :
+	Light(type, color, intensity, radius)
+{
+	m_Info.fov = fov;
+	m_Info.blend = blend;
+}
+
+Light::Light(Type type, Color3 color, float intensity, float radius, float fov, float blend, float limit) :
+	Light(type, color, intensity, radius, fov, blend)
+{
+	m_Info.limit = limit;
+}
+
+
 void Light::Update()
 {
 	Transform* transform = GetTransform();
-	glm::vec3 dir = glm::normalize(transform->Back()); // always point in -z direction
+	glm::vec3 dir = transform->Back(); // always point in -z direction
 	glm::vec3 pos = transform->WorldLocation();
 
 	m_Info.direction = glm::vec4(dir, 0);
@@ -70,8 +97,9 @@ void Light::Render(const glm::mat4& model)
 		auto& pos = GetTransform()->position();
 		auto dir = GetTransform()->Back();
 		
-		float inner = glm::tan(glm::radians(m_Info.fov * (1 - m_Info.blend) * 0.5f)) * m_Info.limit;
-		float outer = glm::tan(glm::radians(m_Info.fov * 0.5f)) * m_Info.limit;
+		constexpr float coneRange = 5;
+		float inner = glm::tan(glm::radians(m_Info.fov * (1 - m_Info.blend) * 0.5f)) * coneRange;
+		float outer = glm::tan(glm::radians(m_Info.fov * 0.5f)) * coneRange;
 
 		gizmos.DrawSpotLight(pos, dir, inner, outer, m_Info.limit, c);
 		GetScene()->PushGizmosInstance(&gizmos);
@@ -129,32 +157,8 @@ _NODISCARD SpotLightUniform Light::GetLightUniformAs() const
 	uniform.blend = m_Info.blend;
 	uniform.shadowOffset = m_Info.useShadows ? 1 : 0;
 	uniform.shadowStrength = 1 - m_Info.oneMinusShadowStrength;
+	uniform.nearClip = m_Info.zNear;
 	return uniform;
-}
-
-Light::Light(Type type, Color3 color, float intensity, float radius) :
-	Light(type, color, intensity)
-{
-	m_Info.radius = radius;
-}
-
-Light::Light(Type type, Color3 color, float intensity, float radius, float limit) :
-	Light(type, color, intensity, radius)
-{
-	m_Info.limit = limit;
-}
-
-Light::Light(Type type, Color3 color, float intensity, float radius, float fov, float blend) :
-	Light(type, color, intensity, radius)
-{
-	m_Info.fov = fov;
-	m_Info.blend = blend;
-}
-
-Light::Light(Type type, Color3 color, float intensity, float radius, float fov, float blend, float limit) :
-	Light(type, color, intensity, radius, fov, blend)
-{
-	m_Info.limit = limit;
 }
 
 void Light::Inspect() 
