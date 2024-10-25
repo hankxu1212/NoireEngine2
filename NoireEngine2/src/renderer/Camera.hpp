@@ -28,6 +28,8 @@ public:
 
     inline const glm::mat4& getViewMatrix() const { return viewMatrix; }
     inline const glm::mat4& getProjectionMatrix() const { return projectionMatrix; }
+
+    // returns projection * view. O(1)
     inline const glm::mat4& getWorldToClipMatrix() const { return worldToClip; }
 
     inline glm::mat4& GetViewMatrixUnsafe() { return viewMatrix; } // allows function to modify the projection matrix. use with care!

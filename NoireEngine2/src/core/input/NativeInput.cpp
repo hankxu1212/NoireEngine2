@@ -50,7 +50,7 @@ glm::vec2 NativeInput::GetVec2Input(InputTypeVec2 inputKeys)
 		acc += glm::vec2({ 0, -1 });
 
 	if (acc != glm::vec2())
-		acc = glm::normalize(acc);
+		acc = normalize(acc);
 
 	return acc;
 }
@@ -73,7 +73,7 @@ glm::vec3 NativeInput::GetVec3Input(InputTypeVec3& inputKeys)
 		acc += Vec3::Down;
 
 	if (acc != Vec3::Zero)
-		acc = glm::normalize(acc);
+		acc = normalize(acc);
 
 	return acc;
 }

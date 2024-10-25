@@ -90,7 +90,7 @@ public:
 
 	void Inspect() override;
 
-	_NODISCARD LightInfo& GetLightInfo() { return m_Info; }
+	_NODISCARD inline LightInfo& GetLightInfo() { return m_Info; }
 
 	template<typename T>
 	_NODISCARD T GetLightUniformAs() const;

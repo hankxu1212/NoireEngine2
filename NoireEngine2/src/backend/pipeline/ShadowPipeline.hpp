@@ -116,6 +116,7 @@ private:
 		uint32_t cascadeIndex;
 	};
 
+	// cascades will push SHADOW_MAP_CASCADE_COUNT lightspace matrices into the lightspace buffer, instead of 1
 	std::vector<CascadePass> m_ShadowCascadePasses;
 
 	void Cascade_CreateRenderPasses();
@@ -123,5 +124,6 @@ private:
 	void Cascade_CreatePipelineLayout();
 	void Cascade_CreateGraphicsPipeline();
 	void Cascade_BeginRenderPass(const CommandBuffer& cmdBuffer, uint32_t index);
+	void Cascade_UpdateCascades();
 };
 

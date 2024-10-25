@@ -268,22 +268,16 @@ void Editor::ShowStats()
         }
 
         // culling mode
-        static auto cullMode = Application::GetSpecification().Culling;
+        auto cullMode = Application::GetSpecification().Culling;
         if (cullMode == ApplicationSpecification::Culling::None)
             ImGui::Text("Culling Mode: none");
         else if (cullMode == ApplicationSpecification::Culling::Frustum)
             ImGui::Text("Culling Mode: frustum");
         ImGui::Separator(); // -----------------------------------------------------
 
-        // num objects drawn
-        ImGui::Text("Objects Drawn: %I64u", ObjectPipeline::ObjectsDrawn);
-        ImGui::Text("Vertices Drawn: %I64u", ObjectPipeline::VerticesDrawn);
-        ImGui::Text("Indirect Indexed Draw Calls: %I64u", ObjectPipeline::NumDrawCalls);
-        ImGui::Separator(); // -----------------------------------------------------
-
         // camera mode
         static const char* items[]{ "Scene","User","Debug" };
-        static int Selecteditem = 0;
+        static int Selecteditem = (int)SceneManager::Get()->getCameraMode(); // gets the initial state
         if (ImGui::Combo("Camera Mode", &Selecteditem, items, IM_ARRAYSIZE(items)))
         {
             SceneManager::Get()->SetCameraMode((Scene::CameraMode)Selecteditem);
@@ -291,23 +285,13 @@ void Editor::ShowStats()
         ImGui::Separator(); // -----------------------------------------------------
 
         // enable UI
-        ImGui::Columns(2);
-        ImGui::Text("Stats Only");
-        ImGui::NextColumn();
-        ImGui::Checkbox("##STATSONLYUI", &statsOnly);
-        ImGui::Columns(1);
+        ImGui::Checkbox("Stats Only", &statsOnly);
         ImGui::Separator(); // -----------------------------------------------------
 
-        ImGui::Columns(2);
-        ImGui::Text("Gizmos");
-        ImGui::NextColumn();
-        ImGui::Checkbox("##DRAWGIZMOS", &ObjectPipeline::UseGizmos);
-        ImGui::Columns(1);
+        ImGui::Checkbox("Use Gizmos", &ObjectPipeline::UseGizmos);
         ImGui::Separator(); // -----------------------------------------------------
 
-        ImGui::Text("Shadows");
-        ImGui::Separator(); // -----------------------------------------------------
-
+        ImGui::SeparatorText("Shadows"); // -----------------------------------------------------
         ImGui::Columns(2);
         ImGui::Text("PCF Samples");
         ImGui::NextColumn();
@@ -323,8 +307,14 @@ void Editor::ShowStats()
         ImGui::Separator(); // -----------------------------------------------------
 
         // rendering stats
-        ImGui::Text("Rendering Information");
+        ImGui::SeparatorText("Rendering"); // -----------------------------------------------------
+        
+        // num objects drawn
+        ImGui::Text("Objects Drawn: %I64u", ObjectPipeline::ObjectsDrawn);
+        ImGui::Text("Vertices Drawn: %I64u", ObjectPipeline::VerticesDrawn);
+        ImGui::Text("Indirect Indexed Draw Calls: %I64u", ObjectPipeline::NumDrawCalls);
         ImGui::Separator(); // -----------------------------------------------------
+
         ImGui::BulletText("Application Update Time: %.3fms", Application::ApplicationUpdateTime);
         ImGui::BulletText("Application Render Time: %.3fms", Application::ApplicationRenderTime);
         ImGui::Indent(20);
@@ -434,7 +424,7 @@ void Editor::ShowGizmos()
         ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
 
         // Editor camera
-        auto sceneCamera = SceneManager::Get()->getScene()->GetRenderCam()->camera();
+        auto sceneCamera = VIEW_CAM;
         glm::mat4& cameraView = sceneCamera->GetViewMatrixUnsafe();
         glm::mat4& cameraProjection = sceneCamera->GetProjectionMatrixUnsafe();
 

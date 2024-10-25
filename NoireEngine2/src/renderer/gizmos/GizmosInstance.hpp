@@ -108,8 +108,8 @@ struct GizmosInstance
 
         constexpr uint32_t segments = 3;
 
-        glm::vec3 right = glm::normalize(glm::cross(direction, Vec3::Up));
-        glm::vec3 up = glm::normalize(glm::cross(right, direction));
+        glm::vec3 right = normalize(glm::cross(direction, Vec3::Up));
+        glm::vec3 up = normalize(glm::cross(right, direction));
 
         // Base position at the end of the cone (range away from the light position)
         constexpr float coneRange = 5;
@@ -137,7 +137,7 @@ struct GizmosInstance
     {
         m_LinesVertices.clear();
 
-        glm::vec3 normalizedLightDir = glm::normalize(lightDir);
+        glm::vec3 normalizedLightDir = normalize(lightDir);
 
         // Calculate the end point of the arrow based on the direction and length
         glm::vec3 arrowEnd = position + (normalizedLightDir * arrowLength);
@@ -169,11 +169,11 @@ struct GizmosInstance
     void DrawArrowHead(const glm::vec3& tip, const glm::vec3& direction, float size, Color4_4 color = Color4_4::White)
     {
         // Create two perpendicular vectors for the arrowhead
-        glm::vec3 right = glm::normalize(glm::cross(direction, glm::vec3(0, 1, 0)));
+        glm::vec3 right = normalize(glm::cross(direction, glm::vec3(0, 1, 0)));
         if (glm::length(right) < 0.01f) {
-            right = glm::normalize(glm::cross(direction, glm::vec3(1, 0, 0))); // Handle edge case where direction is almost vertical
+            right = normalize(glm::cross(direction, glm::vec3(1, 0, 0))); // Handle edge case where direction is almost vertical
         }
-        glm::vec3 up = glm::normalize(glm::cross(right, direction));
+        glm::vec3 up = normalize(glm::cross(right, direction));
 
         // Calculate the points for the arrowhead
         glm::vec3 arrowLeft = tip - (direction * size) + (right * size * 0.5f);

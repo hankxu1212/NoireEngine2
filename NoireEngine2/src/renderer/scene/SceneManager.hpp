@@ -36,6 +36,8 @@ public:
 	Scene::CameraMode getCameraMode() const { return cameraMode; }
 
 private:
-	Scene::CameraMode cameraMode = Scene::CameraMode::Scene;
+	Scene::CameraMode cameraMode = Scene::CameraMode::User;
 	std::unique_ptr<Scene> scene; // the active scene
 };
+
+#define VIEW_CAM SceneManager::Get()->getScene()->GetRenderCam()->camera()

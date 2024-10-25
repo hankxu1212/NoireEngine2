@@ -20,7 +20,7 @@ namespace Core {
 		nativeCamera = entity->GetComponent<CameraComponent>()->camera();
 
 		glm::vec3 dir = anchorPoint - transform->position();
-		anchorDir = glm::normalize(dir);
+		anchorDir = normalize(dir);
 		radius = glm::length(dir) / glm::length(anchorDir);
 	}
 
@@ -58,7 +58,7 @@ namespace Core {
 			{
 				transform->RotateAround(anchorPoint + anchorOffset, mouseDelta.y * anchoredRotationSensitivity, transform->Left());
 				transform->RotateAround(anchorPoint + anchorOffset, mouseDelta.x * anchoredRotationSensitivity, Vec3::Back);
-				anchorDir = glm::normalize(anchorPoint - transform->position());
+				anchorDir = normalize(anchorPoint - transform->position());
 				return;
 			}
 		}
