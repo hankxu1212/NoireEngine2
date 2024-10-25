@@ -586,14 +586,19 @@ void Scene::UpdateShadowCasters()
 		return;
 
 	m_ShadowCasters.clear();
-	for (auto& light : m_SceneLights)
+
+	// shadow casters must follow the order: Directional, Point, Spot.
+	// otherwise the lightspaces mess up. this took too long to debug
+	// furthermore, the order of which the light is pushed must respect the order of the lights in scene
+	for (uint32_t i = 0; i < 3; i++) 
 	{
-		uint32_t type = light->GetLightInfo().type;
-		if (light->GetLightInfo().useShadows && type != 1)
+		for (auto& light : m_SceneLights)
 		{
-			m_ShadowCasters.emplace_back(light);
+			if (light->GetLightInfo().useShadows && light->GetLightInfo().type == i)
+				m_ShadowCasters.emplace_back(light);
 		}
 	}
+
 
 	shadowCastersDirty = false;
 }

@@ -156,7 +156,7 @@ void ImGuiPipeline::CreateRenderPass()
 
 void ImGuiPipeline::Rebuild()
 {
-    s_Renderpass->Rebuild();
+    s_Renderpass->RebuildFromSwapchain();
 }
 
 void ImGuiPipeline::CreatePipeline()

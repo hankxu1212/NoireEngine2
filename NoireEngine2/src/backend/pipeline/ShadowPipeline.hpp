@@ -29,14 +29,6 @@ public:
 	// run a series of render passes on each shadow caster
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
-	// Resources of the depth map generation pass
-	struct CascadePass
-	{
-		VkRenderPass renderPass;
-		VkPipelineLayout pipelineLayout;
-		VkPipeline pipeline;
-	} m_CascadePass;
-
 	// Contains all resources required for a single shadow map cascade
 	struct Cascade
 	{
@@ -46,7 +38,12 @@ public:
 		float splitDepth;
 	};
 
-	Buffer m_CascadeViewProjMatrices;
+	// a cascade pass has multiple cascades
+	struct CascadePass
+	{
+		int32_t width, height;
+		std::array<Cascade, SHADOW_MAP_CASCADE_COUNT> cascades;
+	};
 
 	//struct UBOFS {
 	//	float cascadeSplits[4];
@@ -57,57 +54,70 @@ public:
 	//} uboFS;
 
 	// naive shadowmap pass, used for spotlights
-	struct ShadowMapPass {
+	struct ShadowMapPass 
+	{
 		int32_t width, height;
 		VkFramebuffer frameBuffer;
-		VkRenderPass renderPass;
 		std::unique_ptr<ImageDepth> depthAttachment;
-		VkPipeline pipeline;
 	};
 	const std::vector<ShadowMapPass>& getShadowPasses() const { return m_ShadowMapPasses; }
 
 private:
-	int32_t displayDepthMapCascadeIndex = 0;
-	float cascadeSplitLambda = 0.95f;
-
-	VkPipelineLayout	m_PipelineLayout;
-	ObjectPipeline* p_ObjectPipeline = nullptr;
-
-	struct Push 
-	{
-		int lightspaceID;
-	};
-
-	// For simplicity all pipelines use the same push constant block layout
-	struct CascadePush {
-		glm::vec4 position;
-		uint32_t cascadeIndex;
-	};
+	// Global pipeline variables ////////////////////////////////////////////
+	ObjectPipeline*		p_ObjectPipeline = nullptr;
 
 	struct Workspace
 	{
 		Buffer LightSpaces_Src;
 		Buffer LightSpaces;
 
-		VkDescriptorSet set0_Offscreen;
+		VkDescriptorSet set0_Lightspaces;
 	};
 	std::vector<Workspace> workspaces;
 
-	VkDescriptorSetLayout set0_OffscreenLayout;
-
+	VkDescriptorSetLayout set0_LightspacesLayout;
 	DescriptorAllocator m_Allocator;
 
-	// all naive shadowmap passes
+	// Shadow Mapping Naive ////////////////////////////////////////////
+
+	VkPipelineLayout	m_ShadowMapPassPipelineLayout;
+	VkRenderPass		m_ShadowMapRenderPass;
+	VkPipeline			m_ShadowMapPipeline;
+
+	struct Push 
+	{
+		int lightspaceID;
+	};
+
 	std::vector<ShadowMapPass> m_ShadowMapPasses;
 
-	// all cascade shadowmap passes
-	std::array<Cascade, SHADOW_MAP_CASCADE_COUNT> cascades;
+	void ShadowMap_CreateRenderPasses();
+	void ShadowMap_CreateDescriptors();
+	void ShadowMap_CreatePipelineLayout();
+	void ShadowMap_CreateGraphicsPipeline();
+	void ShadowMap_BeginRenderPass(const CommandBuffer& cmdBuffer, uint32_t index);
 
-	void CreateRenderPasses();
-	void CreateDescriptors();
-	void CreatePipelineLayout();
-	void CreateGraphicsPipeline();
+	// Shadow cascading ////////////////////////////////////////////
 
-	void BeginRenderPass(const CommandBuffer& cmdBuffer, uint32_t index);
+	VkRenderPass		m_CascadeRenderPass;
+	VkPipelineLayout	m_CascadePassPipelineLayout;
+	VkPipeline			m_CascadePipeline;
+
+	int32_t displayDepthMapCascadeIndex = 0;
+	float cascadeSplitLambda = 0.95f;
+	
+	struct CascadePush 
+	{
+		glm::vec4 position;
+		uint32_t cascadeIndex;
+	};
+
+	std::vector<CascadePass> m_ShadowCascadePasses;
+
+	void Cascade_CreateRenderPasses();
+	void Cascade_CreateDescriptors();
+	void Cascade_CreatePipelineLayout();
+	void Cascade_CreateGraphicsPipeline();
+	void Cascade_BeginRenderPass(const CommandBuffer& cmdBuffer, uint32_t index);
 };
 

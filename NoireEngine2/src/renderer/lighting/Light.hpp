@@ -26,6 +26,7 @@ struct LightInfo
 	float zNear = 1.0f;
 	float zFar = 96.0f;
 	glm::mat4 lightspace; /*depthMVP*/
+	float oneMinusShadowStrength = 0;
 };
 
 struct alignas(16) DirectionalLightUniform
@@ -36,6 +37,7 @@ struct alignas(16) DirectionalLightUniform
 	float angle;
 	float intensity;
 	uint32_t shadowOffset;
+	float shadowStrength;
 };
 static_assert(sizeof(DirectionalLightUniform) == 64 + 16 * 3);
 
@@ -48,8 +50,9 @@ struct alignas(16) PointLightUniform
 	float radius;
 	float limit;
 	uint32_t shadowOffset;
+	float shadowStrength;
 };
-static_assert(sizeof(PointLightUniform) == 64 + 16 * 3);
+static_assert(sizeof(PointLightUniform) == 64 + 16 * 2 + 16 * 2);
 
 struct alignas(16) SpotLightUniform
 {
@@ -63,8 +66,9 @@ struct alignas(16) SpotLightUniform
 	float fov;
 	float blend;
 	uint32_t shadowOffset;
+	float shadowStrength;
 };
-static_assert(sizeof(SpotLightUniform) == 64 + 16 * 5);
+static_assert(sizeof(SpotLightUniform) == 64 + 16 * 3 + 16 * 2);
 
 class Light : public Component
 {

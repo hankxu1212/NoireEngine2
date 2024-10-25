@@ -299,7 +299,7 @@ void ObjectPipeline::CreateDescriptors()
 
 void ObjectPipeline::Rebuild()
 {
-	m_Renderpass->Rebuild();
+	m_Renderpass->RebuildFromSwapchain();
 }
 
 void ObjectPipeline::CreatePipeline()

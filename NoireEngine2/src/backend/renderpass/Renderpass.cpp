@@ -16,7 +16,7 @@ Renderpass::~Renderpass()
 	}
 }
 
-void Renderpass::Rebuild()
+void Renderpass::RebuildFromSwapchain()
 {
 	DestroyFrameBuffers();
 
@@ -24,7 +24,7 @@ void Renderpass::Rebuild()
 	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
 
 	if (hasDepth)
-		s_SwapchainDepthImage = std::make_unique<ImageDepth>(swapchain->getExtentVec2());
+		s_DepthImage = std::make_unique<ImageDepth>(swapchain->getExtentVec2());
 
 	//Make framebuffers for each swapchain image:
 	m_Framebuffers.assign(swapchain->getImageViews().size(), VK_NULL_HANDLE);
@@ -33,7 +33,7 @@ void Renderpass::Rebuild()
 		std::vector<VkImageView> attachments;
 		attachments.emplace_back(swapchain->getImageViews()[i]);
 		if (hasDepth)
-			attachments.emplace_back(s_SwapchainDepthImage->getView());
+			attachments.emplace_back(s_DepthImage->getView());
 
 		VkFramebufferCreateInfo create_info
 		{
@@ -108,5 +108,5 @@ void Renderpass::DestroyFrameBuffers()
 		}
 	}
 	m_Framebuffers.clear();
-	s_SwapchainDepthImage.reset();
+	s_DepthImage.reset();
 }

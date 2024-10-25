@@ -9,7 +9,7 @@ public:
 
 	~Renderpass();
 
-	void Rebuild();
+	void RebuildFromSwapchain();
 
 	void Begin(const CommandBuffer& commandBuffer);
 
@@ -20,7 +20,7 @@ public:
 private:
 	void DestroyFrameBuffers();
 
-	std::unique_ptr<ImageDepth>				s_SwapchainDepthImage;
+	std::unique_ptr<ImageDepth>				s_DepthImage;
 	std::vector<VkFramebuffer>				m_Framebuffers;
 	bool hasDepth;
 };

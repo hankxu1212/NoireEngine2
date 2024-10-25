@@ -42,16 +42,16 @@ ShadowPipeline::~ShadowPipeline()
 			vkDestroyFramebuffer(VulkanContext::GetDevice(), m_ShadowMapPasses[i].frameBuffer, nullptr);
 			m_ShadowMapPasses[i].frameBuffer = VK_NULL_HANDLE;
 		}
+	}
 
-		if (m_ShadowMapPasses[i].renderPass != VK_NULL_HANDLE) {
-			vkDestroyRenderPass(VulkanContext::GetDevice(), m_ShadowMapPasses[i].renderPass, nullptr);
-			m_ShadowMapPasses[i].renderPass = VK_NULL_HANDLE;
-		}
+	if (m_ShadowMapRenderPass != VK_NULL_HANDLE) {
+		vkDestroyRenderPass(VulkanContext::GetDevice(), m_ShadowMapRenderPass, nullptr);
+		m_ShadowMapRenderPass = VK_NULL_HANDLE;
+	}
 
-		if (m_ShadowMapPasses[i].pipeline != VK_NULL_HANDLE) {
-			vkDestroyPipeline(VulkanContext::GetDevice(), m_ShadowMapPasses[i].pipeline, nullptr);
-			m_ShadowMapPasses[i].pipeline = VK_NULL_HANDLE;
-		}
+	if (m_ShadowMapPipeline != VK_NULL_HANDLE) {
+		vkDestroyPipeline(VulkanContext::GetDevice(), m_ShadowMapPipeline, nullptr);
+		m_ShadowMapPipeline = VK_NULL_HANDLE;
 	}
 
 	for (Workspace& workspace : workspaces)
@@ -63,16 +63,16 @@ ShadowPipeline::~ShadowPipeline()
 
 	m_Allocator.Cleanup();
 
-	if (m_PipelineLayout != VK_NULL_HANDLE) {
-		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_PipelineLayout, nullptr);
-		m_PipelineLayout = VK_NULL_HANDLE;
+	if (m_ShadowMapPassPipelineLayout != VK_NULL_HANDLE) {
+		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_ShadowMapPassPipelineLayout, nullptr);
+		m_ShadowMapPassPipelineLayout = VK_NULL_HANDLE;
 	}
 }
 
 // Set up a separate render pass for the offscreen frame buffer
 void ShadowPipeline::CreateRenderPass()
 {
-	CreateRenderPasses();
+	ShadowMap_CreateRenderPasses();
 }
 
 void ShadowPipeline::Rebuild()
@@ -81,9 +81,9 @@ void ShadowPipeline::Rebuild()
 
 void ShadowPipeline::CreatePipeline()
 {
-	CreateDescriptors();
-	CreatePipelineLayout();
-	CreateGraphicsPipeline();
+	ShadowMap_CreateDescriptors();
+	ShadowMap_CreatePipelineLayout();
+	ShadowMap_CreateGraphicsPipeline();
 }
 
 void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
@@ -125,7 +125,7 @@ void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_Allocator)
 			.BindBuffer(0, &Lightspaces_info, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-			.Write(workspace.set0_Offscreen);
+			.Write(workspace.set0_Lightspaces);
 
 		NE_INFO("Reallocated SHADOWS to {} bytes", new_bytes);
 	}
@@ -133,19 +133,19 @@ void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 	assert(workspace.LightSpaces_Src.getSize() == workspace.LightSpaces.getSize());
 	assert(workspace.LightSpaces_Src.getSize() >= needed_bytes);
 
-	size_t copy_size = 0;
 	{ //copy LightSpaces into LightSpaces_Src:
+		size_t offset = 0;
 		assert(workspace.LightSpaces_Src.data() != nullptr);
 
 		for (int i = 0; i < shadowLights.size(); ++i) 
 		{
 			auto& lightInfo = shadowLights[i]->GetLightInfo();
-			memcpy(PTR_ADD(workspace.LightSpaces_Src.data(), copy_size), glm::value_ptr(lightInfo.lightspace), sizeof(glm::mat4));
-			copy_size += sizeof(glm::mat4);
+			memcpy(PTR_ADD(workspace.LightSpaces_Src.data(), offset), glm::value_ptr(lightInfo.lightspace), sizeof(glm::mat4));
+			offset += sizeof(glm::mat4);
 		}
 	}
 
-	Buffer::CopyBuffer(commandBuffer, workspace.LightSpaces_Src.getBuffer(), workspace.LightSpaces.getBuffer(), copy_size);
+	Buffer::CopyBuffer(commandBuffer, workspace.LightSpaces_Src.getBuffer(), workspace.LightSpaces.getBuffer(), shadowLights.size() * sizeof(glm::mat4));
 }
 
 void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
@@ -154,14 +154,14 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 
 	// bind descriptors
 	std::array< VkDescriptorSet, 2 > descriptor_sets{
-		workspaces[CURR_FRAME].set0_Offscreen,
+		workspaces[CURR_FRAME].set0_Lightspaces,
 		p_ObjectPipeline->workspaces[CURR_FRAME].set1_StorageBuffers // for transforms
 	};
 
 	vkCmdBindDescriptorSets(
 		commandBuffer, //command buffer
 		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-		m_PipelineLayout, //pipeline layout
+		m_ShadowMapPassPipelineLayout, //pipeline layout
 		0, //first set
 		uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
 		0, nullptr //dynamic offsets count, ptr
@@ -170,16 +170,16 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 	// render each shadow map
 	for (int lightIndex = 0; lightIndex < shadowLights.size(); ++lightIndex)
 	{
-		BeginRenderPass(commandBuffer, lightIndex);
+		ShadowMap_BeginRenderPass(commandBuffer, lightIndex);
 
 		// bind pipeline
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ShadowMapPasses[lightIndex].pipeline);
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ShadowMapPipeline);
 
 		// push constant
 		Push push{
 			.lightspaceID = lightIndex
 		};
-		vkCmdPushConstants(commandBuffer, m_PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Push), &push);
+		vkCmdPushConstants(commandBuffer, m_ShadowMapPassPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Push), &push);
 		
 		// draw once
 		const auto& allInstances = scene->getObjectInstances();
@@ -235,7 +235,7 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 	}
 }
 
-void ShadowPipeline::CreateRenderPasses()
+void ShadowPipeline::ShadowMap_CreateRenderPasses()
 {
 	// resize offscreen passes
 	const auto& shadowLights = SceneManager::Get()->getScene()->getShadowInstances();
@@ -287,8 +287,15 @@ void ShadowPipeline::CreateRenderPasses()
 		.pDependencies = dependencies.data(),
 	};
 
+	// create render pass
+	VulkanContext::VK_CHECK(
+		vkCreateRenderPass(VulkanContext::GetDevice(), &renderpassCreateInfo, nullptr, &m_ShadowMapRenderPass),
+		"[Vulkan] Create Render pass failed"
+	);
+
 	m_ShadowMapPasses.resize(shadowLights.size());
 
+	// create frame buffers and image views
 	for (int i = 0; i < shadowLights.size(); ++i)
 	{
 		m_ShadowMapPasses[i].width = shadowMapize;
@@ -296,36 +303,27 @@ void ShadowPipeline::CreateRenderPasses()
 
 		m_ShadowMapPasses[i].depthAttachment = std::make_unique<ImageDepth>(glm::uvec2{ shadowMapize, shadowMapize }, VK_FORMAT_D16_UNORM);
 
-		// create render pass
-		VulkanContext::VK_CHECK(
-			vkCreateRenderPass(VulkanContext::GetDevice(), &renderpassCreateInfo, nullptr, &m_ShadowMapPasses[i].renderPass),
-			"[Vulkan] Create Render pass failed"
-		);
+		VkImageView view = m_ShadowMapPasses[i].depthAttachment->getView();
 
-		// create frame buffer
+		VkFramebufferCreateInfo create_info
 		{
-			VkImageView view = m_ShadowMapPasses[i].depthAttachment->getView();
+			.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+			.renderPass = m_ShadowMapRenderPass,
+			.attachmentCount = 1,
+			.pAttachments = &view,
+			.width = uint32_t(m_ShadowMapPasses[i].width),
+			.height = uint32_t(m_ShadowMapPasses[i].height),
+			.layers = 1,
+		};
 
-			VkFramebufferCreateInfo create_info
-			{
-				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-				.renderPass = m_ShadowMapPasses[i].renderPass,
-				.attachmentCount = 1,
-				.pAttachments = &view,
-				.width = uint32_t(m_ShadowMapPasses[i].width),
-				.height = uint32_t(m_ShadowMapPasses[i].height),
-				.layers = 1,
-			};
-
-			VulkanContext::VK_CHECK(
-				vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_ShadowMapPasses[i].frameBuffer),
-				"[vulkan] Creating frame buffer failed"
-			);
-		}
+		VulkanContext::VK_CHECK(
+			vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_ShadowMapPasses[i].frameBuffer),
+			"[vulkan] Creating frame buffer failed"
+		);
 	}
 }
 
-void ShadowPipeline::CreateDescriptors()
+void ShadowPipeline::ShadowMap_CreateDescriptors()
 {
 	workspaces.resize(VulkanContext::Get()->getFramesInFlight());
 
@@ -333,14 +331,14 @@ void ShadowPipeline::CreateDescriptors()
 	{
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_Allocator)
 			.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-			.Build(workspace.set0_Offscreen, set0_OffscreenLayout);
+			.Build(workspace.set0_Lightspaces, set0_LightspacesLayout);
 	}
 }
 
-void ShadowPipeline::CreatePipelineLayout()
+void ShadowPipeline::ShadowMap_CreatePipelineLayout()
 {
 	std::array< VkDescriptorSetLayout, 2 > layouts{
-		set0_OffscreenLayout,
+		set0_LightspacesLayout,
 		p_ObjectPipeline->set1_StorageBuffersLayout
 	};
 
@@ -359,10 +357,10 @@ void ShadowPipeline::CreatePipelineLayout()
 		.pPushConstantRanges = &push_constant,
 	};
 
-	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
+	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_ShadowMapPassPipelineLayout));
 }
 
-void ShadowPipeline::CreateGraphicsPipeline()
+void ShadowPipeline::ShadowMap_CreateGraphicsPipeline()
 {
 	std::vector< VkDynamicState > dynamic_states{
 		VK_DYNAMIC_STATE_VIEWPORT,
@@ -370,49 +368,14 @@ void ShadowPipeline::CreateGraphicsPipeline()
 		VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
 	};
 
-	VulkanGraphicsPipelineBuilder builder = VulkanGraphicsPipelineBuilder::Start()
+	VulkanGraphicsPipelineBuilder::Start()
 		.SetDynamicStates(dynamic_states)
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
-		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-
-	VulkanShader vertModule("../spv/shaders/shadow/offscreen.vert.spv", VulkanShader::ShaderStage::Vertex);
-	VulkanShader fragModule("../spv/shaders/shadow/offscreen.frag.spv", VulkanShader::ShaderStage::Frag);
-
-	std::array< VkPipelineShaderStageCreateInfo, 2 > stages{
-		vertModule.shaderStage(),
-		fragModule.shaderStage()
-	};
-
-	VkGraphicsPipelineCreateInfo create_info{
-		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-		.stageCount = uint32_t(stages.size()),
-		.pStages = stages.data(),
-		.pVertexInputState = builder.vertexInput,
-		.pInputAssemblyState = &builder.inputAssembly,
-		.pViewportState = &builder.viewportState,
-		.pRasterizationState = &builder.rasterizer,
-		.pMultisampleState = &builder.multisampling,
-		.pDepthStencilState = &builder.depthStencil,
-		.pColorBlendState = &builder.colorBlending,
-		.pDynamicState = &builder.dynamicState,
-		.layout = m_PipelineLayout,
-		.renderPass = VK_NULL_HANDLE,
-		.subpass = 0,
-	};
-	
-	const auto& shadowLights = SceneManager::Get()->getScene()->getShadowInstances();
-
-	// builds all pipelines
-	for (int i = 0; i < shadowLights.size(); ++i)
-	{
-		create_info.renderPass = m_ShadowMapPasses[i].renderPass;
-		VulkanContext::VK_CHECK(
-			vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VulkanContext::Get()->getPipelineCache(), 1, &create_info, nullptr, &m_ShadowMapPasses[i].pipeline),
-			"[Vulkan] Create pipeline failed");
-	}
+		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+		.Build("../spv/shaders/shadow/offscreen.vert.spv", "../spv/shaders/shadow/offscreen.frag.spv", &m_ShadowMapPipeline, m_ShadowMapPassPipelineLayout, m_ShadowMapRenderPass);
 }
 
-void ShadowPipeline::BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t index)
+void ShadowPipeline::ShadowMap_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t index)
 {
 	static std::array< VkClearValue, 1 > clear_values{
 		VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
@@ -420,7 +383,7 @@ void ShadowPipeline::BeginRenderPass(const CommandBuffer& commandBuffer, uint32_
 
 	VkRenderPassBeginInfo begin_info{
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-		.renderPass = m_ShadowMapPasses[index].renderPass,
+		.renderPass = m_ShadowMapRenderPass,
 		.framebuffer = m_ShadowMapPasses[index].frameBuffer,
 		.renderArea{
 			.offset = {.x = 0, .y = 0},
@@ -455,4 +418,24 @@ void ShadowPipeline::BeginRenderPass(const CommandBuffer& commandBuffer, uint32_
 		depthBiasConstant,
 		0.0f,
 		depthBiasSlope);
+}
+
+void ShadowPipeline::Cascade_CreateRenderPasses()
+{
+}
+
+void ShadowPipeline::Cascade_CreateDescriptors()
+{
+}
+
+void ShadowPipeline::Cascade_CreatePipelineLayout()
+{
+}
+
+void ShadowPipeline::Cascade_CreateGraphicsPipeline()
+{
+}
+
+void ShadowPipeline::Cascade_BeginRenderPass(const CommandBuffer& cmdBuffer, uint32_t index)
+{
 }

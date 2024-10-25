@@ -7,6 +7,7 @@ struct DirLight
 	float angle;
 	float intensity;
 	int shadowOffset;
+	float shadowStrength;
 };
 
 layout(set=1, binding=1, std140) readonly buffer DirLights {
@@ -22,6 +23,7 @@ struct PointLight
 	float radius;
 	float limit;
 	int shadowOffset;
+	float shadowStrength;
 };
 
 layout(set=1, binding=2, std140) readonly buffer PointLights {
@@ -40,6 +42,7 @@ struct SpotLight
 	float fov;
 	float blend;
 	int shadowOffset;
+	float shadowStrength;
 };
 
 layout(set=1, binding=3, std140) readonly buffer SpotLights {
@@ -48,7 +51,7 @@ layout(set=1, binding=3, std140) readonly buffer SpotLights {
 
 vec3 DirLightRadiance(int i)
 {
-	return max(0.0, dot(n, vec3(DIR_LIGHTS[i].direction))) * DIR_LIGHTS[i].intensity * vec3(DIR_LIGHTS[i].color);
+	return max(0.0, dot(n, -vec3(DIR_LIGHTS[i].direction))) * DIR_LIGHTS[i].intensity * vec3(DIR_LIGHTS[i].color);
 }
 
 float CalculateFallOff(float D, float limit, float radius)
@@ -61,7 +64,7 @@ float CalculateFallOff(float D, float limit, float radius)
 
 vec3 PointLightRadiance(int i)
 {
-	vec3 lightDir = normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
+	vec3 lightDir = -normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
 
 	float D = distance(vec3(POINT_LIGHTS[i].position), inPosition);
     
@@ -74,7 +77,7 @@ vec3 PointLightRadiance(int i)
 
 vec3 SpotLightRadiance(int i)
 {
-	vec3 lightDir = normalize(vec3(SPOT_LIGHTS[i].position) - inPosition);
+	vec3 lightDir = -normalize(vec3(SPOT_LIGHTS[i].position) - inPosition);
 	vec3 spotlightDirection = normalize(vec3(SPOT_LIGHTS[i].direction));
 
 	float D = distance(vec3(SPOT_LIGHTS[i].position), inPosition); // distance to light
@@ -114,7 +117,15 @@ vec3 DirectLighting()
 	}
 
 	for (int i = 0; i < scene.numLights[1]; ++i)
-		lightsSum += PointLightRadiance(i);
+	{
+		vec3 radiance = PointLightRadiance(i);
+		if (POINT_LIGHTS[i].shadowOffset == 1)
+		{
+			radiance *= PointLightShadow(i, shadowMapOffsetId);
+			shadowMapOffsetId += POINT_LIGHTS[i].shadowOffset;
+		}
+		lightsSum += radiance;
+	}
 
 	for (int i = 0; i < scene.numLights[2]; ++i)
 	{

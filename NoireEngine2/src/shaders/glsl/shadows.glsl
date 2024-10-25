@@ -50,15 +50,15 @@ float FindOccluderDistance(vec2 uv, float currentDepth, float uvLightSize, float
 }
 
 // blocker search
-const float nearClip = 1;
-const int occluderSamples = 32;
-const int pcfSamples = 32;
-const float uvLightSize = 0.1;
 
 //////////////////////////////////////////////////////////////////////////
-float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex)
+float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex, float lightSize)
 {
-	float occluderDistance = FindOccluderDistance(uv, currentDepth, uvLightSize, nearClip, occluderSamples, bias, shadowMapIndex);
+	const float nearClip = 1;
+	const int occluderSamples = 32;
+	const int pcfSamples = 32;
+
+	float occluderDistance = FindOccluderDistance(uv, currentDepth, lightSize, nearClip, occluderSamples, bias, shadowMapIndex);
 	if (occluderDistance == -1)
 		return 1;
 
@@ -66,13 +66,13 @@ float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex)
 	float penumbraWidth = (currentDepth - occluderDistance) / occluderDistance;
 
 	// percentage-close filtering
-	float uvRadius = penumbraWidth * uvLightSize * nearClip / currentDepth;
+	float uvRadius = penumbraWidth * lightSize * nearClip / currentDepth;
 	return PCF(uv, currentDepth, uvRadius, pcfSamples, bias, shadowMapIndex);
 }
 
 float DirLightShadow(int lightId, int shadowMapId)
 {
-	const float shadowBias = 0.002;
+	const float shadowBias = 0.005;
 	vec4 shadowCoord = biasMat * DIR_LIGHTS[lightId].lightspace * vec4(inPosition, 1.0);
 		
 	// perform perspective divide
@@ -85,7 +85,7 @@ float DirLightShadow(int lightId, int shadowMapId)
 		&& shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0
 		&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
 	{
-		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, shadowMapId);
+		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, shadowMapId, 0.1) * DIR_LIGHTS[lightId].shadowStrength;
 	}
 	return shadow;
 }
@@ -110,7 +110,8 @@ float SpotLightShadow(int lightId, int shadowMapId)
 		&& shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0
 		&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
 	{
-		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, shadowMapId);
+		float lightSize = SPOT_LIGHTS[lightId].radius;
+		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, shadowMapId, lightSize) * SPOT_LIGHTS[lightId].shadowStrength;
 	}
 	return shadow;
 }

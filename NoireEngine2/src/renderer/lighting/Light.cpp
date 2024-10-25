@@ -20,7 +20,7 @@ Light::Light(Type type, Color3 color, float intensity) :
 void Light::Update()
 {
 	Transform* transform = GetTransform();
-	glm::vec3 dir = transform->Forward();
+	glm::vec3 dir = glm::normalize(transform->Back()); // always point in -z direction
 	glm::vec3 pos = transform->WorldLocation();
 
 	m_Info.direction = glm::vec4(dir, 0);
@@ -31,16 +31,17 @@ void Light::Update()
 		if (m_Info.type == (uint32_t)Type::Directional)
 		{
 			glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, m_Info.zNear, m_Info.zFar);
-			glm::mat4 depthViewMatrix = glm::lookAt(pos, pos - dir, Vec3::Up);
+			glm::mat4 depthViewMatrix = glm::lookAt(pos, pos + dir, transform->Up());
 			m_Info.lightspace = depthProjectionMatrix * depthViewMatrix;
 		}
 		else if (m_Info.type == (uint32_t)Type::Point)
 		{
 			// TODO: add
 		}
-		else {
+		else  // Type::Spot
+		{
 			glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(m_Info.fov), 1.0f, m_Info.zNear, m_Info.zFar);
-			glm::mat4 depthViewMatrix = glm::lookAt(pos, pos - dir, Vec3::Up);
+			glm::mat4 depthViewMatrix = glm::lookAt(pos, pos + dir, transform->Up());
 			m_Info.lightspace = depthProjectionMatrix * depthViewMatrix;
 		}
 	}
@@ -94,6 +95,7 @@ _NODISCARD DirectionalLightUniform Light::GetLightUniformAs() const
 	uniform.angle = 0.0f;
 	uniform.intensity = m_Info.intensity;
 	uniform.shadowOffset = m_Info.useShadows ? 1 : 0;
+	uniform.shadowStrength = 1 - m_Info.oneMinusShadowStrength;
 	return uniform;
 }
 
@@ -107,7 +109,8 @@ _NODISCARD PointLightUniform Light::GetLightUniformAs() const
 	uniform.intensity = m_Info.intensity;
 	uniform.radius = m_Info.radius;
 	uniform.limit = m_Info.limit;
-	uniform.shadowOffset = 0;
+	uniform.shadowOffset = m_Info.useShadows ? 1 : 0;
+	uniform.shadowStrength = 1 - m_Info.oneMinusShadowStrength;
 	return uniform;
 }
 
@@ -125,6 +128,7 @@ _NODISCARD SpotLightUniform Light::GetLightUniformAs() const
 	uniform.fov = m_Info.fov;
 	uniform.blend = m_Info.blend;
 	uniform.shadowOffset = m_Info.useShadows ? 1 : 0;
+	uniform.shadowStrength = 1 - m_Info.oneMinusShadowStrength;
 	return uniform;
 }
 
@@ -194,7 +198,7 @@ void Light::Inspect()
 			ImGui::Columns(2);
 			ImGui::Text("Radius");
 			ImGui::NextColumn();
-			ImGui::DragFloat("###Radius", &m_Info.radius, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("###Radius", &m_Info.radius, 0.03f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 			ImGui::Columns(1);
 
 			ImGui::Columns(2);
@@ -218,6 +222,12 @@ void Light::Inspect()
 			ImGui::DragFloat("###BLEND", &m_Info.blend, 0.002f, 0, 1, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 			ImGui::Columns(1);
 		}
+
+		ImGui::Columns(2);
+		ImGui::Text("Shadow Strength");
+		ImGui::NextColumn();
+		ImGui::DragFloat("###ShadowStrength", &m_Info.oneMinusShadowStrength, 0.01f, 0.0f, 1.0f, "%.05f", ImGuiSliderFlags_AlwaysClamp);
+		ImGui::Columns(1);
 	}
 	ImGui::PopID();
 }
