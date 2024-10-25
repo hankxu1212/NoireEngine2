@@ -95,13 +95,11 @@ public:
 	float m_NearClip = 1.0f;
 	float m_FarClip = 96.0f;
 	std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT> m_Lightspaces; /*depthMVP*/
-	float m_ShadowAttenuation = 0;
+	float m_ShadowAttenuation = 1;
 	glm::vec4 m_CascadeSplitDepths;
 
 private:
 	void UpdateDirectionalLightCascades();
 	
 	GizmosInstance gizmos;
-
-
 };

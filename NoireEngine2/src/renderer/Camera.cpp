@@ -1,6 +1,7 @@
 #include "Camera.hpp"
 #include "core/window/Window.hpp"
 #include "Camera.hpp"
+#include "utils/Logger.hpp"
 
 Camera::Camera()
 {
@@ -27,10 +28,13 @@ Camera::Camera(Type type_, bool orthographic_, float np, float fp, float fov, fl
 	aspectRatio(aspect) {
 }
 
-void Camera::Update(const Transform& t)
+void Camera::Update(const Transform& t, bool updateFrustum)
 {
-	viewMatrix = glm::lookAt(t.position(), t.position() - t.Forward(), t.Up());
-	
+	glm::vec3 eye = t.position();
+	glm::vec3 target = eye + t.Back();
+
+	viewMatrix = Mat4::LookAt(eye, target, t.Up());
+
 	if (orthographic) {
 		projectionMatrix = glm::ortho(
 			-aspectRatio * orthographicScale * 0.5f,
@@ -40,11 +44,10 @@ void Camera::Update(const Transform& t)
 			nearClipPlane, farClipPlane);
 	}
 	else
-		projectionMatrix = glm::perspective(fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
+		projectionMatrix = Mat4::Perspective(fieldOfView, aspectRatio, nearClipPlane, farClipPlane);
 
-	projectionMatrix[1][1] *= -1;
-
-	frustum.Update(viewMatrix, projectionMatrix);
+	if (updateFrustum)
+		frustum.Update(viewMatrix, projectionMatrix);
 
 	worldToClip = projectionMatrix * viewMatrix;
 }

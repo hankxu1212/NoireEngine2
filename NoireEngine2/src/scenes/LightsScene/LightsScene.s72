@@ -40,26 +40,6 @@
 },
 {
 	"type":"MESH",
-	"name":"Plane",
-	"topology":"TRIANGLE_LIST",
-	"count":6,
-	"attributes":{
-		"POSITION":{ "src":"LightsScene.Plane.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
-		"NORMAL":{ "src":"LightsScene.Plane.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
-		"TANGENT":{ "src":"LightsScene.Plane.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
-		"TEXCOORD":{ "src":"LightsScene.Plane.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
-	}
-},
-{
-	"type":"NODE",
-	"name":"Plane",
-	"translation":[0,0,-1.00539],
-	"rotation":[0,0,0,1],
-	"scale":[16.0173,16.0173,16.0173],
-	"mesh":"Plane"
-},
-{
-	"type":"MESH",
 	"name":"Icosphere",
 	"topology":"TRIANGLE_LIST",
 	"count":240,
@@ -157,8 +137,28 @@
 	"light":"Light.001"
 },
 {
+	"type":"MESH",
+	"name":"Cube.003",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"LightsScene.Cube.003.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"LightsScene.Cube.003.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"LightsScene.Cube.003.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"LightsScene.Cube.003.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube.003",
+	"translation":[0,0,-1.034],
+	"rotation":[0,0,0,1],
+	"scale":[13.5451,13.5451,0.299341],
+	"mesh":"Cube.003"
+},
+{
 	"type":"SCENE",
 	"name":"F:\\gameDev\\Engines\\NoireEngine2\\NoireEngine2\\src\\scenes\\LightsScene\\LightsScene.blend",
-	"roots":["Cube", "Camera", "Plane", "Icosphere", "Cube.001", "Cube.002", "Light.002", "Light.001"]
+	"roots":["Cube", "Camera", "Icosphere", "Cube.001", "Cube.002", "Light.002", "Light.001", "Cube.003"]
 }
 ]

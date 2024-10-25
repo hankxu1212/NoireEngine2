@@ -18,14 +18,12 @@ glm::mat4 Mat4::Perspective(float vfov, float aspect, float near, float far) {
 		0.0f, 0.0f,-0.5f - 0.5f * (f + n) / (f - n),-1.0f,
 		0.0f, 0.0f,             -(f * n) / (f - n), 0.0f,
 	};
-}
 
+}
 glm::mat4 Mat4::LookAt(
 	float eye_x, float eye_y, float eye_z,
 	float target_x, float target_y, float target_z,
 	float up_x, float up_y, float up_z) {
-
-	//NOTE: this would be a lot cleaner with a vec3 type and some overloads!
 
 	//compute vector from eye to target:
 	float in_x = target_x - eye_x;
@@ -67,6 +65,11 @@ glm::mat4 Mat4::LookAt(
 		right_z, up_z, -in_z, 0.0f,
 		-right_dot_eye, -up_dot_eye, in_dot_eye, 1.0f,
 	};
+}
+
+glm::mat4 Mat4::LookAt(const glm::vec3& eye, const glm::vec3& target, const glm::vec3& up)
+{
+	return LookAt(eye.x, eye.y, eye.z, target.x, target.y, target.z, up.x, up.y, up.z);
 }
 
 bool Mat4::Compare(const glm::mat4& mat1, const glm::mat4& mat2, float epsilon)

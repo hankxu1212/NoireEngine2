@@ -14,10 +14,12 @@ public:
     Transform(glm::vec3 t, glm::quat q);
     Transform(glm::vec3 t, glm::quat q, glm::vec3 s);
 
-    const glm::vec3& position() const { return m_Position; }
-    const glm::quat& rotation() const { return m_Rotation; }
-    const glm::vec3& scale() const { return m_Scale; }
-    const Transform* parent() const { return m_Parent; }
+    // by default, these return ws positions
+    inline glm::vec3 position() const;
+    inline glm::quat rotation() const;
+    inline glm::vec3 eulerAngles() const { return glm::eulerAngles(rotation()); }
+    inline glm::vec3 scale() const;
+    inline const Transform* parent() const { return m_Parent; }
 
     void SetPosition(glm::vec3);
     void SetPosition(glm::vec3&);
@@ -38,18 +40,15 @@ public:
     glm::mat4 Local() const;
     glm::mat4 LocalDirty();
 
+    // the transformation matrix in worldspace, and local to world operations
+    glm::mat4 World() const;
+    glm::mat4 WorldDirty();
+
     // the local operations
     glm::mat4 LocalInverse() const;
     glm::vec3 LocalInverseLocation() const;
     glm::vec3 LocalInverseScale() const;
     glm::quat LocalInverseRotation() const;
-
-    // the transformation matrix in worldspace, and local to world operations
-    glm::mat4 World() const;
-    glm::mat4 WorldDirty();
-    glm::vec3 WorldLocation() const;
-    glm::vec3 WorldScale() const;
-    glm::quat WorldRotation() const;
 
     // the world to local transformation matrix and operations
     glm::mat4 WorldInverse() const;

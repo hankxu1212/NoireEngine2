@@ -582,7 +582,7 @@ void Scene::UpdateSceneInfo()
 
 	// update camera
 	m_SceneInfo.cameraView = GetRenderCam()->camera()->getViewMatrix();
-	const glm::vec3& pos = GetRenderCam()->GetTransform()->WorldLocation();
+	glm::vec3 pos = GetRenderCam()->GetTransform()->position();
 	m_SceneInfo.cameraPosition = {pos.x, pos.y, pos.z, 0};
 }
 

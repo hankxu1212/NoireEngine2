@@ -71,7 +71,7 @@ float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex, float li
 float textureProj(vec4 shadowCoord, vec2 offset, int cascadeIndex)
 {
 	float shadow = 1.0;
-	float bias = 0.0005;
+	float bias = 0;
 
 	float dist = texture(shadowMaps[cascadeIndex], shadowCoord.st + offset).r;
 	if (dist < shadowCoord.z - bias) {
@@ -85,14 +85,14 @@ float DirLightShadow(int lightId, int shadowMapId)
 	// Get cascade index for the current fragment's view position
 	int cascadeIndex = 0;
 	for(int i = 0; i < DIR_LIGHTS[lightId].shadowOffset - 1; ++i) {
-		if(inViewPos.z <= DIR_LIGHTS[lightId].splitDepths[i]) {	
+		if(inViewPos.z < DIR_LIGHTS[lightId].splitDepths[i]) {	
 			cascadeIndex = i + 1;
 		}
 	}
 
 	int cascadedShadowMapID = shadowMapId + cascadeIndex;
 
-	const float shadowBias = 0.0005;
+	const float shadowBias = 0;
 	vec4 shadowCoord = biasMat * DIR_LIGHTS[lightId].lightspaces[cascadedShadowMapID] * vec4(inPosition, 1.0);
 		
 	// perform perspective divide
@@ -106,9 +106,9 @@ float DirLightShadow(int lightId, int shadowMapId)
 		&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
 	{
 		// shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, cascadedShadowMapID, shadowBias) * DIR_LIGHTS[lightId].shadowStrength;
-		shadow = textureProj(shadowCoord, vec2(0), cascadedShadowMapID);
+		shadow = (1 - textureProj(shadowCoord, vec2(0), cascadedShadowMapID)) * DIR_LIGHTS[lightId].shadowStrength;
 	}
-	return shadow;
+	return 1 - shadow;
 }
 
 float PointLightShadow(int lightId, int shadowMapId)
@@ -118,7 +118,7 @@ float PointLightShadow(int lightId, int shadowMapId)
 
 float SpotLightShadow(int lightId, int shadowMapId)
 {
-	float shadowBias = 0.0005;
+	float shadowBias = EPSILON;
 
 	vec4 shadowCoord = biasMat * SPOT_LIGHTS[lightId].lightspace * vec4(inPosition, 1.0);
 	
@@ -133,7 +133,7 @@ float SpotLightShadow(int lightId, int shadowMapId)
 		&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
 	{
 		float lightSize = SPOT_LIGHTS[lightId].radius;
-		shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, shadowMapId, lightSize) * SPOT_LIGHTS[lightId].shadowStrength;
+		shadow = (1 - PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, shadowMapId, lightSize)) * SPOT_LIGHTS[lightId].shadowStrength;
 	}
-	return shadow;
+	return 1 - shadow;
 }

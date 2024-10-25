@@ -44,14 +44,6 @@ public:
 	};
 	const std::vector<CascadePass>& getCascadePasses() const { return m_CascadePasses; }
 
-	//struct UBOFS {
-	//	float m_CascadeSplitDepths[4];
-	//	glm::mat4 inverseViewMat;
-	//	glm::vec3 lightDir;
-	//	float _pad;
-	//	int32_t colorCascades;
-	//} uboFS;
-
 	// naive shadowmap pass, used for spotlights
 	struct ShadowMapPass 
 	{
@@ -106,6 +98,5 @@ private:
 	std::vector<CascadePass> m_CascadePasses;
 
 	void Cascade_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t passIndex, uint32_t cascadeIndex);
-	void Cascade_UpdateCascades();
 };
 

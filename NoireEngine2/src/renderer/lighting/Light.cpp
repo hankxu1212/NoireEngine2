@@ -5,9 +5,9 @@
 #include "renderer/scene/SceneManager.hpp"
 #include "imgui/imgui.h"
 
-Light::Light(Type type)
+Light::Light(Type type_) :
+	type((uint32_t)type_)
 {
-	this->type = (uint32_t)type;
 	useGizmos = true;
 }
 
@@ -47,8 +47,8 @@ Light::Light(Type type, Color3 color, float intensity, float radius, float fov, 
 void Light::Update()
 {
 	Transform* transform = GetTransform();
+	glm::vec3 pos = transform->position();
 	glm::vec3 dir = transform->Back(); // always point in -z m_Direction
-	glm::vec3 pos = transform->WorldLocation();
 
 	m_Direction = glm::vec4(dir, 0);
 	m_Position = glm::vec4(pos, 0);
@@ -66,7 +66,8 @@ void Light::Update()
 		else  // Type::Spot
 		{
 			glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(m_Fov), 1.0f, m_NearClip, m_FarClip);
-			glm::mat4 depthViewMatrix = glm::lookAt(pos, pos + dir, transform->Up());
+			depthProjectionMatrix[1][1] *= -1;
+			glm::mat4 depthViewMatrix = Mat4::LookAt(pos, pos + dir, transform->Up());
 			m_Lightspaces[0] = depthProjectionMatrix * depthViewMatrix;
 		}
 	}
@@ -86,13 +87,13 @@ void Light::Render(const glm::mat4& model)
 
 	if (type == (uint32_t)Type::Point) 
 	{
-		auto& pos = GetTransform()->position();
+		glm::vec3 pos = GetTransform()->position();
 		gizmos.DrawWireSphere(m_Limit, pos, c);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
 	else if (type == (uint32_t)Type::Spot)
 	{
-		auto& pos = GetTransform()->position();
+		glm::vec3 pos = GetTransform()->position();
 		auto dir = GetTransform()->Back();
 		
 		constexpr float coneRange = 5;
@@ -104,7 +105,7 @@ void Light::Render(const glm::mat4& model)
 	}
 	else
 	{
-		auto& pos = GetTransform()->position();
+		glm::vec3 pos = GetTransform()->position();
 		auto dir = GetTransform()->Back();
 		gizmos.DrawDirectionalLight(dir, pos, c);
 		GetScene()->PushGizmosInstance(&gizmos);
@@ -121,7 +122,7 @@ _NODISCARD DirectionalLightUniform Light::GetLightUniformAs() const
 	uniform.angle = 0.0f;
 	uniform.intensity = m_Intensity;
 	uniform.shadowOffset = m_UseShadows ? 4 : 0;
-	uniform.shadowStrength = 1 - m_ShadowAttenuation;
+	uniform.shadowStrength = m_ShadowAttenuation;
 	uniform.splitDepths = m_CascadeSplitDepths;
 	return uniform;
 }
@@ -137,7 +138,7 @@ _NODISCARD PointLightUniform Light::GetLightUniformAs() const
 	uniform.radius = m_Radius;
 	uniform.limit = m_Limit;
 	uniform.shadowOffset = m_UseShadows ? 1 : 0;
-	uniform.shadowStrength = 1 - m_ShadowAttenuation;
+	uniform.shadowStrength = m_ShadowAttenuation;
 	return uniform;
 }
 
@@ -155,7 +156,7 @@ _NODISCARD SpotLightUniform Light::GetLightUniformAs() const
 	uniform.fov = m_Fov;
 	uniform.blend = m_Blend;
 	uniform.shadowOffset = m_UseShadows ? 1 : 0;
-	uniform.shadowStrength = 1 - m_ShadowAttenuation;
+	uniform.shadowStrength = m_ShadowAttenuation;
 	uniform.nearClip = m_NearClip;
 	return uniform;
 }
@@ -309,8 +310,9 @@ void Light::UpdateDirectionalLightCascades()
 		glm::vec3 maxExtents = glm::vec3(radius);
 		glm::vec3 minExtents = -maxExtents;
 
-		glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - glm::vec3(m_Direction) * -minExtents.z, frustumCenter, Vec3::Up);
+		glm::mat4 lightViewMatrix = Mat4::LookAt(frustumCenter - glm::vec3(m_Direction) * -minExtents.z, frustumCenter, GetTransform()->Up());
 		glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
+		lightOrthoMatrix[1][1] *= -1;
 
 		// Store split distance and matrix in cascade
 		m_CascadeSplitDepths[i] = (nearClip + splitDist * clipRange) * -1.0f;

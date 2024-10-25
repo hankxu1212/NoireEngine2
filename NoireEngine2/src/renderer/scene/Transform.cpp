@@ -3,6 +3,8 @@
 #include "Entity.hpp"
 #include "editor/ImGuiExtension.hpp"
 
+#pragma region Constructors
+
 Transform::Transform(const Transform& other) : 
     m_Position(other.m_Position), m_Rotation(other.m_Rotation), m_Scale(other.m_Scale), m_Parent(other.m_Parent) {
 }
@@ -27,6 +29,10 @@ Transform::Transform(glm::vec3 t, glm::quat q, glm::vec3 s) :
 Transform::Transform(glm::vec3 t, glm::quat q) :
     m_Position(t), m_Rotation(q) {
 }
+
+#pragma endregion
+
+#pragma region Setters
 
 void Transform::SetPosition(glm::vec3 newPosition)
 {
@@ -64,8 +70,9 @@ void Transform::SetScale(glm::vec3& newScale)
     isDirty = true;
 }
 
-// TODO: move all above to Vector3 or sth
-////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma endregion
+
+#pragma region Getters
 
 glm::mat4 Transform::Local() const {
     return glm::translate(Mat4::Identity, m_Position) * glm::mat4_cast(m_Rotation) * glm::scale(Mat4::Identity, m_Scale);
@@ -80,6 +87,32 @@ glm::mat4 Transform::LocalDirty()
     return localMat;
 }
 
+
+glm::mat4 Transform::World() const {
+    return m_Parent ? m_Parent->World() * Local() : Local();
+}
+
+glm::mat4 Transform::WorldDirty() {
+    return m_Parent ? m_Parent->WorldDirty() * LocalDirty() : LocalDirty();
+}
+
+glm::vec3 Transform::position() const
+{
+    return m_Parent ? m_Parent->position() + m_Position : m_Position;
+}
+
+glm::vec3 Transform::scale() const {
+    return m_Parent ? m_Parent->scale() * m_Scale : m_Scale;
+}
+
+glm::quat Transform::rotation() const {
+    return m_Parent ? m_Parent->rotation() * m_Rotation : m_Rotation;
+}
+
+#pragma endregion
+
+#pragma region Inverses
+
 glm::mat4 Transform::LocalInverse() const {
     return glm::scale(Mat4::Identity, 1.0f / m_Scale) * glm::mat4_cast(glm::inverse(m_Rotation)) * glm::translate(Mat4::Identity, -m_Position);
 }
@@ -90,76 +123,28 @@ glm::vec3 Transform::LocalInverseScale() const { return 1.0f / m_Scale; }
 
 glm::quat Transform::LocalInverseRotation() const { return glm::inverse(m_Rotation); }
 
-glm::mat4 Transform::World() const {
-    if (m_Parent) {
-        return m_Parent->World() * Local();
-    }
-    else {
-        return Local();
-    }
-}
-
-glm::mat4 Transform::WorldDirty()
-{
-    if (m_Parent) {
-        return m_Parent->WorldDirty() * LocalDirty();
-    }
-    else {
-        return LocalDirty();
-    }
-}
-
-glm::vec3 Transform::WorldLocation() const
-{
-    if (m_Parent) {
-        return m_Parent->WorldLocation() + m_Position;
-    }
-    else {
-        return m_Position;
-    }
-}
-
-glm::vec3 Transform::WorldScale() const
-{
-    if (m_Parent) {
-        return m_Parent->WorldScale() * m_Scale;
-    }
-    else {
-        return m_Scale;
-    }
-}
-
-glm::quat Transform::WorldRotation() const
-{
-    if (m_Parent) {
-        return m_Parent->WorldRotation() * m_Rotation;
-    }
-    else {
-        return m_Rotation;
-    }
-}
+glm::vec3 Transform::WorldInverseLocation() const { return -position(); }
 
 glm::mat4 Transform::WorldInverse() const {
-    if (m_Parent) {
-        return LocalInverse() * m_Parent->WorldInverse();
-    }
-    else {
-        return LocalInverse();
-    }
+    return m_Parent ? LocalInverse() * m_Parent->WorldInverse() : LocalInverse();
 }
 
-glm::vec3 Transform::WorldInverseLocation() const { return -WorldLocation(); }
+glm::vec3 Transform::WorldInverseScale() const { return 1.0f / scale(); }
 
-glm::vec3 Transform::WorldInverseScale() const { return 1.0f / WorldScale(); }
+glm::quat Transform::WorldInverseRotation() const { return glm::inverse(rotation()); }
 
-glm::quat Transform::WorldInverseRotation() const { return glm::inverse(WorldRotation()); }
+#pragma endregion
 
-glm::vec3 Transform::Forward() const { return m_Rotation * Vec3::Forward; }
-glm::vec3 Transform::Back() const { return m_Rotation * Vec3::Back; }
-glm::vec3 Transform::Right() const { return m_Rotation * Vec3::Right; }
-glm::vec3 Transform::Left() const { return m_Rotation * Vec3::Left; }
-glm::vec3 Transform::Up() const { return m_Rotation * Vec3::Up; }
-glm::vec3 Transform::Down() const { return m_Rotation * Vec3::Down; }
+#pragma region Direction
+
+glm::vec3 Transform::Forward() const { return rotation() * Vec3::Forward; }
+glm::vec3 Transform::Back() const { return rotation() * Vec3::Back; }
+glm::vec3 Transform::Right() const { return rotation() * Vec3::Right; }
+glm::vec3 Transform::Left() const { return rotation() * Vec3::Left; }
+glm::vec3 Transform::Up() const { return rotation() * Vec3::Up; }
+glm::vec3 Transform::Down() const { return rotation() * Vec3::Down; }
+
+#pragma endregion
 
 void Transform::Decompose(const glm::mat4& m, glm::vec3& pos, glm::quat& rot, glm::vec3& scale)
 {
@@ -209,11 +194,7 @@ void Transform::RotateAround(const glm::vec3& point, const float& angle, const g
 
 void Transform::Translate(const glm::vec3& translation, bool useWorldspace)
 {
-    if (!useWorldspace)
-        m_Position += translation;
-    else {
-        m_Position += WorldRotation() * translation;
-    }
+    m_Position += useWorldspace ? rotation() * translation : translation;
 }
 
 glm::vec3 lerp(glm::vec3& x, const glm::vec3& y, float t) {

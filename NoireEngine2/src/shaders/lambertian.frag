@@ -29,7 +29,8 @@ layout( push_constant ) uniform constants
 	float environmentLightIntensity;
 } material;
 
-void main() {
+void main() 
+{
     // calculate TBN
     n = normalize(inNormal);
     vec3 tangent = inTangent.xyz;
@@ -56,9 +57,34 @@ void main() {
 
 	// direct lighting and shadows
 	vec3 directLighting = DirectLighting();
+	// vec3 directLighting = vec3(0);
 
 	vec3 color = vec3(material.albedo) * texColor * (directLighting + ambientLighting);
 	
 	color = ACES(color);
+
+	// Get cascade index for the current fragment's view position
+	//int cascadeIndex = 0;
+	//for(int i = 0; i < DIR_LIGHTS[0].shadowOffset - 1; ++i) {
+	//	if(inViewPos.z < DIR_LIGHTS[0].splitDepths[i]) {	
+	//		cascadeIndex = i + 1;
+	//	}
+	//}
+	//
+	//switch(cascadeIndex) {
+	//	case 0 : 
+	//		color *= vec3(1.0f, 0.25f, 0.25f);
+	//		break;
+	//	case 1 : 
+	//		color *= vec3(0.25f, 1.0f, 0.25f);
+	//		break;
+	//	case 2 : 
+	//		color *= vec3(0.25f, 0.25f, 1.0f);
+	//		break;
+	//	case 3 : 
+	//		color *= vec3(1.0f, 1.0f, 0.25f);
+	//		break;
+	//}
+
 	outColor = gamma_map(color, 2.2f);
 }

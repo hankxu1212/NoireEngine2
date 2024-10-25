@@ -12,7 +12,7 @@ class TransformComponent;
 class Camera 
 {
 public:
-    enum Type { Game, Scene, Debug, Other };
+    enum Type { Game, Scene, Debug, Light, Other };
 
     Camera();
     Camera(const Camera& other) = default;
@@ -24,7 +24,7 @@ public:
     /**
       * Updates view and projection matrix based on the transform the camera is attached to
     */
-    void Update(const Transform& transform);
+    void Update(const Transform& transform, bool updateFrustum=true);
 
     inline const glm::mat4& getViewMatrix() const { return viewMatrix; }
     inline const glm::mat4& getProjectionMatrix() const { return projectionMatrix; }
@@ -48,7 +48,6 @@ public:
     float orthographicScale = 5;
 
 private:
-
     Type type = Scene;
 
     //glm::vec3 velocity; // This camera's motion in units per second as it was during the last frame.
