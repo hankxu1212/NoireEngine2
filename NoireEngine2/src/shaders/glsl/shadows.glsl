@@ -71,7 +71,7 @@ float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex, float li
 float DirLightShadow(int lightId, int shadowMapId)
 {
 	const float shadowBias = 0.005;
-	vec4 shadowCoord = biasMat * DIR_LIGHTS[lightId].lightspace * vec4(inPosition, 1.0);
+	vec4 shadowCoord = biasMat * DIR_LIGHTS[lightId].lightspaces[0] * vec4(inPosition, 1.0);
 		
 	// perform perspective divide
 	shadowCoord /= shadowCoord.w;

@@ -9,29 +9,11 @@
 
 #include <variant>
 
-struct LightInfo 
-{
-	glm::vec4 color = { 1,1,1,0 };
-	glm::vec4 position;
-	glm::vec4 direction;
-	float radius = 1;
-	float limit = 100;
-	float intensity = 1; /* or power */
-	float fov = 0.349066f;
-	float blend = 0.5f;
-	uint32_t type = 0 /*Directional*/;
-
-	// shadow params
-	bool useShadows = true;
-	float zNear = 1.0f;
-	float zFar = 96.0f;
-	glm::mat4 lightspace; /*depthMVP*/
-	float oneMinusShadowStrength = 0;
-};
+#define SHADOW_MAP_CASCADE_COUNT 4
 
 struct alignas(16) DirectionalLightUniform
 {
-	glm::mat4 lightspace; /*depthMVP*/
+	std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT> lightspaces; /*depthMVP*/
 	glm::vec4 color;
 	glm::vec4 direction;
 	float angle;
@@ -39,7 +21,7 @@ struct alignas(16) DirectionalLightUniform
 	uint32_t shadowOffset;
 	float shadowStrength;
 };
-static_assert(sizeof(DirectionalLightUniform) == 64 + 16 * 3);
+static_assert(sizeof(DirectionalLightUniform) == 64 * 4 + 16 * 3);
 
 struct alignas(16) PointLightUniform
 {
@@ -74,6 +56,8 @@ static_assert(sizeof(SpotLightUniform) == 64 + 16 * 3 + 16 * 2);
 class Light : public Component
 {
 public:
+	using Info = std::variant<DirectionalLightUniform, PointLightUniform, SpotLightUniform>;
+
 	enum class Type { Directional = 0, Point = 1, Spot = 2, };
 
 	Light(Type type);
@@ -90,14 +74,28 @@ public:
 
 	void Inspect() override;
 
-	_NODISCARD inline LightInfo& GetLightInfo() { return m_Info; }
-
 	template<typename T>
 	_NODISCARD T GetLightUniformAs() const;
 
 	const char* getName() override { return "Light"; }
 
+	glm::vec4 color = { 1,1,1,0 };
+	glm::vec4 position;
+	glm::vec4 direction;
+	float radius = 1;
+	float limit = 100;
+	float intensity = 1; /* or power */
+	float fov = 0.349066f;
+	float blend = 0.5f;
+	uint32_t type = 0 /*Directional*/;
+
+	// shadow params
+	bool useShadows = true;
+	float zNear = 1.0f;
+	float zFar = 96.0f;
+	std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT> lightspaces; /*depthMVP*/
+	float oneMinusShadowStrength = 0;
+
 private:
-	LightInfo m_Info;
 	GizmosInstance gizmos;
 };

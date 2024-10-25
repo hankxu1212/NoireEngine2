@@ -1,7 +1,7 @@
 // uniforms
 struct DirLight
 {
-	mat4 lightspace;
+	mat4 lightspaces[4];
 	vec4 color;
 	vec4 direction;
 	float angle;

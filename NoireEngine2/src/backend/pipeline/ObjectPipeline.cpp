@@ -439,7 +439,7 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 		std::array<size_t, 3> neededBytesPerLightType = { 0 };
 		for (int i = 0; i < lightInstances.size(); ++i)
 		{
-			switch (lightInstances[i]->GetLightInfo().type)
+			switch (lightInstances[i]->type)
 			{
 			case 0/*Light::Type::Directional*/:
 				neededBytesPerLightType[0] += sizeof(DirectionalLightUniform);
@@ -506,7 +506,7 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 
 		for (int i = 0; i < lightInstances.size(); ++i)
 		{
-			switch (lightInstances[i]->GetLightInfo().type)
+			switch (lightInstances[i]->type)
 			{
 			case 0/*Light::Type::Directional*/:
 				*directionalIt = lightInstances[i]->GetLightUniformAs<DirectionalLightUniform>();

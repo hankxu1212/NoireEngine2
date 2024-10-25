@@ -141,8 +141,7 @@ void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 
 		for (int i = 0; i < shadowLights.size(); ++i) 
 		{
-			auto& lightInfo = shadowLights[i]->GetLightInfo();
-			memcpy(PTR_ADD(workspace.LightSpaces_Src.data(), offset), glm::value_ptr(lightInfo.lightspace), sizeof(glm::mat4));
+			memcpy(PTR_ADD(workspace.LightSpaces_Src.data(), offset), glm::value_ptr(shadowLights[i]->lightspaces[0]), sizeof(glm::mat4));
 			offset += sizeof(glm::mat4);
 		}
 	}
@@ -522,9 +521,9 @@ void ShadowPipeline::Cascade_UpdateCascades()
 
 		for (int lightIndex = 0; lightIndex < shadowLights.size(); ++lightIndex) {
 			Light* light = shadowLights[lightIndex];
-			if (light->GetLightInfo().type == 0) // only do this for directional lights
+			if (light->type == 0) // only do this for directional lights
 			{
-				glm::vec3 lightDir = normalize(-light->GetLightInfo().position);
+				glm::vec3 lightDir = normalize(-light->position);
 				glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, Vec3::Up);
 
 				// Store split distance and matrix in cascade

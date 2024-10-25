@@ -7,40 +7,40 @@
 
 Light::Light(Type type)
 {
-	m_Info.type = (uint32_t)type;
+	this->type = (uint32_t)type;
 	useGizmos = true;
 }
 
 Light::Light(Type type, Color3 color, float intensity) :
 	Light(type)
 {
-	memcpy(&m_Info.color, color.value_ptr(), sizeof(Color3));
-	m_Info.intensity = intensity;
+	memcpy(&this->color, color.value_ptr(), sizeof(Color3));
+	this->intensity = intensity;
 }
 
 Light::Light(Type type, Color3 color, float intensity, float radius) :
 	Light(type, color, intensity)
 {
-	m_Info.radius = radius;
+	this->radius = radius;
 }
 
 Light::Light(Type type, Color3 color, float intensity, float radius, float limit) :
 	Light(type, color, intensity, radius)
 {
-	m_Info.limit = limit;
+	this->limit = limit;
 }
 
 Light::Light(Type type, Color3 color, float intensity, float radius, float fov, float blend) :
 	Light(type, color, intensity, radius)
 {
-	m_Info.fov = fov;
-	m_Info.blend = blend;
+	this->fov = fov;
+	this->blend = blend;
 }
 
 Light::Light(Type type, Color3 color, float intensity, float radius, float fov, float blend, float limit) :
 	Light(type, color, intensity, radius, fov, blend)
 {
-	m_Info.limit = limit;
+	this->limit = limit;
 }
 
 
@@ -50,26 +50,26 @@ void Light::Update()
 	glm::vec3 dir = transform->Back(); // always point in -z direction
 	glm::vec3 pos = transform->WorldLocation();
 
-	m_Info.direction = glm::vec4(dir, 0);
-	m_Info.position = glm::vec4(pos, 0);
+	direction = glm::vec4(dir, 0);
+	position = glm::vec4(pos, 0);
 
-	if (m_Info.useShadows) 
+	if (useShadows) 
 	{
-		if (m_Info.type == (uint32_t)Type::Directional)
+		if (type == (uint32_t)Type::Directional)
 		{
-			glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, m_Info.zNear, m_Info.zFar);
+			glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, zNear, zFar);
 			glm::mat4 depthViewMatrix = glm::lookAt(pos, pos + dir, transform->Up());
-			m_Info.lightspace = depthProjectionMatrix * depthViewMatrix;
+			lightspaces[0] = depthProjectionMatrix * depthViewMatrix;
 		}
-		else if (m_Info.type == (uint32_t)Type::Point)
+		else if (type == (uint32_t)Type::Point)
 		{
 			// TODO: add
 		}
 		else  // Type::Spot
 		{
-			glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(m_Info.fov), 1.0f, m_Info.zNear, m_Info.zFar);
+			glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(fov), 1.0f, zNear, zFar);
 			glm::mat4 depthViewMatrix = glm::lookAt(pos, pos + dir, transform->Up());
-			m_Info.lightspace = depthProjectionMatrix * depthViewMatrix;
+			lightspaces[0] = depthProjectionMatrix * depthViewMatrix;
 		}
 	}
 }
@@ -80,28 +80,28 @@ void Light::Render(const glm::mat4& model)
 		return;
 
 	Color4_4 c{
-		static_cast<uint8_t>(m_Info.color.x * 255),
-		static_cast<uint8_t>(m_Info.color.y * 255),
-		static_cast<uint8_t>(m_Info.color.z * 255),
+		static_cast<uint8_t>(color.x * 255),
+		static_cast<uint8_t>(color.y * 255),
+		static_cast<uint8_t>(color.z * 255),
 		255
 	};
 
-	if (m_Info.type == (uint32_t)Type::Point) 
+	if (type == (uint32_t)Type::Point) 
 	{
 		auto& pos = GetTransform()->position();
-		gizmos.DrawWireSphere(m_Info.limit, pos, c);
+		gizmos.DrawWireSphere(limit, pos, c);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
-	else if (m_Info.type == (uint32_t)Type::Spot)
+	else if (type == (uint32_t)Type::Spot)
 	{
 		auto& pos = GetTransform()->position();
 		auto dir = GetTransform()->Back();
 		
 		constexpr float coneRange = 5;
-		float inner = glm::tan(glm::radians(m_Info.fov * (1 - m_Info.blend) * 0.5f)) * coneRange;
-		float outer = glm::tan(glm::radians(m_Info.fov * 0.5f)) * coneRange;
+		float inner = glm::tan(glm::radians(fov * (1 - blend) * 0.5f)) * coneRange;
+		float outer = glm::tan(glm::radians(fov * 0.5f)) * coneRange;
 
-		gizmos.DrawSpotLight(pos, dir, inner, outer, m_Info.limit, c);
+		gizmos.DrawSpotLight(pos, dir, inner, outer, limit, c);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
 	else
@@ -117,13 +117,13 @@ template<>
 _NODISCARD DirectionalLightUniform Light::GetLightUniformAs() const
 {
 	DirectionalLightUniform uniform;
-	uniform.lightspace = m_Info.lightspace;
-	uniform.color = m_Info.color;
-	uniform.direction = m_Info.direction;
+	uniform.lightspaces = lightspaces;
+	uniform.color = color;
+	uniform.direction = direction;
 	uniform.angle = 0.0f;
-	uniform.intensity = m_Info.intensity;
-	uniform.shadowOffset = m_Info.useShadows ? 1 : 0;
-	uniform.shadowStrength = 1 - m_Info.oneMinusShadowStrength;
+	uniform.intensity = intensity;
+	uniform.shadowOffset = useShadows ? 1 : 0;
+	uniform.shadowStrength = 1 - oneMinusShadowStrength;
 	return uniform;
 }
 
@@ -131,14 +131,14 @@ template<>
 _NODISCARD PointLightUniform Light::GetLightUniformAs() const
 {
 	PointLightUniform uniform;
-	uniform.lightspace = m_Info.lightspace;
-	uniform.color = m_Info.color;
-	uniform.position = m_Info.position;
-	uniform.intensity = m_Info.intensity;
-	uniform.radius = m_Info.radius;
-	uniform.limit = m_Info.limit;
-	uniform.shadowOffset = m_Info.useShadows ? 1 : 0;
-	uniform.shadowStrength = 1 - m_Info.oneMinusShadowStrength;
+	uniform.lightspace = lightspaces[0];
+	uniform.color = color;
+	uniform.position = position;
+	uniform.intensity = intensity;
+	uniform.radius = radius;
+	uniform.limit = limit;
+	uniform.shadowOffset = useShadows ? 1 : 0;
+	uniform.shadowStrength = 1 - oneMinusShadowStrength;
 	return uniform;
 }
 
@@ -146,18 +146,18 @@ template<>
 _NODISCARD SpotLightUniform Light::GetLightUniformAs() const
 {
 	SpotLightUniform uniform;
-	uniform.lightspace = m_Info.lightspace;
-	uniform.color = m_Info.color;
-	uniform.position = m_Info.position;
-	uniform.direction = m_Info.direction;
-	uniform.intensity = m_Info.intensity;
-	uniform.radius = m_Info.radius;
-	uniform.limit = m_Info.limit;
-	uniform.fov = m_Info.fov;
-	uniform.blend = m_Info.blend;
-	uniform.shadowOffset = m_Info.useShadows ? 1 : 0;
-	uniform.shadowStrength = 1 - m_Info.oneMinusShadowStrength;
-	uniform.nearClip = m_Info.zNear;
+	uniform.lightspace = lightspaces[0];
+	uniform.color = color;
+	uniform.position = position;
+	uniform.direction = direction;
+	uniform.intensity = intensity;
+	uniform.radius = radius;
+	uniform.limit = limit;
+	uniform.fov = fov;
+	uniform.blend = blend;
+	uniform.shadowOffset = useShadows ? 1 : 0;
+	uniform.shadowStrength = 1 - oneMinusShadowStrength;
+	uniform.nearClip = zNear;
 	return uniform;
 }
 
@@ -168,7 +168,7 @@ void Light::Inspect()
 		ImGui::Columns(2);
 		ImGui::Text("Light Type");
 		ImGui::NextColumn();
-		switch (m_Info.type)
+		switch (type)
 		{
 		case 0:
 			ImGui::Text("Directional");
@@ -182,12 +182,12 @@ void Light::Inspect()
 		}
 		ImGui::Columns(1);
 
-		ImGui::ColorEdit3("Light Color", (float*)&m_Info.color);
+		ImGui::ColorEdit3("Light Color", (float*)&color);
 		
 		ImGui::Columns(2);
 		ImGui::Text("Intensity");
 		ImGui::NextColumn();
-		ImGui::DragFloat("###Intensity", &m_Info.intensity, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+		ImGui::DragFloat("###Intensity", &intensity, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 		ImGui::Columns(1);
 
 		ImGui::Columns(2);
@@ -197,40 +197,40 @@ void Light::Inspect()
 		ImGui::Columns(1);
 		ImGui::Separator(); // -----------------------------------------------------
 
-		if (m_Info.type != /*Type::Directional*/0)
+		if (type != /*Type::Directional*/0)
 		{
 			ImGui::Columns(2);
 			ImGui::Text("Radius");
 			ImGui::NextColumn();
-			ImGui::DragFloat("###Radius", &m_Info.radius, 0.03f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("###Radius", &radius, 0.03f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 			ImGui::Columns(1);
 
 			ImGui::Columns(2);
 			ImGui::Text("Limit");
 			ImGui::NextColumn();
-			ImGui::DragFloat("###Limit", &m_Info.limit, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("###Limit", &limit, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 			ImGui::Columns(1);
 		}
 
-		if (m_Info.type == /*Type::Spot*/2)
+		if (type == /*Type::Spot*/2)
 		{
 			ImGui::Columns(2);
 			ImGui::Text("FOV");
 			ImGui::NextColumn();
-			ImGui::DragFloat("###FOV", &m_Info.fov, 0.5f, 0.0f, 180, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("###FOV", &fov, 0.5f, 0.0f, 180, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 			ImGui::Columns(1);
 
 			ImGui::Columns(2);
 			ImGui::Text("Blend");
 			ImGui::NextColumn();
-			ImGui::DragFloat("###BLEND", &m_Info.blend, 0.002f, 0, 1, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("###BLEND", &blend, 0.002f, 0, 1, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 			ImGui::Columns(1);
 		}
 
 		ImGui::Columns(2);
 		ImGui::Text("Shadow Strength");
 		ImGui::NextColumn();
-		ImGui::DragFloat("###ShadowStrength", &m_Info.oneMinusShadowStrength, 0.01f, 0.0f, 1.0f, "%.05f", ImGuiSliderFlags_AlwaysClamp);
+		ImGui::DragFloat("###ShadowStrength", &oneMinusShadowStrength, 0.01f, 0.0f, 1.0f, "%.05f", ImGuiSliderFlags_AlwaysClamp);
 		ImGui::Columns(1);
 	}
 	ImGui::PopID();

@@ -570,7 +570,7 @@ void Scene::UpdateSceneInfo()
 
 	for (int i = 0; i < m_SceneLights.size(); ++i)
 	{
-		uint32_t type = m_SceneLights[i]->GetLightInfo().type;
+		uint32_t type = m_SceneLights[i]->type;
 		m_SceneInfo.numLights[type]++;
 	}
 
@@ -597,7 +597,7 @@ void Scene::UpdateShadowCasters()
 	{
 		for (auto& light : m_SceneLights)
 		{
-			if (light->GetLightInfo().useShadows && light->GetLightInfo().type == i)
+			if (light->useShadows && light->type == i)
 				m_ShadowCasters.emplace_back(light);
 		}
 	}
