@@ -132,7 +132,13 @@ use_vert_frag('shaders/mirror', 'backend/pipeline/material_pipeline/MirrorMateri
 use_vert_frag('shaders/pbr', 'backend/pipeline/material_pipeline/PBRMaterialPipeline.cpp');
 
 // shadow
-use_vert_frag('shaders/shadow/offscreen', 'backend/pipeline/ShadowPipeline.cpp');
+const shadowmapping_shaders = [
+	maek.GLSLC('shaders/shadow/shadowmapping.vert'),
+	maek.GLSLC('shaders/shadow/shadowmapping.frag'),
+	maek.GLSLC('shaders/shadow/shadowcascade.vert'),
+	maek.GLSLC('shaders/shadow/shadowcascade.frag'),
+];
+vulkan_objs.push(maek.CPP('backend/pipeline/ShadowPipeline.cpp', undefined, { depends: [...shadowmapping_shaders] }));
 
 const imgui_objs = [
 	maek.CPP('../vendor/imgui/imgui.cpp'),
@@ -179,7 +185,7 @@ const main_exe = maek.LINK
 		...vulkan_objs,
 		...component_objs,
 		...imgui_objs,
-		...scripting_objs
+		...scripting_objs,
 	],
 	'bin/main'
 );
@@ -194,7 +200,7 @@ const cube_exe = maek.LINK
 		...vulkan_objs,
 		...component_objs,
 		...imgui_objs,
-		...scripting_objs
+		...scripting_objs,
 	], 'bin/cube'
 );
 
@@ -375,6 +381,14 @@ function init_maek() {
 	console.log(`Building in ${__dirname}.`);
 	process.chdir(__dirname);
 
+	// delete spv files and recompile on start
+	try {
+		fs.rmdirSync("spv", { recursive: true });
+		console.log('SPV Folder deleted successfully:');
+	} catch (err) {
+		console.error('Error deleting spv folder:', err);
+	}
+
 	//make it slightly more idiomatic to export:
 	const maek = module.exports;
 
@@ -484,7 +498,6 @@ function init_maek() {
 
 		return dstFile;
 	};
-
 
 	//maek.CPP makes an object from a c++ source file:
 	// cppFile is the source file name

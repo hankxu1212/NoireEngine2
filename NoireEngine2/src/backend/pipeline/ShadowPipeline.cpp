@@ -374,7 +374,7 @@ void ShadowPipeline::ShadowMap_CreateGraphicsPipeline()
 		.SetDynamicStates(dynamic_states)
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
 		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-		.Build("../spv/shaders/shadow/offscreen.vert.spv", "../spv/shaders/shadow/offscreen.frag.spv", &m_ShadowMapPipeline, m_ShadowMapPassPipelineLayout, m_ShadowMapRenderPass);
+		.Build("../spv/shaders/shadow/shadowmapping.vert.spv", "../spv/shaders/shadow/shadowmapping.frag.spv", &m_ShadowMapPipeline, m_ShadowMapPassPipelineLayout, m_ShadowMapRenderPass);
 }
 
 void ShadowPipeline::ShadowMap_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t index)
@@ -470,7 +470,7 @@ void ShadowPipeline::Cascade_UpdateCascades()
 		cascadeSplits[i] = (d - nearClip) / clipRange;
 	}
 
-	int lightIndex = 0; // TODO: add for loop
+	const auto& shadowLights = SceneManager::Get()->getScene()->getShadowInstances();
 
 	// Calculate orthographic projection matrix for each cascade
 	float lastSplitDist = 0.0;
@@ -518,16 +518,21 @@ void ShadowPipeline::Cascade_UpdateCascades()
 		glm::vec3 maxExtents = glm::vec3(radius);
 		glm::vec3 minExtents = -maxExtents;
 
-		Light* light = SceneManager::Get()->getScene()->getShadowInstances()[0];
-
-		glm::vec3 lightDir = normalize(-light->GetLightInfo().position);
-		glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
 
-		// Store split distance and matrix in cascade
-		m_ShadowCascadePasses[lightIndex].cascades[i].splitDepth = (nearClip + splitDist * clipRange) * -1.0f;
-		m_ShadowCascadePasses[lightIndex].cascades[i].viewProjMatrix = lightOrthoMatrix * lightViewMatrix;
+		for (int lightIndex = 0; lightIndex < shadowLights.size(); ++lightIndex) {
+			Light* light = shadowLights[lightIndex];
+			if (light->GetLightInfo().type == 0) // only do this for directional lights
+			{
+				glm::vec3 lightDir = normalize(-light->GetLightInfo().position);
+				glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, Vec3::Up);
 
+				// Store split distance and matrix in cascade
+				// TODO: replace this withwhatever type it is, dont assume [0]
+				m_ShadowCascadePasses[0].cascades[i].splitDepth = (nearClip + splitDist * clipRange) * -1.0f;
+				m_ShadowCascadePasses[0].cascades[i].viewProjMatrix = lightOrthoMatrix * lightViewMatrix;
+			}
+		}
 		lastSplitDist = cascadeSplits[i];
 	}
 }

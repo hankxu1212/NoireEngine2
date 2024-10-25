@@ -1029,8 +1029,8 @@
     <None Include="src\shaders\compute\ggx\ggx_prefilter_env.comp" />
     <None Include="src\shaders\compute\ggx\ggx_brdf.comp" />
     <None Include="src\shaders\glsl\parallax.glsl" />
-    <None Include="src\shaders\shadow\offscreen.frag" />
-    <None Include="src\shaders\shadow\offscreen.vert" />
+    <None Include="src\shaders\shadow\shadowmapping.frag" />
+    <None Include="src\shaders\shadow\shadowmapping.vert" />
     <None Include="src\shaders\glsl\shadows.glsl" />
   </ItemGroup>
   <ItemGroup>
