@@ -196,20 +196,20 @@ vec3 DirectLightingPBR()
 
 	for (int i = 0; i < scene.numLights[0]; ++i)
 	{
-		vec3 radiance = DirLightRadiance(i);
+		vec3 radiance = DirLightRadiance(i) * vec3(DIR_LIGHTS[i].color);
 		lightsSum += CalcPBRDirectLighting(radiance, vec3(DIR_LIGHTS[i].direction));
 	}
 
 	for (int i = 0; i < scene.numLights[1]; ++i)
 	{
-		vec3 radiance = PointLightRadiance(i);
+		vec3 radiance = PointLightRadiance(i) * vec3(POINT_LIGHTS[i].color);
 		vec3 Li = normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
 		lightsSum += CalcPBRDirectLighting(radiance, Li);
 	}
 
 	for (int i = 0; i < scene.numLights[2]; ++i)
 	{
-		vec3 radiance = SpotLightRadiance(i);
+		vec3 radiance = SpotLightRadiance(i) * vec3(SPOT_LIGHTS[i].color);
 		vec3 Li = normalize(vec3(SPOT_LIGHTS[i].position) - inPosition);
 		lightsSum += CalcPBRDirectLighting(radiance, Li);
 	}

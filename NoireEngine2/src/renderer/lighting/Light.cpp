@@ -61,7 +61,9 @@ void Light::Update()
 		}
 		else if (type == (uint32_t)Type::Point)
 		{
-			// TODO: add
+			for (uint32_t face = 0; face < OMNI_SHADOWMAPS_COUNT; face++) {
+				UpdatePointLightLightSpaces(face);
+			}
 		}
 		else  // Type::Spot
 		{
@@ -116,12 +118,15 @@ template<>
 _NODISCARD DirectionalLightUniform Light::GetLightUniformAs() const
 {
 	DirectionalLightUniform uniform;
-	uniform.lightspaces = m_Lightspaces;
+	
+	// copy lightspaces
+	memcpy(uniform.lightspaces.data(), m_Lightspaces.data(), sizeof(glm::mat4) * SHADOW_MAP_CASCADE_COUNT);
+
 	uniform.color = m_Color;
 	uniform.direction = m_Direction;
 	uniform.angle = 0.0f;
 	uniform.intensity = m_Intensity;
-	uniform.shadowOffset = m_UseShadows ? 4 : 0;
+	uniform.shadowOffset = m_UseShadows ? SHADOW_MAP_CASCADE_COUNT : 0;
 	uniform.shadowStrength = m_ShadowAttenuation;
 	uniform.splitDepths = m_CascadeSplitDepths;
 	return uniform;
@@ -131,13 +136,16 @@ template<>
 _NODISCARD PointLightUniform Light::GetLightUniformAs() const
 {
 	PointLightUniform uniform;
-	uniform.lightspace = m_Lightspaces[0];
+	
+	// copy lightspaces
+	memcpy(uniform.lightspaces.data(), m_Lightspaces.data(), sizeof(glm::mat4) * OMNI_SHADOWMAPS_COUNT);
+
 	uniform.color = m_Color;
 	uniform.position = m_Position;
 	uniform.intensity = m_Intensity;
 	uniform.radius = m_Radius;
 	uniform.limit = m_Limit;
-	uniform.shadowOffset = m_UseShadows ? 1 : 0;
+	uniform.shadowOffset = m_UseShadows ? OMNI_SHADOWMAPS_COUNT : 0;
 	uniform.shadowStrength = m_ShadowAttenuation;
 	return uniform;
 }
@@ -320,6 +328,41 @@ void Light::UpdateDirectionalLightCascades()
 
 		lastSplitDist = cascadeSplits[i];
 	}
+}
+
+void Light::UpdatePointLightLightSpaces(uint32_t faceIndex)
+{
+	// TODO: add projection matrix
+	glm::mat4 lightViewMatrix = glm::mat4(1.0f);
+	glm::mat4 depthProjectionMatrix = glm::perspective(glm::pi<float>() / 2.0f, 1.0f, m_NearClip, m_FarClip);
+	depthProjectionMatrix[1][1] *= -1;
+
+	switch (faceIndex)
+	{
+	case 0: // POSITIVE_X
+		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		break;
+	case 1:	// NEGATIVE_X
+		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		break;
+	case 2:	// POSITIVE_Y
+		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		break;
+	case 3:	// NEGATIVE_Y
+		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		break;
+	case 4:	// POSITIVE_Z
+		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		break;
+	case 5:	// NEGATIVE_Z
+		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		break;
+	}
+
+	assert(faceIndex >= 0 && faceIndex < 6);
+	m_Lightspaces[faceIndex] = depthProjectionMatrix * lightViewMatrix;
 }
 
 template<>

@@ -247,9 +247,11 @@ void ObjectPipeline::CreateDescriptors()
 	{
 		const auto& shadowPasses = s_ShadowPipeline->getShadowPasses();
 		const auto& cascadePasses = s_ShadowPipeline->getCascadePasses();
+		const auto& omniPasses = s_ShadowPipeline->getOmniPasses();
 
 		NE_INFO("Found {} shadow maps.", shadowPasses.size());
 		NE_INFO("Found {} cascaded shadow maps.", cascadePasses.size());
+		NE_INFO("Found {} omnidirectional shadow maps.", omniPasses.size());
 
 		std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
 			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
@@ -260,12 +262,15 @@ void ObjectPipeline::CreateDescriptors()
 			.pBindingFlags = descriptorBindingFlags.data()
 		};
 
-		// TODO: dont forget to add omni sources here
-		uint32_t combinedShadowPassSize = static_cast<uint32_t>(shadowPasses.size() + cascadePasses.size() * SHADOW_MAP_CASCADE_COUNT);
+		// total number of descriptors across all shadow passes
+		uint32_t combinedShadowDescriptorsCount = static_cast<uint32_t>(
+			shadowPasses.size() + 
+			cascadePasses.size() * SHADOW_MAP_CASCADE_COUNT +
+			omniPasses.size() * OMNI_SHADOWMAPS_COUNT);
 
 		// combine all shadow passes
 		std::vector<uint32_t> variableDesciptorCounts = {
-			combinedShadowPassSize
+			combinedShadowDescriptorsCount
 		};
 
 		VkDescriptorSetVariableDescriptorCountAllocateInfoEXT variableDescriptorInfoAI =
@@ -289,7 +294,16 @@ void ObjectPipeline::CreateDescriptors()
 			}
 		}
 
-		// TODO: add omni point light shadowpasses here
+		// omni point light shadowpasses here
+		for (uint32_t i = 0; i < omniPasses.size(); ++i)
+		{
+			for (int faceIndex = 0; faceIndex < OMNI_SHADOWMAPS_COUNT; ++faceIndex) {
+				auto& depth = omniPasses[i].cubefaces[faceIndex].depthAttachment;
+				shadowDescriptors.emplace_back(VkDescriptorImageInfo{
+					depth->getSampler(), depth->getView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+				});
+			}
+		}
 
 		// push spotlight shadowpasses here
 		for (uint32_t i = 0; i < shadowPasses.size(); ++i)
@@ -303,9 +317,9 @@ void ObjectPipeline::CreateDescriptors()
 		// actually build the descriptor set now
 		DescriptorBuilder builder = DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator);
 		
-		if (combinedShadowPassSize > 0)
+		if (combinedShadowDescriptorsCount > 0)
 			builder.BindImage(0, shadowDescriptors.data(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				VK_SHADER_STAGE_FRAGMENT_BIT, combinedShadowPassSize);
+				VK_SHADER_STAGE_FRAGMENT_BIT, combinedShadowDescriptorsCount);
 		else
 			builder.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 

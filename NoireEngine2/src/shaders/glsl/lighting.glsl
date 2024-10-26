@@ -17,7 +17,7 @@ layout(set=1, binding=1, std140) readonly buffer DirLights {
 
 struct PointLight
 {
-	mat4 lightspace;
+	mat4 lightspaces[6];
 	vec4 color;
 	vec4 position;
 	float intensity;
@@ -25,6 +25,10 @@ struct PointLight
 	float limit;
 	int shadowOffset;
 	float shadowStrength;
+
+	float pad;
+	float pad2;
+	float pad3;
 };
 
 layout(set=1, binding=2, std140) readonly buffer PointLights {
@@ -51,9 +55,12 @@ layout(set=1, binding=3, std140) readonly buffer SpotLights {
 	SpotLight SPOT_LIGHTS[];
 };
 
-vec3 DirLightRadiance(int i)
+float DirLightRadiance(int i)
 {
-	return max(0.0, dot(n, -vec3(DIR_LIGHTS[i].direction))) * DIR_LIGHTS[i].intensity * vec3(DIR_LIGHTS[i].color);
+	vec3 lightDir = normalize(vec3(DIR_LIGHTS[i].direction));
+	float cosTheta = max(dot(n, lightDir), 0.0);
+
+	return cosTheta * DIR_LIGHTS[i].intensity;
 }
 
 float CalculateFallOff(float D, float limit, float radius)
@@ -64,7 +71,7 @@ float CalculateFallOff(float D, float limit, float radius)
     return mix(1.0, falloff, step(radius, D)) * attenuation;
 }
 
-vec3 PointLightRadiance(int i)
+float PointLightRadiance(int i)
 {
 	vec3 lightDir = normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
 
@@ -74,10 +81,10 @@ vec3 PointLightRadiance(int i)
 
 	float falloff = CalculateFallOff(D, POINT_LIGHTS[i].limit, POINT_LIGHTS[i].radius);
 
-	return cosTheta * POINT_LIGHTS[i].intensity * falloff * vec3(POINT_LIGHTS[i].color);
+	return cosTheta * POINT_LIGHTS[i].intensity * falloff;
 }
 
-vec3 SpotLightRadiance(int i)
+float SpotLightRadiance(int i)
 {
 	vec3 lightDir = normalize(vec3(SPOT_LIGHTS[i].position) - inPosition);
 
@@ -95,7 +102,7 @@ vec3 SpotLightRadiance(int i)
     float cosThetaOuter = cos(fov * 0.5);
 	float coneAttenuation = clamp((cosAngle - cosThetaOuter) / saturate(cosThetaInner - cosThetaOuter), 0.0, 1.0);
 	
-	return cosTheta * SPOT_LIGHTS[i].intensity * falloff * coneAttenuation * vec3(SPOT_LIGHTS[i].color);
+	return cosTheta * SPOT_LIGHTS[i].intensity * falloff * coneAttenuation;
 }
 
 #include "shadows.glsl"
@@ -108,35 +115,35 @@ vec3 DirectLighting()
 
 	for (int i = 0; i < scene.numLights[0]; ++i)
 	{
-		vec3 radiance = DirLightRadiance(i);
-		if (DIR_LIGHTS[i].shadowOffset > 0)
-		{
+		float radiance = DirLightRadiance(i);
+
+		if (radiance > 0 && DIR_LIGHTS[i].shadowOffset > 0)
 			radiance *= DirLightShadow(i, shadowMapOffsetId);
-			shadowMapOffsetId += DIR_LIGHTS[i].shadowOffset;
-		}
-		lightsSum += radiance;
+
+		shadowMapOffsetId += DIR_LIGHTS[i].shadowOffset;
+		lightsSum += radiance * vec3(DIR_LIGHTS[i].color);
 	}
 
 	for (int i = 0; i < scene.numLights[1]; ++i)
 	{
-		vec3 radiance = PointLightRadiance(i);
-		if (POINT_LIGHTS[i].shadowOffset > 0)
-		{
+		float radiance = PointLightRadiance(i);
+
+		if (radiance > 0 && POINT_LIGHTS[i].shadowOffset > 0)
 			radiance *= PointLightShadow(i, shadowMapOffsetId);
-			shadowMapOffsetId += POINT_LIGHTS[i].shadowOffset;
-		}
-		lightsSum += radiance;
+
+		shadowMapOffsetId += POINT_LIGHTS[i].shadowOffset;
+		lightsSum += radiance * vec3(POINT_LIGHTS[i].color);
 	}
 
 	for (int i = 0; i < scene.numLights[2]; ++i)
 	{
-		vec3 radiance = SpotLightRadiance(i);
-		if (SPOT_LIGHTS[i].shadowOffset > 0)
-		{
+		float radiance = SpotLightRadiance(i);
+
+		if (radiance > 0 && SPOT_LIGHTS[i].shadowOffset > 0)
 			radiance *= SpotLightShadow(i, shadowMapOffsetId);
-			shadowMapOffsetId += SPOT_LIGHTS[i].shadowOffset;
-		}
-		lightsSum += radiance;
+
+		shadowMapOffsetId += SPOT_LIGHTS[i].shadowOffset;
+		lightsSum += radiance * vec3(SPOT_LIGHTS[i].color);
 	}
 
 	return lightsSum;

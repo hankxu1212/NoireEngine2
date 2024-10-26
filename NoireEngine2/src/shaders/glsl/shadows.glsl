@@ -1,6 +1,7 @@
 // Note: shadows.glsl relies on a descriptor indexed shadowMaps[] array
 
 #include "sampling.glsl"
+#include "cubemap.glsl"
 
 #define ambient 0.1
 
@@ -93,7 +94,7 @@ float DirLightShadow(int lightId, int shadowMapId)
 	int cascadedShadowMapID = shadowMapId + cascadeIndex;
 
 	const float shadowBias = 0;
-	vec4 shadowCoord = biasMat * DIR_LIGHTS[lightId].lightspaces[cascadedShadowMapID] * vec4(inPosition, 1.0);
+	vec4 shadowCoord = biasMat * DIR_LIGHTS[lightId].lightspaces[cascadeIndex] * vec4(inPosition, 1.0);
 		
 	// perform perspective divide
 	shadowCoord /= shadowCoord.w;
@@ -113,7 +114,30 @@ float DirLightShadow(int lightId, int shadowMapId)
 
 float PointLightShadow(int lightId, int shadowMapId)
 {
-	return 1;
+	vec3 lightDir = normalize(vec3(POINT_LIGHTS[lightId].position) - inPosition);
+	int face;
+	CartesianToCubeUV(lightDir, face);
+
+	int omniShadowMapID = shadowMapId + face;
+
+	float shadowBias = EPSILON;
+
+	vec4 shadowCoord = biasMat * POINT_LIGHTS[lightId].lightspaces[face] * vec4(inPosition, 1.0);
+	
+	// perform perspective divide
+	shadowCoord /= shadowCoord.w;
+
+	// when z/w goes outside the normalized range [-1, 1], they lie outside the view frustum
+	// similarly for x,y, they need to be in [0, 1]
+	float shadow = 1;
+	if (abs(shadowCoord.z) <= 1
+		&& shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0
+		&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
+	{
+		float lightSize = POINT_LIGHTS[lightId].radius;
+		shadow = (1 - PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, omniShadowMapID, lightSize)) * POINT_LIGHTS[lightId].shadowStrength;
+	}
+	return 1 - shadow;
 }
 
 float SpotLightShadow(int lightId, int shadowMapId)

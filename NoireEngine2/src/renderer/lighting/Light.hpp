@@ -10,6 +10,8 @@
 #include <variant>
 
 #define SHADOW_MAP_CASCADE_COUNT 4
+#define OMNI_SHADOWMAPS_COUNT 6
+#define MAX_LIGHTSPACES 6
 
 struct alignas(16) DirectionalLightUniform
 {
@@ -26,7 +28,7 @@ static_assert(sizeof(DirectionalLightUniform) == 64 * 4 + 16 * 4);
 
 struct alignas(16) PointLightUniform
 {
-	glm::mat4 lightspace; /*depthMVP*/
+	std::array<glm::mat4, OMNI_SHADOWMAPS_COUNT> lightspaces; /*depthMVP*/
 	glm::vec4 color;
 	glm::vec4 position;
 	float intensity;
@@ -35,7 +37,7 @@ struct alignas(16) PointLightUniform
 	uint32_t shadowOffset;
 	float shadowStrength;
 };
-static_assert(sizeof(PointLightUniform) == 64 + 16 * 2 + 16 * 2);
+static_assert(sizeof(PointLightUniform) == 64 * 6 + 16 * 2 + 16 * 2);
 
 struct alignas(16) SpotLightUniform
 {
@@ -94,12 +96,13 @@ public:
 	bool m_UseShadows = true;
 	float m_NearClip = 1.0f;
 	float m_FarClip = 96.0f;
-	std::array<glm::mat4, SHADOW_MAP_CASCADE_COUNT> m_Lightspaces; /*depthMVP*/
+	std::array<glm::mat4, MAX_LIGHTSPACES> m_Lightspaces; /*depthMVP*/
 	float m_ShadowAttenuation = 1;
 	glm::vec4 m_CascadeSplitDepths;
 
 private:
 	void UpdateDirectionalLightCascades();
+	void UpdatePointLightLightSpaces(uint32_t faceIndex);
 	
 	GizmosInstance gizmos;
 };

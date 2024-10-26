@@ -1,3 +1,6 @@
+#ifndef _INCLUDE_CUBEMAP
+#define _INCLUDE_CUBEMAP
+
 vec3 CubeUVtoCartesian(int index, vec2 uv) 
 {
     vec3 xyz = vec3(0.0);
@@ -67,3 +70,5 @@ vec2 CartesianToCubeUV(vec3 dir, out int faceIndex)
     uv = uv * 0.5 + 0.5;
     return uv;
 }
+
+#endif
