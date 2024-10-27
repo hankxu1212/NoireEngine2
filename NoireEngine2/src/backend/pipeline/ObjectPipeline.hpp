@@ -49,12 +49,17 @@ public:
 		uint32_t firstInstanceIndex;
 		uint32_t count;
 	};
-	static std::vector<IndirectBatch> CompactDraws(const std::vector<ObjectInstance>& objects);
+
+	const std::vector<std::vector<IndirectBatch>>& getIndirectBatches() const { return m_IndirectBatches; }
 
 private:
 	void CreateDescriptors();
-	
+
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
+
+	void CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t workflowIndex);
+
+	void PrepareIndirectDrawBuffer(const Scene* scene);
 
 	void DrawScene(const Scene* scene, const CommandBuffer& commandBuffer);
 
@@ -102,6 +107,8 @@ private:
 	DescriptorAllocator						m_DescriptorAllocator;
 
 	std::unique_ptr<Renderpass>				m_Renderpass;
+
+	std::vector<std::vector<IndirectBatch>> m_IndirectBatches;
 
 private: // material pipelines
 	std::vector<std::unique_ptr<MaterialPipeline>>	m_MaterialPipelines;

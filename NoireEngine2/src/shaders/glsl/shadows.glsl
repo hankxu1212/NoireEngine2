@@ -72,7 +72,7 @@ float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex, float li
 float textureProj(vec4 shadowCoord, vec2 offset, int cascadeIndex)
 {
 	float shadow = 1.0;
-	float bias = 0;
+	float bias = 0.005;
 
 	float dist = texture(shadowMaps[cascadeIndex], shadowCoord.st + offset).r;
 	if (dist < shadowCoord.z - bias) {
@@ -116,7 +116,7 @@ float PointLightShadow(int lightId, int shadowMapId)
 
 	int omniShadowMapID = shadowMapId + face;
 
-	float shadowBias = EPSILON;
+	float shadowBias = 0.0005;
 
 	vec4 shadowCoord = biasMat * POINT_LIGHTS[lightId].lightspaces[face] * vec4(inPosition, 1.0);
 
@@ -135,7 +135,7 @@ float PointLightShadow(int lightId, int shadowMapId)
 
 float SpotLightShadow(int lightId, int shadowMapId)
 {
-	float shadowBias = EPSILON;
+	float shadowBias = 0.0005;
 
 	vec4 shadowCoord = biasMat * SPOT_LIGHTS[lightId].lightspace * vec4(inPosition, 1.0);
 	

@@ -40,7 +40,7 @@ public:
     const char* getTypeStr() const;
 
     float nearClipPlane = 0.1f;
-    float farClipPlane = 300.0f;
+    float farClipPlane = 96.0f;
     float fieldOfView = 1.0471975512f; // around 60 
     float aspectRatio = 1980.0f/1020.0f;
 

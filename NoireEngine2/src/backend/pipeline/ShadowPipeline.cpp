@@ -284,51 +284,32 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 		0, nullptr //dynamic offsets count, ptr
 	);
 
+	const auto& allInstances = scene->getObjectInstances();
+	const auto& indirectBatches = p_ObjectPipeline->getIndirectBatches();
+
+	// bind pipeline
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ShadowMapPipeline);
+
 	// bind and draw scene
 	auto DrawOnce = [&](int lightIndex)
 	{
-		// bind pipeline
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ShadowMapPipeline);
-
-		// push constant
-		Push push{
-			.lightspaceID = lightIndex
-		};
+		Push push{ .lightspaceID = lightIndex };
 		vkCmdPushConstants(commandBuffer, m_ShadowMapPassPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Push), &push);
 
-		// draw once
-		const auto& allInstances = scene->getObjectInstances();
-
-		VkDrawIndexedIndirectCommand* drawCommands = (VkDrawIndexedIndirectCommand*)VulkanContext::Get()->getIndirectBuffer()->data();
-
 		//draw all instances in relation to a certain material:
-		uint32_t instanceIndex = 0;
 		uint32_t offsetIndex = 0;
 		VertexInput* previouslyBindedVertex = nullptr;
 
 		for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
 		{
-			auto& workflowInstances = allInstances[workflowIndex];
+			const auto& workflowInstances = allInstances[workflowIndex];
 			if (workflowInstances.empty())
 				continue;
 
-			// make draws into compact batches
-			std::vector<ObjectPipeline::IndirectBatch> draws = ObjectPipeline::CompactDraws(workflowInstances);
-
-			//encode the draw data of each object into the indirect draw buffer
 			uint32_t instanceCount = (uint32_t)workflowInstances.size();
-			for (uint32_t i = 0; i < instanceCount; i++)
-			{
-				drawCommands[instanceIndex].indexCount = workflowInstances[i].mesh->getIndexCount();
-				drawCommands[instanceIndex].instanceCount = 1;
-				drawCommands[instanceIndex].firstIndex = 0;
-				drawCommands[instanceIndex].vertexOffset = 0;
-				drawCommands[instanceIndex].firstInstance = instanceIndex;
-				instanceIndex++;
-			}
 
 			// draw each batch
-			for (ObjectPipeline::IndirectBatch& draw : draws)
+			for (const ObjectPipeline::IndirectBatch& draw : indirectBatches[workflowIndex])
 			{
 				VertexInput* vertexInputPtr = draw.mesh->getVertexInput();
 				if (vertexInputPtr != previouslyBindedVertex) {
@@ -342,6 +323,7 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 				VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * stride;
 
 				vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
+				ObjectPipeline::NumDrawCalls++;
 			}
 			offsetIndex += instanceCount;
 		}

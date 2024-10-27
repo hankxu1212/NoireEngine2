@@ -3,6 +3,7 @@
 #include <array>
 #include <algorithm>
 #include <execution>
+#include <thread>
 
 #include "backend/VulkanContext.hpp"
 #include "backend/shader/VulkanShader.h"
@@ -370,10 +371,11 @@ void ObjectPipeline::CreatePipeline()
 void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
 	Prepare(scene, commandBuffer);
+	PrepareIndirectDrawBuffer(scene);
 
 	// render shadow pass
 	s_ShadowPipeline->Render(scene, commandBuffer);
-	
+
 	m_Renderpass->Begin(commandBuffer);
 	{
 		DrawScene(scene, commandBuffer);
@@ -589,10 +591,28 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 	}
 }
 
-//draw with the objects pipeline:
-void ObjectPipeline::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
+void ObjectPipeline::CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t workflowIndex)
+{
+	std::vector<IndirectBatch>& draws = m_IndirectBatches[workflowIndex];
+	draws.emplace_back(objects[0].mesh, objects[0].material, 0, 1);
+
+	for (uint32_t i = 1; i < objects.size(); i++)
+	{
+		//compare the mesh and material with the end of the vector of draws
+		bool sameMesh = objects[i].mesh == draws.back().mesh;
+		bool sameMaterial = objects[i].material == draws.back().material;
+
+		if (sameMesh && sameMaterial)
+			draws.back().count++;
+		else
+			draws.emplace_back(objects[i].mesh, objects[i].material, i, 1);
+	}
+}
+
+void ObjectPipeline::PrepareIndirectDrawBuffer(const Scene* scene)
 {
 	const auto& allInstances = scene->getObjectInstances();
+	m_IndirectBatches.resize(allInstances.size());
 
 	ObjectsDrawn = 0;
 	NumDrawCalls = 0;
@@ -602,26 +622,18 @@ void ObjectPipeline::DrawScene(const Scene* scene, const CommandBuffer& commandB
 
 	//draw all instances in relation to a certain material:
 	uint32_t instanceIndex = 0;
-	uint32_t offsetIndex = 0; 
-	VertexInput* previouslyBindedVertex = nullptr;
 
 	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
 	{
-		auto& workflowInstances = allInstances[workflowIndex];
+		const auto& workflowInstances = allInstances[workflowIndex];
 		if (workflowInstances.empty())
 			continue;
 
-		// bind pipeline
-		m_MaterialPipelines[workflowIndex]->BindPipeline(commandBuffer);
-
-		// bind descriptor sets
-		m_MaterialPipelines[workflowIndex]->BindDescriptors(commandBuffer);
-
 		// make draws into compact batches
-		std::vector<IndirectBatch> draws = CompactDraws(workflowInstances);
-		NumDrawCalls += draws.size();
+		m_IndirectBatches[workflowIndex].clear();
+		CompactDraws(workflowInstances, workflowIndex);
 
-		//encode the draw data of each object into the indirect draw buffer
+		// encode the draw data of each object into the indirect draw buffer
 		uint32_t instanceCount = (uint32_t)workflowInstances.size();
 		for (uint32_t i = 0; i < instanceCount; i++)
 		{
@@ -634,9 +646,35 @@ void ObjectPipeline::DrawScene(const Scene* scene, const CommandBuffer& commandB
 
 			VerticesDrawn += workflowInstances[i].mesh->getVertexCount();
 		}
+	}
+	ObjectsDrawn = instanceIndex;
+}
+
+//draw with the objects pipeline:
+void ObjectPipeline::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
+{
+	const auto& allInstances = scene->getObjectInstances();
+
+	//draw all instances in relation to a certain material:
+	uint32_t offsetIndex = 0; 
+	VertexInput* previouslyBindedVertex = nullptr;
+
+	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
+	{
+		const auto& workflowInstances = allInstances[workflowIndex];
+		if (workflowInstances.empty())
+			continue;
+
+		// bind pipeline
+		m_MaterialPipelines[workflowIndex]->BindPipeline(commandBuffer);
+
+		// bind descriptor sets
+		m_MaterialPipelines[workflowIndex]->BindDescriptors(commandBuffer);
+
+		uint32_t instanceCount = (uint32_t)workflowInstances.size();
 
 		// draw each batch
-		for (IndirectBatch& draw : draws)
+		for (IndirectBatch& draw : m_IndirectBatches[workflowIndex])
 		{
 			VertexInput* vertexInputPtr = draw.mesh->getVertexInput();
 			if (vertexInputPtr != previouslyBindedVertex) {
@@ -651,28 +689,8 @@ void ObjectPipeline::DrawScene(const Scene* scene, const CommandBuffer& commandB
 			VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * stride;
 
 			vkCmdDrawIndexedIndirect(commandBuffer, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
+			NumDrawCalls++;
 		}
 		offsetIndex += instanceCount;
 	}
-	ObjectsDrawn = instanceIndex;
-}
-
-std::vector<ObjectPipeline::IndirectBatch> ObjectPipeline::CompactDraws(const std::vector<ObjectInstance>& objects)
-{
-	std::vector<IndirectBatch> draws;
-
-	draws.emplace_back(objects[0].mesh, objects[0].material, 0, 1);
-
-	for (uint32_t i = 1; i < objects.size(); i++)
-	{
-		//compare the mesh and material with the end of the vector of draws
-		bool sameMesh = objects[i].mesh == draws.back().mesh;
-		bool sameMaterial = objects[i].material == draws.back().material;
-
-		if (sameMesh && sameMaterial)
-			draws.back().count++;
-		else
-			draws.emplace_back(objects[i].mesh, objects[i].material, i, 1);
-	}
-	return draws;
 }
