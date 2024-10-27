@@ -7,7 +7,7 @@ static VkDescriptorPool CreatePool(VkDevice device, const DescriptorAllocator::P
 {
 	std::vector<VkDescriptorPoolSize> sizes;
 	sizes.reserve(poolSizes.sizes.size());
-	for (auto sz : poolSizes.sizes) {
+	for (auto& sz : poolSizes.sizes) {
 		sizes.push_back({ sz.first, uint32_t(sz.second * count) });
 	}
 	VkDescriptorPoolCreateInfo pool_info = {};
@@ -68,7 +68,7 @@ bool DescriptorAllocator::Allocate(VkDescriptorSet* set, VkDescriptorSetLayout l
 	if (currentPool == VK_NULL_HANDLE) {
 
 		currentPool = GrabPool();
-		usedPools.push_back(currentPool);
+		usedPools.emplace_back(currentPool);
 	}
 
 	VkDescriptorSetAllocateInfo allocInfo = {};
@@ -100,7 +100,7 @@ bool DescriptorAllocator::Allocate(VkDescriptorSet* set, VkDescriptorSetLayout l
 	if (needReallocate) {
 		//allocate a new pool and retry
 		currentPool = GrabPool();
-		usedPools.push_back(currentPool);
+		usedPools.emplace_back(currentPool);
 
 		allocResult = vkAllocateDescriptorSets(VulkanContext::GetDevice(), &allocInfo, set);
 
@@ -117,12 +117,9 @@ void DescriptorAllocator::ResetPools() {
 	//reset all used pools and add them to the free pools
 	for (auto p : usedPools) {
 		vkResetDescriptorPool(VulkanContext::GetDevice(), p, 0);
-		freePools.push_back(p);
+		freePools.emplace_back(p);
 	}
 
-	//clear the used pools, since we've put them all in the free pools
 	usedPools.clear();
-
-	//reset the current pool handle back to null
 	currentPool = VK_NULL_HANDLE;
 }

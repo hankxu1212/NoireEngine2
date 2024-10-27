@@ -103,13 +103,14 @@ void VertexInput::Load()
 	for (const auto& nativeAttribute : m_NativeAttributes)
 	{
 		VkFormat format = vkStringToFormat(nativeAttribute.format);
-		m_VulkanAttributes.emplace_back(VkVertexInputAttributeDescription2EXT{
-			.sType = VK_STRUCTURE_TYPE_VERTEX_INPUT_ATTRIBUTE_DESCRIPTION_2_EXT,
-			.location = i++,
-			.binding = 0,
-			.format = format,
-			.offset = nativeAttribute.offset,
-		});
+		m_VulkanAttributes.emplace_back(
+			VK_STRUCTURE_TYPE_VERTEX_INPUT_ATTRIBUTE_DESCRIPTION_2_EXT,
+			nullptr,
+			i++,
+			0,
+			format,
+			nativeAttribute.offset
+		);
 	}
 
 	m_Binding = {

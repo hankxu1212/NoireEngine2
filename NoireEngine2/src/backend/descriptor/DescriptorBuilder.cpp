@@ -22,7 +22,7 @@ DescriptorBuilder& DescriptorBuilder::BindBuffer(uint32_t binding, VkDescriptorB
 	newBinding.stageFlags = stageFlags;
 	newBinding.binding = binding;
 
-	bindings.push_back(newBinding);
+	bindings.emplace_back(newBinding);
 
 	//create the descriptor write
 	VkWriteDescriptorSet newWrite{};
@@ -34,21 +34,15 @@ DescriptorBuilder& DescriptorBuilder::BindBuffer(uint32_t binding, VkDescriptorB
 	newWrite.pBufferInfo = bufferInfo;
 	newWrite.dstBinding = binding;
 
-	writes.push_back(newWrite);
+	writes.emplace_back(newWrite);
 	return *this;
 }
 
 DescriptorBuilder& DescriptorBuilder::BindImage(uint32_t binding, VkDescriptorImageInfo* imageInfo, 
 	VkDescriptorType type, VkShaderStageFlags stageFlags, uint32_t descriptorCount)
 {
-	bindings.emplace_back( VkDescriptorSetLayoutBinding {
-		.binding = binding,
-		.descriptorType = type,
-		.descriptorCount = descriptorCount,
-		.stageFlags = stageFlags,
-		.pImmutableSamplers = nullptr,
-	});
-
+	bindings.emplace_back(binding, type, descriptorCount, stageFlags, nullptr);
+	
 	writes.emplace_back( VkWriteDescriptorSet {
 		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.pNext = nullptr,
@@ -63,16 +57,7 @@ DescriptorBuilder& DescriptorBuilder::BindImage(uint32_t binding, VkDescriptorIm
 
 DescriptorBuilder& DescriptorBuilder::AddBinding(uint32_t binding, VkDescriptorType type, VkShaderStageFlags stageFlags)
 {
-	//create the descriptor binding for the layout
-	VkDescriptorSetLayoutBinding newBinding{};
-
-	newBinding.descriptorCount = 1;
-	newBinding.descriptorType = type;
-	newBinding.pImmutableSamplers = nullptr;
-	newBinding.stageFlags = stageFlags;
-	newBinding.binding = binding;
-
-	bindings.push_back(newBinding);
+	bindings.emplace_back(binding, type, 1, stageFlags, nullptr);
 
 	return *this;
 }

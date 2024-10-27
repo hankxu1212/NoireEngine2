@@ -98,7 +98,7 @@ private:
 	void TransformToIndexedMesh(Vertex* vertices, uint32_t count);
 
 	void CreateVertexBuffer(std::vector<Vertex>& vertices);
-	void CreateIndexBuffer(std::vector<uint32_t> indices);
+	void CreateIndexBuffer(std::vector<uint32_t>& indices);
 
 private:
 	Buffer							m_VertexBuffer;

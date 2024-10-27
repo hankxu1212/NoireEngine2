@@ -25,8 +25,6 @@ void Buffer::Destroy()
 	buffer = VK_NULL_HANDLE;
 	bufferMemory = VK_NULL_HANDLE;
 	m_Size = 0;
-
-	//std::cout << "Destroyed buffer" << std::endl;
 }
 
 void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map)
@@ -80,7 +78,7 @@ void Buffer::UnmapMemory() const {
 }
 
 void Buffer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-	CommandBuffer commandBuffer;
+	CommandBuffer commandBuffer(true, VK_QUEUE_TRANSFER_BIT);
 	CopyBuffer(commandBuffer, srcBuffer, dstBuffer, size);
 	commandBuffer.SubmitIdle();
 }

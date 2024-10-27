@@ -20,4 +20,18 @@ struct ObjectInstance
 
 	Mesh* mesh;
 	Material* material;
+
+	ObjectInstance(
+		const glm::mat4& view,
+		const glm::mat4& model,
+		const glm::mat4& normal,
+		uint32_t vertexIndex,
+		Mesh* meshPtr,
+		Material* materialPtr
+	) : 
+		m_TransformUniform{ view, model, normal },
+		firstVertex(vertexIndex),
+		mesh(meshPtr),
+		material(materialPtr)
+	{}
 };

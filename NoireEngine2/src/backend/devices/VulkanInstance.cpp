@@ -146,7 +146,7 @@ VulkanInstance::VulkanInstance()
     uint32_t extensions_count = 0;
     const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
     for (uint32_t i = 0; i < extensions_count; i++)
-        extensions.push_back(glfw_extensions[i]);
+        extensions.emplace_back(glfw_extensions[i]);
 
     // Enumerate available extensions
     uint32_t properties_count;
@@ -157,16 +157,16 @@ VulkanInstance::VulkanInstance()
 
     // Enable required extensions (portability and some MoltenSDK compatability stuff)
     if (ValidationLayersEnabled) {
-        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
     if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
-        extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+        extensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
     else
         std::runtime_error("no VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME extension found possible on this device. Aborting...\n");
 
     if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
     {
-        extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+        extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         instance_create_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
     }
 

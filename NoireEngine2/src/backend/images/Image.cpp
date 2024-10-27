@@ -190,7 +190,7 @@ void Image::CreateMipmaps(const VkImage& image, const VkExtent3D& extent, VkForm
 	assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT);
 	assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT);
 
-	CommandBuffer commandBuffer;
+	CommandBuffer commandBuffer(true, VK_QUEUE_TRANSFER_BIT);
 
 	for (uint32_t i = 1; i < mipLevels; i++) {
 		VkImageMemoryBarrier barrier0 = {};
@@ -261,7 +261,7 @@ void Image::CreateMipmaps(const VkImage& image, const VkExtent3D& extent, VkForm
 void Image::TransitionImageLayout(const VkImage& image, VkFormat format, VkImageLayout srcImageLayout, VkImageLayout dstImageLayout,
 	VkImageAspectFlags imageAspect, uint32_t mipLevels, uint32_t baseMipLevel, uint32_t layerCount, uint32_t baseArrayLayer) {
 
-	CommandBuffer commandBuffer;
+	CommandBuffer commandBuffer(true, VK_QUEUE_TRANSFER_BIT);
 
 	VkImageMemoryBarrier imageMemoryBarrier = {};
 	imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -366,7 +366,7 @@ void Image::InsertImageMemoryBarrier(const CommandBuffer& commandBuffer, const V
 
 void Image::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, const VkExtent3D& extent, uint32_t layerCount, uint32_t baseArrayLayer, uint32_t miplevel) 
 {
-	CommandBuffer commandBuffer;
+	CommandBuffer commandBuffer(true, VK_QUEUE_TRANSFER_BIT);
 
 	VkBufferImageCopy region = {};
 	region.bufferOffset = 0;
@@ -417,7 +417,7 @@ start:
 	CreateImage(dstImage, dstImageMemory, extent, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_LINEAR,
 		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 1, numLayers, VK_IMAGE_TYPE_2D);
 
-	CommandBuffer commandBuffer;
+	CommandBuffer commandBuffer(true, VK_QUEUE_TRANSFER_BIT);
 
 	// Transition destination image to transfer destination layout.
 	InsertImageMemoryBarrier(commandBuffer, dstImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,

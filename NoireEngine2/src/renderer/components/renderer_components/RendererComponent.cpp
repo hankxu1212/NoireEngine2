@@ -40,16 +40,15 @@ void RendererComponent::Render(const glm::mat4& model)
 	}
 
 	const Camera* renderCam = GetScene()->GetRenderCam()->camera();
-	GetScene()->PushObjectInstance({
-		{
+	GetScene()->GetObjectInstances((uint32_t)material->getWorkflow())
+		.emplace_back(
 			renderCam->getWorldToClipMatrix() * model,
 			model, // model
 			glm::inverse(model), // normal
-		}, // transform uniform
-		0, //  first vertex
-		mesh, // mesh pointer
-		material // material pointer
-	}, (uint32_t)material->getWorkflow());
+			0, //  first vertex
+			mesh, // mesh pointer
+			material // material pointer
+		);
 
 	if (ObjectPipeline::UseGizmos && useGizmos) {
 		gizmos.DrawWireCube1(mesh->getAABB().min, mesh->getAABB().max, Color4_4::Green);

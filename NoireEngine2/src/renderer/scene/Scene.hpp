@@ -71,7 +71,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Rendering and scene uniforms
 
-	void PushObjectInstance(ObjectInstance&& instance, uint32_t index);
+	std::vector<ObjectInstance>& GetObjectInstances(uint32_t index) { return m_ObjectInstances[index]; }
 
 	void PushGizmosInstance(GizmosInstance* instance);
 

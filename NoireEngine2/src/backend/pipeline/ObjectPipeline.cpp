@@ -289,9 +289,7 @@ void ObjectPipeline::CreateDescriptors()
 		{
 			for (int cascadeIndex = 0; cascadeIndex < SHADOW_MAP_CASCADE_COUNT; ++cascadeIndex) {
 				auto& depth = cascadePasses[i].cascades[cascadeIndex].depthAttachment;
-				shadowDescriptors.emplace_back(VkDescriptorImageInfo{
-					depth->getSampler(), depth->getView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-				});
+				shadowDescriptors.emplace_back(depth->getSampler(), depth->getView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 			}
 		}
 
@@ -300,9 +298,7 @@ void ObjectPipeline::CreateDescriptors()
 		{
 			for (int faceIndex = 0; faceIndex < OMNI_SHADOWMAPS_COUNT; ++faceIndex) {
 				auto& depth = omniPasses[i].cubefaces[faceIndex].depthAttachment;
-				shadowDescriptors.emplace_back(VkDescriptorImageInfo{
-					depth->getSampler(), depth->getView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-				});
+				shadowDescriptors.emplace_back(depth->getSampler(), depth->getView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 			}
 		}
 
@@ -310,9 +306,7 @@ void ObjectPipeline::CreateDescriptors()
 		for (uint32_t i = 0; i < shadowPasses.size(); ++i)
 		{
 			auto& depth = shadowPasses[i].depthAttachment;
-			shadowDescriptors.emplace_back(VkDescriptorImageInfo {
-				depth->getSampler(), depth->getView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-			});
+			shadowDescriptors.emplace_back(depth->getSampler(), depth->getView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 		}
 
 		// actually build the descriptor set now

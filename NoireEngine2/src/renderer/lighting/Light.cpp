@@ -257,7 +257,7 @@ void Light::UpdateDirectionalLightCascades()
 	float minZ = nearClip;
 	float maxZ = nearClip + clipRange;
 
-	float range = maxZ - minZ;
+	float range = clipRange;
 	float ratio = maxZ / minZ;
 
 	// Calculate split depths based on view camera frustum
@@ -274,7 +274,8 @@ void Light::UpdateDirectionalLightCascades()
 
 	// Calculate orthographic projection matrix for each cascade
 	float lastSplitDist = 0.0;
-	for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) {
+	for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++) 
+	{
 		float splitDist = cascadeSplits[i];
 
 		glm::vec3 frustumCorners[8] = {

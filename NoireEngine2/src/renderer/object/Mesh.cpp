@@ -168,9 +168,9 @@ void Mesh::TransformToIndexedMesh(Vertex* vertices, uint32_t count)
 		}
 		else
 		{
-			uniqueVertices.push_back(vertex);
+			uniqueVertices.emplace_back(vertex);
 			uint32_t newIndex = static_cast<uint32_t>(uniqueVertices.size()) - 1;
-			indices.push_back(newIndex);
+			indices.emplace_back(newIndex);
 			vertexToIndexMap[vertex] = newIndex;
 		}
 	}
@@ -196,7 +196,7 @@ void Mesh::CreateVertexBuffer(std::vector<Vertex>& vertices)
 	Buffer::TransferToBuffer(vertices.data(), vertices.size() * 48, m_VertexBuffer.getBuffer());
 }
 
-void Mesh::CreateIndexBuffer(std::vector<uint32_t> indices)
+void Mesh::CreateIndexBuffer(std::vector<uint32_t>& indices)
 {
 	m_IndexBuffer = Buffer(
 		indices.size() * 4,

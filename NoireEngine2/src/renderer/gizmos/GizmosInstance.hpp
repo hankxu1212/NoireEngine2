@@ -182,9 +182,9 @@ struct GizmosInstance
         glm::vec3 arrowDown = tip - (direction * size) - (up * size * 0.5f);
 
         // Add lines for the arrowhead
-        AddEdge({ tip, color }, {arrowLeft, color });
-        AddEdge({ tip, color }, {arrowRight, color });
-        AddEdge({ tip, color }, {arrowUp, color });
+        AddEdge({ tip, color }, { arrowLeft, color });
+        AddEdge({ tip, color }, { arrowRight, color });
+        AddEdge({ tip, color }, { arrowUp, color });
         AddEdge({ tip, color }, { arrowDown, color });
     }
 
@@ -192,8 +192,8 @@ struct GizmosInstance
     // Helper function to add edges
     void AddEdge(const PosColVertex& start, const PosColVertex& end)
     {
-        m_LinesVertices.push_back(start);
-        m_LinesVertices.push_back(end);
+        m_LinesVertices.emplace_back(start);
+        m_LinesVertices.emplace_back(end);
     };
 
     // Helper function to add edges

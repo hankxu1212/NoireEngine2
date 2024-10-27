@@ -98,6 +98,8 @@ VkQueue CommandBuffer::GetQueue() const
 		return VulkanContext::Get()->getLogicalDevice()->getGraphicsQueue();
 	case VK_QUEUE_COMPUTE_BIT:
 		return VulkanContext::Get()->getLogicalDevice()->getComputeQueue();
+	case VK_QUEUE_TRANSFER_BIT:
+		return VulkanContext::Get()->getLogicalDevice()->getTransferQueue();
 	default:
 		return nullptr;
 	}

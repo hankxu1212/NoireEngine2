@@ -483,11 +483,6 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type, bool isDefault)
 	}
 }
 
-void Scene::PushObjectInstance(ObjectInstance&& instance, uint32_t index)
-{
-	m_ObjectInstances[index].emplace_back(std::move(instance));
-}
-
 void Scene::PushGizmosInstance(GizmosInstance* instance)
 {
 	m_GizmosInstances.emplace_back(instance);
