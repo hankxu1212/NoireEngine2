@@ -1,5 +1,12 @@
 ["s72-v2",
 {
+	"type":"MATERIAL",
+	"name":"lambertian:Red",
+	"lambertian":{
+		"albedo":[ 0.800474, 0.0207259, 0.0171463 ]
+	}
+},
+{
 	"type":"MESH",
 	"name":"Cube",
 	"topology":"TRIANGLE_LIST",
@@ -9,7 +16,8 @@
 		"NORMAL":{ "src":"LightsScene.Cube.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
 		"TANGENT":{ "src":"LightsScene.Cube.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
 		"TEXCOORD":{ "src":"LightsScene.Cube.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
-	}
+	},
+	"material":"lambertian:Red"
 },
 {
 	"type":"NODE",
@@ -39,6 +47,13 @@
 	"camera":"Camera"
 },
 {
+	"type":"MATERIAL",
+	"name":"lambertian:Blue",
+	"lambertian":{
+		"albedo":[ 0.00220864, 0.126912, 0.800119 ]
+	}
+},
+{
 	"type":"MESH",
 	"name":"Icosphere",
 	"topology":"TRIANGLE_LIST",
@@ -48,7 +63,8 @@
 		"NORMAL":{ "src":"LightsScene.Icosphere.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
 		"TANGENT":{ "src":"LightsScene.Icosphere.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
 		"TEXCOORD":{ "src":"LightsScene.Icosphere.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
-	}
+	},
+	"material":"lambertian:Blue"
 },
 {
 	"type":"NODE",
@@ -57,6 +73,13 @@
 	"rotation":[0,0,0,1],
 	"scale":[1,1,1],
 	"mesh":"Icosphere"
+},
+{
+	"type":"MATERIAL",
+	"name":"lambertian:Yellow",
+	"lambertian":{
+		"albedo":[ 0.800197, 0.620888, 0 ]
+	}
 },
 {
 	"type":"MESH",
@@ -68,7 +91,8 @@
 		"NORMAL":{ "src":"LightsScene.Cube.001.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
 		"TANGENT":{ "src":"LightsScene.Cube.001.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
 		"TEXCOORD":{ "src":"LightsScene.Cube.001.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
-	}
+	},
+	"material":"lambertian:Yellow"
 },
 {
 	"type":"NODE",
@@ -88,7 +112,8 @@
 		"NORMAL":{ "src":"LightsScene.Cube.002.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
 		"TANGENT":{ "src":"LightsScene.Cube.002.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
 		"TEXCOORD":{ "src":"LightsScene.Cube.002.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
-	}
+	},
+	"material":"lambertian:Blue"
 },
 {
 	"type":"NODE",
@@ -120,26 +145,6 @@
 },
 {
 	"type":"MESH",
-	"name":"Cube.003",
-	"topology":"TRIANGLE_LIST",
-	"count":36,
-	"attributes":{
-		"POSITION":{ "src":"LightsScene.Cube.003.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
-		"NORMAL":{ "src":"LightsScene.Cube.003.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
-		"TANGENT":{ "src":"LightsScene.Cube.003.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
-		"TEXCOORD":{ "src":"LightsScene.Cube.003.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
-	}
-},
-{
-	"type":"NODE",
-	"name":"Cube.003",
-	"translation":[0,0,-1.034],
-	"rotation":[0,0,0,1],
-	"scale":[13.5451,13.5451,0.299341],
-	"mesh":"Cube.003"
-},
-{
-	"type":"MESH",
 	"name":"Cube.004",
 	"topology":"TRIANGLE_LIST",
 	"count":36,
@@ -155,7 +160,7 @@
 	"name":"Cube.004",
 	"translation":[0.404337,32.448,-1.034],
 	"rotation":[0,0,0,1],
-	"scale":[13.5451,13.5451,0.299341],
+	"scale":[81.4304,81.4304,0.99049],
 	"mesh":"Cube.004"
 },
 {
@@ -168,14 +173,15 @@
 		"NORMAL":{ "src":"LightsScene.Cube.005.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
 		"TANGENT":{ "src":"LightsScene.Cube.005.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
 		"TEXCOORD":{ "src":"LightsScene.Cube.005.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
-	}
+	},
+	"material":"lambertian:Blue"
 },
 {
 	"type":"NODE",
 	"name":"Cube.005",
-	"translation":[-13.7044,32.6528,14.6288],
+	"translation":[-13.7044,32.6528,10.9703],
 	"rotation":[0,0,0,1],
-	"scale":[0.495062,13.5451,15.9755],
+	"scale":[0.495062,13.5451,11.38],
 	"mesh":"Cube.005"
 },
 {
@@ -188,14 +194,15 @@
 		"NORMAL":{ "src":"LightsScene.Cube.006.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
 		"TANGENT":{ "src":"LightsScene.Cube.006.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
 		"TEXCOORD":{ "src":"LightsScene.Cube.006.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
-	}
+	},
+	"material":"lambertian:Yellow"
 },
 {
 	"type":"NODE",
 	"name":"Cube.006",
-	"translation":[0.524164,46.4719,14.6288],
+	"translation":[0.524164,46.4719,10.9703],
 	"rotation":[0,0,0.707107,0.707107],
-	"scale":[0.495062,13.5451,15.9755],
+	"scale":[0.495062,13.5451,11.38],
 	"mesh":"Cube.006"
 },
 {
@@ -208,12 +215,13 @@
 		"NORMAL":{ "src":"LightsScene.Cube.009.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
 		"TANGENT":{ "src":"LightsScene.Cube.009.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
 		"TEXCOORD":{ "src":"LightsScene.Cube.009.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
-	}
+	},
+	"material":"lambertian:Red"
 },
 {
 	"type":"NODE",
 	"name":"Cube.009",
-	"translation":[0.404337,32.448,5.76282],
+	"translation":[0.404337,32.448,8.6309],
 	"rotation":[0,0,0,1],
 	"scale":[3.42428,3.42428,3.10948],
 	"mesh":"Cube.009"
@@ -239,8 +247,44 @@
 	"light":"Light.004"
 },
 {
+
+	"type":"LIGHT",
+	"name":"Point",
+	"tint":[0.87967, 1, 0.840697],
+	"sphere":{
+		"radius":0,
+		"power":10000
+	}
+},
+{
+	"type":"NODE",
+	"name":"Point",
+	"translation":[0.513978,32.5091,7.76405],
+	"rotation":[0.557546,-0.133512,0.478794,0.664886],
+	"scale":[1,1,1],
+	"light":"Point"
+},
+{
+
+	"type":"LIGHT",
+	"name":"Sun",
+	"tint":[1, 1, 1],
+	"sun":{
+		"angle":0.00918043,
+		"strength":10
+	}
+},
+{
+	"type":"NODE",
+	"name":"Sun",
+	"translation":[0,0,41.9859],
+	"rotation":[0,0,0,1],
+	"scale":[1,1,1],
+	"light":"Sun"
+},
+{
 	"type":"SCENE",
 	"name":"F:\\gameDev\\Engines\\NoireEngine2\\NoireEngine2\\src\\scenes\\LightsScene\\LightsScene.blend",
-	"roots":["Cube", "Camera", "Icosphere", "Cube.001", "Cube.002", "Spot", "Cube.003", "Cube.004", "Cube.005", "Cube.006", "Cube.009", "Spot.002"]
+	"roots":["Cube", "Camera", "Icosphere", "Cube.001", "Cube.002", "Spot", "Cube.004", "Cube.005", "Cube.006", "Cube.009", "Spot.002", "Point", "Sun"]
 }
 ]

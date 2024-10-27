@@ -16,18 +16,12 @@
 
 //#include "glm/gtc/matrix_transform.hpp"
 
-// Depth bias (and slope) are used to avoid shadowing artifacts
-// Constant depth bias factor (always applied)
-const float depthBiasConstant = 1.25f;
-// Slope depth bias factor, applied depending on polygon's slope
-const float depthBiasSlope = 1.75f;
-
 #if defined(__ANDROID__)
+#define SHADOWMAP_DIM 512
+#define CASCADED_SHADOWMAP_DIM 1024
+#else
 #define SHADOWMAP_DIM 1024
 #define CASCADED_SHADOWMAP_DIM 2048
-#else
-#define SHADOWMAP_DIM 2048
-#define CASCADED_SHADOWMAP_DIM 4096
 #endif
 
 static std::array< VkClearValue, 1 > clear_values{
@@ -508,14 +502,6 @@ void ShadowPipeline::ShadowMap_BeginRenderPass(const CommandBuffer& commandBuffe
 		.maxDepth = 1.0f,
 	};
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-	// Set depth bias (aka "Polygon offset")
-	// Required to avoid shadow mapping artifacts
-	vkCmdSetDepthBias(
-		commandBuffer,
-		depthBiasConstant,
-		0.0f,
-		depthBiasSlope);
 }
 
 void ShadowPipeline::Cascade_CreateRenderPasses(uint32_t numPasses)
@@ -568,12 +554,6 @@ void ShadowPipeline::Cascade_SetViewports(const CommandBuffer& commandBuffer, ui
 		.maxDepth = 1.0f,
 	};
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-	vkCmdSetDepthBias(
-		commandBuffer,
-		depthBiasConstant,
-		0.0f,
-		depthBiasSlope);
 }
 
 void ShadowPipeline::Cascade_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t passIndex, uint32_t cascadeIndex)
@@ -644,12 +624,6 @@ void ShadowPipeline::Omni_SetViewports(const CommandBuffer& commandBuffer, uint3
 		.maxDepth = 1.0f,
 	};
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-	vkCmdSetDepthBias(
-		commandBuffer,
-		depthBiasConstant,
-		0.0f,
-		depthBiasSlope);
 }
 
 void ShadowPipeline::Omni_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t passIndex, uint32_t faceIndex)

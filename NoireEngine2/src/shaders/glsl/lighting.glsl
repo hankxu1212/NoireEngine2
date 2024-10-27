@@ -57,7 +57,7 @@ layout(set=1, binding=3, std140) readonly buffer SpotLights {
 
 float DirLightRadiance(int i)
 {
-	vec3 lightDir = normalize(vec3(DIR_LIGHTS[i].direction));
+	vec3 lightDir = -normalize(vec3(DIR_LIGHTS[i].direction));
 	float cosTheta = max(dot(n, lightDir), 0.0);
 
 	return cosTheta * DIR_LIGHTS[i].intensity;
@@ -127,10 +127,10 @@ vec3 DirectLighting()
 	for (int i = 0; i < scene.numLights[1]; ++i)
 	{
 		float radiance = PointLightRadiance(i);
-
+		
 		if (radiance > 0 && POINT_LIGHTS[i].shadowOffset > 0)
 			radiance *= PointLightShadow(i, shadowMapOffsetId);
-
+		
 		shadowMapOffsetId += POINT_LIGHTS[i].shadowOffset;
 		lightsSum += radiance * vec3(POINT_LIGHTS[i].color);
 	}

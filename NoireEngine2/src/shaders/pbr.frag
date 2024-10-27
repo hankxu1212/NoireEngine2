@@ -20,6 +20,7 @@ layout (set = 3, binding = 0) uniform samplerCube skybox;
 layout (set = 3, binding = 1) uniform samplerCube diffuseIrradiance;
 layout (set = 3, binding = 2) uniform sampler2D specularBRDF;
 layout (set = 3, binding = 3) uniform samplerCube prefilterEnvMap;
+
 // shadowmapping
 layout (set = 4, binding = 0) uniform sampler2D shadowMaps[]; // shadow maps, indexed
 

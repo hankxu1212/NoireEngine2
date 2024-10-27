@@ -71,4 +71,20 @@ vec2 CartesianToCubeUV(vec3 dir, out int faceIndex)
     return uv;
 }
 
+int CartesianToCubeFace(vec3 dir) 
+{
+    vec3 absDir = abs(dir);
+    int faceIndex = 0;
+
+    if (absDir.x >= absDir.y && absDir.x >= absDir.z) {
+        faceIndex = dir.x > 0.0 ? 0 : 1;  // Positive or Negative X
+    } else if (absDir.y >= absDir.z) {
+        faceIndex = dir.y > 0.0 ? 2 : 3;  // Positive or Negative Y
+    } else {
+        faceIndex = dir.z > 0.0 ? 4 : 5;  // Positive or Negative Z
+    }
+
+    return faceIndex;
+}
+
 #endif

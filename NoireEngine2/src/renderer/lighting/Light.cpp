@@ -67,8 +67,7 @@ void Light::Update()
 		}
 		else  // Type::Spot
 		{
-			glm::mat4 depthProjectionMatrix = glm::perspective(glm::radians(m_Fov), 1.0f, m_NearClip, m_FarClip);
-			depthProjectionMatrix[1][1] *= -1;
+			glm::mat4 depthProjectionMatrix = Mat4::Perspective(glm::radians(m_Fov), 1.0f, m_NearClip, m_FarClip);
 			glm::mat4 depthViewMatrix = Mat4::LookAt(pos, pos + dir, transform->Up());
 			m_Lightspaces[0] = depthProjectionMatrix * depthViewMatrix;
 		}
@@ -333,31 +332,30 @@ void Light::UpdateDirectionalLightCascades()
 void Light::UpdatePointLightLightSpaces(uint32_t faceIndex)
 {
 	// TODO: add projection matrix
-	glm::mat4 lightViewMatrix = glm::mat4(1.0f);
-	glm::mat4 depthProjectionMatrix = glm::perspective(glm::pi<float>() / 2.0f, 1.0f, m_NearClip, m_FarClip);
-	depthProjectionMatrix[1][1] *= -1;
+	glm::mat4 lightViewMatrix;
+	glm::mat4 depthProjectionMatrix = Mat4::Perspective(glm::pi<float>() / 2.0f, 1.0f, 0.1f, 1024.0f);
+
+	glm::vec3 pos = glm::vec3(m_Position);
 
 	switch (faceIndex)
 	{
 	case 0: // POSITIVE_X
-		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		lightViewMatrix = Mat4::LookAt(pos, pos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		break;
 	case 1:	// NEGATIVE_X
-		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		lightViewMatrix = Mat4::LookAt(pos, pos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		break;
 	case 2:	// POSITIVE_Y
-		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		lightViewMatrix = Mat4::LookAt(pos, pos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
 		break;
 	case 3:	// NEGATIVE_Y
-		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		lightViewMatrix = Mat4::LookAt(pos, pos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		break;
 	case 4:	// POSITIVE_Z
-		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		lightViewMatrix = Mat4::LookAt(pos, pos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		break;
 	case 5:	// NEGATIVE_Z
-		lightViewMatrix = glm::rotate(lightViewMatrix, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		lightViewMatrix = Mat4::LookAt(pos, pos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		break;
 	}
 
