@@ -1,49 +1,111 @@
 #pragma once
 
 #include <vector>
-#include <mutex>
+#include <thread>
 #include <queue>
-#include <future>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
 
-// A fixed size pool of threads.
-class ThreadPool {
-public:
-	explicit ThreadPool(uint32_t threadCount = std::thread::hardware_concurrency());
-	~ThreadPool();
+// make_unique is not available in C++11
+// Taken from Herb Sutter's blog (https://herbsutter.com/gotw/_102/)
+template<typename T, typename ...Args>
+std::unique_ptr<T> make_unique(Args&& ...args)
+{
+	return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
 
-	template<typename F, typename... Args>
-	auto Enqueue(F &&f, Args &&... args);
-
-	void Wait();
-
-	const std::vector<std::thread> &GetWorkers() const { return workers; }
-
+class Thread
+{
 private:
-	std::vector<std::thread> workers;
-	std::queue<std::function<void()>> tasks;
-
+	bool destroying = false;
+	std::thread worker;
+	std::queue<std::function<void()>> jobQueue;
 	std::mutex queueMutex;
 	std::condition_variable condition;
-	bool stop = false;
+
+	// Loop through all remaining jobs
+	void queueLoop()
+	{
+		while (true)
+		{
+			std::function<void()> job;
+			{
+				std::unique_lock<std::mutex> lock(queueMutex);
+				condition.wait(lock, [this] { return !jobQueue.empty() || destroying; });
+				if (destroying)
+				{
+					break;
+				}
+				job = jobQueue.front();
+			}
+
+			job();
+
+			{
+				std::lock_guard<std::mutex> lock(queueMutex);
+				jobQueue.pop();
+				condition.notify_one();
+			}
+		}
+	}
+
+public:
+	Thread()
+	{
+		worker = std::thread(&Thread::queueLoop, this);
+	}
+
+	~Thread()
+	{
+		if (worker.joinable())
+		{
+			wait();
+			queueMutex.lock();
+			destroying = true;
+			condition.notify_one();
+			queueMutex.unlock();
+			worker.join();
+		}
+	}
+
+	// Add a new job to the thread's queue
+	void addJob(std::function<void()> function)
+	{
+		std::lock_guard<std::mutex> lock(queueMutex);
+		jobQueue.push(std::move(function));
+		condition.notify_one();
+	}
+
+	// Wait until all work items have been finished
+	void wait()
+	{
+		std::unique_lock<std::mutex> lock(queueMutex);
+		condition.wait(lock, [this]() { return jobQueue.empty(); });
+	}
 };
 
-template<typename F, typename ... Args>
-auto ThreadPool::Enqueue(F &&f, Args &&... args) 
+class ThreadPool
 {
-	using return_type = typename std::invoke_result_t<F, Args ...>;
+public:
+	std::vector<std::unique_ptr<Thread>> threads;
 
-	auto task = std::shared_ptr<std::packaged_task<return_type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
-	auto result = task->get_future();
+	// Sets the number of threads to be allocated in this pool
+	void SetThreadCount(uint32_t count)
+	{
+		threads.clear();
+		for (uint32_t i = 0; i < count; i++)
+		{
+			threads.push_back(make_unique<Thread>());
+		}
+	}
 
-	std::unique_lock<std::mutex> lock(queueMutex);
-
-	if (stop)
-		throw std::runtime_error("Enqueue called on a stopped ThreadPool");
-
-	tasks.emplace([task]() {
-		(*task)();
-	});
-
-	condition.notify_one();
-	return result;
-}
+	// Wait until all threads have finished their work items
+	void Wait()
+	{
+		for (auto& thread : threads)
+		{
+			thread->wait();
+		}
+	}
+};

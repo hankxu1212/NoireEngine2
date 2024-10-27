@@ -21,13 +21,15 @@ CommandBuffer::~CommandBuffer()
 	vkFreeCommandBuffers(VulkanContext::GetDevice(), *r_CommandPool, 1, &m_CommandBuffer);
 }
 
-void CommandBuffer::Begin(VkCommandBufferUsageFlags usage) {
+void CommandBuffer::Begin(VkCommandBufferUsageFlags usage, const VkCommandBufferInheritanceInfo* inheritance)
+{
 	if (running)
 		return;
 
 	VkCommandBufferBeginInfo beginInfo {
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 		.flags = usage,
+		.pInheritanceInfo = inheritance
 	};
 	VulkanContext::VK_CHECK(vkBeginCommandBuffer(m_CommandBuffer, &beginInfo), 
 		"[vulkan] Error: cannot begin command buffer");
@@ -71,7 +73,7 @@ void CommandBuffer::Submit(const VkSemaphore& waitSemaphore, const VkSemaphore& 
 	};
 
 	if (waitSemaphore != VK_NULL_HANDLE) {
-		// Pipeline stages used to wait at for graphics queue submissions.
+		// Pipeline stages used to Wait at for graphics queue submissions.
 		static VkPipelineStageFlags submitPipelineStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		submitInfo.pWaitDstStageMask = &submitPipelineStages;

@@ -177,7 +177,6 @@
     <ClCompile Include="src\scripting\ScriptingEngine.cpp" />
     <ClCompile Include="src\utils\sejp\sejp.cpp" />
     <ClCompile Include="src\utils\String.cpp" />
-    <ClCompile Include="src\utils\ThreadPool.cpp" />
     <ClCompile Include="src\renderer\scene\Transform.cpp" />
     <ClCompile Include="src\utils\UUID.cpp" />
     <ClCompile Include="src\renderer\scene\TransformMatrixStack.cpp" />

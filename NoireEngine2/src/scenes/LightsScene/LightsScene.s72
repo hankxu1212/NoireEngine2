@@ -265,26 +265,8 @@
 	"light":"Point"
 },
 {
-
-	"type":"LIGHT",
-	"name":"Sun",
-	"tint":[1, 1, 1],
-	"sun":{
-		"angle":0.00918043,
-		"strength":10
-	}
-},
-{
-	"type":"NODE",
-	"name":"Sun",
-	"translation":[0,0,41.9859],
-	"rotation":[0,0,0,1],
-	"scale":[1,1,1],
-	"light":"Sun"
-},
-{
 	"type":"SCENE",
 	"name":"F:\\gameDev\\Engines\\NoireEngine2\\NoireEngine2\\src\\scenes\\LightsScene\\LightsScene.blend",
-	"roots":["Cube", "Camera", "Icosphere", "Cube.001", "Cube.002", "Spot", "Cube.004", "Cube.005", "Cube.006", "Cube.009", "Spot.002", "Point", "Sun"]
+	"roots":["Cube", "Camera", "Icosphere", "Cube.001", "Cube.002", "Spot", "Cube.004", "Cube.005", "Cube.006", "Cube.009", "Spot.002", "Point"]
 }
 ]

@@ -15,6 +15,8 @@
 #include <type_traits>
 #include "glm/glm.hpp"
 
+#include "utils/ThreadPool.hpp"
+
 class Renderer;
 class MeshRenderInstance;
 

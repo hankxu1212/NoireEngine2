@@ -26,7 +26,10 @@ public:
 	  * Begins the recording state for this command buffer.
 	  * @param usage How this command buffer will be used.
 	*/
-	void Begin(VkCommandBufferUsageFlags usage = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+	void Begin(
+		VkCommandBufferUsageFlags usage = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+		const VkCommandBufferInheritanceInfo* inheritance = nullptr
+	);
 
 	// Ends the recording state for this command buffer.
 	void End();

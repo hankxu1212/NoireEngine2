@@ -69,7 +69,6 @@ const component_objs = [
 ]
 
 const util_objs = [
-	maek.CPP('utils/ThreadPool.cpp'),
 	maek.CPP('math/Math.cpp'),
 	maek.CPP('math/vector/Vec2.cpp'),
 	maek.CPP('math/vector/Vec3.cpp'),

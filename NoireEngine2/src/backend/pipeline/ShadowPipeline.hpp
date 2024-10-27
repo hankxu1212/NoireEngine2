@@ -2,10 +2,12 @@
 
 #include "VulkanPipeline.hpp"
 #include "math/Math.hpp"
+#include "utils/ThreadPool.hpp"
+#include <array>
+
 #include "backend/images/ImageDepth.hpp"
 #include "backend/buffers/Buffer.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
-#include <array>
 
 class ObjectPipeline;
 
@@ -83,13 +85,22 @@ private:
 		Buffer LightSpaces;
 
 		VkDescriptorSet set0_Lightspaces;
+
+		// Multi-threading ////////////////////////////////////////////
+		std::unique_ptr<ThreadPool> threadPool;
+		std::vector<std::unique_ptr<CommandBuffer>> secondaryCommandBuffers;
 	};
+
 	std::vector<Workspace> workspaces;
 
 	VkDescriptorSetLayout set0_LightspacesLayout;
 	DescriptorAllocator m_Allocator;
 
-	// Shadow Mapping Naive ////////////////////////////////////////////
+	void CreateDescriptors();
+	void CreatePipelineLayout();
+	void CreateGraphicsPipeline();
+	void SetViewports(const CommandBuffer& commandBuffer, uint32_t width, uint32_t height);
+	void BeginRenderPass(const CommandBuffer& commandBuffer, VkFramebuffer frameBuffer, uint32_t width, uint32_t height);
 
 	VkPipelineLayout	m_ShadowMapPassPipelineLayout;
 	VkRenderPass		m_ShadowMapRenderPass;
@@ -100,29 +111,22 @@ private:
 		int lightspaceID;
 	};
 
-	std::vector<ShadowMapPass> m_ShadowMapPasses;
+	// Multi-threading ////////////////////////////////////////////
+	void PrepareShadowRenderThreads();
+	void T_RenderShadows(uint32_t tid, VkCommandBufferInheritanceInfo inheritanceInfo, const Scene* scene, uint32_t lightType, uint32_t width, uint32_t height);
 
+	// Shadow Mapping Naive ////////////////////////////////////////////
+	std::vector<ShadowMapPass> m_ShadowMapPasses;
 	void ShadowMap_CreateRenderPasses(uint32_t numPasses);
-	void ShadowMap_CreateDescriptors();
-	void ShadowMap_CreatePipelineLayout();
-	void ShadowMap_CreateGraphicsPipeline();
-	void ShadowMap_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t passIndex);
 
 	// Shadow cascading ////////////////////////////////////////////
-	
 	// cascades will push SHADOW_MAP_CASCADE_COUNT lightspace matrices into the lightspace buffer, instead of 1
 	std::vector<CascadePass> m_CascadePasses;
-
 	void Cascade_CreateRenderPasses(uint32_t numPasses);
-	void Cascade_SetViewports(const CommandBuffer& commandBuffer, uint32_t passIndex);
-	void Cascade_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t passIndex, uint32_t cascadeIndex);
 
 	// Omni-directional point light shadowmapping ////////////////////////////////////////////
 	// pushes 6 faces in a single pass
 	std::vector<OmniPass> m_OmniPasses;
-
 	void Omni_CreateRenderPasses(uint32_t numPasses);
-	void Omni_SetViewports(const CommandBuffer& commandBuffer, uint32_t passIndex);
-	void Omni_BeginRenderPass(const CommandBuffer& commandBuffer, uint32_t passIndex, uint32_t faceIndex);
 };
 

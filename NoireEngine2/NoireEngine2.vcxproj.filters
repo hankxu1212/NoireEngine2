@@ -69,9 +69,6 @@
     <ClCompile Include="src\core\resources\Resources.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\ThreadPool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\utils\String.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
