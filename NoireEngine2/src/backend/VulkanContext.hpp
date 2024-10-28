@@ -71,7 +71,7 @@ public:
 	inline const PhysicalDevice*			getPhysicalDevice() const { return s_PhysicalDevice.get(); }
 	inline const VkPipelineCache&			getPipelineCache() const { return m_PipelineCache; }
 
-	std::shared_ptr<CommandPool>&			GetCommandPool(const TID& threadId = std::this_thread::get_id());
+	std::shared_ptr<CommandPool>			GetCommandPool(const TID& threadId = std::this_thread::get_id());
 
 	inline const Surface* getSurface(std::size_t id = 0) const
 	{

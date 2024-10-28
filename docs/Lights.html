@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<!-- saved from url=(0069)http://graphics.cs.cmu.edu/courses/15-472-f24/A3/report-template.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>15-472-s24: A3 - Lights</title>
+<style>
+/* feel free to style your report in a fancier way! */
+
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;700&Anonymous+Pro&display=swap');
+
+html {
+	background:#505055;
+}
+
+body {
+	font-family: 'Quicksand', sans-serif;
+	color:#000;
+	background:#eeeee8;
+	font-size:15px;
+	margin: 1em auto 50vh auto;
+	padding: 1em 2em 1em 2em;
+	max-width:45em;
+	border-radius:4px;
+	box-shadow:0 0 10px #0008;
+}
+
+h1 { font-size: 20px; font-weight: 700; }
+h2 { font-size: 16px; font-weight: 700; }
+h3 { font-size: 16px; font-weight: 400; }
+h4 { font-size: 14px; font-weight: 400; }
+
+h1, h2, h3, h4 {
+	margin: 15px 0 0 -10px;
+}
+
+p {
+	margin: 5px 0 0 0;
+}
+
+.subtitle {
+	display:block;
+	font-size:16px;
+	font-weight:400;
+}
+
+.placeholder {
+	color:#800;
+	font-style:italic;
+}
+
+kbd {
+	display:inline-block;
+	background:#ccc;
+	color:#444;
+	font-style:normal;
+	font-weight:700;
+	border-radius:8px;
+	padding:1px 6px;
+	margin:1px;
+	border:1.5px solid #aaa;
+}
+
+code {
+	font-family: 'Anonymous Pro', monospace;
+	background: #222;
+	color:#fff;
+	border-radius:4px;
+	padding:2px 4px;
+	margin:1px;
+}
+
+code var {
+	color:#ef5;
+	font-style:italic;
+}
+
+.atag {
+	font-family: 'Calistoga', serif;
+	font-size:90%;
+	color:#000;
+	background:#b00;
+
+	display:inline-block;
+	padding:1px 4px;
+	border-radius: 4px;
+	line-height:120%;
+}
+.atag:before {
+	content:'»';
+}
+.atag.extra {
+	background:#b08;
+}
+.atag.creative {
+	/* thanks, shout.horse! */
+	background:linear-gradient(0.4turn, #ffe680, #916f6f);
+}
+
+</style>
+</head>
+<body>
+<h1>A3: Lights
+<span class="subtitle">by <span class="placeholder">Hank Xu (ninghuax)</span></span>
+</h1>
+
+<p class="placeholder">
+Building on top of A2, Noire Engine 2 is now a multi-threaded forward renderer that supports PCSS on spotlights, pointlights, and cascaded directional lights.
+</p>
+
+<h2>My Lit Scene <span class="atag creative">A3-create</span></h2>
+
+<p class="placeholder">
+Describe the scene you lit, the light count and placement approach, and include a screen recording showing it running in real-time:
+</p>
+
+<video>
+</video>
+
+<p class="placeholder">
+Credit + cite your sources for textures and models, if you did not create them yourself.
+</p>
+
+<h2>My Code</h2>
+
+<h3>Loading light objects <span class="atag">A3-load</span></h3> 
+
+<p class="placeholder">
+Cover, at least:
+Lights are components, and are de-serialized as usual from s72 files, and loaded into the 
+scene on an entity.
+
+how data moves from <code>"LIGHT"</code>s stored in an s72 file to the in-memory representation used by your renderer;
+I left power and tint separate, but i could multiply them together i suppose. I think one of the reasons I left it separate is cuz I wanted to check if the radiance is 0 before the shadow calculations,
+and checking 1 float is better than checking all 3, although not sure how much performance impact this would have.
+</p>
+
+<h3>Adding Direct Lighting to Materials <span class="atag">A3-materials</span></h3>
+
+<p class="placeholder">
+I used storage buffers to pass light uniforms to the GPU, streamed per frame, exacly as we stream transform informations.
+</p>
+
+<p class="placeholder">
+Include screenshots or recordings of your viewer showing proper behavior of lambertian and pbr materials under sphere, spot, and sun lights.
+</p>
+
+<p class="placeholder">
+Include a graph showing the performance impact of adding additional lights to a scene.
+We would theoretically expect a linear increase in computing time; is this borne out in practice?
+How many lights can your viewer handle at a reasonable frame rate?
+</p>
+
+<h3>Adding Shadows for Spot Lights <span class="atag">A3-shadows</span></h3>
+
+<p class="placeholder">
+I bind shadowmap as 2D textures to a descriptor indexed array, allowing unlimited lights to be spawned at scene start.<br><br>
+I reduce artifacts by rendering backfaces, using cosine-angle-weighted bias (less bias as angle gets steeper).<br><br>
+The PCF samples from a Poisson64 disk, and the user may choose to change the number of samples from 1 up to 64.<br><br>
+</p>
+
+<p class="placeholder">
+Include output images showing that spot light shadows are working correctly for both lambertian and pbr materials.
+</p>
+<p class="placeholder">
+Include output images showing that "shadow" light parameter does actually change the shadow map resolution.
+</p>
+
+<p class="placeholder">
+Include a graph showing the performance impact of adding shadowing to lights to a scene.
+Attempt to separate the performance impact of shadow map rendering and shadow map sampling (e.g., by testing the same scenes with per-frame rendered shadow maps and pre-rendered shadow maps). Which is larger?
+</p>
+
+
+<h3>Extra: Light Sort <span class="atag extra">A3x-sort</span></h3>
+Didnt do this.
+
+<h3>Extra: PCSS Soft Shadows <span class="atag extra">A3x-soft</span></h3>
+
+<p class="placeholder">
+PCSS is just dynamic PCF, so underneath it just estimates the penumbra size by finding occluders (you can tune this sample as well) and then runs PCF based on the radius we got.
+</p>
+
+<p class="placeholder">
+Include images showing the same shadows rendered with and without PCSS, showing the spreading behavior as the shadow stretches further from the light.
+</p>
+
+
+<h3>Extra: Shadows for Sun Lights <span class="atag extra">A3x-cascade</span></h3>
+
+<p class="placeholder">
+Directional lights pushes, by default, 4 shadowmaps to the shaders.
+<br><br>
+Cover, at least:
+your choice of shadow map cascade levels and layout;
+how your cascade is packed into a texture;
+how [if at all] your cascade avoids "boiling" as the camera moves
+</p>
+
+<p class="placeholder">
+Include images showing a scene rendered with a shadow-casting distant directional light.
+Include images with a modified shader color-coding pixels by what cascade level they are sampling.
+Include images from a debug camera, showing how the shadow map cascade fits the camera frustum.
+</p>
+
+
+<h3>Extra: Shadows for Sphere Lights <span class="atag extra">A3x-cube</span></h3>
+
+<p class="placeholder">
+Point lights pushes 6 shadowmaps, instead of a cubemap. The reason for this is the simplicity of a single descriptor holding every shadowmap in the engine.
+In the fragment shader, a cartesian direction to cube UV conversion is done to find which face to sample from.
+</p>
+
+<p class="placeholder">
+Include images or video showing a scene rendered with a shadow-casting sphere light.
+Show that there are no artifacts at the edges or corners of the shadow map cube.
+</p>
+
+
+<h3>Extra: Multi-threaded shadow renderer <span class="atag extra">A3x-*</span></h3>
+
+<p class="placeholder">
+I implemented a simple secondary command buffer recording scheme that runs all the shadow recordings in separate threads in parallel. <br><br>
+Lets say you are rendering 32 shadow maps. Then the engine spawns 32 threads on the CPU to record each of those draw calls into a separate secondary command buffer.<br><br>
+Before submitting to the primary command buffer, all the threads are joined.
+</p>
+
+<h2>Feedback</h2>
+<p class="placeholder">
+	I liked this assignment
+</p>
+
+
+
+</body></html>

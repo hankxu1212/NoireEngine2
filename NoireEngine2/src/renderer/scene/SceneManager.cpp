@@ -26,7 +26,8 @@ void SceneManager::LoadDefault()
 		//scene->Load("../scenes/examples/Materials.s72");
 		//scene->Load("../scenes/BrickScene/BrickScene.s72");
 		//scene->Load("../scenes/examples/lights-Mix.s72");
-		scene->Load("../scenes/LightsScene/LightsScene.s72");
+		//scene->Load("../scenes/LightsScene/LightsScene.s72");
+		scene->Load("../scenes/ManyLights/ManyLights.s72");
 
 	SetCameraMode(Scene::CameraMode::User);
 }

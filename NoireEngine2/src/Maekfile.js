@@ -383,7 +383,7 @@ function init_maek() {
 		fs.rmdirSync("spv", { recursive: true });
 		console.log('SPV Folder deleted successfully:');
 	} catch (err) {
-		console.error('Error deleting spv folder:', err);
+		console.warn('Error deleting spv folder:', err);
 	}
 
 	//make it slightly more idiomatic to export:

@@ -37,7 +37,7 @@ ShadowPipeline::~ShadowPipeline()
 {
 	for (Workspace& workspace : workspaces)
 	{
-		// wait for thread first
+		// Wait for thread first
 		workspace.threadPool->Wait();
 
 		workspace.LightSpaces.Destroy();
@@ -288,7 +288,7 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& primaryCmdB
 
 	// record into secondary command buffers in a separate thread
 	uint32_t passIndices[3] = {0}; // which pass are we executing
-	int lightspaceMatrixID = 0; // offset of the lightspace matrix in the shader storage buffer
+	int lightspaceId = 0; // offset of the lightspace matrix in the shader storage buffer
 	// render each shadow map
 	for (int lightIndex = 0; lightIndex < shadowLights.size(); ++lightIndex)
 	{
@@ -300,11 +300,11 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& primaryCmdB
 			{
 				inheritanceInfo.framebuffer = m_CascadePasses[passIndices[type]].cascades[cascadeIndex].frameBuffer;
 
-				workspace.threadPool->threads[lightspaceMatrixID]->addJob([=] {
-					T_RenderShadows(lightspaceMatrixID, inheritanceInfo, scene, type, CASCADED_SHADOWMAP_DIM, CASCADED_SHADOWMAP_DIM);
+				workspace.threadPool->threads[lightspaceId]->AddJob([=] {
+					T_RenderShadows(lightspaceId, inheritanceInfo, scene, type, CASCADED_SHADOWMAP_DIM, CASCADED_SHADOWMAP_DIM);
 				});
 
-				lightspaceMatrixID++;
+				lightspaceId++;
 			}
 			break;
 		case 1:
@@ -312,19 +312,19 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& primaryCmdB
 			{
 				inheritanceInfo.framebuffer = m_OmniPasses[passIndices[type]].cubefaces[faceIndex].frameBuffer;
 
-				workspace.threadPool->threads[lightspaceMatrixID]->addJob([=] {
-					T_RenderShadows(lightspaceMatrixID, inheritanceInfo, scene, type, SHADOWMAP_DIM, SHADOWMAP_DIM);
+				workspace.threadPool->threads[lightspaceId]->AddJob([=] {
+					T_RenderShadows(lightspaceId, inheritanceInfo, scene, type, SHADOWMAP_DIM, SHADOWMAP_DIM);
 				});
-				lightspaceMatrixID++;
+				lightspaceId++;
 			}
 			break;
 		case 2:
 			inheritanceInfo.framebuffer = m_ShadowMapPasses[passIndices[type]].frameBuffer;
 
-			workspace.threadPool->threads[lightspaceMatrixID]->addJob([=] {
-				T_RenderShadows(lightspaceMatrixID, inheritanceInfo, scene, type, SHADOWMAP_DIM, SHADOWMAP_DIM);
+			workspace.threadPool->threads[lightspaceId]->AddJob([=] {
+				T_RenderShadows(lightspaceId, inheritanceInfo, scene, type, SHADOWMAP_DIM, SHADOWMAP_DIM);
 			});
-			lightspaceMatrixID++;
+			lightspaceId++;
 			break;
 		}
 		passIndices[type]++;
@@ -335,7 +335,15 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& primaryCmdB
 
 	for (int i = 0; i < 3; i++)
 		passIndices[i] = 0;
-	lightspaceMatrixID = 0;
+	lightspaceId = 0;
+
+	auto RenderShadowPass = [&](VkFramebuffer frameBuffer, int lid, uint32_t dims)
+	{
+		BeginRenderPass(primaryCmdBuffer, frameBuffer, dims, dims);
+		vkCmdExecuteCommands(primaryCmdBuffer, 1, &workspace.secondaryCommandBuffers[lightspaceId]->getCommandBuffer());
+		vkCmdEndRenderPass(primaryCmdBuffer);
+		lightspaceId++;
+	};
 
 	// render each shadow map in the main thread by calling a bunch of executes
 	// on the primary command buffer
@@ -346,27 +354,14 @@ void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& primaryCmdB
 		{
 		case 0:
 			for (uint32_t cascadeIndex = 0; cascadeIndex < SHADOW_MAP_CASCADE_COUNT; ++cascadeIndex)
-			{
-				BeginRenderPass(primaryCmdBuffer, m_CascadePasses[passIndices[type]].cascades[cascadeIndex].frameBuffer, CASCADED_SHADOWMAP_DIM, CASCADED_SHADOWMAP_DIM);
-				vkCmdExecuteCommands(primaryCmdBuffer, 1, &workspace.secondaryCommandBuffers[lightspaceMatrixID]->getCommandBuffer());
-				vkCmdEndRenderPass(primaryCmdBuffer);
-				lightspaceMatrixID++;
-			}
+				RenderShadowPass(m_CascadePasses[passIndices[type]].cascades[cascadeIndex].frameBuffer, lightspaceId, CASCADED_SHADOWMAP_DIM);
 			break;
 		case 1:
 			for (uint32_t faceIndex = 0; faceIndex < OMNI_SHADOWMAPS_COUNT; ++faceIndex)
-			{
-				BeginRenderPass(primaryCmdBuffer, m_OmniPasses[passIndices[type]].cubefaces[faceIndex].frameBuffer, SHADOWMAP_DIM, SHADOWMAP_DIM);
-				vkCmdExecuteCommands(primaryCmdBuffer, 1, &workspace.secondaryCommandBuffers[lightspaceMatrixID]->getCommandBuffer());
-				vkCmdEndRenderPass(primaryCmdBuffer);
-				lightspaceMatrixID++;
-			}
+				RenderShadowPass(m_OmniPasses[passIndices[type]].cubefaces[faceIndex].frameBuffer, lightspaceId, SHADOWMAP_DIM);
 			break;
 		case 2:
-			BeginRenderPass(primaryCmdBuffer, m_ShadowMapPasses[passIndices[type]].frameBuffer, SHADOWMAP_DIM, SHADOWMAP_DIM);
-			vkCmdExecuteCommands(primaryCmdBuffer, 1, &workspace.secondaryCommandBuffers[lightspaceMatrixID]->getCommandBuffer());
-			vkCmdEndRenderPass(primaryCmdBuffer);
-			lightspaceMatrixID++;
+			RenderShadowPass(m_ShadowMapPasses[passIndices[type]].frameBuffer, lightspaceId, SHADOWMAP_DIM);
 			break;
 		}
 		passIndices[type]++;
@@ -407,71 +402,73 @@ void ShadowPipeline::T_RenderShadows(uint32_t tid, VkCommandBufferInheritanceInf
 {
 	Workspace& workspace = workspaces[CURR_FRAME];
 
-	if (!workspace.secondaryCommandBuffers[tid]) {
+	// allocate if not created -- this must be alloacted in a different thread
+	if (!workspace.secondaryCommandBuffers[tid])
 		workspace.secondaryCommandBuffers[tid] = std::make_unique<CommandBuffer>(false, VK_QUEUE_GRAPHICS_BIT, VK_COMMAND_BUFFER_LEVEL_SECONDARY);
-	}
 
-	workspace.secondaryCommandBuffers[tid]->Begin(VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, &inheritance);
+	CommandBuffer& cmdBuf = *workspace.secondaryCommandBuffers[tid].get();
 
-	// bind descriptors
-	std::array< VkDescriptorSet, 2 > descriptor_sets{
-		workspaces[CURR_FRAME].set0_Lightspaces,
-		p_ObjectPipeline->workspaces[CURR_FRAME].set1_StorageBuffers // for transforms
-	};
-
-	vkCmdBindDescriptorSets(
-		workspace.secondaryCommandBuffers[tid]->getCommandBuffer(), //command buffer
-		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-		m_ShadowMapPassPipelineLayout, //pipeline layout
-		0, //first set
-		uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
-		0, nullptr //dynamic offsets count, ptr
-	);
-
-	// bind pipeline
-	vkCmdBindPipeline(workspace.secondaryCommandBuffers[tid]->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_ShadowMapPipeline);
-
-	SetViewports(*workspace.secondaryCommandBuffers[tid].get(), width, height);
-
-	const auto& allInstances = scene->getObjectInstances();
-	const auto& indirectBatches = p_ObjectPipeline->getIndirectBatches();
-
-	Push push{ .lightspaceID = (int)tid };
-	vkCmdPushConstants(workspace.secondaryCommandBuffers[tid]->getCommandBuffer(), m_ShadowMapPassPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Push), &push);
-
-	//draw all instances in relation to a certain material:
-	uint32_t offsetIndex = 0;
-	VertexInput* previouslyBindedVertex = nullptr;
-
-	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
+	cmdBuf.Begin(VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT, &inheritance);
 	{
-		const auto& workflowInstances = allInstances[workflowIndex];
-		if (workflowInstances.empty())
-			continue;
+		// bind descriptors
+		std::array< VkDescriptorSet, 2 > descriptor_sets{
+			workspaces[CURR_FRAME].set0_Lightspaces,
+			p_ObjectPipeline->workspaces[CURR_FRAME].set1_StorageBuffers // for transforms
+		};
 
-		uint32_t instanceCount = (uint32_t)workflowInstances.size();
+		vkCmdBindDescriptorSets(
+			cmdBuf.getCommandBuffer(), //command buffer
+			VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+			m_ShadowMapPassPipelineLayout, //pipeline layout
+			0, //first set
+			uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+			0, nullptr //dynamic offsets count, ptr
+		);
 
-		// draw each batch
-		for (const ObjectPipeline::IndirectBatch& draw : indirectBatches[workflowIndex])
+		// bind pipeline
+		vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ShadowMapPipeline);
+
+		SetViewports(cmdBuf, width, height);
+
+		const auto& allInstances = scene->getObjectInstances();
+		const auto& indirectBatches = p_ObjectPipeline->getIndirectBatches();
+
+		Push push{ .lightspaceID = (int)tid };
+		vkCmdPushConstants(cmdBuf, m_ShadowMapPassPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Push), &push);
+
+		//draw all instances in relation to a certain material:
+		uint32_t offsetIndex = 0;
+		VertexInput* previouslyBindedVertex = nullptr;
+
+		for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
 		{
-			VertexInput* vertexInputPtr = draw.mesh->getVertexInput();
-			if (vertexInputPtr != previouslyBindedVertex) {
-				vertexInputPtr->Bind(*workspace.secondaryCommandBuffers[tid].get());
-				previouslyBindedVertex = vertexInputPtr;
+			const auto& workflowInstances = allInstances[workflowIndex];
+			if (workflowInstances.empty())
+				continue;
+
+			uint32_t instanceCount = (uint32_t)workflowInstances.size();
+
+			// draw each batch
+			for (const ObjectPipeline::IndirectBatch& draw : indirectBatches[workflowIndex])
+			{
+				VertexInput* vertexInputPtr = draw.mesh->getVertexInput();
+				if (vertexInputPtr != previouslyBindedVertex) {
+					vertexInputPtr->Bind(*workspace.secondaryCommandBuffers[tid].get());
+					previouslyBindedVertex = vertexInputPtr;
+				}
+
+				draw.mesh->Bind(*workspace.secondaryCommandBuffers[tid].get());
+
+				constexpr uint32_t stride = sizeof(VkDrawIndexedIndirectCommand);
+				VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * stride;
+
+				vkCmdDrawIndexedIndirect(cmdBuf, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
+				ObjectPipeline::NumDrawCalls++;
 			}
-
-			draw.mesh->Bind(*workspace.secondaryCommandBuffers[tid].get());
-
-			constexpr uint32_t stride = sizeof(VkDrawIndexedIndirectCommand);
-			VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * stride;
-
-			vkCmdDrawIndexedIndirect(workspace.secondaryCommandBuffers[tid]->getCommandBuffer(), VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
-			ObjectPipeline::NumDrawCalls++;
+			offsetIndex += instanceCount;
 		}
-		offsetIndex += instanceCount;
 	}
-
-	workspace.secondaryCommandBuffers[tid]->End();
+	cmdBuf.End();
 }
 
 void ShadowPipeline::ShadowMap_CreateRenderPasses(uint32_t numPasses)
@@ -559,8 +556,8 @@ void ShadowPipeline::CreateGraphicsPipeline()
 void ShadowPipeline::SetViewports(const CommandBuffer& commandBuffer, uint32_t width, uint32_t height)
 {
 	VkRect2D scissor{
-	.offset = {.x = 0, .y = 0},
-	.extent = {.width = width, .height = height},
+		.offset = {.x = 0, .y = 0},
+		.extent = {.width = width, .height = height},
 	};
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 

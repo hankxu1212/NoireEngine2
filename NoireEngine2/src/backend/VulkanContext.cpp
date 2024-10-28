@@ -1,6 +1,7 @@
 #include "VulkanContext.hpp"
 
 #include <format>
+#include <atomic>
 #include <vulkan/vk_enum_string_helper.h>
 
 #include "utils/Enumerate.hpp"
@@ -160,11 +161,22 @@ void VulkanContext::VK_CHECK(VkResult err)
     NE_ERROR("[vulkan] Error: ", string_VkResult(err));
 }
 
-std::shared_ptr<CommandPool>& VulkanContext::GetCommandPool(const TID& threadId)
+std::atomic_flag lock = ATOMIC_FLAG_INIT;
+
+std::shared_ptr<CommandPool> VulkanContext::GetCommandPool(const TID& threadId)
 {
+    while (lock.test_and_set(std::memory_order_acquire)) {} // Acquire lock
+
+    std::shared_ptr<CommandPool> ret;
+
     if (auto it = m_CommandPools.find(threadId); it != m_CommandPools.end())
-        return it->second;
-    return m_CommandPools.emplace(threadId, std::make_shared<CommandPool>(threadId)).first->second;
+        ret = it->second;
+    else
+        ret = m_CommandPools.emplace(threadId, std::make_shared<CommandPool>(threadId)).first->second;
+
+    lock.clear(std::memory_order_release); // Release lock
+
+    return ret;
 }
 
 void VulkanContext::CreatePipelineCache()

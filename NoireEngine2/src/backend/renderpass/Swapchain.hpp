@@ -20,7 +20,7 @@ public:
 	~SwapChain();
 
 	/**
-		* Acquires the next image in the swapchain into the internal acquired image. The function will always wait until the next image has been acquired by setting timeout to UINT64_MAX.
+		* Acquires the next image in the swapchain into the internal acquired image. The function will always Wait until the next image has been acquired by setting timeout to UINT64_MAX.
 		* @param presentCompleteSemaphore A optional semaphore that is signaled when the image is ready for use.
 		* @param fence A optional fence that is signaled once the previous command buffer has completed.
 		* @return Result of the image acquisition.
