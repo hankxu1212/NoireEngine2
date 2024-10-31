@@ -35,7 +35,6 @@ const vec3 Fdielectric = vec3(0.04);
 vec3 n, F0, V, albedo;
 float roughness, metalness, cosLo; 
 #include "glsl/lighting.glsl"
-#include "glsl/cubemap.glsl"
 
 vec3 CalcPBRDirectLighting(vec3 radiance, vec3 Li);
 vec3 DirectLightingPBR();
@@ -99,7 +98,7 @@ void main()
 	}
 
 	// albedo 
-	albedo = vec3(material.albedo);
+	albedo = material.albedo.rgb;
 	if (material.albedoTexId >= 0)
 		albedo *= texture(textures[material.albedoTexId], UV).rgb;
 
@@ -158,13 +157,9 @@ void main()
 
 	vec3 color = directLighting + ambientLighting;
 
-    // shadow calculation
-	//float shadow = CalculateShadow();
-    //color *= shadow;
-
     // color = color * (1.0f / Uncharted2Tonemap(vec3(11.2f)));
     color = ACES(color);
-	outColor = vec4(color, 1);
+	outColor = vec4(LinearToSRGB(color), 1);
 }
 
 vec3 CalcPBRDirectLighting(vec3 radiance, vec3 Li)
@@ -194,24 +189,41 @@ vec3 DirectLightingPBR()
 {
 	vec3 lightsSum = vec3(0);
 
+    int shadowMapOffsetId = 0;
+
 	for (int i = 0; i < scene.numLights[0]; ++i)
 	{
-		vec3 radiance = DirLightRadiance(i) * vec3(DIR_LIGHTS[i].color);
-		lightsSum += CalcPBRDirectLighting(radiance, vec3(DIR_LIGHTS[i].direction));
+        float radiance = DirLightRadiance(i);
+
+		if (radiance > 0 && DIR_LIGHTS[i].shadowOffset > 0)
+			radiance *= DirLightShadow(i, shadowMapOffsetId);
+
+		shadowMapOffsetId += DIR_LIGHTS[i].shadowOffset;
+		lightsSum += CalcPBRDirectLighting(radiance * vec3(DIR_LIGHTS[i].color), -vec3(DIR_LIGHTS[i].direction));
 	}
 
 	for (int i = 0; i < scene.numLights[1]; ++i)
 	{
-		vec3 radiance = PointLightRadiance(i) * vec3(POINT_LIGHTS[i].color);
+    	float radiance = PointLightRadiance(i);
+		
+		if (radiance > 0 && POINT_LIGHTS[i].shadowOffset > 0)
+			radiance *= PointLightShadow(i, shadowMapOffsetId);
+		
+		shadowMapOffsetId += POINT_LIGHTS[i].shadowOffset;
 		vec3 Li = normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
-		lightsSum += CalcPBRDirectLighting(radiance, Li);
+		lightsSum += CalcPBRDirectLighting(radiance * vec3(POINT_LIGHTS[i].color), Li);
 	}
 
 	for (int i = 0; i < scene.numLights[2]; ++i)
 	{
-		vec3 radiance = SpotLightRadiance(i) * vec3(SPOT_LIGHTS[i].color);
+    	float radiance = SpotLightRadiance(i);
+
+		if (radiance > 0 && SPOT_LIGHTS[i].shadowOffset > 0)
+			radiance *= SpotLightShadow(i, shadowMapOffsetId);
+
+		shadowMapOffsetId += SPOT_LIGHTS[i].shadowOffset;
 		vec3 Li = normalize(vec3(SPOT_LIGHTS[i].position) - inPosition);
-		lightsSum += CalcPBRDirectLighting(radiance, Li);
+		lightsSum += CalcPBRDirectLighting(radiance * vec3(SPOT_LIGHTS[i].color), Li);
 	}
 
 	return lightsSum;

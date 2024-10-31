@@ -2,6 +2,7 @@
 #include "utils/Logger.hpp"
 
 #include <vulkan/vk_enum_string_helper.h>
+
 Surface::Surface(const VulkanInstance& instance, const PhysicalDevice& physicalDevice, const LogicalDevice& logicalDevice, Window* window) :
 	m_Window(window)
 {
@@ -40,12 +41,6 @@ Surface::Surface(const VulkanInstance& instance, const PhysicalDevice& physicalD
 		m_Format.format = surfaceFormats[0].format;
 		m_Format.colorSpace = surfaceFormats[0].colorSpace;
 	}
-
-	NE_INFO("Found surface format:");
-	NE_DEBUG(string_VkFormat(m_Format.format), Logger::MAGENTA, Logger::BOLD);
-
-	NE_INFO("Found surface colorspace:");
-	NE_DEBUG(string_VkColorSpaceKHR(m_Format.colorSpace), Logger::MAGENTA, Logger::BOLD);
 
 	// Check for presentation support.
 	VkBool32 presentSupport;

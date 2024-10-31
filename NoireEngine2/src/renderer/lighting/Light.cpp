@@ -88,27 +88,21 @@ void Light::Render(const glm::mat4& model)
 
 	if (type == (uint32_t)Type::Point) 
 	{
-		glm::vec3 pos = GetTransform()->position();
-		gizmos.DrawWireSphere(m_Limit, pos, c);
+		gizmos.DrawWireSphere(m_Limit, glm::vec3(m_Position), c);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
 	else if (type == (uint32_t)Type::Spot)
 	{
-		glm::vec3 pos = GetTransform()->position();
-		auto dir = GetTransform()->Back();
-		
 		constexpr float coneRange = 5;
 		float inner = glm::tan(glm::radians(m_Fov * (1 - m_Blend) * 0.5f)) * coneRange;
 		float outer = glm::tan(glm::radians(m_Fov * 0.5f)) * coneRange;
 
-		gizmos.DrawSpotLight(pos, dir, inner, outer, m_Limit, c);
+		gizmos.DrawSpotLight(glm::vec3(m_Position), glm::vec3(m_Direction), inner, outer, m_Limit, c);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
 	else
 	{
-		glm::vec3 pos = GetTransform()->position();
-		auto dir = GetTransform()->Back();
-		gizmos.DrawDirectionalLight(dir, pos, c);
+		gizmos.DrawDirectionalLight(glm::vec3(m_Direction), glm::vec3(m_Position), c);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}
 }

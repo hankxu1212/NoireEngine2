@@ -60,8 +60,8 @@ void main()
 	// direct lighting and shadows
 	vec3 directLighting = DirectLighting();
 
-	vec3 color = vec3(material.albedo) * texColor * (directLighting + ambientLighting);
+	vec3 color = texColor * (directLighting + ambientLighting);
 	
 	color = ACES(color);
-	outColor = vec4(color, 1);
+	outColor = vec4(LinearToSRGB(color), 1);
 }

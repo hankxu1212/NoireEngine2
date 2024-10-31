@@ -65,6 +65,5 @@ private:
 	std::vector<VkImageView> imageViews;
 	VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 
-	VkFence fenceImage = VK_NULL_HANDLE;
 	uint32_t activeImageIndex;
 };

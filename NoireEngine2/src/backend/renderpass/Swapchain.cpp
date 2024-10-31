@@ -3,6 +3,8 @@
 #include "backend/VulkanContext.hpp"
 #include "backend/images/Image.hpp"
 #include "math/Math.hpp"
+#include <vulkan/vk_enum_string_helper.h>
+#include "utils/Logger.hpp"
 
 static const std::vector<VkCompositeAlphaFlagBitsKHR> COMPOSITE_ALPHA_FLAGS = {
 	VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR, VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
@@ -85,7 +87,10 @@ SwapChain::SwapChain(const PhysicalDevice& physicalDevice, Surface& surface, con
 	swapchainCreateInfo.compositeAlpha = compositeAlpha;
 	swapchainCreateInfo.presentMode = presentMode;
 	swapchainCreateInfo.clipped = VK_TRUE;
-	swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
+	if (oldSwapchain)
+		swapchainCreateInfo.oldSwapchain = oldSwapchain->getSwapchain();
+	else
+		swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
 
 	if (surfaceCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
 		swapchainCreateInfo.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
@@ -117,16 +122,14 @@ SwapChain::SwapChain(const PhysicalDevice& physicalDevice, Surface& surface, con
 			1, 0, 1, 0);
 	}
 
-	VkFenceCreateInfo fenceCreateInfo = {};
-	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	vkCreateFence(logicalDevice, &fenceCreateInfo, nullptr, &fenceImage);
+	NE_DEBUG(string_VkFormat(surfaceFormat.format), Logger::MAGENTA, Logger::BOLD);
+	NE_DEBUG(string_VkColorSpaceKHR(surfaceFormat.colorSpace), Logger::MAGENTA, Logger::BOLD);
 }
 
 SwapChain::~SwapChain() {
 	for (const auto& imageView : imageViews) {
 		vkDestroyImageView(logicalDevice, imageView, nullptr);
 	}
-	vkDestroyFence(logicalDevice, fenceImage, nullptr);
 	vkDestroySwapchainKHR(logicalDevice, swapchain, nullptr);
 }
 

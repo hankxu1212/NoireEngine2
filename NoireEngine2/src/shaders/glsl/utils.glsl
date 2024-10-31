@@ -3,14 +3,17 @@
 
 #define saturate(x) clamp(x, 0.0, 1.0)
 
-// Convert linear color to sRGB for display
-vec3 GammaCorrectToSRGB(vec3 color) {
-    return pow(color, vec3(1.0 / 2.2)); // Applying gamma correction for display
+const float GAMMA = 2.2;
+const float INV_GAMMA = 1.0 / GAMMA;
+
+vec3 LinearToSRGB(vec3 color)
+{
+    return pow(color, vec3(INV_GAMMA));
 }
 
-// Convert sRGB color to linear space for calculations
-vec3 GammaCorrectToLinear(vec3 color) {
-    return pow(color, vec3(2.2)); // Linearizing sRGB color
+vec3 SRGBToLinear(vec3 srgbIn)
+{
+    return vec3(pow(srgbIn.xyz, vec3(GAMMA)));
 }
 
 // Mathematical constants

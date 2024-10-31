@@ -58,7 +58,7 @@ void Renderpass::Begin(const CommandBuffer& commandBuffer)
 	VkExtent2D swapChainExtent = VulkanContext::Get()->getSwapChain()->getExtent();
 
 	static std::array< VkClearValue, 2 > clear_values{
-		VkClearValue{.color{.float32{0.2f, 0.2f, 0.2f, 0.2f} } },
+		VkClearValue{.color{.float32{0.5f, 0.5f, 0.5f, 1} } },
 		VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
 	};
 

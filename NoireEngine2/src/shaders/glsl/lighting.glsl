@@ -57,7 +57,7 @@ layout(set=1, binding=3, std140) readonly buffer SpotLights {
 
 float DirLightRadiance(int i)
 {
-	vec3 lightDir = -normalize(vec3(DIR_LIGHTS[i].direction));
+	vec3 lightDir = -vec3(DIR_LIGHTS[i].direction);
 	float cosTheta = max(dot(n, lightDir), 0.0);
 
 	return cosTheta * DIR_LIGHTS[i].intensity;
