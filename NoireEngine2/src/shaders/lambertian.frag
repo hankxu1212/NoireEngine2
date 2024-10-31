@@ -63,5 +63,5 @@ void main()
 	vec3 color = texColor * (directLighting + ambientLighting);
 	
 	color = ACES(color);
-	outColor = vec4(LinearToSRGB(color), 1);
+	outColor = vec4(color, 1);
 }

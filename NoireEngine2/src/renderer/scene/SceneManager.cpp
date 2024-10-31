@@ -25,7 +25,9 @@ void SceneManager::LoadDefault()
 		//scene->Load("../scenes/SphereScene/SphereScene.s72");
 		//scene->Load("../scenes/examples/Materials.s72");
 		//scene->Load("../scenes/BrickScene/BrickScene.s72");
-		scene->Load("../scenes/examples/lights-Mix.s72");
+		//scene->Load("../scenes/examples/lights-Mix.s72");
+		scene->Load("../scenes/examples/lights-Parameters.s72");
+		//scene->Load("../scenes/examples/lights-Spot-Shadows.s72");
 		//scene->Load("../scenes/LightsScene/LightsScene.s72");
 		//scene->Load("../scenes/ManyLights/ManyLights.s72");
 

@@ -87,8 +87,6 @@ void main()
     }
 
 	// normal mapping
-    // Perform sampling before (potentially) discarding.
-	// This is to avoid implicit derivatives in non-uniform control flow.
 	if (material.normalTexId >= 0)
 	{
         n = 2.0 * texture(textures[material.normalTexId], UV).rgb - 1.0;
@@ -101,9 +99,6 @@ void main()
 	albedo = material.albedo.rgb;
 	if (material.albedoTexId >= 0)
 		albedo *= texture(textures[material.albedoTexId], UV).rgb;
-
-    if(UV.x > 1.0 || UV.y > 1.0 || UV.x < 0.0 || UV.y < 0.0)
-        discard;
 
     // roughness
     roughness = material.roughness;
@@ -159,7 +154,7 @@ void main()
 
     // color = color * (1.0f / Uncharted2Tonemap(vec3(11.2f)));
     color = ACES(color);
-	outColor = vec4(LinearToSRGB(color), 1);
+	outColor = vec4(color, 1);
 }
 
 vec3 CalcPBRDirectLighting(vec3 radiance, vec3 Li)
