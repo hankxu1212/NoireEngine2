@@ -73,7 +73,7 @@ public:
 
 	// to be used in gizmos UI
 	static inline uint32_t PCFSamples = 32;
-	static inline uint32_t PCSSOccluderSamples = 32;
+	static inline uint32_t PCSSOccluderSamples = 8;
 
 private:
 	// Global pipeline variables ////////////////////////////////////////////

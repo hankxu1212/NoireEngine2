@@ -92,10 +92,10 @@ void main()
 	// This is to avoid implicit derivatives in non-uniform control flow.
 	if (material.normalTexId >= 0)
 	{
-        vec3 localNormal = 2.0 * textureLod(textures[material.normalTexId], UV, 0.0).rgb - 1.0;
-        n = TBN * localNormal;
+        n = 2.0 * texture(textures[material.normalTexId], UV).rgb - 1.0;
 		n.xy *= material.normalStrength;
 		n = normalize(n);
+        n = normalize(TBN * n);
 	}
 
 	// albedo 
@@ -109,12 +109,12 @@ void main()
     // roughness
     roughness = material.roughness;
     if (material.roughnessTexId >= 0)
-        roughness = textureLod(textures[material.roughnessTexId], UV, 0.0).a;
+        roughness *= texture(textures[material.roughnessTexId], UV).a;
 
     // metallic
     metalness = material.metallic;
     if (material.metallicTexId >= 0)
-        metalness = textureLod(textures[material.metallicTexId], UV, 0.0).a;
+        metalness *= texture(textures[material.metallicTexId], UV).a;
 
 	// light out
     cosLo = max(0.0, dot(n, V));
@@ -156,16 +156,15 @@ void main()
         ambientLighting = diffuseIBL + specularIBL * material.environmentLightIntensity;
     }
 
-
 	vec3 color = directLighting + ambientLighting;
 
     // shadow calculation
-	// float shadow = CalculateShadow();
-    // color *= shadow;
+	//float shadow = CalculateShadow();
+    //color *= shadow;
 
     // color = color * (1.0f / Uncharted2Tonemap(vec3(11.2f)));
     color = ACES(color);
-	outColor = gamma_map(color, 2.2);
+	outColor = vec4(color, 1);
 }
 
 vec3 CalcPBRDirectLighting(vec3 radiance, vec3 Li)

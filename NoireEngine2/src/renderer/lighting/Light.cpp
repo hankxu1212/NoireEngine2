@@ -319,7 +319,7 @@ void Light::UpdateDirectionalLightCascades()
 		glm::vec3 minExtents = -maxExtents;
 
 		glm::mat4 lightViewMatrix = Mat4::LookAt(frustumCenter - glm::vec3(m_Direction) * -minExtents.z, frustumCenter, GetTransform()->Up());
-		glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
+		glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, -1000.0f, maxExtents.z - minExtents.z);
 		lightOrthoMatrix[1][1] *= -1;
 
 		// Store split distance and matrix in cascade

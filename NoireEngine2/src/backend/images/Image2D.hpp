@@ -9,60 +9,22 @@
 class Image2D : public Image, public Resource 
 {
 public:
-	static std::shared_ptr<Image2D> Create(const Node& node);
+	// creates a texture from a file, loads it and caches it
+	static std::shared_ptr<Image2D> Create(
+		const std::filesystem::path& filename, 
+		VkFormat format = VK_FORMAT_R8G8B8A8_SRGB,
+		VkFilter filter = VK_FILTER_LINEAR,
+		VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT, 
+		bool anisotropic = true, bool mipmap = true, bool load=true
+	);
 
-	static std::shared_ptr<Image2D> Create(const std::filesystem::path& filename, VkFilter filter = VK_FILTER_LINEAR,
-		VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT, bool anisotropic = true, bool mipmap = true);
+	explicit Image2D();
 
-	/**
-	  * Creates a new 2D image.
-	  * @param filename The file to load the image from.
-	  * @param filter The magnification/minification filter to apply to lookups.
-	  * @param addressMode The addressing mode for outside [0..1] range.
-	  * @param anisotropic If anisotropic filtering is enabled.
-	  * @param mipmap If mapmaps will be generated.
-	  * @param load If this resource will be loaded immediately, otherwise {@link Image2d#Load} can be called later.
-	*/
-	explicit Image2D(const std::filesystem::path& filename, VkFilter filter = VK_FILTER_LINEAR, VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-		bool anisotropic = true, bool mipmap = true, bool load = true);
+	// loads an image with filename
+	explicit Image2D(const std::filesystem::path& filename, VkFormat format, VkFilter filter, VkSamplerAddressMode addressMode, bool mipmap, bool load);
 
-	explicit Image2D(const std::filesystem::path& filename, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage,
-		VkFilter filter = VK_FILTER_LINEAR, VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT, bool anisotropic = false, bool mipmap = false);
-
-	/**
-	  * Creates a new 2D image.
-	  * @param extent The images extent in pixels.
-	  * @param format The format and type of the texel blocks that will be contained in the image.
-	  * @param layout The layout that the image subresources accessible from.
-	  * @param usage The intended usage of the image.
-	  * @param filter The magnification/minification filter to apply to lookups.
-	  * @param addressMode The addressing mode for outside [0..1] range.
-	  * @param samples The number of samples per texel.
-	  * @param anisotropic If anisotropic filtering is enabled.
-	  * @param mipmap If mapmaps will be generated.
-	*/
-	explicit Image2D(const glm::vec2 extent, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-		VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-		VkFilter filter = VK_FILTER_LINEAR, VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT, bool anisotropic = false, bool mipmap = false);
-
-	/**
-	  * Creates a new 2D image.
-	  * @param bitmap The bitmap to load from.
-	  * @param format The format and type of the texel blocks that will be contained in the image.
-	  * @param layout The layout that the image subresources accessible from.
-	  * @param usage The intended usage of the image.
-	  * @param filter The magnification/minification filter to apply to lookups.
-	  * @param addressMode The addressing mode for outside [0..1] range.
-	  * @param samples The number of samples per texel.
-	  * @param anisotropic If anisotropic filtering is enabled.
-	  * @param mipmap If mapmaps will be generated.
-	*/
-	explicit Image2D(std::unique_ptr<Bitmap>&& bitmap, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM, VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-		VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-		VkFilter filter = VK_FILTER_LINEAR, VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT, bool anisotropic = false, bool mipmap = false);
+	// create an empty image with specified width, height, format, layout, and usage
+	explicit Image2D(uint32_t w, uint32_t h, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage);
 
 	/**
 	  * Sets the pixels of this image.
@@ -84,6 +46,7 @@ public:
 	friend Node& operator<<(Node& node, const Image2D& image);
 
 private:
+	static std::shared_ptr<Image2D> Create(const Node& node);
 	void Load(std::unique_ptr<Bitmap> loadBitmap = nullptr);
 
 	std::filesystem::path filename;

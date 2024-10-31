@@ -115,7 +115,7 @@ void LambertianMaterial::Load()
 	}
 	if (m_CreateInfo.normalPath != NE_NULL_STR)
 	{
-		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.normalPath);
+		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.normalPath, VK_FORMAT_R8G8B8A8_UNORM, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, true, false, true);
 		m_NormalMapId = tex->getTextureId();
 	}
 }

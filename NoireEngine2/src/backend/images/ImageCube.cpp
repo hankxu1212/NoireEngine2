@@ -33,7 +33,7 @@ ImageCube::ImageCube(std::filesystem::path filename, VkFilter filter, VkSamplerA
 	bool anisotropic, bool mipmap, bool usingHDR) :
 	Image(filter, addressMode, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 		VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		usingHDR ? VK_FORMAT_R32G32B32A32_SFLOAT : VK_FORMAT_R8G8B8A8_UNORM, 1, 6, { 0, 0, 1 }),
+		usingHDR ? VK_FORMAT_R32G32B32A32_SFLOAT : VK_FORMAT_R8G8B8A8_SRGB, 1, 6, { 0, 0, 1 }),
 	filename(std::move(filename)),
 	anisotropic(anisotropic),
 	mipmap(mipmap),

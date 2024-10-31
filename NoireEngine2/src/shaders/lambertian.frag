@@ -39,12 +39,14 @@ void main()
     mat3 TBN = mat3(tangent, bitangent, n);
 
 	// normal mapping
+    // Perform sampling before (potentially) discarding.
+	// This is to avoid implicit derivatives in non-uniform control flow.
 	if (material.normalTexId >= 0)
 	{
-        vec3 localNormal = 2.0 * textureLod(textures[material.normalTexId], inTexCoord, 0.0).rgb - 1.0;
-        n = TBN * localNormal;
+        n = 2.0 * texture(textures[material.normalTexId], inTexCoord).rgb - 1.0;
 		n.xy *= material.normalStrength;
 		n = normalize(n);
+        n = normalize(TBN * n);
 	}
 
 	// sample diffuse irradiance
@@ -61,5 +63,5 @@ void main()
 	vec3 color = vec3(material.albedo) * texColor * (directLighting + ambientLighting);
 	
 	color = ACES(color);
-	outColor = gamma_map(color, 2.2f);
+	outColor = vec4(color, 1);
 }

@@ -46,7 +46,7 @@ void EnvironmentBRDFBaker::Setup()
     assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT);
 
     // make the input image
-    brdfImage = std::make_shared<Image2D>(glm::vec2{ specs->outdim, specs->outdim }, format,
+    brdfImage = std::make_shared<Image2D>(specs->outdim, specs->outdim, format,
         VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
 
     // descriptor

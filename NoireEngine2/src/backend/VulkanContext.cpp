@@ -33,8 +33,6 @@ VulkanContext::~VulkanContext()
 
     if (s_Renderer)
         s_Renderer->Cleanup();
-
-    std::cout << "Destroyed vulkan context module\n";
 }
 
 void VulkanContext::Update()

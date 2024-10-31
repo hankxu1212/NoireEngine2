@@ -414,7 +414,7 @@ bool Image::CopyImage(const VkImage& srcImage, VkImage& dstImage, VkDeviceMemory
 	}
 
 start:
-	CreateImage(dstImage, dstImageMemory, extent, VK_FORMAT_R8G8B8A8_UNORM, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_LINEAR,
+	CreateImage(dstImage, dstImageMemory, extent, VK_FORMAT_R8G8B8A8_SRGB, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_LINEAR,
 		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 1, numLayers, VK_IMAGE_TYPE_2D);
 
 	CommandBuffer commandBuffer(true, VK_QUEUE_TRANSFER_BIT);

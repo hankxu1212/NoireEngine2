@@ -21,5 +21,5 @@ void main() {
 
     vec3 color = texture(samplerCubeMap, R).rgb;
 	color = ACES(color);
-	outColor = gamma_map(color, 2.2);
+	outColor = vec4(color, 1);
 }

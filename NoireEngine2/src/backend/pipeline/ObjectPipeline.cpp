@@ -30,7 +30,7 @@
 ObjectPipeline::ObjectPipeline()
 {
 	m_Renderpass = std::make_unique<Renderpass>(true);
-	Image2D::Create(Files::Path("../textures/default.png"));
+	Image2D::Create(Files::Path("../textures/default.png"), VK_FORMAT_R8G8B8A8_SRGB, VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, false, true);
 }
 
 ObjectPipeline::~ObjectPipeline()

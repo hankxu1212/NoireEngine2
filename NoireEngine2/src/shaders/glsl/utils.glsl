@@ -3,12 +3,14 @@
 
 #define saturate(x) clamp(x, 0.0, 1.0)
 
-vec4 gamma_map(vec3 color, float gamma)
-{
-	color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0/ gamma)); 
+// Convert linear color to sRGB for display
+vec3 GammaCorrectToSRGB(vec3 color) {
+    return pow(color, vec3(1.0 / 2.2)); // Applying gamma correction for display
+}
 
-	return vec4(color, 1);
+// Convert sRGB color to linear space for calculations
+vec3 GammaCorrectToLinear(vec3 color) {
+    return pow(color, vec3(2.2)); // Linearizing sRGB color
 }
 
 // Mathematical constants

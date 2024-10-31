@@ -1,5 +1,7 @@
 #include "backend/VulkanContext.hpp"
+#include "utils/Logger.hpp"
 
+#include <vulkan/vk_enum_string_helper.h>
 Surface::Surface(const VulkanInstance& instance, const PhysicalDevice& physicalDevice, const LogicalDevice& logicalDevice, Window* window) :
 	m_Window(window)
 {
@@ -15,31 +17,35 @@ Surface::Surface(const VulkanInstance& instance, const PhysicalDevice& physicalD
 	std::vector<VkSurfaceFormatKHR> surfaceFormats(surfaceFormatCount);
 	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &surfaceFormatCount, surfaceFormats.data());
 
+	VkFormat DefaultSurfaceFormat = VK_FORMAT_B8G8R8A8_SRGB;
+	VkColorSpaceKHR DefaultColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+
 	if (surfaceFormatCount == 1 && surfaceFormats[0].format == VK_FORMAT_UNDEFINED) {
-		m_Format.format = VK_FORMAT_B8G8R8A8_UNORM;
+		m_Format.format = DefaultSurfaceFormat;
 		m_Format.colorSpace = surfaceFormats[0].colorSpace;
 	}
-	else {
-		// Iterate over the list of available surface format and
-		// check for the presence of VK_FORMAT_B8G8R8A8_UNORM
-		bool found_B8G8R8A8_UNORM = false;
 
-		for (auto& surfaceFormat : surfaceFormats) {
-			if (surfaceFormat.format == VK_FORMAT_B8G8R8A8_UNORM) {
-				m_Format.format = surfaceFormat.format;
-				m_Format.colorSpace = surfaceFormat.colorSpace;
-				found_B8G8R8A8_UNORM = true;
-				break;
-			}
-		}
-
-		// In case VK_FORMAT_B8G8R8A8_UNORM is not available
-		// select the first available color format
-		if (!found_B8G8R8A8_UNORM) {
-			m_Format.format = surfaceFormats[0].format;
-			m_Format.colorSpace = surfaceFormats[0].colorSpace;
+	bool found = false;
+	for (auto& surfaceFormat : surfaceFormats) {
+		if (surfaceFormat.format == DefaultSurfaceFormat && surfaceFormat.colorSpace == DefaultColorSpace) {
+			m_Format.format = surfaceFormat.format;
+			m_Format.colorSpace = surfaceFormat.colorSpace;
+			found = true;
+			break;
 		}
 	}
+
+	// select the first available color format
+	if (!found) {
+		m_Format.format = surfaceFormats[0].format;
+		m_Format.colorSpace = surfaceFormats[0].colorSpace;
+	}
+
+	NE_INFO("Found surface format:");
+	NE_DEBUG(string_VkFormat(m_Format.format), Logger::MAGENTA, Logger::BOLD);
+
+	NE_INFO("Found surface colorspace:");
+	NE_DEBUG(string_VkColorSpaceKHR(m_Format.colorSpace), Logger::MAGENTA, Logger::BOLD);
 
 	// Check for presentation support.
 	VkBool32 presentSupport;

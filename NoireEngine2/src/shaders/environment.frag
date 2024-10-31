@@ -17,5 +17,5 @@ layout (set = 3, binding = 0) uniform samplerCube samplerCubeMap;
 void main() {
 	vec3 color = texture(samplerCubeMap, normalize(inNormal)).rgb;
 	color = ACES(color);
-	outColor = gamma_map(color, 2.2);
+	outColor = vec4(color, 1);
 }

@@ -148,14 +148,16 @@ void PBRMaterial::Load()
 	// normal
 	if (m_CreateInfo.normalPath != NE_NULL_STR)
 	{
-		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.normalPath);
+		// rgba, create mips
+		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.normalPath, VK_FORMAT_R8G8B8A8_UNORM);
 		m_NormalMapId = tex->getTextureId();
 	}
 
 	// TODO: combine normal and displacement map
 	if (m_CreateInfo.displacementPath != NE_NULL_STR)
 	{
-		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.displacementPath);
+		// srgb, dont create mipmaps
+		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.displacementPath, VK_FORMAT_R8G8B8A8_SRGB, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, true, false, true);
 		m_DisplacementMapId = tex->getTextureId();
 	}
 
