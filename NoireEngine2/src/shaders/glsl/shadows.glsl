@@ -3,8 +3,6 @@
 #include "sampling.glsl"
 #include "cubemap.glsl"
 
-#define ambient 0.1
-
 const mat4 biasMat = mat4( 
 	0.5, 0.0, 0.0, 0.0,
 	0.0, 0.5, 0.0, 0.0,
@@ -22,20 +20,22 @@ float PCF(vec2 uv, float currentDepth, float uvRadius, int pcfSamples, float bia
 	for (int i = 0; i < pcfSamples; i++)
 	{
 		float z = texture(shadowMaps[shadowMapIndex], uv + Poisson64[int(i * stp)] * uvRadius).r;
-		sum += (z < (currentDepth - bias)) ? ambient : 1;
+		sum += (z < (currentDepth - bias)) ? 0 : 1;
 	}
 	return sum / pcfSamples;
 }
 
 //////////////////////////////////////////////////////////////////////////
-float FindOccluderDistance(vec2 uv, float currentDepth, float uvLightSize, float nearClip, int occluderSamples, float bias, int shadowMapIndex)
+float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex, float lightSize)
 {
+	const float nearClip = 0.1;
+
 	int occluders = 0;
 	float avgOccluderDistance = 0;
-	float searchWidth = uvLightSize * (currentDepth - nearClip) / currentDepth;
-	float stp = 64 / occluderSamples;
+	float searchWidth = lightSize * (currentDepth - nearClip) / currentDepth;
+	float stp = 64 / scene.occluderSamples;
 
-	for (int i = 0; i < occluderSamples; i++)
+	for (int i = 0; i < scene.occluderSamples; i++)
 	{
 		float z = texture(shadowMaps[shadowMapIndex], uv + Poisson64[int(i * stp)] * searchWidth).r;
 		if (z < (currentDepth - bias))
@@ -44,22 +44,10 @@ float FindOccluderDistance(vec2 uv, float currentDepth, float uvLightSize, float
 			avgOccluderDistance += z;
 		}
 	}
-	if (occluders > 0)
-		return avgOccluderDistance / occluders;
-	else
-		return -1;
-}
-
-// blocker search
-
-//////////////////////////////////////////////////////////////////////////
-float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex, float lightSize)
-{
-	const float nearClip = 0.1;
-	
-	float occluderDistance = FindOccluderDistance(uv, currentDepth, lightSize, nearClip, scene.occluderSamples, bias, shadowMapIndex);
-	if (occluderDistance == -1)
+	if (occluders == 0)
 		return 1;
+
+	float occluderDistance = avgOccluderDistance / occluders;
 
 	// penumbra estimation
 	float penumbraWidth = (currentDepth - occluderDistance) / occluderDistance;
@@ -67,18 +55,6 @@ float PCSS(vec2 uv, float currentDepth, float bias, int shadowMapIndex, float li
 	// percentage-close filtering
 	float uvRadius = penumbraWidth * lightSize * nearClip / currentDepth;
 	return PCF(uv, currentDepth, uvRadius, scene.pcfSamples, bias, shadowMapIndex);
-}
-
-float textureProj(vec4 shadowCoord, vec2 offset, int cascadeIndex)
-{
-	float shadow = 1.0;
-	float bias = 0.005;
-
-	float dist = texture(shadowMaps[cascadeIndex], shadowCoord.st + offset).r;
-	if (dist < shadowCoord.z - bias) {
-		shadow = ambient;
-	}
-	return shadow;
 }
 
 float DirLightShadow(int lightId, int shadowMapId)
@@ -94,7 +70,7 @@ float DirLightShadow(int lightId, int shadowMapId)
 	int cascadedShadowMapID = shadowMapId + cascadeIndex;
 
 	const float shadowBias = EPSILON;
-	vec4 shadowCoord = biasMat * DIR_LIGHTS[lightId].lightspaces[cascadeIndex] * vec4(inPosition, 1.0);
+	vec4 shadowCoord = DIR_LIGHTS[lightId].lightspaces[cascadeIndex] * vec4(inPosition, 1.0);
 		
 	shadowCoord /= shadowCoord.w;
 
@@ -103,8 +79,7 @@ float DirLightShadow(int lightId, int shadowMapId)
 		&& shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0
 		&& shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)
 	{
-		// shadow = PCSS(shadowCoord.xy, shadowCoord.z, shadowBias, cascadedShadowMapID, shadowBias) * DIR_LIGHTS[lightId].shadowStrength;
-		shadow = (1 - textureProj(shadowCoord, vec2(0), cascadedShadowMapID)) * DIR_LIGHTS[lightId].shadowStrength;
+		shadow = (1 - PCF(shadowCoord.xy, shadowCoord.z, 0.0005, scene.pcfSamples, 0.0005, cascadedShadowMapID)) * DIR_LIGHTS[lightId].shadowStrength;
 	}
 	return 1 - shadow;
 }
@@ -118,7 +93,7 @@ float PointLightShadow(int lightId, int shadowMapId)
 
 	float shadowBias = 0.0005;
 
-	vec4 shadowCoord = biasMat * POINT_LIGHTS[lightId].lightspaces[face] * vec4(inPosition, 1.0);
+	vec4 shadowCoord = POINT_LIGHTS[lightId].lightspaces[face] * vec4(inPosition, 1.0);
 
 	shadowCoord /= shadowCoord.w;
 	
@@ -137,7 +112,7 @@ float SpotLightShadow(int lightId, int shadowMapId)
 {
 	float shadowBias = 0.0005;
 
-	vec4 shadowCoord = biasMat * SPOT_LIGHTS[lightId].lightspace * vec4(inPosition, 1.0);
+	vec4 shadowCoord = SPOT_LIGHTS[lightId].lightspace * vec4(inPosition, 1.0);
 	
 	// perform perspective divide
 	shadowCoord /= shadowCoord.w;

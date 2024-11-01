@@ -87,7 +87,6 @@ glm::mat4 Transform::LocalDirty()
     return localMat;
 }
 
-
 glm::mat4 Transform::World() const {
     return m_Parent ? m_Parent->World() * Local() : Local();
 }

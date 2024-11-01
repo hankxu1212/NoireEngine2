@@ -30,6 +30,11 @@ Camera::Camera(Type type_, bool orthographic_, float np, float fp, float fov, fl
 
 void Camera::Update(const Transform& t, bool updateFrustum)
 {
+	if (!isDirty) {
+		wasDirtyThisFrame = false;
+		return;
+	}
+
 	glm::vec3 eye = t.position();
 	glm::vec3 target = eye + t.Back();
 
@@ -50,6 +55,9 @@ void Camera::Update(const Transform& t, bool updateFrustum)
 		frustum.Update(viewMatrix, projectionMatrix);
 
 	worldToClip = projectionMatrix * viewMatrix;
+
+	isDirty = false;
+	wasDirtyThisFrame = true;
 }
 
 const char* Camera::getTypeStr() const

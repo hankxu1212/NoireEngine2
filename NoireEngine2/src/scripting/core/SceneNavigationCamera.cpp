@@ -43,9 +43,14 @@ namespace Core {
 			mouseDeltaRaw != glm::vec2())
 		{
 			glm::vec2 mouseDelta = Time::DeltaTime * mouseDeltaRaw;
+			nativeCamera->isDirty = true;
 
 			// moves anchor point
-			if (NativeInput::IsMouseButtonPressed(anchoredKey) && NativeInput::IsKeyPressed(Key::LeftShift))
+			bool isAnchorPressed = 
+				NativeInput::IsMouseButtonPressed(MOUSE_anchor) || 
+				(NativeInput::IsKeyPressed(KEY_anchor) && NativeInput::IsMouseButtonPressed(MOUSE_anchorMouseLeft));
+
+			if (isAnchorPressed && NativeInput::IsKeyPressed(Key::LeftShift))
 			{
 				glm::vec3 offset = anchoredMoveSensitivity * (mouseDelta.x * transform->Left() + mouseDelta.y * transform->Up());
 				anchorPoint += offset;
@@ -54,7 +59,7 @@ namespace Core {
 			}
 
 			//anchored rotation at (0,0)
-			if (NativeInput::IsMouseButtonPressed(anchoredKey))
+			if (isAnchorPressed)
 			{
 				transform->RotateAround(anchorPoint + anchorOffset, mouseDelta.y * anchoredRotationSensitivity, transform->Left());
 				transform->RotateAround(anchorPoint + anchorOffset, mouseDelta.x * anchoredRotationSensitivity, Vec3::Back);
@@ -64,7 +69,7 @@ namespace Core {
 		}
 			
 		// moving with keyboard -- with acceleration
-		if (NativeInput::IsMouseButtonPressed(anchoredMoveKeyboard)) 
+		if (NativeInput::IsMouseButtonPressed(MOUSE_move)) 
 		{
 			if (auto keyboardInput = NativeInput::GetVec3Input(planeNavKeyBindings);
 				keyboardInput != Vec3::Zero)
@@ -80,6 +85,7 @@ namespace Core {
 					radius = minimumRadius;
 
 				transform->SetPosition(anchorPoint - radius * anchorDir + offset);
+				nativeCamera->isDirty = true;
 				return;
 			}
 		}
@@ -122,6 +128,7 @@ namespace Core {
 				radius = minimumRadius;
 			transform->SetPosition(anchorPoint - radius * anchorDir);
 		}
+		nativeCamera->isDirty = true;
 		return false;
 	}
 }

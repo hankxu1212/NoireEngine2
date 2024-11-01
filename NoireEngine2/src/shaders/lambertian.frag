@@ -39,8 +39,6 @@ void main()
     mat3 TBN = mat3(tangent, bitangent, n);
 
 	// normal mapping
-    // Perform sampling before (potentially) discarding.
-	// This is to avoid implicit derivatives in non-uniform control flow.
 	if (material.normalTexId >= 0)
 	{
         n = 2.0 * texture(textures[material.normalTexId], inTexCoord).rgb - 1.0;

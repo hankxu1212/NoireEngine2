@@ -81,14 +81,6 @@ void CameraComponent::Inspect()
 void CameraComponent::Debug()
 {
 	Inspect();
-
-	// --------------------------------------------------------
-
-	//ImGui::Columns(2);
-	//ImGui::Text("%s", "Velocity");
-	//ImGui::NextColumn();
-	//ImGui::Text("%f", cam.velocity);
-	//ImGui::Columns(1);
 }
 
 CameraComponent::CameraComponent(int priority_) :

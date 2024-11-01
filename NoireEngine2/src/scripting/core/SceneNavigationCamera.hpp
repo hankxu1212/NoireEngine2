@@ -43,8 +43,11 @@ namespace Core {
             Key::S,Key::W,
         };
 
-        MouseCode anchoredKey = Mouse::ButtonMiddle;
-        MouseCode anchoredMoveKeyboard = Mouse::ButtonRight;
+        MouseCode MOUSE_anchorMouseLeft = Mouse::ButtonLeft;
+        MouseCode MOUSE_anchor = Mouse::ButtonMiddle;
+        KeyCode KEY_anchor = Key::LeftAlt;
+
+        MouseCode MOUSE_move = Mouse::ButtonRight;
 
         float moveSpeed = 20;
         float anchoredRotationSensitivity = 300.0f;

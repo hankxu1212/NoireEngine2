@@ -67,32 +67,35 @@ float CalculateFallOff(float D, float limit, float radius)
 {
     float saturated = saturate(1.0 - pow(D / limit, 4));
     float falloff = saturated * saturated / (D * D + 1.0);
-	float attenuation = 1 / (D * D);
-    return mix(1.0, falloff, step(radius, D)) * attenuation;
+	float r = max(radius, D);
+	float attenuation = 1 / (FOUR_PI * r * r);
+    return mix(1.0, falloff, step(limit, D)) * attenuation;
 }
 
 float PointLightRadiance(int i)
 {
-	vec3 lightDir = normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
-
 	float D = distance(vec3(POINT_LIGHTS[i].position), inPosition);
+	float falloff = CalculateFallOff(D, POINT_LIGHTS[i].limit, POINT_LIGHTS[i].radius);
+	if (falloff <= 0)
+		return 0;
+
+	vec3 lightDir = normalize(vec3(POINT_LIGHTS[i].position) - inPosition);
     
 	float cosTheta = max(dot(n, lightDir), 0.0);
-
-	float falloff = CalculateFallOff(D, POINT_LIGHTS[i].limit, POINT_LIGHTS[i].radius);
 
 	return cosTheta * POINT_LIGHTS[i].intensity * falloff;
 }
 
 float SpotLightRadiance(int i)
 {
-	vec3 lightDir = normalize(vec3(SPOT_LIGHTS[i].position) - inPosition);
-
 	float D = distance(vec3(SPOT_LIGHTS[i].position), inPosition);
+	float falloff = CalculateFallOff(D, SPOT_LIGHTS[i].limit, SPOT_LIGHTS[i].radius);
+	if (falloff <= 0)
+		return 0;
+
+	vec3 lightDir = normalize(vec3(SPOT_LIGHTS[i].position) - inPosition);
     
 	float cosTheta = max(dot(n, lightDir), 0.0);
-
-	float falloff = CalculateFallOff(D, SPOT_LIGHTS[i].limit, SPOT_LIGHTS[i].radius);
 
 	float cosAngle = saturate(dot(lightDir, -vec3(SPOT_LIGHTS[i].direction)));
 	float fov = radians(SPOT_LIGHTS[i].fov);

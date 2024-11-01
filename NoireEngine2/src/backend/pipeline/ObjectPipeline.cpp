@@ -541,15 +541,15 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 			switch (lightInstances[i]->type)
 			{
 			case 0/*Light::Type::Directional*/:
-				*directionalIt = lightInstances[i]->GetLightUniformAs<DirectionalLightUniform>();
+				memcpy(directionalIt, lightInstances[i]->GetLightUniformAs<DirectionalLightUniform>(), sizeof(DirectionalLightUniform));
 				directionalIt++;
 				break;
 			case 1/*Light::Type::Point*/:
-				*pointIt = lightInstances[i]->GetLightUniformAs<PointLightUniform>();
+				memcpy(pointIt, lightInstances[i]->GetLightUniformAs<PointLightUniform>(), sizeof(PointLightUniform));
 				pointIt++;
 				break;
 			case 2/*Light::Type::Spot*/:
-				*spotIt = lightInstances[i]->GetLightUniformAs<SpotLightUniform>();
+				memcpy(spotIt, lightInstances[i]->GetLightUniformAs<SpotLightUniform>(), sizeof(SpotLightUniform));
 				spotIt++;
 				break;
 			}

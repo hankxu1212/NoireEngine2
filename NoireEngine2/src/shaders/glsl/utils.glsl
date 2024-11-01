@@ -19,6 +19,7 @@ vec3 SRGBToLinear(vec3 srgbIn)
 // Mathematical constants
 #define PI              3.14159265359        // Pi
 #define TWO_PI          6.28318530718        // 2 * Pi
+#define FOUR_PI         12.5663706144        // 2 * Pi
 #define HALF_PI         1.57079632679        // Pi / 2
 #define QUARTER_PI      0.78539816339        // Pi / 4
 #define EIGHTH_PI       0.39269908169        // Pi / 8

@@ -78,7 +78,7 @@ public:
 	void Inspect() override;
 
 	template<typename T>
-	_NODISCARD T GetLightUniformAs() const;
+	_NODISCARD T* GetLightUniformAs() { return &std::get<T>(m_Uniform); }
 
 	const char* getName() override { return "Light"; }
 
@@ -100,9 +100,17 @@ public:
 	float m_ShadowAttenuation = 1;
 	glm::vec4 m_CascadeSplitDepths;
 
+	bool isDirty = true;
+
 private:
 	void UpdateDirectionalLightCascades();
 	void UpdatePointLightLightSpaces(uint32_t faceIndex);
+
+	void UpdateDirectionalLightUniform();
+	void UpdatePointLightUniform();
+	void UpdateSpotLightUniform();
 	
 	GizmosInstance gizmos;
+
+	std::variant<DirectionalLightUniform, SpotLightUniform, PointLightUniform> m_Uniform;
 };

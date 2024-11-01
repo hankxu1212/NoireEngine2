@@ -22,6 +22,9 @@ void Entity::SetParent(Entity* newParent)
 
 void Entity::Update()
 {
+	if (s_Transform && s_Transform->parent() != nullptr && s_Transform->parent()->isDirty)
+		s_Transform->isDirty = true;
+
 	// update components
 	for (auto& component : m_Components)
 	{

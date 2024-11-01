@@ -19,7 +19,7 @@ public:
     inline glm::quat rotation() const;
     inline glm::vec3 eulerAngles() const { return glm::eulerAngles(rotation()); }
     inline glm::vec3 scale() const;
-    inline const Transform* parent() const { return m_Parent; }
+    inline Transform* parent() const { return m_Parent; }
 
     void SetPosition(glm::vec3);
     void SetPosition(glm::vec3&);
@@ -91,6 +91,9 @@ public:
     bool operator!() const {
         return this == nullptr;
     }
+
+    bool isDirty = true;
+
 private:
     // attach a new transform as parent
     void AttachParent(Transform& parentTransform);
@@ -98,7 +101,6 @@ private:
     // remove the current parent in hierarchy
     void RemoveParent();
 
-    bool isDirty = true;
     glm::mat4 localMat;
 
     Transform* m_Parent = nullptr;

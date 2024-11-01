@@ -110,14 +110,16 @@ Building on top of A2, Noire Engine 2 is now a multi-threaded forward renderer t
 <h2>My Lit Scene <span class="atag creative">A3-create</span></h2>
 
 <p class="placeholder">
-Describe the scene you lit, the light count and placement approach, and include a screen recording showing it running in real-time:
+A bunch of astroids. With a total of 3 spot lights and 2 point lights.
 </p>
 
-<video>
-</video>
+<p class="placeholder">
+	<img src="Astroids.png" width="640" height="360">
+	<img src="AstroidsUpView.png" width="640" height="360">
+</p>
 
 <p class="placeholder">
-Credit + cite your sources for textures and models, if you did not create them yourself.
+	All models and textures are created by myself
 </p>
 
 <h2>My Code</h2>
@@ -130,8 +132,7 @@ Lights are components, and are de-serialized as usual from s72 files, and loaded
 scene on an entity.
 
 how data moves from <code>"LIGHT"</code>s stored in an s72 file to the in-memory representation used by your renderer;
-I left power and tint separate, but i could multiply them together i suppose. I think one of the reasons I left it separate is cuz I wanted to check if the radiance is 0 before the shadow calculations,
-and checking 1 float is better than checking all 3, although not sure how much performance impact this would have.
+I left power and tint separate, but i could multiply them together i suppose.
 </p>
 
 <h3>Adding Direct Lighting to Materials <span class="atag">A3-materials</span></h3>
@@ -141,35 +142,31 @@ I used storage buffers to pass light uniforms to the GPU, streamed per frame, ex
 </p>
 
 <p class="placeholder">
-Include screenshots or recordings of your viewer showing proper behavior of lambertian and pbr materials under sphere, spot, and sun lights.
+	<img src="PBRLight.png" width="640" height="360">
+	<img src="LambertianLight.png" width="640" height="360">
 </p>
 
 <p class="placeholder">
-Include a graph showing the performance impact of adding additional lights to a scene.
-We would theoretically expect a linear increase in computing time; is this borne out in practice?
-How many lights can your viewer handle at a reasonable frame rate?
+	<a href="https://drive.google.com/file/d/1UHmUxNfPvDM110hgBVSTdPGIhxjw_hSr/view?usp=drive_link">Material Light Recording</a>
+</p>
+
+<p class="placeholder">
+	<img src="LightsVsPerformance.png" width="640" height="360">
+</p>
+<p class="placeholder">
+We can see for small lights the frame delays increase linearly, but once the lights get many, the performance decrease looks exponential.
+For 77 point lights at 1024x1024 cube-map shadow resolution, 32 PCF sampling and 8 occluder search PCSS, I was able to obtain 20FPS performance.
 </p>
 
 <h3>Adding Shadows for Spot Lights <span class="atag">A3-shadows</span></h3>
 
 <p class="placeholder">
 I bind shadowmap as 2D textures to a descriptor indexed array, allowing unlimited lights to be spawned at scene start.<br><br>
+However, this meant each shadow is rendered on a separate renderpass. This could be better handled with a shadow atlas.<br><br>
 I reduce artifacts by rendering backfaces, using cosine-angle-weighted bias (less bias as angle gets steeper).<br><br>
 The PCF samples from a Poisson64 disk, and the user may choose to change the number of samples from 1 up to 64.<br><br>
+Note: I did not make the shadow resolution a variable. This meant 1024x1024 for point and spot lights, and 2048 for cascaded directional lights.
 </p>
-
-<p class="placeholder">
-Include output images showing that spot light shadows are working correctly for both lambertian and pbr materials.
-</p>
-<p class="placeholder">
-Include output images showing that "shadow" light parameter does actually change the shadow map resolution.
-</p>
-
-<p class="placeholder">
-Include a graph showing the performance impact of adding shadowing to lights to a scene.
-Attempt to separate the performance impact of shadow map rendering and shadow map sampling (e.g., by testing the same scenes with per-frame rendered shadow maps and pre-rendered shadow maps). Which is larger?
-</p>
-
 
 <h3>Extra: Light Sort <span class="atag extra">A3x-sort</span></h3>
 Didnt do this.
@@ -181,19 +178,17 @@ PCSS is just dynamic PCF, so underneath it just estimates the penumbra size by f
 </p>
 
 <p class="placeholder">
-Include images showing the same shadows rendered with and without PCSS, showing the spreading behavior as the shadow stretches further from the light.
+	<a href="https://drive.google.com/file/d/1Wmw_xKoyM4kB4UOkDZuc3X2-_b2O4BAd/view?usp=drive_link">Material Light Recording</a>
 </p>
-
 
 <h3>Extra: Shadows for Sun Lights <span class="atag extra">A3x-cascade</span></h3>
 
 <p class="placeholder">
 Directional lights pushes, by default, 4 shadowmaps to the shaders.
 <br><br>
-Cover, at least:
-your choice of shadow map cascade levels and layout;
-how your cascade is packed into a texture;
-how [if at all] your cascade avoids "boiling" as the camera moves
+The shadow map cascade is calculated based on a tight logarithmic fitting of the camera frustum. See Light.cpp on more detail of how this is calculated on the CPU.
+
+
 </p>
 
 <p class="placeholder">

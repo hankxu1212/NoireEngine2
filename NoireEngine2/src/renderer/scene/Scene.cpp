@@ -205,7 +205,7 @@ static void MakeLight(Entity* newEntity, const Scene::TValueMap& obj, const Scen
 	if (dict.find("sun") != dict.end())
 	{
 		const auto& lightObj = dict.at("sun").as_object().value();
-		float strength = lightObj.at("strength").as_float();
+		float strength = lightObj.at("strength").as_float() / glm::pi<float>();
 		newEntity->AddComponent<Light>(Light::Type::Directional, color, strength);
 		
 		//float angle = lightObj.at("angle").as_float();
@@ -215,7 +215,7 @@ static void MakeLight(Entity* newEntity, const Scene::TValueMap& obj, const Scen
 	{
 		const auto& lightObj = dict.at("sphere").as_object().value();
 		float radius = lightObj.at("radius").as_float();
-		float power = lightObj.at("power").as_float();
+		float power = lightObj.at("power").as_float() / glm::pi<float>();
 
 		if (lightObj.find("limit") == lightObj.end())
 			newEntity->AddComponent<Light>(Light::Type::Point, color, power, radius);
@@ -228,7 +228,7 @@ static void MakeLight(Entity* newEntity, const Scene::TValueMap& obj, const Scen
 	{
 		const auto& lightObj = dict.at("spot").as_object().value();
 
-		float power = lightObj.at("power").as_float();
+		float power = lightObj.at("power").as_float() / glm::pi<float>();
 		float fov = glm::degrees(lightObj.at("fov").as_float());
 		float radius = lightObj.at("radius").as_float();
 		float blend = lightObj.at("blend").as_float();

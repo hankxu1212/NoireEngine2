@@ -1,0 +1,117 @@
+["s72-v2",
+{
+	"type":"MESH",
+	"name":"Cube",
+	"topology":"TRIANGLE_LIST",
+	"count":36,
+	"attributes":{
+		"POSITION":{ "src":"LightsLimit5.Cube.pnTt.b72", "offset":0, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"NORMAL":{ "src":"LightsLimit5.Cube.pnTt.b72", "offset":12, "stride":48, "format":"R32G32B32_SFLOAT" },
+		"TANGENT":{ "src":"LightsLimit5.Cube.pnTt.b72", "offset":24, "stride":48, "format":"R32G32B32A32_SFLOAT" },
+		"TEXCOORD":{ "src":"LightsLimit5.Cube.pnTt.b72", "offset":40, "stride":48, "format":"R32G32_SFLOAT" }
+	}
+},
+{
+	"type":"NODE",
+	"name":"Cube",
+	"translation":[0,0,0],
+	"rotation":[0,0,0,1],
+	"scale":[36.2141,36.2141,0.780635],
+	"mesh":"Cube"
+},
+{
+
+	"type":"LIGHT",
+	"name":"Light",
+	"tint":[1, 1, 1],
+	"sphere":{
+		"radius":0.1,
+		"power":1000
+	}
+},
+{
+	"type":"NODE",
+	"name":"Light",
+	"translation":[4.07625,1.00545,5.90386],
+	"rotation":[0.169076,0.272171,0.75588,0.570948],
+	"scale":[1,1,1],
+	"light":"Light"
+},
+{
+
+	"type":"LIGHT",
+	"name":"Light.001",
+	"tint":[1, 1, 1],
+	"sphere":{
+		"radius":0.1,
+		"power":1000
+	}
+},
+{
+	"type":"NODE",
+	"name":"Light.001",
+	"translation":[-12.9544,-10.785,5.90386],
+	"rotation":[0.169076,0.272171,0.75588,0.570948],
+	"scale":[1,1,1],
+	"light":"Light.001"
+},
+{
+
+	"type":"LIGHT",
+	"name":"Light.002",
+	"tint":[1, 1, 1],
+	"sphere":{
+		"radius":0.1,
+		"power":1000
+	}
+},
+{
+	"type":"NODE",
+	"name":"Light.002",
+	"translation":[10.9758,-18.296,5.90386],
+	"rotation":[0.169076,0.272171,0.75588,0.570948],
+	"scale":[1,1,1],
+	"light":"Light.002"
+},
+{
+
+	"type":"LIGHT",
+	"name":"Light.003",
+	"tint":[1, 1, 1],
+	"sphere":{
+		"radius":0.1,
+		"power":1000
+	}
+},
+{
+	"type":"NODE",
+	"name":"Light.003",
+	"translation":[16.6527,7.20636,5.90386],
+	"rotation":[0.169076,0.272171,0.75588,0.570948],
+	"scale":[1,1,1],
+	"light":"Light.003"
+},
+{
+
+	"type":"LIGHT",
+	"name":"Light.004",
+	"tint":[1, 1, 1],
+	"sphere":{
+		"radius":0.1,
+		"power":1000
+	}
+},
+{
+	"type":"NODE",
+	"name":"Light.004",
+	"translation":[-7.27753,14.7173,5.90386],
+	"rotation":[0.169076,0.272171,0.75588,0.570948],
+	"scale":[1,1,1],
+	"light":"Light.004"
+},
+{
+	"type":"SCENE",
+	"name":"F:\\gameDev\\Engines\\NoireEngine2\\NoireEngine2\\src\\scenes\\LightsLimitTest\\LightsLimit.blend",
+	"roots":["Cube", "Light", "Light.001", "Light.002", "Light.003", "Light.004"]
+}
+]

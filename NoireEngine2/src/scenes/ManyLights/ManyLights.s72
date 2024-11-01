@@ -191,7 +191,7 @@
 	"type":"MATERIAL",
 	"name":"pbr:Astroid",
 	"pbr":{
-		"albedo":{ "src":"astroid.albedo2.png" },
+		"albedo":{ "src":"astroid.albedo2.png", "format":"srgb" },
 		"roughness":1,
 		"metalness":0
 	}
@@ -221,7 +221,7 @@
 	"type":"MATERIAL",
 	"name":"pbr:Astroid.001",
 	"pbr":{
-		"albedo":{ "src":"astroid.albedo3.png" },
+		"albedo":{ "src":"astroid.albedo3.png", "format":"srgb" },
 		"roughness":0.132931,
 		"metalness":0.314199
 	}
@@ -251,9 +251,9 @@
 	"type":"MATERIAL",
 	"name":"pbr:Astroid.002",
 	"pbr":{
-		"albedo":{ "src":"astroid.albedo.png" },
+		"albedo":{ "src":"astroid.albedo.png", "format":"srgb" },
 		"roughness":0.445972,
-		"metalness":{ "src":"astroid.normal.png" }
+		"metalness":{ "src":"astroid.normal.png", "format":"srgb" }
 	}
 },
 {

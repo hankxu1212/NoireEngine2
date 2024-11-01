@@ -47,6 +47,9 @@ public:
     bool orthographic = false;
     float orthographicScale = 5;
 
+    bool isDirty = true;
+    bool wasDirtyThisFrame = true;
+
 private:
     Type type = Scene;
 
