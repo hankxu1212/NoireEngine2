@@ -268,7 +268,8 @@ void ShadowPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 		}
 	}
 
-	Buffer::CopyBuffer(commandBuffer, workspace.LightSpaces_Src.getBuffer(), workspace.LightSpaces.getBuffer(), offset);
+	if (offset > 0)
+		Buffer::CopyBuffer(commandBuffer, workspace.LightSpaces_Src.getBuffer(), workspace.LightSpaces.getBuffer(), offset);
 }
 
 void ShadowPipeline::Render(const Scene* scene, const CommandBuffer& primaryCmdBuffer)

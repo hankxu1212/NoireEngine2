@@ -201,12 +201,21 @@ static void MakeLight(Entity* newEntity, const Scene::TValueMap& obj, const Scen
 
 	const auto& tintArr = dict.at("tint").as_array().value();
 	Color3 color(tintArr[0].as_float(), tintArr[1].as_float(), tintArr[2].as_float());
+	
+	bool useShadows = false;
+	auto shadowIt = dict.find("shadow");
+	if (shadowIt != dict.end())
+	{
+		useShadows = true;
+		// TODO: add resolution here
+	}
 
 	if (dict.find("sun") != dict.end())
 	{
 		const auto& lightObj = dict.at("sun").as_object().value();
 		float strength = lightObj.at("strength").as_float() / glm::pi<float>();
-		newEntity->AddComponent<Light>(Light::Type::Directional, color, strength);
+		Light& light = newEntity->AddComponent<Light>(Light::Type::Directional, color, strength);
+		light.m_UseShadows = useShadows;
 		
 		//float angle = lightObj.at("angle").as_float();
 		//newEntity->transform()->SetRotation(glm::quat(glm::vec3(std::sin(angle), std::cos(angle), 0)));
@@ -217,11 +226,14 @@ static void MakeLight(Entity* newEntity, const Scene::TValueMap& obj, const Scen
 		float radius = lightObj.at("radius").as_float();
 		float power = lightObj.at("power").as_float() / glm::pi<float>();
 
-		if (lightObj.find("limit") == lightObj.end())
-			newEntity->AddComponent<Light>(Light::Type::Point, color, power, radius);
+		if (lightObj.find("limit") == lightObj.end()) {
+			Light& light = newEntity->AddComponent<Light>(Light::Type::Point, color, power, radius);
+			light.m_UseShadows = useShadows;
+		}
 		else {
 			float limit = lightObj.at("limit").as_float();
-			newEntity->AddComponent<Light>(Light::Type::Point, color, power, radius, limit);
+			Light& light = newEntity->AddComponent<Light>(Light::Type::Point, color, power, radius, limit);
+			light.m_UseShadows = useShadows;
 		}
 	}
 	else if (dict.find("spot") != dict.end())
@@ -233,11 +245,14 @@ static void MakeLight(Entity* newEntity, const Scene::TValueMap& obj, const Scen
 		float radius = lightObj.at("radius").as_float();
 		float blend = lightObj.at("blend").as_float();
 
-		if (lightObj.find("limit") == lightObj.end())
-			newEntity->AddComponent<Light>(Light::Type::Spot, color, power, radius, fov, blend);
+		if (lightObj.find("limit") == lightObj.end()) {
+			Light& light = newEntity->AddComponent<Light>(Light::Type::Spot, color, power, radius, fov, blend);
+			light.m_UseShadows = useShadows;
+		}
 		else {
 			float limit = lightObj.at("limit").as_float();
-			newEntity->AddComponent<Light>(Light::Type::Spot, color, power, radius, fov, blend, limit);
+			Light& light = newEntity->AddComponent<Light>(Light::Type::Spot, color, power, radius, fov, blend, limit);
+			light.m_UseShadows = useShadows;
 		}
 	}
 }
@@ -374,71 +389,66 @@ void Scene::Deserialize(const std::string& path)
 	std::vector<std::string> roots;
 	bool foundScene = false;
 
-	try {
-		sejp::value loaded = sejp::load(sceneRootAbsolutePath.string());
-		auto& arr = loaded.as_array().value();
+	sejp::value loaded = sejp::load(sceneRootAbsolutePath.string());
+	auto& arr = loaded.as_array().value();
 
-		// do a first parse of the file, put everything into sceneMap, hashed by name
-		for (const auto& elem : arr)
-		{
-			const auto& obj = elem.as_object();
-			if (!obj)
-				continue;
+	// do a first parse of the file, put everything into sceneMap, hashed by name
+	for (const auto& elem : arr)
+	{
+		const auto& obj = elem.as_object();
+		if (!obj)
+			continue;
 
-			const auto& objMap = obj.value();
+		const auto& objMap = obj.value();
 
-			// define some lambdas for parsing...
-			auto GET_STR = [&objMap](const char* key) { return objMap.at(key).as_string().value(); };
+		// define some lambdas for parsing...
+		auto GET_STR = [&objMap](const char* key) { return objMap.at(key).as_string().value(); };
 
-			try {
-				SceneNode::Type type = SceneNode::ObjectType(GET_STR("type"));
+		try {
+			SceneNode::Type type = SceneNode::ObjectType(GET_STR("type"));
 
-				// insert into scene map
-				if (sceneMap.find(type) == sceneMap.end())
-					sceneMap[type] = {};
-				sceneMap[type].insert({ GET_STR("name"), elem });
+			// insert into scene map
+			if (sceneMap.find(type) == sceneMap.end())
+				sceneMap[type] = {};
+			sceneMap[type].insert({ GET_STR("name"), elem });
 
-				// add all node names to be used later
-				if (type == SceneNode::Scene)
+			// add all node names to be used later
+			if (type == SceneNode::Scene)
+			{
+				if (foundScene)
+					throw std::runtime_error("More than one scene object found!");
+
+				foundScene = true;
+				const auto& rootsArr = objMap.at("roots").as_array().value();
+				roots.resize(rootsArr.size());
+
+				for (const auto& [id, root] : Enumerate(rootsArr))
 				{
-					if (foundScene)
-						throw std::runtime_error("More than one scene object found!");
-
-					foundScene = true;
-					const auto& rootsArr = objMap.at("roots").as_array().value();
-					roots.resize(rootsArr.size());
-
-					for (const auto& [id, root] : Enumerate(rootsArr))
-					{
-						roots[id] = root.as_string().value();
-					}
+					roots[id] = root.as_string().value();
 				}
 			}
-			catch (std::exception& e) {
-				NE_WARN("Skipping this object due to an error: {}", e.what());
-				continue;
-			}
 		}
+		catch (std::exception& e) {
+			NE_WARN("Skipping this object due to an error: {}", e.what());
+			continue;
+		}
+	}
 
-		if (sceneMap.find(SceneNode::Node) == sceneMap.end()) 
-			NE_WARN("Scene is empty");
-		else 
+	if (sceneMap.find(SceneNode::Node) == sceneMap.end()) 
+		NE_WARN("Scene is empty");
+	else 
+	{
+		// traverse all node objects
+		for (const auto& root : roots)
 		{
-			// traverse all node objects
-			for (const auto& root : roots)
-			{
-				MakeNode(this, sceneMap, root, nullptr);
-			}
-
-			MakeAnimation(sceneMap);
-			MakeEnvironment(this, sceneMap);
+			MakeNode(this, sceneMap, root, nullptr);
 		}
 
-		NE_INFO("Finished loading scene");
+		MakeAnimation(sceneMap);
+		MakeEnvironment(this, sceneMap);
 	}
-	catch (std::exception& e) {
-		NE_ERROR("Failed to deserialize a scene with path: [{}]. Error: {}", std::move(path), e.what());
-	}
+
+	NE_INFO("Finished loading scene");
 }
 
 void Scene::AddSkybox(const std::string& path, SkyboxType type, bool isDefault)

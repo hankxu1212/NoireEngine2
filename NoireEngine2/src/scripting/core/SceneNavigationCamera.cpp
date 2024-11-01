@@ -39,10 +39,9 @@ namespace Core {
 	void SceneNavigationCamera::HandleMovement()
 	{
 		// moving with mouse
-		if (auto mouseDeltaRaw = Input::Get()->GetMouseDelta(); 
-			mouseDeltaRaw != glm::vec2())
+		if (auto mouseDelta = Input::Get()->GetMouseDelta();
+			mouseDelta != glm::vec2())
 		{
-			glm::vec2 mouseDelta = Time::DeltaTime * mouseDeltaRaw;
 			nativeCamera->isDirty = true;
 
 			// moves anchor point

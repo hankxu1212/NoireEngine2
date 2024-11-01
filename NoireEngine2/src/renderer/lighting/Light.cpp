@@ -58,27 +58,29 @@ void Light::Update()
 	m_Direction = glm::vec4(dir, 0);
 	m_Position = glm::vec4(pos, 0);
 
-	if (m_UseShadows)
+	if (type == (uint32_t)Type::Directional)
 	{
-		if (type == (uint32_t)Type::Directional)
-		{
+		if(m_UseShadows)
 			UpdateDirectionalLightCascades();
-			UpdateDirectionalLightUniform();
-		}
-		else if (type == (uint32_t)Type::Point)
-		{
+		UpdateDirectionalLightUniform();
+	}
+	else if (type == (uint32_t)Type::Point)
+	{
+		if (m_UseShadows) {
 			for (uint32_t face = 0; face < OMNI_SHADOWMAPS_COUNT; face++) {
 				UpdatePointLightLightSpaces(face);
 			}
-			UpdatePointLightUniform();
 		}
-		else  // Type::Spot
-		{
+		UpdatePointLightUniform();
+	}
+	else  // Type::Spot
+	{
+		if (m_UseShadows) {
 			glm::mat4 depthProjectionMatrix = Mat4::Perspective(glm::radians(m_Fov), 1.0f, m_NearClip, m_FarClip);
 			glm::mat4 depthViewMatrix = Mat4::LookAt(pos, pos + dir, transform->Up());
 			m_Lightspaces[0] = depthProjectionMatrix * depthViewMatrix;
-			UpdateSpotLightUniform();
 		}
+		UpdateSpotLightUniform();
 	}
 	isDirty = false;
 }
@@ -331,10 +333,12 @@ void Light::UpdateDirectionalLightUniform()
 	DirectionalLightUniform uniform;
 
 	// copy lightspaces
-	memcpy(uniform.lightspaces.data(), m_Lightspaces.data(), sizeof(glm::mat4) * SHADOW_MAP_CASCADE_COUNT);
-	for (int i = 0; i < SHADOW_MAP_CASCADE_COUNT; ++i)
-	{
-		uniform.lightspaces[i] = BIAS_MAT * uniform.lightspaces[i];
+	if (m_UseShadows) {
+		memcpy(uniform.lightspaces.data(), m_Lightspaces.data(), sizeof(glm::mat4) * SHADOW_MAP_CASCADE_COUNT);
+		for (int i = 0; i < SHADOW_MAP_CASCADE_COUNT; ++i)
+		{
+			uniform.lightspaces[i] = BIAS_MAT * uniform.lightspaces[i];
+		}
 	}
 
 	uniform.color = m_Color;
@@ -353,10 +357,12 @@ void Light::UpdatePointLightUniform()
 	PointLightUniform uniform;
 
 	// copy lightspaces
-	memcpy(uniform.lightspaces.data(), m_Lightspaces.data(), sizeof(glm::mat4) * OMNI_SHADOWMAPS_COUNT);
-	for (int i = 0; i < OMNI_SHADOWMAPS_COUNT; ++i)
-	{
-		uniform.lightspaces[i] = BIAS_MAT * uniform.lightspaces[i];
+	if (m_UseShadows) {
+		memcpy(uniform.lightspaces.data(), m_Lightspaces.data(), sizeof(glm::mat4) * OMNI_SHADOWMAPS_COUNT);
+		for (int i = 0; i < OMNI_SHADOWMAPS_COUNT; ++i)
+		{
+			uniform.lightspaces[i] = BIAS_MAT * uniform.lightspaces[i];
+		}
 	}
 
 	uniform.color = m_Color;
@@ -373,7 +379,9 @@ void Light::UpdatePointLightUniform()
 void Light::UpdateSpotLightUniform()
 {
 	SpotLightUniform uniform;
-	uniform.lightspace = BIAS_MAT * m_Lightspaces[0];
+	if (m_UseShadows) {
+		uniform.lightspace = BIAS_MAT * m_Lightspaces[0];
+	}
 	uniform.color = m_Color;
 	uniform.position = m_Position;
 	uniform.direction = m_Direction;

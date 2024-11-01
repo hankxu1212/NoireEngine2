@@ -178,7 +178,7 @@ PCSS is just dynamic PCF, so underneath it just estimates the penumbra size by f
 </p>
 
 <p class="placeholder">
-	<a href="https://drive.google.com/file/d/1Wmw_xKoyM4kB4UOkDZuc3X2-_b2O4BAd/view?usp=drive_link">Material Light Recording</a>
+	<a href="https://drive.google.com/file/d/1Wmw_xKoyM4kB4UOkDZuc3X2-_b2O4BAd/view?usp=drive_link">PCSS</a>
 </p>
 
 <h3>Extra: Shadows for Sun Lights <span class="atag extra">A3x-cascade</span></h3>
@@ -187,16 +187,14 @@ PCSS is just dynamic PCF, so underneath it just estimates the penumbra size by f
 Directional lights pushes, by default, 4 shadowmaps to the shaders.
 <br><br>
 The shadow map cascade is calculated based on a tight logarithmic fitting of the camera frustum. See Light.cpp on more detail of how this is calculated on the CPU.
-
-
-</p>
-
 <p class="placeholder">
-Include images showing a scene rendered with a shadow-casting distant directional light.
-Include images with a modified shader color-coding pixels by what cascade level they are sampling.
-Include images from a debug camera, showing how the shadow map cascade fits the camera frustum.
+	<a href="https://drive.google.com/file/d/1Wtiy7uiUrDulcR-jVGRQxuF2JvsZTEbM/view?usp=drive_link">Shadow Cascading Tints</a>
 </p>
-
+<p class="placeholder">
+	<img src="ShadowCascadeDivide.png" width="640" height="360">
+</p>
+Sadly no images showing how the frustum fits the lightspaces is shown.
+</p>
 
 <h3>Extra: Shadows for Sphere Lights <span class="atag extra">A3x-cube</span></h3>
 
@@ -206,17 +204,18 @@ In the fragment shader, a cartesian direction to cube UV conversion is done to f
 </p>
 
 <p class="placeholder">
-Include images or video showing a scene rendered with a shadow-casting sphere light.
-Show that there are no artifacts at the edges or corners of the shadow map cube.
+	<img src="PointLight.png" width="640" height="360"> PCSS for point lights.
+	<img src="PointLightNoArtifacts.png" width="640" height="360">Showing point lights and no artifacts around corners.
 </p>
-
 
 <h3>Extra: Multi-threaded shadow renderer <span class="atag extra">A3x-*</span></h3>
 
 <p class="placeholder">
 I implemented a simple secondary command buffer recording scheme that runs all the shadow recordings in separate threads in parallel. <br><br>
 Lets say you are rendering 32 shadow maps. Then the engine spawns 32 threads on the CPU to record each of those draw calls into a separate secondary command buffer.<br><br>
-Before submitting to the primary command buffer, all the threads are joined.
+Before submitting to the primary command buffer, all the threads are joined. <br><br>
+
+But tbh the performance wasnt that acknowledgable anyways. maybe its bad.
 </p>
 
 <h2>Feedback</h2>
