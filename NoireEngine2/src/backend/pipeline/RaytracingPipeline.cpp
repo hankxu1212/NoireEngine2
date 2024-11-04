@@ -287,12 +287,19 @@ void RaytracingPipeline::CreateBottomLevelAccelerationStructure()
 		allBlas.emplace_back(MeshToGeometry(mesh.get()));
 	}
 	m_RTBuilder.BuildBlas(allBlas, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+
+	NE_DEBUG(std::format("Built {} bottom level triangle geometries", allBlas.size()), Logger::CYAN, Logger::BOLD);
 }
 
 void RaytracingPipeline::CreateTopLevelAccelerationStructure()
 {
 	std::vector<VkAccelerationStructureInstanceKHR> tlas;
 	const auto& allInstances = SceneManager::Get()->getScene()->getObjectInstances();
+
+	uint32_t totalSize = 0;
+	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
+		totalSize += (uint32_t)allInstances[workflowIndex].size();
+	tlas.reserve(totalSize);
 
 	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
 	{
@@ -312,6 +319,8 @@ void RaytracingPipeline::CreateTopLevelAccelerationStructure()
 	}
 
 	m_RTBuilder.BuildTlas(tlas, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+
+	NE_DEBUG(std::format("Built {} top level instances", totalSize), Logger::CYAN, Logger::BOLD);
 }
 
 void RaytracingPipeline::CreateUniformBuffer()
