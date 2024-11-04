@@ -110,8 +110,7 @@ void VulkanContext::InitializeRenderer()
 
 void VulkanContext::WaitGraphicsQueue()
 {
-    VK_CHECK(vkQueueWaitIdle(s_LogicalDevice->getGraphicsQueue()),
-        "[vulkan] Error: Wait queue on destroy vulkan context failed");
+    VK_CHECK(vkQueueWaitIdle(s_LogicalDevice->getGraphicsQueue()));
 }
 
 uint32_t VulkanContext::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)

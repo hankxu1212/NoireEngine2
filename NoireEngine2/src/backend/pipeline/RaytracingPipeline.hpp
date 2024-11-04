@@ -5,6 +5,8 @@
 #include "backend/buffers/Buffer.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
 #include "backend/raytracing/RaytracingBuilderKHR.hpp"
+#include "backend/images/Image2D.hpp"
+#include "core/Core.hpp"
 
 class ObjectPipeline;
 
@@ -56,15 +58,16 @@ public:
 
 	static uint64_t GetBufferDeviceAddress(VkBuffer buffer);
 
-	void CreateStorageImage(VkFormat format, VkExtent3D extent);
-
-	void DeleteStorageImage();
-
 	VkStridedDeviceAddressRegionKHR GetSbtEntryStridedDeviceAddressRegion(VkBuffer buffer, uint32_t handleCount);
 
 	void CreateShaderBindingTable(ShaderBindingTable& shaderBindingTable, uint32_t handleCount);
 
 public:
+	START_BINDING(RTXBindings)
+		TLAS = 0,  // Top-level acceleration structure
+		OutImage = 1   // Ray tracer output image
+	END_BINDING();
+
 	std::vector<VkRayTracingShaderGroupCreateInfoKHR> shaderGroups{};
 	struct ShaderBindingTables {
 		ShaderBindingTable raygen;
@@ -74,20 +77,23 @@ public:
 
 	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
 	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
-	VkDescriptorSet descriptorSet;
-	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorSet set0;
+	VkDescriptorSetLayout set0_layout;
 
 	DescriptorAllocator						m_DescriptorAllocator;
 	RaytracingBuilderKHR					m_RTBuilder;
+
+	std::unique_ptr<Image2D>				m_RtxImage;
 
 private:
 	//void MeshTo
 	void CreateBottomLevelAccelerationStructure();
 	void CreateTopLevelAccelerationStructure();
+	void CreateStorageImage();
+	void CreateDescriptorSets();
 	void CreateUniformBuffer();
 	void CreateRayTracingPipeline();
 	void CreateShaderBindingTables();
-	void CreateDescriptorSets();
 
 private:
 	ObjectPipeline* p_ObjectPipeline;

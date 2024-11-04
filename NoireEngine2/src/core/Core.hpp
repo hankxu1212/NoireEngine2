@@ -26,3 +26,12 @@ const T& max(const T& a, const T& b)
 
 #define NE_ENTITY_TYPE "NEntity"
 #define NE_NULL_STR "none"
+
+// clang-format off
+#ifdef __cplusplus // Descriptor binding helper for C++ and GLSL
+#define START_BINDING(a) enum a {
+#define END_BINDING() }
+#else
+#define START_BINDING(a)  const uint
+#define END_BINDING() 
+#endif

@@ -3,19 +3,14 @@
 #include "backend/VulkanContext.hpp"
 
 // helper for creating a descriptor pool
-static VkDescriptorPool CreatePool(VkDevice device, const DescriptorAllocator::PoolSizes& poolSizes, int count, VkDescriptorPoolCreateFlags flags)
+static VkDescriptorPool CreatePool(VkDevice device, const std::vector<VkDescriptorPoolSize>& poolSizes, uint32_t maxSets, VkDescriptorPoolCreateFlags flags)
 {
-	std::vector<VkDescriptorPoolSize> sizes;
-	sizes.reserve(poolSizes.sizes.size());
-	for (auto& sz : poolSizes.sizes) {
-		sizes.push_back({ sz.first, uint32_t(sz.second * count) });
-	}
 	VkDescriptorPoolCreateInfo pool_info = {};
 	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	pool_info.flags = flags;
-	pool_info.maxSets = count;
-	pool_info.poolSizeCount = (uint32_t)sizes.size();
-	pool_info.pPoolSizes = sizes.data();
+	pool_info.maxSets = maxSets;
+	pool_info.poolSizeCount = (uint32_t)poolSizes.size();
+	pool_info.pPoolSizes = poolSizes.data();
 
 	VkDescriptorPool descriptorPool;
 
@@ -58,8 +53,14 @@ VkDescriptorPool DescriptorAllocator::GrabPool()
 	else
 	{
 		//no pools availible, so create a new one
-		return CreatePool(VulkanContext::GetDevice(), descriptorSizes, 1000, 0);
+		return CreatePool(VulkanContext::GetDevice(), descriptorSizes, maxSets, 0);
 	}
+}
+
+void DescriptorAllocator::SetCustomPoolParams(std::vector<VkDescriptorPoolSize>& sizes, uint32_t maxSets_)
+{
+	descriptorSizes.assign(sizes.begin(), sizes.end());
+	maxSets = maxSets_;
 }
 
 bool DescriptorAllocator::Allocate(VkDescriptorSet* set, VkDescriptorSetLayout layout, const void* pNext)

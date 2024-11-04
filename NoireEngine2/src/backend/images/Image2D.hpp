@@ -24,7 +24,9 @@ public:
 	explicit Image2D(const std::filesystem::path& filename, VkFormat format, VkFilter filter, VkSamplerAddressMode addressMode, bool mipmap, bool load);
 
 	// create an empty image with specified width, height, format, layout, and usage
-	explicit Image2D(uint32_t w, uint32_t h, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage);
+	explicit Image2D(uint32_t w, uint32_t h, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage, bool mipmap);
+
+	void Load(std::unique_ptr<Bitmap> loadBitmap = nullptr);
 
 	/**
 	  * Sets the pixels of this image.
@@ -47,7 +49,6 @@ public:
 
 private:
 	static std::shared_ptr<Image2D> Create(const Node& node);
-	void Load(std::unique_ptr<Bitmap> loadBitmap = nullptr);
 
 	std::filesystem::path filename;
 

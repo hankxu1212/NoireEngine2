@@ -1,6 +1,7 @@
 #include "DescriptorBuilder.hpp"
 
 #include "backend/VulkanContext.hpp"
+#include "backend/raytracing/RTCore.h"
 
 DescriptorBuilder DescriptorBuilder::Start(DescriptorLayoutCache* layoutCache, DescriptorAllocator* allocator) 
 {
@@ -28,7 +29,6 @@ DescriptorBuilder& DescriptorBuilder::BindBuffer(uint32_t binding, VkDescriptorB
 	VkWriteDescriptorSet newWrite{};
 	newWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	newWrite.pNext = nullptr;
-
 	newWrite.descriptorCount = 1;
 	newWrite.descriptorType = type;
 	newWrite.pBufferInfo = bufferInfo;
@@ -52,6 +52,30 @@ DescriptorBuilder& DescriptorBuilder::BindImage(uint32_t binding, VkDescriptorIm
 		.pImageInfo = imageInfo,
 	});
 
+	return *this;
+}
+
+DescriptorBuilder& DescriptorBuilder::BindAccelerationStructure(uint32_t binding, VkWriteDescriptorSetAccelerationStructureKHR as, VkShaderStageFlags stageFlags)
+{
+	//create the descriptor binding for the layout
+	VkDescriptorSetLayoutBinding newBinding{};
+	newBinding.descriptorCount = 1;
+	newBinding.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+	newBinding.pImmutableSamplers = nullptr;
+	newBinding.stageFlags = stageFlags;
+	newBinding.binding = binding;
+
+	bindings.emplace_back(newBinding);
+
+	VkWriteDescriptorSet accelerationStructureWrite{};
+	accelerationStructureWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	// The specialized acceleration structure descriptor has to be chained
+	accelerationStructureWrite.pNext = &as;
+	accelerationStructureWrite.dstBinding = 0;
+	accelerationStructureWrite.descriptorCount = 1;
+	accelerationStructureWrite.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+
+	writes.emplace_back(accelerationStructureWrite);
 	return *this;
 }
 

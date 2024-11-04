@@ -47,7 +47,7 @@ void EnvironmentBRDFBaker::Setup()
 
     // make the input image
     brdfImage = std::make_shared<Image2D>(specs->outdim, specs->outdim, format,
-        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT, false);
 
     // descriptor
     VkDescriptorImageInfo storageTex = brdfImage->GetDescriptorInfo();

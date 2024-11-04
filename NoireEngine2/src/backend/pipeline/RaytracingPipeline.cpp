@@ -7,6 +7,7 @@
 #include "utils/Logger.hpp"
 #include "renderer/object/Mesh.hpp"
 #include "backend/raytracing/RaytracingBuilderKHR.hpp"
+#include "core/Bitmap.hpp"
 
 #pragma warning (disable:4702)
 
@@ -85,12 +86,13 @@ void RaytracingPipeline::CreatePipeline()
 	// Create the acceleration structures used to render the ray traced scene
 	CreateBottomLevelAccelerationStructure();
 	CreateTopLevelAccelerationStructure();
+	CreateStorageImage();
+	CreateDescriptorSets();
 	return;
 	//CreateStorageImage(swapChain.colorFormat, { width, height, 1 });
 	CreateUniformBuffer();
 	CreateRayTracingPipeline();
 	CreateShaderBindingTables();
-	CreateDescriptorSets();
 	//buildCommandBuffers();
 }
 
@@ -196,14 +198,6 @@ uint64_t RaytracingPipeline::GetBufferDeviceAddress(VkBuffer buffer)
 	bufferDeviceAI.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
 	bufferDeviceAI.buffer = buffer;
 	return vkGetBufferDeviceAddressKHR(VulkanContext::GetDevice(), &bufferDeviceAI);
-}
-
-void RaytracingPipeline::CreateStorageImage(VkFormat format, VkExtent3D extent)
-{
-}
-
-void RaytracingPipeline::DeleteStorageImage()
-{
 }
 
 VkStridedDeviceAddressRegionKHR RaytracingPipeline::GetSbtEntryStridedDeviceAddressRegion(VkBuffer buffer, uint32_t handleCount)
@@ -323,6 +317,24 @@ void RaytracingPipeline::CreateTopLevelAccelerationStructure()
 	NE_DEBUG(std::format("Built {} top level instances", totalSize), Logger::CYAN, Logger::BOLD);
 }
 
+void RaytracingPipeline::CreateStorageImage()
+{
+	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain();
+
+	glm::uvec2 extent = swapchain->getExtentVec2();
+	//VkFormat format = VulkanContext::Get()->getSurface()->getFormat().format;
+	VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
+
+	m_RtxImage = std::make_unique<Image2D>(
+		extent.x, extent.y, format, 
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+		false
+	);
+
+	m_RtxImage->Load();
+}
+
 void RaytracingPipeline::CreateUniformBuffer()
 {
 }
@@ -337,4 +349,26 @@ void RaytracingPipeline::CreateShaderBindingTables()
 
 void RaytracingPipeline::CreateDescriptorSets()
 {
+	std::vector<VkDescriptorPoolSize> poolSizes = 
+	{
+		{ VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, 1 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
+		//{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
+		//{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2 }
+	};
+
+	m_DescriptorAllocator.SetCustomPoolParams(poolSizes, 100);
+
+	VkDescriptorImageInfo rtxImageInfo = m_RtxImage->GetDescriptorInfo();
+
+	auto as = m_RTBuilder.getAccelerationStructure();
+
+	VkWriteDescriptorSetAccelerationStructureKHR descASInfo{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR };
+	descASInfo.accelerationStructureCount = 1;
+	descASInfo.pAccelerationStructures = &as;
+
+	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+		.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
+		.BindImage(RTXBindings::OutImage, &rtxImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
+		.Build(set0, set0_layout);
 }
