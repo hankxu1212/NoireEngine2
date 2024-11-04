@@ -1,18 +1,8 @@
-#include "AccelerationStructureBuildData.h"
+#include "RTCore.h"
 
 #include "backend/pipeline/RaytracingPipeline.hpp"
 
-// Helper function to insert a memory barrier for acceleration structures
-inline void accelerationStructureBarrier(VkCommandBuffer cmd, VkAccessFlags src, VkAccessFlags dst)
-{
-    VkMemoryBarrier barrier{ VK_STRUCTURE_TYPE_MEMORY_BARRIER };
-    barrier.srcAccessMask = src;
-    barrier.dstAccessMask = dst;
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
-        VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &barrier, 0, nullptr, 0, nullptr);
-}
-
-void AccelerationStructureBuildData::addGeometry(const VkAccelerationStructureGeometryKHR& asGeom,
+void AccelerationStructureBuildData::AddGeometry(const VkAccelerationStructureGeometryKHR& asGeom,
     const VkAccelerationStructureBuildRangeInfoKHR& offset)
 {
     asGeometry.push_back(asGeom);
@@ -20,14 +10,14 @@ void AccelerationStructureBuildData::addGeometry(const VkAccelerationStructureGe
 }
 
 
-void AccelerationStructureBuildData::addGeometry(const AccelerationStructureGeometryInfo& asGeom)
+void AccelerationStructureBuildData::AddGeometry(const AccelerationStructureGeometryInfo& asGeom)
 {
     asGeometry.push_back(asGeom.geometry);
     asBuildRangeInfo.push_back(asGeom.rangeInfo);
 }
 
 
-VkAccelerationStructureBuildSizesInfoKHR AccelerationStructureBuildData::finalizeGeometry(VkDevice device, VkBuildAccelerationStructureFlagsKHR flags)
+VkAccelerationStructureBuildSizesInfoKHR AccelerationStructureBuildData::FinalizeGeometry(VkDevice device, VkBuildAccelerationStructureFlagsKHR flags)
 {
     assert(asGeometry.size() > 0 && "No geometry added to Build Structure");
     assert(asType != VK_ACCELERATION_STRUCTURE_TYPE_MAX_ENUM_KHR && "Acceleration Structure Type not set");
@@ -55,7 +45,7 @@ VkAccelerationStructureBuildSizesInfoKHR AccelerationStructureBuildData::finaliz
     return sizeInfo;
 }
 
-VkAccelerationStructureCreateInfoKHR AccelerationStructureBuildData::makeCreateInfo() const
+VkAccelerationStructureCreateInfoKHR AccelerationStructureBuildData::MakeCreateInfo() const
 {
     assert(asType != VK_ACCELERATION_STRUCTURE_TYPE_MAX_ENUM_KHR && "Acceleration Structure Type not set");
     assert(sizeInfo.accelerationStructureSize > 0 && "Acceleration Structure Size not set");
@@ -67,7 +57,7 @@ VkAccelerationStructureCreateInfoKHR AccelerationStructureBuildData::makeCreateI
     return createInfo;
 }
 
-AccelerationStructureGeometryInfo AccelerationStructureBuildData::makeInstanceGeometry(size_t numInstances,
+AccelerationStructureGeometryInfo AccelerationStructureBuildData::MakeInstanceGeometry(size_t numInstances,
     VkDeviceAddress instanceBufferAddr)
 {
     assert(asType == VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR && "Instance geometry can only be used with TLAS");
@@ -94,7 +84,7 @@ AccelerationStructureGeometryInfo AccelerationStructureBuildData::makeInstanceGe
 }
 
 
-void AccelerationStructureBuildData::cmdBuildAccelerationStructure(VkCommandBuffer cmd,
+void AccelerationStructureBuildData::CmdBuildAccelerationStructure(VkCommandBuffer cmd,
     VkAccelerationStructureKHR accelerationStructure,
     VkDeviceAddress scratchAddress)
 {
@@ -114,10 +104,10 @@ void AccelerationStructureBuildData::cmdBuildAccelerationStructure(VkCommandBuff
 
     // Since the scratch buffer is reused across builds, we need a barrier to ensure one build
     // is finished before starting the next one.
-    accelerationStructureBarrier(cmd, VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR, VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR);
+    AccelerationStructureBarrier(cmd, VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR, VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR);
 }
 
-void AccelerationStructureBuildData::cmdUpdateAccelerationStructure(VkCommandBuffer cmd,
+void AccelerationStructureBuildData::CmdUpdateAccelerationStructure(VkCommandBuffer cmd,
     VkAccelerationStructureKHR accelerationStructure,
     VkDeviceAddress scratchAddress)
 {
@@ -137,5 +127,5 @@ void AccelerationStructureBuildData::cmdUpdateAccelerationStructure(VkCommandBuf
 
     // Since the scratch buffer is reused across builds, we need a barrier to ensure one build
     // is finished before starting the next one.
-    accelerationStructureBarrier(cmd, VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR, VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR);
+    AccelerationStructureBarrier(cmd, VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR, VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR);
 }

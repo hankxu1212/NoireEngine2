@@ -92,12 +92,16 @@ public:
 
 	void Bind(const CommandBuffer& commandBuffer);
 
+	inline uint32_t getBlasID() const { return m_BLASID; }
+	inline void SetBlasID(uint32_t newId) { m_BLASID = newId; }
+
 private:
 	void CreateAABB(const std::vector<Vertex>& vertices);
 
 	void TransformToIndexedMesh(Vertex* vertices, uint32_t count);
 
 	void CreateVertexBuffer(std::vector<Vertex>& vertices);
+
 	void CreateIndexBuffer(std::vector<uint32_t>& indices);
 
 private:
@@ -108,4 +112,5 @@ private:
 	VertexInput*					m_Vertex;
 	CreateInfo						m_CreateInfo;
 	AABB							m_AABB;
+	uint32_t						m_BLASID; // bottom level acceleration structure id
 };

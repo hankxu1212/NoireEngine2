@@ -4,7 +4,8 @@
 #include <vulkan/vulkan_core.h>
 #include "backend/buffers/Buffer.hpp"
 #include "glm/glm.hpp"
-#include "AccelerationStructureBuildData.h"
+
+#include "RTCore.h"
 
 class BlasBuilder
 {

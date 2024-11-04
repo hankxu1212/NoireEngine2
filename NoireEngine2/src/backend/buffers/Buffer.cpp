@@ -18,7 +18,6 @@ void Buffer::Destroy()
 		mapped = nullptr;
 	}
 
-	VulkanContext::VK_CHECK(vkQueueWaitIdle(VulkanContext::Get()->getLogicalDevice()->getGraphicsQueue()), "[vulkan] wait idle fail on destroying buffer");
 	vkDestroyBuffer(VulkanContext::GetDevice(), buffer, nullptr);
 	vkFreeMemory(VulkanContext::GetDevice(), bufferMemory, nullptr);
 
@@ -70,12 +69,6 @@ void Buffer::UnmapMemory() const {
 	vkUnmapMemory(VulkanContext::GetDevice(), bufferMemory);
 }
 
-void Buffer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-	CommandBuffer commandBuffer(true, VK_QUEUE_TRANSFER_BIT);
-	CopyBuffer(commandBuffer, srcBuffer, dstBuffer, size);
-	commandBuffer.SubmitIdle();
-}
-
 void Buffer::CopyBuffer(VkCommandBuffer cmdBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
 	VkBufferCopy copyRegion{};
@@ -83,7 +76,7 @@ void Buffer::CopyBuffer(VkCommandBuffer cmdBuffer, VkBuffer srcBuffer, VkBuffer 
 	vkCmdCopyBuffer(cmdBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 }
 
-void Buffer::TransferToBuffer(void* data, size_t size, VkBuffer dstBuffer)
+void Buffer::TransferToBufferIdle(void* data, size_t size, VkBuffer dstBuffer)
 {
 	Buffer transferSource = Buffer(
 		size,
@@ -94,12 +87,15 @@ void Buffer::TransferToBuffer(void* data, size_t size, VkBuffer dstBuffer)
 
 	std::memcpy(transferSource.mapped, data, size);
 
-	CopyBuffer(transferSource.buffer, dstBuffer, size);
+	CommandBuffer commandBuffer(true, VK_QUEUE_TRANSFER_BIT);
 
+	CopyBuffer(commandBuffer, transferSource.getBuffer(), dstBuffer, size);
+
+	commandBuffer.SubmitIdle();
 	transferSource.Destroy();
 }
 
-VkBufferMemoryBarrier Buffer::CreateMemoryBarrier(VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, uint32_t offset)
+VkBufferMemoryBarrier Buffer::CreateBufferMemoryBarrier(VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, uint32_t offset)
 {
 	return {
 		.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,

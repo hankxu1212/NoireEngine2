@@ -59,3 +59,24 @@ void Entity::RenderPass(TransformMatrixStack& matrixStack)
 	}
 	matrixStack.Pop();
 }
+
+void Entity::PrepareAcceleration(TransformMatrixStack& matrixStack)
+{
+	matrixStack.Push();
+	{
+		matrixStack.Multiply(std::move(s_Transform->LocalDirty()));
+
+		// render self
+		const glm::mat4& model = matrixStack.Peek();
+		RendererComponent* renderer = GetComponent<RendererComponent>();
+		if (renderer)
+			renderer->PrepareAcceleration(model);
+
+		// render children first
+		for (auto& child : m_Children)
+		{
+			child->PrepareAcceleration(matrixStack);
+		}
+	}
+	matrixStack.Pop();
+}

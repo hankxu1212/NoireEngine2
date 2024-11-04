@@ -46,7 +46,7 @@ public:
 
 	void InitializeRenderer();
 
-	void WaitForCommands();
+	void WaitGraphicsQueue();
 
 	/* Finds physical device memory properties given a certain type filter */
 	static uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

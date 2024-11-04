@@ -20,7 +20,7 @@ VulkanContext::VulkanContext() :
 
 VulkanContext::~VulkanContext()
 {
-    WaitForCommands();
+    WaitGraphicsQueue();
 
     m_Swapchains.clear();
 
@@ -108,7 +108,7 @@ void VulkanContext::InitializeRenderer()
     s_Renderer = std::make_unique<Renderer>();
 }
 
-void VulkanContext::WaitForCommands()
+void VulkanContext::WaitGraphicsQueue()
 {
     VK_CHECK(vkQueueWaitIdle(s_LogicalDevice->getGraphicsQueue()),
         "[vulkan] Error: Wait queue on destroy vulkan context failed");
@@ -187,7 +187,7 @@ void VulkanContext::CreatePipelineCache()
 
 void VulkanContext::RecreateSwapchain()
 {
-    WaitForCommands();
+    WaitGraphicsQueue();
 
     auto wd = getSurface(0)->getWindow();
     uint32_t w, h;

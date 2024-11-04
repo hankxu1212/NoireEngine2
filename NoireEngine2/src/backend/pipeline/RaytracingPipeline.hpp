@@ -36,35 +36,9 @@ public:
 	inline static PFN_vkCmdWriteAccelerationStructuresPropertiesKHR vkCmdWriteAccelerationStructuresPropertiesKHR;
 	inline static PFN_vkCmdCopyAccelerationStructureKHR vkCmdCopyAccelerationStructureKHR;
 
-	static uint32_t alignedSize(uint32_t value, uint32_t alignment)
-	{
-		return (value + alignment - 1) & ~(alignment - 1);
-	}
-
-	static size_t alignedSize(size_t value, size_t alignment)
-	{
-		return (value + alignment - 1) & ~(alignment - 1);
-	}
-
-	static VkDeviceSize alignedVkSize(VkDeviceSize value, VkDeviceSize alignment)
-	{
-		return (value + alignment - 1) & ~(alignment - 1);
-	}
-
 	// Available features and properties
 	VkPhysicalDeviceRayTracingPipelinePropertiesKHR  rayTracingPipelineProperties{};
 	VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures{};
-
-	// Holds information for a ray tracing scratch buffer that is used as a temporary storage
-	struct ScratchBuffer
-	{
-		Buffer buffer;
-		uint64_t deviceAddress = 0;
-
-		void Destroy() {
-			buffer.Destroy();
-		}
-	};
 
 	// Extends the buffer class and holds information for a shader binding table
 	class ShaderBindingTable : public Buffer {

@@ -114,7 +114,7 @@ const vulkan_objs = [
 	maek.CPP('backend/pipeline/ObjectPipeline.cpp'),
 	maek.CPP('backend/pipeline/VulkanGraphicsPipelineBuilder.cpp'),
 	maek.CPP('backend/pipeline/RaytracingPipeline.cpp'),
-	maek.CPP('backend/raytracing/AccelerationStructureBuildData.cpp'),
+	maek.CPP('backend/raytracing/RTCore.cpp'),
 	maek.CPP('backend/raytracing/BLASBuilder.cpp'),
 	maek.CPP('backend/raytracing/RaytracingBuilderKHR.cpp')
 ]

@@ -86,6 +86,22 @@ void RendererComponent::Inspect()
 	}
 }
 
+void RendererComponent::PrepareAcceleration(const glm::mat4& model)
+{
+	mesh->Update(model);
+
+	const Camera* renderCam = GetScene()->GetRenderCam()->camera();
+	GetScene()->GetObjectInstances((uint32_t)material->getWorkflow())
+		.emplace_back(
+			renderCam->getWorldToClipMatrix() * model,
+			model, // model
+			glm::inverse(model), // normal
+			0, //  first vertex
+			mesh, // mesh pointer
+			material // material pointer
+		);
+}
+
 template<>
 void Scene::OnComponentAdded<RendererComponent>(Entity& entity, RendererComponent& component)
 {

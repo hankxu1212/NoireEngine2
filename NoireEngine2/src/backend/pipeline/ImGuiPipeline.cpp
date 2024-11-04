@@ -64,7 +64,7 @@ ImGuiPipeline::ImGuiPipeline()
 
 ImGuiPipeline::~ImGuiPipeline()
 {
-    VulkanContext::Get()->WaitForCommands();
+    VulkanContext::Get()->WaitGraphicsQueue();
 
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();

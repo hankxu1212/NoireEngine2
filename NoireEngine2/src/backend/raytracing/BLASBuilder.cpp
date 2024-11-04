@@ -3,15 +3,6 @@
 #include "backend/VulkanContext.hpp"
 #include <format>
 
-inline void accelerationStructureBarrier(VkCommandBuffer cmd, VkAccessFlags src, VkAccessFlags dst)
-{
-    VkMemoryBarrier barrier{ VK_STRUCTURE_TYPE_MEMORY_BARRIER };
-    barrier.srcAccessMask = src;
-    barrier.dstAccessMask = dst;
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
-        VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &barrier, 0, nullptr, 0, nullptr);
-}
-
 BlasBuilder::~BlasBuilder()
 {
     Destroy();
@@ -133,7 +124,7 @@ VkDeviceSize BlasBuilder::BuildAccelerationStructures(VkCommandBuffer cmd,
         && m_currentBlasIdx < blasBuildData.size())
     {
         auto& data = blasBuildData[m_currentBlasIdx];
-        VkAccelerationStructureCreateInfoKHR createInfo = data.makeCreateInfo();
+        VkAccelerationStructureCreateInfoKHR createInfo = data.MakeCreateInfo();
 
         // Create and store acceleration structure
         blasAccel[m_currentBlasIdx] = RaytracingPipeline::CreateAccelerationStructure(createInfo);
@@ -158,7 +149,7 @@ VkDeviceSize BlasBuilder::BuildAccelerationStructures(VkCommandBuffer cmd,
         collectedRangeInfo.data());
 
     // Barrier to ensure proper synchronization after building
-    accelerationStructureBarrier(cmd, VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR, VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR);
+    AccelerationStructureBarrier(cmd, VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR, VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR);
 
     // If a query pool is available, record the properties of the built acceleration structures
     if (m_queryPool)
@@ -271,7 +262,7 @@ ScratchSizeInfo calculateScratchAlignedSizes(const std::vector<AccelerationStruc
 
     for (auto& buildInfo : buildData)
     {
-        VkDeviceSize alignedSize = RaytracingPipeline::alignedVkSize(buildInfo.sizeInfo.buildScratchSize, minAlignment);
+        VkDeviceSize alignedSize = alignedVkSize(buildInfo.sizeInfo.buildScratchSize, minAlignment);
         // assert(alignedSize == buildInfo.sizeInfo.buildScratchSize);  // Make sure it was already aligned
         maxScratch = std::max(maxScratch, alignedSize);
         totalScratch += alignedSize;
@@ -319,7 +310,7 @@ void BlasBuilder::getScratchAddresses(VkDeviceSize                              
         for (auto& buildInfo : buildData)
         {
             scratchAddresses.push_back(scratchBufferAddress + address);
-            VkDeviceSize alignedSize = RaytracingPipeline::alignedVkSize(buildInfo.sizeInfo.buildScratchSize, minAlignment);
+            VkDeviceSize alignedSize = alignedVkSize(buildInfo.sizeInfo.buildScratchSize, minAlignment);
             address += alignedSize;
         }
     }

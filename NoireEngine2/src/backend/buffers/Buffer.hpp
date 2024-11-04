@@ -14,7 +14,10 @@ public:
 	};
 	
 	Buffer() = default;
+
+	// destroys the buffer, and waits on a queue before doing so
 	void Destroy();
+
 	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map=Unmapped, void* memoryAllocationInfoPNext = nullptr);
 
 	/**
@@ -29,14 +32,16 @@ public:
 	void MapMemory(void **data) const;
 
 	void UnmapMemory() const;
-
-	static void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	
+	// executes a copy action command.
 	static void CopyBuffer(VkCommandBuffer cmdBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	
-	static void TransferToBuffer(void* data, size_t size, VkBuffer dstBuffer);
+	// transfer to a device local buffer using memcpy. Allocates a new command buffer and idle submits.
+	// This is quite slow cuz it waits idle on the graphics queue. Should NOT be called in a loop
+	static void TransferToBufferIdle(void* data, size_t size, VkBuffer dstBuffer);
 
-	VkBufferMemoryBarrier CreateMemoryBarrier(VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, uint32_t offset=0);
+	VkBufferMemoryBarrier CreateBufferMemoryBarrier(VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, uint32_t offset=0);
+
 public:
 	VkDeviceSize				getSize() const { return m_Size; }
 	VkBuffer					getBuffer() const { return buffer; }

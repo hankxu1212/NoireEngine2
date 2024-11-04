@@ -22,6 +22,8 @@ Mesh::Mesh(const CreateInfo& createInfo) :
 
 Mesh::~Mesh()
 {
+	VulkanContext::Get()->WaitGraphicsQueue();
+
 	m_VertexBuffer.Destroy();
 	m_IndexBuffer.Destroy();
 }
@@ -204,7 +206,7 @@ void Mesh::CreateVertexBuffer(std::vector<Vertex>& vertices)
 		&flags_info
 	);
 
-	Buffer::TransferToBuffer(vertices.data(), vertices.size() * 48, m_VertexBuffer.getBuffer());
+	Buffer::TransferToBufferIdle(vertices.data(), vertices.size() * 48, m_VertexBuffer.getBuffer());
 }
 
 void Mesh::CreateIndexBuffer(std::vector<uint32_t>& indices)
@@ -225,7 +227,7 @@ void Mesh::CreateIndexBuffer(std::vector<uint32_t>& indices)
 		&flags_info
 	);
 
-	Buffer::TransferToBuffer(indices.data(), indices.size() * 4, m_IndexBuffer.getBuffer());
+	Buffer::TransferToBufferIdle(indices.data(), indices.size() * 4, m_IndexBuffer.getBuffer());
 }
 
 void Mesh::Update(const glm::mat4& model)

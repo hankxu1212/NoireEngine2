@@ -480,7 +480,7 @@
     <ClCompile Include="src\backend\raytracing\RaytracingBuilderKHR.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\backend\raytracing\AccelerationStructureBuildData.cpp">
+    <ClCompile Include="src\backend\raytracing\RTCore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\backend\raytracing\BLASBuilder.cpp">
@@ -1004,7 +1004,7 @@
     <ClInclude Include="src\backend\raytracing\RaytracingBuilderKHR.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\backend\raytracing\AccelerationStructureBuildData.h">
+    <ClInclude Include="src\backend\raytracing\RTCore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\backend\raytracing\BLASBuilder.h">

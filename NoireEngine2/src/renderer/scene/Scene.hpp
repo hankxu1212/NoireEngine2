@@ -123,6 +123,7 @@ private:
 	void InstantiateCoreScripts();
 	void UpdateSceneInfo();
 	void UpdateShadowCasters();
+	void PrepareAccelerationStructures();
 
 private:
 	friend class SceneManager;

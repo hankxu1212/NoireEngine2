@@ -46,7 +46,6 @@ public:
 	~Entity();
 
 public:
-
 	template<typename... TArgs>
 	Entity* AddChild(TArgs&... args)
 	{
@@ -105,6 +104,11 @@ public:
 	Scene* scene() { return m_Scene; }
 
 private:
+	friend class Scene;
+	void PrepareAcceleration(TransformMatrixStack& matrixStack);
+
+private:
+
 	std::unique_ptr<Transform>				s_Transform;
 	Entity*									m_Parent = nullptr;
 	std::list<std::unique_ptr<Entity>>		m_Children; // manages its children

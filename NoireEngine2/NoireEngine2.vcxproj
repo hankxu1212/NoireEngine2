@@ -90,7 +90,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\backend\raytracing\BLASBuilder.cpp" />
-    <ClCompile Include="src\backend\raytracing\AccelerationStructureBuildData.cpp" />
+    <ClCompile Include="src\backend\raytracing\RTCore.cpp" />
     <ClCompile Include="src\backend\pipeline\RaytracingPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\ShadowPipeline.cpp" />
     <ClCompile Include="src\backend\raytracing\RaytracingBuilderKHR.cpp" />
@@ -249,7 +249,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\backend\raytracing\BLASBuilder.h" />
-    <ClInclude Include="src\backend\raytracing\AccelerationStructureBuildData.h" />
+    <ClInclude Include="src\backend\raytracing\RTCore.h" />
     <ClInclude Include="src\backend\pipeline\RaytracingPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\ShadowPipeline.hpp" />
     <ClInclude Include="src\backend\raytracing\RaytracingBuilderKHR.hpp" />

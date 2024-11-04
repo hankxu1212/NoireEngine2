@@ -219,5 +219,5 @@ void SkyboxPipeline::CreateVertexBuffer()
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 	);
 
-	Buffer::TransferToBuffer(skyboxVertices, SKYBOX_SIZE_BYTES, m_VertexBuffer.getBuffer());
+	Buffer::TransferToBufferIdle(skyboxVertices, SKYBOX_SIZE_BYTES, m_VertexBuffer.getBuffer());
 }

@@ -29,7 +29,7 @@ void Scene::Load(const std::string& path)
 	UpdateSceneInfo();
 
 	m_ObjectInstances.resize(MAX_WORKFLOWS);
-
+	PrepareAccelerationStructures();
 }
 
 Scene::~Scene()
@@ -611,4 +611,16 @@ void Scene::UpdateShadowCasters()
 	}
 
 	shadowCastersDirty = false;
+}
+
+void Scene::PrepareAccelerationStructures()
+{
+	m_GizmosInstances.clear();
+	m_MatrixStack.Clear();
+
+	// push all transforms to pipeline
+	for (auto& child : Entity::root().children())
+	{
+		child->PrepareAcceleration(m_MatrixStack);
+	}
 }

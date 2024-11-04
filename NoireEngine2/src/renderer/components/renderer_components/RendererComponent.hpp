@@ -23,4 +23,8 @@ public:
 	Mesh* mesh = nullptr;
 	Material* material = nullptr;
 	GizmosInstance gizmos;
+
+private:
+	friend class Entity;
+	void PrepareAcceleration(const glm::mat4& model);
 };
