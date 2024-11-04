@@ -16,6 +16,7 @@ layout (set = 2, binding = 0) uniform sampler2D textures[];
 
 // IDL
 #define GGX_MIP_LEVELS 6
+#define MAX_REFLECTION_LOD 6.0;
 layout (set = 3, binding = 0) uniform samplerCube skybox;
 layout (set = 3, binding = 1) uniform samplerCube diffuseIrradiance;
 layout (set = 3, binding = 2) uniform sampler2D specularBRDF;
@@ -126,7 +127,7 @@ void main()
     vec3 ambientLighting;
     {
         // lambertian diffuse irradiance
-        vec3 irradiance = texture(diffuseIrradiance, n).rgb;
+        vec3 irradiance = texture(diffuseIrradiance, n).rgb / PI;
 
         vec3 F = FresnelSchlickRoughness(F0, cosLo, roughness);
 
@@ -135,17 +136,12 @@ void main()
         vec3 diffuseIBL = kd * albedo * irradiance;
 
         // Specular IBL from pre-filtered environment map
-        const float MAX_REFLECTION_LOD = 6.0; // todo: param/const
 	    float lod = roughness * MAX_REFLECTION_LOD;
-	    float lodf = floor(lod);
-	    float lodc = ceil(lod);
-	    vec3 a = textureLod(prefilterEnvMap, R, lodf).rgb;
-	    vec3 b = textureLod(prefilterEnvMap, R, lodc).rgb;
-        vec3 specularIrradiance = mix(a, b, lod - lodf);
+        vec3 specularIrradiance = textureLod(prefilterEnvMap, R, lod).rgb;
 
         // Cook-Torrance specular split-sum approximation
         vec2 specularBRDF = texture(specularBRDF, vec2(cosLo, roughness)).rg;
-        vec3 specularIBL = (F0 * specularBRDF.x + specularBRDF.y) * specularIrradiance;
+        vec3 specularIBL = (F * specularBRDF.x + specularBRDF.y) * specularIrradiance;
 
         ambientLighting = diffuseIBL + specularIBL * material.environmentLightIntensity;
     }

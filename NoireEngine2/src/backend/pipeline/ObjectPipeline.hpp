@@ -11,6 +11,7 @@
 #include "SkyboxPipeline.hpp"
 #include "LinesPipeline.hpp"
 #include "ShadowPipeline.hpp"
+#include "RaytracingPipeline.hpp"
 
 #include <type_traits>
 #include "glm/glm.hpp"
@@ -90,6 +91,7 @@ private:
 	friend class LinesPipeline;
 	friend class SkyboxPipeline;
 	friend class ShadowPipeline;
+	friend class RaytracingPipeline;
 
 	std::vector<Workspace> workspaces;
 
@@ -117,5 +119,6 @@ private: // material pipelines
 	std::unique_ptr<LinesPipeline>					s_LinesPipeline;
 	std::unique_ptr<SkyboxPipeline>					s_SkyboxPipeline;
 	std::unique_ptr<ShadowPipeline>					s_ShadowPipeline;
+	std::unique_ptr<RaytracingPipeline>				s_RaytracingPipeline;
 };
 

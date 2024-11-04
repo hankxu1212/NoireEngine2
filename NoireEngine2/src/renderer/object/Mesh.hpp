@@ -78,7 +78,7 @@ public:
 
 	inline const Buffer& getVertexBuffer() const { return m_VertexBuffer; }
 	
-	inline const Buffer& getIndexBuffer() const { return m_VertexBuffer; }
+	inline const Buffer& getIndexBuffer() const { return m_IndexBuffer; }
 
 	inline uint32_t getVertexCount() const { return numVertices; }
 

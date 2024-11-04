@@ -10,7 +10,7 @@
 #include "renderer/scene/SceneManager.hpp"
 
 EnvironmentMaterialPipeline::EnvironmentMaterialPipeline(ObjectPipeline* objectPipeline) :
-	p_ObjectPipeline(objectPipeline)
+	MaterialPipeline(objectPipeline)
 {
 }
 

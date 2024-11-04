@@ -43,8 +43,8 @@ private:
 	};
 	std::vector<Workspace> workspaces;
 
-	VkPipeline			m_Pipeline;
-	VkPipelineLayout	m_PipelineLayout;
+	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
+	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
 	ObjectPipeline*		p_ObjectPipeline;
 
 	DescriptorAllocator						m_DescriptorAllocator;

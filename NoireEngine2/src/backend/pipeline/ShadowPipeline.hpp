@@ -102,9 +102,9 @@ private:
 	void SetViewports(const CommandBuffer& commandBuffer, uint32_t width, uint32_t height);
 	void BeginRenderPass(const CommandBuffer& commandBuffer, VkFramebuffer frameBuffer, uint32_t width, uint32_t height);
 
-	VkPipelineLayout	m_ShadowMapPassPipelineLayout;
-	VkRenderPass		m_ShadowMapRenderPass;
-	VkPipeline			m_ShadowMapPipeline;
+	VkPipelineLayout	m_ShadowMapPassPipelineLayout = VK_NULL_HANDLE;
+	VkRenderPass		m_ShadowMapRenderPass = VK_NULL_HANDLE;
+	VkPipeline			m_ShadowMapPipeline = VK_NULL_HANDLE;
 
 	struct Push 
 	{

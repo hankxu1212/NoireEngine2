@@ -185,12 +185,23 @@ void Mesh::TransformToIndexedMesh(Vertex* vertices, uint32_t count)
 	NE_INFO("Loading as indexed mesh took {}ms", timer.GetElapsed(true));
 }
 
+
 void Mesh::CreateVertexBuffer(std::vector<Vertex>& vertices)
 {
+	VkBufferUsageFlags accelerationStructureFlags = 
+		VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | 
+		VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | 
+		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+
+	VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };
+	flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
+
 	m_VertexBuffer = Buffer(
 		vertices.size() * 48,
-		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | accelerationStructureFlags,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		Buffer::Unmapped,
+		&flags_info
 	);
 
 	Buffer::TransferToBuffer(vertices.data(), vertices.size() * 48, m_VertexBuffer.getBuffer());
@@ -198,10 +209,20 @@ void Mesh::CreateVertexBuffer(std::vector<Vertex>& vertices)
 
 void Mesh::CreateIndexBuffer(std::vector<uint32_t>& indices)
 {
+	VkBufferUsageFlags accelerationStructureFlags =
+		VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+		VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
+		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+
+	VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };
+	flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
+
 	m_IndexBuffer = Buffer(
 		indices.size() * 4,
-		VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | accelerationStructureFlags,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		Buffer::Unmapped,
+		&flags_info
 	);
 
 	Buffer::TransferToBuffer(indices.data(), indices.size() * 4, m_IndexBuffer.getBuffer());

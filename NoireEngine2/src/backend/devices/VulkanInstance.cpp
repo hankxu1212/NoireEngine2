@@ -106,8 +106,8 @@ static bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& prope
 
 
 const std::vector<const char*> VulkanInstance::ValidationLayers = {
-    "VK_LAYER_KHRONOS_validation"
-}; // "VK_LAYER_RENDERDOC_Capture"
+    "VK_LAYER_KHRONOS_validation",
+};
 
 VulkanInstance::VulkanInstance()
 {

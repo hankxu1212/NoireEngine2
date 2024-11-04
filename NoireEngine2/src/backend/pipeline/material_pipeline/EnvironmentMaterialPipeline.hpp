@@ -19,8 +19,6 @@ private:
 	void CreateGraphicsPipeline();
 	void CreatePipelineLayout();
 
-	ObjectPipeline*		p_ObjectPipeline;
-
 	DescriptorAllocator						m_DescriptorAllocator;
 };
 

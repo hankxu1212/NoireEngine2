@@ -9,7 +9,7 @@
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 
 MirrorMaterialPipeline::MirrorMaterialPipeline(ObjectPipeline* objectPipeline) :
-	p_ObjectPipeline(objectPipeline)
+	MaterialPipeline(objectPipeline)
 {
 }
 

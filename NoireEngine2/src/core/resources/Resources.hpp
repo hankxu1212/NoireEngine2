@@ -29,12 +29,17 @@ public:
 		if (resources.find(typeid(T)) == resources.end())
 			return nullptr;
 
-		for (const auto& [key, resource] : resources.at(typeid(T))) {
+		for (const auto& [key, resource] : FindAllOfType<T>()) {
 			if (key == node)
 				return std::dynamic_pointer_cast<T>(resource);
 		}
 
 		return nullptr;
+	}
+
+	template<typename T>
+	const std::map<Node, std::shared_ptr<Resource>>& FindAllOfType() const {
+		return resources.at(typeid(T));
 	}
 
 	void Add(const Node& node, const std::shared_ptr<Resource>& resource);

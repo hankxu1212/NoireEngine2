@@ -474,6 +474,18 @@
     <ClCompile Include="src\backend\pipeline\ShadowPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\backend\pipeline\RaytracingPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\raytracing\RaytracingBuilderKHR.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\raytracing\AccelerationStructureBuildData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\raytracing\BLASBuilder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h">
@@ -984,6 +996,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\backend\pipeline\ShadowPipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\pipeline\RaytracingPipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\raytracing\RaytracingBuilderKHR.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\raytracing\AccelerationStructureBuildData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\raytracing\BLASBuilder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -15,7 +15,7 @@ public:
 	
 	Buffer() = default;
 	void Destroy();
-	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map=Unmapped);
+	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map=Unmapped, void* memoryAllocationInfoPNext = nullptr);
 
 	/**
 	  * Creates a new buffer with optional data.
@@ -24,7 +24,7 @@ public:
 	  * @param properties Memory properties for this buffer (i.e. device local, host visible, coherent).
 	  * @param data Pointer to the data that should be copied to the buffer after creation (optional, if not set, no data is copied over).
 	*/
-	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map = Unmapped);
+	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map = Unmapped, void* memoryAllocationInfoPNext=nullptr);
 
 	void MapMemory(void **data) const;
 
@@ -39,7 +39,7 @@ public:
 	VkBufferMemoryBarrier CreateMemoryBarrier(VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, uint32_t offset=0);
 public:
 	VkDeviceSize				getSize() const { return m_Size; }
-	const VkBuffer&				getBuffer() const { return buffer; }
+	VkBuffer					getBuffer() const { return buffer; }
 	const VkDeviceMemory&		getBufferMemory() const { return bufferMemory; }
 	void*						data() const { return reinterpret_cast<char*>(mapped); }
 

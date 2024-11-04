@@ -7,7 +7,15 @@ const std::vector<const char*> LogicalDevice::DeviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 	VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
 	VK_EXT_VERTEX_INPUT_DYNAMIC_STATE_EXTENSION_NAME, // dynamic vertex binding
-	VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME // descriptor indexing
+	VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME, // descriptor indexing
+
+	// ray tracing
+	VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+	VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+	VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+	VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+	VK_KHR_SPIRV_1_4_EXTENSION_NAME, // Required for VK_KHR_ray_tracing_pipeline,
+	VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME // Required by VK_KHR_spirv_1_4
 };
 
 LogicalDevice::LogicalDevice(const VulkanInstance& instance, const PhysicalDevice& physicalDevice) :
@@ -184,7 +192,7 @@ void LogicalDevice::CreateLogicalDevice()
 		enabledFeatures.multiDrawIndirect = VK_TRUE;
 	else
 		NE_WARN("Selected GPU does not support multi draw indirect!");
-		
+
 	VkDeviceCreateInfo deviceCreateInfo = {};
 
 	// enable dynamic vertex input state
@@ -212,15 +220,31 @@ void LogicalDevice::CreateLogicalDevice()
 	setenv("MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS", "1", 1);
 #endif
 
-	// add synchronization feature
-#ifdef VK_VERSION_1_3
 	VkPhysicalDeviceSynchronization2Features sync2Ext{
 		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
 		.synchronization2 = true
 	};
 
 	physicalDeviceDescriptorIndexingFeatures.pNext = &sync2Ext;
-#endif
+
+	// add ray tracing features
+	{
+		VkPhysicalDeviceBufferDeviceAddressFeatures enabledBufferDeviceAddresFeatures{};
+		enabledBufferDeviceAddresFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+		enabledBufferDeviceAddresFeatures.bufferDeviceAddress = VK_TRUE;
+
+		VkPhysicalDeviceRayTracingPipelineFeaturesKHR enabledRayTracingPipelineFeatures{};
+		enabledRayTracingPipelineFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+		enabledRayTracingPipelineFeatures.rayTracingPipeline = VK_TRUE;
+		enabledRayTracingPipelineFeatures.pNext = &enabledBufferDeviceAddresFeatures;
+
+		VkPhysicalDeviceAccelerationStructureFeaturesKHR enabledAccelerationStructureFeatures{};
+		enabledAccelerationStructureFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+		enabledAccelerationStructureFeatures.accelerationStructure = VK_TRUE;
+		enabledAccelerationStructureFeatures.pNext = &enabledRayTracingPipelineFeatures;
+
+		sync2Ext.pNext = &enabledAccelerationStructureFeatures;
+	}
 
 	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -232,6 +256,7 @@ void LogicalDevice::CreateLogicalDevice()
 	deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(DeviceExtensions.size());
 	deviceCreateInfo.ppEnabledExtensionNames = DeviceExtensions.data();
 	deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
+
 	VulkanContext::VK_CHECK(vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_LogicalDevice), 
 		"[vulkan] Error: cannot create physical device");
 

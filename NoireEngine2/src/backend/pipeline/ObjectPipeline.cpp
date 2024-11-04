@@ -341,6 +341,8 @@ void ObjectPipeline::CreatePipeline()
 		m_MaterialPipelines[i] = MaterialPipeline::Create(Material::Workflow(i), this);
 	}
 
+	s_RaytracingPipeline = std::make_unique<RaytracingPipeline>(this);
+
 	s_LinesPipeline = std::make_unique<LinesPipeline>(this);
 	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>(this);
 	
@@ -353,6 +355,8 @@ void ObjectPipeline::CreatePipeline()
 
 	// the following pipelines rely on ObjectPipeline's descriptor sets
 	s_ShadowPipeline->CreatePipeline();
+
+	s_RaytracingPipeline->CreatePipeline();
 
 	for (int i = 0; i < NUM_WORKFLOWS; i++) {
 		m_MaterialPipelines[i]->Create();

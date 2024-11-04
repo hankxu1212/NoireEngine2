@@ -55,11 +55,22 @@ void CommandBuffer::SubmitIdle() {
 		.pCommandBuffers = &m_CommandBuffer
 	};
 
+	vkQueueSubmit(GetQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(GetQueue());
+}
+
+void CommandBuffer::SubmitWait()
+{
 	VkFenceCreateInfo fenceCreateInfo = {};
 	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
-	vkQueueSubmit(GetQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+	VkFence fence;
+	VulkanContext::VK_CHECK(vkCreateFence(VulkanContext::GetDevice(), &fenceCreateInfo, nullptr, &fence));
+	Submit(VK_NULL_HANDLE, VK_NULL_HANDLE, fence);
+
 	vkQueueWaitIdle(GetQueue());
+	vkWaitForFences(VulkanContext::GetDevice(), 1, &fence, VK_TRUE, UINT64_MAX);
+	vkDestroyFence(VulkanContext::GetDevice(), fence, nullptr);
 }
 
 void CommandBuffer::Submit(const VkSemaphore& waitSemaphore, const VkSemaphore& signalSemaphore, VkFence fence) {

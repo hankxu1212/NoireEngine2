@@ -113,6 +113,10 @@ const vulkan_objs = [
 	maek.CPP('backend/pipeline/material_pipeline/MaterialPipeline.cpp'),
 	maek.CPP('backend/pipeline/ObjectPipeline.cpp'),
 	maek.CPP('backend/pipeline/VulkanGraphicsPipelineBuilder.cpp'),
+	maek.CPP('backend/pipeline/RaytracingPipeline.cpp'),
+	maek.CPP('backend/raytracing/AccelerationStructureBuildData.cpp'),
+	maek.CPP('backend/raytracing/BLASBuilder.cpp'),
+	maek.CPP('backend/raytracing/RaytracingBuilderKHR.cpp')
 ]
 
 function use_vert_frag(name, pipeline) {

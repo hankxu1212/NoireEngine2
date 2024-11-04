@@ -475,7 +475,7 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type, bool isDefault)
 	m_SkyboxLambertian = ImageCube::Create(FormatPath(lambertianPath), isHDR);
 	
 	// env brdf lookup table
-	m_SpecularBRDF = Image2D::Create(Files::Path("../textures/material_textures/SpecularBRDF_LUT.png"), VK_FORMAT_R8G8B8A8_UNORM);
+	m_SpecularBRDF = Image2D::Create(Files::Path("../textures/material_textures/SpecularBRDF_LUT.png"), VK_FORMAT_R8G8B8A8_UNORM, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, false, true);
 	
 	// specular ggx
 	m_PrefilteredEnvMap = std::make_shared<ImageCube>(FormatPath(path), VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, true, true, isHDR);

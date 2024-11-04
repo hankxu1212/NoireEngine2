@@ -52,7 +52,7 @@ namespace Core {
         float moveSpeed = 20;
         float anchoredRotationSensitivity = 0.5f;
         float zoomSpeed = 1.0f;
-        float anchoredMoveSensitivity = 0.2f;
+        float anchoredMoveSensitivity = 0.1f;
 
         glm::vec3 anchorPoint = Vec3::Zero;
         const glm::vec3 anchorOffset = glm::vec3(0.001f, 0.001f, 0.001f);

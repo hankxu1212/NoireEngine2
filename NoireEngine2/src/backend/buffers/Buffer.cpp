@@ -3,9 +3,9 @@
 #include "Buffer.hpp"
 #include "backend/VulkanContext.hpp"
 
-Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map)
+Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map, void* memoryAllocationInfoPNext)
 {
-	CreateBuffer(size, usage, properties, map);
+	CreateBuffer(size, usage, properties, map, memoryAllocationInfoPNext);
 }
 
 void Buffer::Destroy()
@@ -27,25 +27,17 @@ void Buffer::Destroy()
 	m_Size = 0;
 }
 
-void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map)
+void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map, void* memoryAllocationInfoPNext)
 {
 	m_Size = size;
 	auto& logicalDevice = *(VulkanContext::Get()->getLogicalDevice());
-
-	std::array<uint32_t, 3> queueFamily = {
-		logicalDevice.getGraphicsFamily(),
-		logicalDevice.getPresentFamily(),
-		logicalDevice.getComputeFamily()
-	};
 
 	// Create the buffer handle.
 	VkBufferCreateInfo bufferCreateInfo{
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 		.size = size,
 		.usage = usage,
-		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-		.queueFamilyIndexCount = static_cast<uint32_t>(queueFamily.size()),
-		.pQueueFamilyIndices = queueFamily.data()
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
 	};
 	VulkanContext::VK_CHECK(vkCreateBuffer(logicalDevice, &bufferCreateInfo, nullptr, &buffer),
 		"[vulkan] Error: failed to create buffer");
@@ -56,8 +48,9 @@ void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryP
 
 	VkMemoryAllocateInfo memoryAllocateInfo{
 		.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+		.pNext = memoryAllocationInfoPNext,
 		.allocationSize = memoryRequirements.size,
-		.memoryTypeIndex = VulkanContext::FindMemoryType(memoryRequirements.memoryTypeBits, properties)
+		.memoryTypeIndex = VulkanContext::FindMemoryType(memoryRequirements.memoryTypeBits, properties),
 	};
 	VulkanContext::VK_CHECK(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &bufferMemory),
 		"[vulkan] Error: cannot allocate buffer memory");

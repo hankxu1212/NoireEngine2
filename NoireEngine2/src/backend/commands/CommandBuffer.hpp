@@ -34,8 +34,11 @@ public:
 	// Ends the recording state for this command buffer.
 	void End();
 
-	// Submits the command buffer to the queue and will hold the current thread idle until it has finished.
+	// Submits the command buffer to the queue and will hold the current queue idle until it has finished.
 	void SubmitIdle();
+
+	// submit idle, and also wait on a fence
+	void SubmitWait();
 
 	/**
 	  * Submits the command buffer.

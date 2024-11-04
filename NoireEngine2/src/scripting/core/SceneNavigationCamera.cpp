@@ -53,7 +53,7 @@ namespace Core {
 			{
 				glm::vec3 offset = anchoredMoveSensitivity * (mouseDelta.x * transform->Left() + mouseDelta.y * transform->Up());
 				anchorPoint += offset;
-				transform->SetPosition(transform->position() + offset);
+				transform->Translate(offset);
 				return;
 			}
 

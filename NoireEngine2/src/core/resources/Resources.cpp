@@ -15,7 +15,7 @@ std::shared_ptr<Resource> Resources::Find(const std::type_index& typeIndex, cons
 	return nullptr;
 }
 
-void Resources::Add(const Node& node, const std::shared_ptr<Resource>& resource) 
+void Resources::Add(const Node& node, const std::shared_ptr<Resource>& resource)
 {
 	if (Find(resource->getTypeIndex(), node))
 		return;
