@@ -23,6 +23,7 @@ void Renderer::CreatePipelines()
 {
 	objectPipeline->CreatePipeline();
 	imguiPipeline->CreatePipeline();
+	imguiPipeline->SetupRaytracingViewport(objectPipeline->s_RaytracingPipeline.get());
 }
 
 void Renderer::Cleanup()

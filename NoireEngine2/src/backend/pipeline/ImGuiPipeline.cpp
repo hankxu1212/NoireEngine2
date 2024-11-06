@@ -8,6 +8,8 @@
 #include <vulkan/vk_enum_string_helper.h>
 #include "glm/gtx/string_cast.hpp"
 
+#include "RaytracingPipeline.hpp"
+
 // allocates a seperate custom descriptor pool for imgui
 static void CreateImGuiDescriptorPool(VkDevice logicalDevice, VkDescriptorPool& descriptorPool)
 {
@@ -36,7 +38,6 @@ static void CreateImGuiDescriptorPool(VkDevice logicalDevice, VkDescriptorPool& 
 
     VulkanContext::VK_CHECK(vkCreateDescriptorPool(logicalDevice, &pool_info, nullptr, &descriptorPool));
 }
-
 
 ImGuiPipeline::ImGuiPipeline()
 {
@@ -88,6 +89,12 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
     for (Layer* layer : Application::Get().GetLayerStack())
         layer->OnViewportRender();
 
+    // render rtx info:
+    ImGui::Begin("Ray Tracing");
+    ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+    ImGui::Image(m_RTXOutImage, ImVec2{ viewportPanelSize.x, viewportPanelSize.y });
+    ImGui::End();
+
     ImGui::Render();
 
     ImGuiIO& io = ImGui::GetIO();
@@ -103,6 +110,13 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
     s_Renderpass->Begin(commandBuffer);
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
     s_Renderpass->End(commandBuffer);
+}
+
+void ImGuiPipeline::SetupRaytracingViewport(RaytracingPipeline* rtxPipeline)
+{
+    m_RTXOutImage = ImGui_ImplVulkan_AddTexture(
+        rtxPipeline->m_RtxImage->getSampler(),
+        rtxPipeline->m_RtxImage->getView(), VK_IMAGE_LAYOUT_GENERAL);
 }
 
 void ImGuiPipeline::CreateRenderPass()

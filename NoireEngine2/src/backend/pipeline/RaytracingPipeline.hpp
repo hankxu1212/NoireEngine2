@@ -57,6 +57,8 @@ public: // ray tracing helpers
 	VkStridedDeviceAddressRegionKHR GetSbtEntryStridedDeviceAddressRegion(VkBuffer buffer, uint32_t handleCount);
 
 private:
+	friend class ImGuiPipeline;
+
 	ObjectPipeline* p_ObjectPipeline;
 
 	START_BINDING(RTXBindings)
@@ -100,7 +102,5 @@ private:
 	void CreateUniformBuffer();
 	void CreateRayTracingPipeline();
 	void CreateShaderBindingTables();
-
-private:
 };
 

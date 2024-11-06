@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include "glm/glm.hpp"
+#include "core/resources/Files.hpp"
 
 class Bitmap {
 public:

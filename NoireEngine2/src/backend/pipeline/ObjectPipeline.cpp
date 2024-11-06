@@ -371,8 +371,11 @@ void ObjectPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 	Prepare(scene, commandBuffer);
 	PrepareIndirectDrawBuffer(scene);
 
-	// render shadow pass
+	// render shadow passes
 	s_ShadowPipeline->Render(scene, commandBuffer);
+
+	// draw rtx
+	s_RaytracingPipeline->Render(scene, commandBuffer);
 
 	m_Renderpass->Begin(commandBuffer);
 	{

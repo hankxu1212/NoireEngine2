@@ -92,6 +92,8 @@ private:
 	friend class SkyboxPipeline;
 	friend class ShadowPipeline;
 	friend class RaytracingPipeline;
+	friend class ImGuiPipeline;
+	friend class Renderer;
 
 	std::vector<Workspace> workspaces;
 

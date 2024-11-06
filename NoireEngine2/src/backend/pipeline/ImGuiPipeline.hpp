@@ -7,6 +7,8 @@
 #include "imgui/backends/imgui_impl_vulkan.h"
 #include "imgui/backends/imgui_impl_glfw.h"
 
+class RaytracingPipeline;
+
 class ImGuiPipeline : public VulkanPipeline
 {
 public:
@@ -24,6 +26,8 @@ public:
 
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
+	void SetupRaytracingViewport(RaytracingPipeline* rtxPipeline);
+
 private:
 	void SetTheme();
 
@@ -34,5 +38,7 @@ private:
 
 	VkDescriptorPool						m_DescriptorPool = VK_NULL_HANDLE;
 	std::unique_ptr<Renderpass>				s_Renderpass;
+
+	VkDescriptorSet							m_RTXOutImage;
 };
 

@@ -92,6 +92,33 @@ void RaytracingPipeline::CreatePipeline()
 
 void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_Pipeline);
+
+	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
+	std::vector<VkDescriptorSet> descriptor_sets{
+		set0,
+		workspace.set0_World,
+		workspace.set1_StorageBuffers,
+		p_ObjectPipeline->set2_Textures,
+		p_ObjectPipeline->set3_Cubemap,
+		p_ObjectPipeline->set4_ShadowMap
+	};
+	vkCmdBindDescriptorSets(
+		commandBuffer, //command buffer
+		VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, //pipeline bind point
+		m_PipelineLayout, //pipeline layout
+		0, //first set
+		uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+		0, nullptr //dynamic offsets count, ptr
+	);
+
+	// Initializing push constant values
+	m_pcRay.clearColor = glm::vec4(1,0.5f,0,1);
+	vkCmdPushConstants(commandBuffer, m_PipelineLayout,
+		VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_MISS_BIT_KHR,
+		0, sizeof(PushConstantRay), &m_pcRay);
+
+	vkCmdTraceRaysKHR(commandBuffer, &m_rgenRegion, &m_missRegion, &m_hitRegion, &m_callRegion, 1920, 1080, 1);
 }
 
 void RaytracingPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)

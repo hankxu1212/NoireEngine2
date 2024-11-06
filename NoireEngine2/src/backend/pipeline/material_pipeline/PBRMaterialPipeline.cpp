@@ -26,6 +26,7 @@ void PBRMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer)
 		p_ObjectPipeline->set3_Cubemap,
 		p_ObjectPipeline->set4_ShadowMap
 	};
+
 	vkCmdBindDescriptorSets(
 		commandBuffer, //command buffer
 		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
