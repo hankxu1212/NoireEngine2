@@ -13,10 +13,8 @@ void Buffer::Destroy()
 	if (buffer == VK_NULL_HANDLE || bufferMemory == VK_NULL_HANDLE)
 		return;
 
-	if (mapped != nullptr) {
+	if (mapped != nullptr)
 		UnmapMemory();
-		mapped = nullptr;
-	}
 
 	vkDestroyBuffer(VulkanContext::GetDevice(), buffer, nullptr);
 	vkFreeMemory(VulkanContext::GetDevice(), bufferMemory, nullptr);
@@ -65,8 +63,9 @@ void Buffer::MapMemory(void **data) const {
 	VulkanContext::VK_CHECK(vkMapMemory(VulkanContext::GetDevice(), bufferMemory, 0, m_Size, 0, data), "[vulkan] Error: failed to map buffer memory");
 }
 
-void Buffer::UnmapMemory() const {
+void Buffer::UnmapMemory() {
 	vkUnmapMemory(VulkanContext::GetDevice(), bufferMemory);
+	mapped = nullptr;
 }
 
 void Buffer::CopyBuffer(VkCommandBuffer cmdBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)

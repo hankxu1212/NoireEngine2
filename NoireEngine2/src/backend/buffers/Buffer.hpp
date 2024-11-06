@@ -31,7 +31,7 @@ public:
 
 	void MapMemory(void **data) const;
 
-	void UnmapMemory() const;
+	void UnmapMemory();
 	
 	// executes a copy action command.
 	static void CopyBuffer(VkCommandBuffer cmdBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
@@ -46,7 +46,7 @@ public:
 	VkDeviceSize				getSize() const { return m_Size; }
 	VkBuffer					getBuffer() const { return buffer; }
 	const VkDeviceMemory&		getBufferMemory() const { return bufferMemory; }
-	void*						data() const { return reinterpret_cast<char*>(mapped); }
+	void*						data() const { return mapped; }
 
 protected:
 	VkBuffer				buffer = VK_NULL_HANDLE;

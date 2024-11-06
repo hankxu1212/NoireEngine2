@@ -23,7 +23,7 @@ public:
 
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
 
-public:
+public: // ray tracing helpers
 	// Function pointers for ray tracing related stuff
 	inline static PFN_vkGetBufferDeviceAddressKHR vkGetBufferDeviceAddressKHR;
 	inline static PFN_vkCreateAccelerationStructureKHR vkCreateAccelerationStructureKHR;
@@ -42,16 +42,12 @@ public:
 	VkPhysicalDeviceRayTracingPipelinePropertiesKHR  rayTracingPipelineProperties{};
 	VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures{};
 
-	// Extends the buffer class and holds information for a shader binding table
-	class ShaderBindingTable : public Buffer {
-	public:
-		VkStridedDeviceAddressRegionKHR stridedDeviceAddressRegion{};
-	};
-
 	static ScratchBuffer CreateScratchBuffer(VkDeviceSize size);
-
-	void CreateAccelerationStructure(AccelerationStructure& accelerationStructure, VkAccelerationStructureTypeKHR type, VkAccelerationStructureBuildSizesInfoKHR buildSizeInfo);
 	
+	// fills acceleration buffer and calls vkCreateAccelerationStructureKHR from build sizes
+	static void CreateAccelerationStructure(AccelerationStructure& accelerationStructure, VkAccelerationStructureTypeKHR type, VkAccelerationStructureBuildSizesInfoKHR buildSizeInfo);
+	
+	// creates an acceleration structure from create info. Calls vkCreateAccelerationStructureKHR
 	static AccelerationStructure CreateAccelerationStructure(const VkAccelerationStructureCreateInfoKHR& createInfo);
 
 	static void DeleteAccelerationStructure(AccelerationStructure& accelerationStructure);
@@ -60,20 +56,13 @@ public:
 
 	VkStridedDeviceAddressRegionKHR GetSbtEntryStridedDeviceAddressRegion(VkBuffer buffer, uint32_t handleCount);
 
-	void CreateShaderBindingTable(ShaderBindingTable& shaderBindingTable, uint32_t handleCount);
+private:
+	ObjectPipeline* p_ObjectPipeline;
 
-public:
 	START_BINDING(RTXBindings)
 		TLAS = 0,  // Top-level acceleration structure
 		OutImage = 1   // Ray tracer output image
 	END_BINDING();
-
-	std::vector<VkRayTracingShaderGroupCreateInfoKHR> shaderGroups{};
-	struct ShaderBindingTables {
-		ShaderBindingTable raygen;
-		ShaderBindingTable miss;
-		ShaderBindingTable hit;
-	} shaderBindingTables;
 
 	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
 	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
@@ -95,6 +84,13 @@ public:
 
 	std::unique_ptr<Image2D>				m_RtxImage;
 
+	// SBT
+	Buffer                    m_rtSBTBuffer;
+	VkStridedDeviceAddressRegionKHR m_rgenRegion{};
+	VkStridedDeviceAddressRegionKHR m_missRegion{};
+	VkStridedDeviceAddressRegionKHR m_hitRegion{};
+	VkStridedDeviceAddressRegionKHR m_callRegion{};
+
 private:
 	//void MeshTo
 	void CreateBottomLevelAccelerationStructure();
@@ -106,6 +102,5 @@ private:
 	void CreateShaderBindingTables();
 
 private:
-	ObjectPipeline* p_ObjectPipeline;
 };
 
