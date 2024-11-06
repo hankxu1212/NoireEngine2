@@ -163,7 +163,8 @@ void ObjectPipeline::CreateDescriptors()
 
 		// build world buffer descriptor
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 
+				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_RAYGEN_BIT_KHR)
 			.Build(workspace.set0_World, set0_WorldLayout);
 
 		// build transforms and lights storage buffers, no buffer allocation
@@ -583,7 +584,7 @@ void ObjectPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuf
 
 		vkCmdPipelineBarrier(commandBuffer,
 			VK_PIPELINE_STAGE_TRANSFER_BIT, //srcStageMask
-			VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, //dstStageMask
+			VK_PIPELINE_STAGE_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, //dstStageMask
 			0, //dependencyFlags
 			1, &memory_barrier, //memoryBarriers (count, data)
 			0, nullptr, //bufferMemoryBarriers (count, data)

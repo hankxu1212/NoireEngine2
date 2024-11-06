@@ -573,22 +573,29 @@ void Scene::UpdateSceneInfo()
 	m_SceneInfo.numLights[0] = 0;
 	m_SceneInfo.numLights[1] = 0;
 	m_SceneInfo.numLights[2] = 0;
-
 	for (int i = 0; i < m_SceneLights.size(); ++i)
 	{
 		uint32_t type = m_SceneLights[i]->type;
 		m_SceneInfo.numLights[type]++;
 	}
 
-	// shadows
+	// update shadows
+	UpdateShadowCasters();
 	m_SceneInfo.shadowOccluderSamples = ShadowPipeline::PCSSOccluderSamples;
 	m_SceneInfo.shadowPCFSamples = ShadowPipeline::PCFSamples;
-	UpdateShadowCasters();
 
-	// update camera
-	m_SceneInfo.cameraView = GetRenderCam()->camera()->getViewMatrix();
-	glm::vec3 pos = GetRenderCam()->GetTransform()->position();
-	m_SceneInfo.cameraPosition = {pos.x, pos.y, pos.z, 0};
+	// update camera info
+	Camera* cam = GetRenderCam()->camera();
+	if (cam->wasDirtyThisFrame) 
+	{
+		m_SceneInfo.cameraView = cam->getViewMatrix();
+		m_SceneInfo.cameraViewProj = cam->getWorldToClipMatrix();
+		m_SceneInfo.cameraViewInverse = glm::inverse(m_SceneInfo.cameraView);
+		m_SceneInfo.cameraProjInverse = glm::inverse(cam->getProjectionMatrix());
+
+		glm::vec3 pos = GetRenderCam()->GetTransform()->position();
+		m_SceneInfo.cameraPosition = {pos.x, pos.y, pos.z, 0};
+	}
 }
 
 void Scene::UpdateShadowCasters()

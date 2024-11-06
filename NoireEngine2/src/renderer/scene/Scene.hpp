@@ -86,12 +86,15 @@ public:
 	struct alignas(16) SceneUniform 
 	{
 		glm::mat4 cameraView;
+		glm::mat4 cameraViewProj;
+		glm::mat4 cameraViewInverse;
+		glm::mat4 cameraProjInverse;
 		struct { float x, y, z, _padding; } cameraPosition;
 		glm::uvec4 numLights;
 		uint32_t shadowPCFSamples;
 		uint32_t shadowOccluderSamples;
 	};
-	static_assert(sizeof(SceneUniform) == 64 + 16 * 3);
+	static_assert(sizeof(SceneUniform) == 64 * 4 + 16 * 3);
 
 	inline const void* getSceneUniformPtr() const { return &m_SceneInfo; }
 

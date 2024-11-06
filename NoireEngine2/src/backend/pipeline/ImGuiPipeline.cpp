@@ -90,10 +90,11 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
         layer->OnViewportRender();
 
     // render rtx info:
-    ImGui::Begin("Ray Tracing");
-    ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-    ImGui::Image(m_RTXOutImage, ImVec2{ viewportPanelSize.x, viewportPanelSize.y });
-    ImGui::End();
+    if (ImGui::Begin("Ray Tracing")) {
+        ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+        ImGui::Image(m_RTXOutImage, ImVec2{ viewportPanelSize.x, viewportPanelSize.y });
+        ImGui::End();
+    }
 
     ImGui::Render();
 
