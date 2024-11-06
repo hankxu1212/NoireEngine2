@@ -1,9 +1,10 @@
 #version 460
 #extension GL_EXT_ray_tracing : require
 
-layout(location = 0) rayPayloadInEXT vec3 hitValue;
+#include "rtxcore.glsl"
+layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 void main()
 {
-    hitValue = vec3(0.0, 0.1, 0.3);
+    prd.hitValue = rayConstants.clearColor.xyz * 0.8;
 }

@@ -64,6 +64,7 @@ RaytracingPipeline::~RaytracingPipeline()
 
 	m_RTBuilder.Destroy();
 	m_rtSBTBuffer.Destroy();
+	m_ObjDescBuffer.Destroy();
 
 	if (m_PipelineLayout != VK_NULL_HANDLE) {
 		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_PipelineLayout, nullptr);
@@ -83,11 +84,11 @@ void RaytracingPipeline::CreatePipeline()
 	CreateBottomLevelAccelerationStructure();
 	CreateTopLevelAccelerationStructure();
 	CreateStorageImage();
+	CreateObjectDescriptionBuffer();
 	CreateDescriptorSets();
 	CreateRayTracingPipeline();
 	CreateShaderBindingTables();
 	return;
-	CreateUniformBuffer();
 }
 
 void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
@@ -302,6 +303,8 @@ void RaytracingPipeline::CreateTopLevelAccelerationStructure()
 		totalSize += (uint32_t)allInstances[workflowIndex].size();
 	tlas.reserve(totalSize);
 
+	uint32_t customIndex = 0;
+
 	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
 	{
 		const auto& workflowInstances = allInstances[workflowIndex];
@@ -310,12 +313,14 @@ void RaytracingPipeline::CreateTopLevelAccelerationStructure()
 		{
 			VkAccelerationStructureInstanceKHR rayInst{};
 			rayInst.transform = toTransformMatrixKHR(workflowInstances[i].m_TransformUniform.modelMatrix); // Position of the instance
-			rayInst.instanceCustomIndex = workflowInstances[i].mesh->getBlasID(); // gl_InstanceCustomIndexEXT
+			rayInst.instanceCustomIndex = customIndex; // gl_InstanceCustomIndexEXT
 			rayInst.accelerationStructureReference = m_RTBuilder.getBlasDeviceAddress(workflowInstances[i].mesh->getBlasID());
 			rayInst.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 			rayInst.mask = 0xFF; //  Only be hit if rayMask & instance.mask != 0
 			rayInst.instanceShaderBindingTableRecordOffset = 0; // We will use the same hit group for all objects
+
 			tlas.emplace_back(rayInst);
+			customIndex++;
 		}
 	}
 
@@ -342,8 +347,39 @@ void RaytracingPipeline::CreateStorageImage()
 	m_RtxImage->Load();
 }
 
-void RaytracingPipeline::CreateUniformBuffer()
+void RaytracingPipeline::CreateObjectDescriptionBuffer()
 {
+	const auto& allInstances = SceneManager::Get()->getScene()->getObjectInstances();
+
+	uint32_t totalSize = 0;
+	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
+		totalSize += (uint32_t)allInstances[workflowIndex].size();
+
+	std::vector<ObjectDescription> objectDescriptions;
+	objectDescriptions.reserve(totalSize);
+
+	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
+	{
+		const auto& workflowInstances = allInstances[workflowIndex];
+		uint32_t instanceCount = (uint32_t)workflowInstances.size();
+		for (uint32_t i = 0; i < instanceCount; i++)
+		{
+			ObjectDescription desc;
+			desc.vertexAddress = GetBufferDeviceAddress(workflowInstances[i].mesh->getVertexBuffer().getBuffer());
+			desc.indexAddress = GetBufferDeviceAddress(workflowInstances[i].mesh->getIndexBuffer().getBuffer());
+
+			objectDescriptions.emplace_back(desc);
+		}
+	}
+
+	m_ObjDescBuffer = Buffer(
+		totalSize * sizeof(ObjectDescription),
+		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		Buffer::Unmapped
+	);
+
+	Buffer::TransferToBufferIdle(objectDescriptions.data(), totalSize * sizeof(ObjectDescription), m_ObjDescBuffer.getBuffer());
 }
 
 void RaytracingPipeline::CreateRayTracingPipeline()
@@ -517,7 +553,7 @@ void RaytracingPipeline::CreateDescriptorSets()
 		{ VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, 1 },
 		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
 		//{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
-		//{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2 }
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2 }
 	};
 
 	m_DescriptorAllocator.SetCustomPoolParams(poolSizes, 100);
@@ -530,8 +566,16 @@ void RaytracingPipeline::CreateDescriptorSets()
 	descASInfo.accelerationStructureCount = 1;
 	descASInfo.pAccelerationStructures = &as;
 
+	VkDescriptorBufferInfo objDescInfo
+	{
+		.buffer = m_ObjDescBuffer.getBuffer(),
+		.offset = 0,
+		.range = m_ObjDescBuffer.getSize(),
+	};
+
 	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 		.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
 		.BindImage(RTXBindings::OutImage, &rtxImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
+		.BindBuffer(RTXBindings::ObjDesc, &objDescInfo, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR)
 		.Build(set0, set0_layout);
 }

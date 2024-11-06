@@ -63,7 +63,8 @@ private:
 
 	START_BINDING(RTXBindings)
 		TLAS = 0,  // Top-level acceleration structure
-		OutImage = 1   // Ray tracer output image
+		OutImage = 1,   // Ray tracer output image
+		ObjDesc = 2 // stores obj description and buffer addresses
 	END_BINDING();
 
 	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
@@ -79,7 +80,19 @@ private:
 		float lightIntensity;
 		int   lightType;
 	};
+
 	PushConstantRay m_pcRay{};
+
+	// Information of a obj model when referenced in a shader
+	struct ObjectDescription
+	{
+		int      txtOffset;             // Texture index offset in the array of textures
+		uint64_t vertexAddress;         // Address of the Vertex buffer
+		uint64_t indexAddress;          // Address of the index buffer
+		//uint64_t materialAddress;       // Address of the material buffer
+		//uint64_t materialIndexAddress;  // Address of the triangle material index buffer
+	};
+	Buffer m_ObjDescBuffer;
 
 	DescriptorAllocator						m_DescriptorAllocator;
 	RaytracingBuilderKHR					m_RTBuilder;
@@ -99,7 +112,7 @@ private:
 	void CreateTopLevelAccelerationStructure();
 	void CreateStorageImage();
 	void CreateDescriptorSets();
-	void CreateUniformBuffer();
+	void CreateObjectDescriptionBuffer();
 	void CreateRayTracingPipeline();
 	void CreateShaderBindingTables();
 };

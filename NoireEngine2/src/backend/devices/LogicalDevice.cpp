@@ -8,6 +8,7 @@ const std::vector<const char*> LogicalDevice::DeviceExtensions = {
 	VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
 	VK_EXT_VERTEX_INPUT_DYNAMIC_STATE_EXTENSION_NAME, // dynamic vertex binding
 	VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME, // descriptor indexing
+	VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME, // enables scalar buffers
 
 	// ray tracing
 	VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
@@ -244,6 +245,14 @@ void LogicalDevice::CreateLogicalDevice()
 		enabledAccelerationStructureFeatures.pNext = &enabledRayTracingPipelineFeatures;
 
 		sync2Ext.pNext = &enabledAccelerationStructureFeatures;
+
+		// add scalar buffer blockout extension
+		{
+			VkPhysicalDeviceScalarBlockLayoutFeatures scalarBlockLayoutFeatures{};
+			scalarBlockLayoutFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES;
+			scalarBlockLayoutFeatures.scalarBlockLayout = VK_TRUE; // Enable scalar block layout
+			enabledBufferDeviceAddresFeatures.pNext = &scalarBlockLayoutFeatures;
+		}
 	}
 
 	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

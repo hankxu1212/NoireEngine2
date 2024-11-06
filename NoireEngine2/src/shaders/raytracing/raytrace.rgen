@@ -10,25 +10,6 @@ layout(location = 0) rayPayloadEXT hitPayload prd;
 layout(set = 0, binding = 0) uniform accelerationStructureEXT topLevelAS;
 layout(set = 0, binding = 1, rgba32f) uniform image2D image;
 
-layout(push_constant) uniform constants 
-{ 
-    vec4  clearColor;
-	vec3  lightPosition;
-	float lightIntensity;
-	int   lightType;
-} rayConstants;
-
-layout(set=1,binding=0,std140) uniform World {
-	mat4 view;
-	mat4 viewProj;
-	mat4 viewInverse;
-	mat4 projInverse;
-	vec4 cameraPos;
-	uvec4 numLights;
-	int pcfSamples;
-	int occluderSamples;
-}scene;
-
 void main() 
 {
     const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5);
