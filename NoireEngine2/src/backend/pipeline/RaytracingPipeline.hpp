@@ -79,6 +79,16 @@ public:
 	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
 	VkDescriptorSet set0;
 	VkDescriptorSetLayout set0_layout;
+	std::vector<VkRayTracingShaderGroupCreateInfoKHR> m_RTShaderGroups;
+
+	struct PushConstantRay
+	{
+		glm::vec4  clearColor;
+		glm::vec3  lightPosition;
+		float lightIntensity;
+		int   lightType;
+	};
+	PushConstantRay m_pcRay{};
 
 	DescriptorAllocator						m_DescriptorAllocator;
 	RaytracingBuilderKHR					m_RTBuilder;

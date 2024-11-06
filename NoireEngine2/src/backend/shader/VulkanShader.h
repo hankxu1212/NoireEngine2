@@ -6,14 +6,9 @@
 class VulkanShader
 {
 public:
-	enum ShaderStage { Frag, Vertex, Compute };
+	enum ShaderStage { Frag, Vertex, Compute, RTX_Raygen, RTX_Miss, RTX_CHit };
 
 public:
-	template< size_t N >
-	VulkanShader(uint32_t const (&arr)[N], ShaderStage stage) : VulkanShader(arr, 4 * N, stage) {}
-
-	VulkanShader(const uint32_t* code, size_t bytes, ShaderStage stage);
-
 	VulkanShader(const std::string& path, ShaderStage stage);
 
 	~VulkanShader();
@@ -21,7 +16,7 @@ public:
 	operator const VkShaderModule& () const { return m_ShaderModule; }
 	const VkPipelineShaderStageCreateInfo& shaderStage() const{ return m_ShaderStage; }
 
-public:
+private:
 	VkShaderModule						m_ShaderModule;
-	VkPipelineShaderStageCreateInfo		m_ShaderStage;
+	VkPipelineShaderStageCreateInfo		m_ShaderStage{};
 };

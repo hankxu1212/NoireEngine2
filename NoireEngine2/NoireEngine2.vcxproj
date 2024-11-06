@@ -449,6 +449,10 @@
     <None Include="src\shaders\mirror.vert" />
     <None Include="src\shaders\pbr.frag" />
     <None Include="src\shaders\pbr.vert" />
+    <None Include="src\shaders\raytracing\raytrace.rchit" />
+    <None Include="src\shaders\raytracing\raytrace.rgen" />
+    <None Include="src\shaders\raytracing\raytrace.rmiss" />
+    <None Include="src\shaders\raytracing\rtxcore.glsl" />
     <None Include="src\shaders\shadow\shadowmapping.frag" />
     <None Include="src\shaders\shadow\shadowmapping.vert" />
     <None Include="src\shaders\skybox.frag" />

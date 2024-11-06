@@ -88,12 +88,10 @@ void RaytracingPipeline::CreatePipeline()
 	CreateTopLevelAccelerationStructure();
 	CreateStorageImage();
 	CreateDescriptorSets();
-	return;
-	//CreateStorageImage(swapChain.colorFormat, { width, height, 1 });
-	CreateUniformBuffer();
 	CreateRayTracingPipeline();
+	return;
+	CreateUniformBuffer();
 	CreateShaderBindingTables();
-	//buildCommandBuffers();
 }
 
 void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
@@ -341,6 +339,90 @@ void RaytracingPipeline::CreateUniformBuffer()
 
 void RaytracingPipeline::CreateRayTracingPipeline()
 {
+	enum StageIndices
+	{
+		eRaygen,
+		eMiss,
+		eClosestHit,
+		eShaderGroupCount
+	};
+
+	// load all shaders
+	VulkanShader raygenModule("../spv/shaders/raytracing/raytrace.rgen.spv", VulkanShader::ShaderStage::RTX_Raygen);
+	VulkanShader missModule("../spv/shaders/raytracing/raytrace.rmiss.spv", VulkanShader::ShaderStage::RTX_Miss);
+	VulkanShader closesthitModule("../spv/shaders/raytracing/raytrace.rchit.spv", VulkanShader::ShaderStage::RTX_CHit);
+
+	std::array<VkPipelineShaderStageCreateInfo, eShaderGroupCount> stages{};
+	VkPipelineShaderStageCreateInfo stage{ VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
+
+	stages[eRaygen] = raygenModule.shaderStage();
+	stages[eMiss] = missModule.shaderStage();
+	stages[eClosestHit] = closesthitModule.shaderStage();
+
+	// Shader groups
+	VkRayTracingShaderGroupCreateInfoKHR group{ VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR };
+	group.anyHitShader = VK_SHADER_UNUSED_KHR;
+	group.closestHitShader = VK_SHADER_UNUSED_KHR;
+	group.generalShader = VK_SHADER_UNUSED_KHR;
+	group.intersectionShader = VK_SHADER_UNUSED_KHR;
+
+	// Raygen
+	group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+	group.generalShader = eRaygen;
+	m_RTShaderGroups.push_back(group);
+
+	// Miss
+	group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+	group.generalShader = eMiss;
+	m_RTShaderGroups.push_back(group);
+
+	// closest hit shader
+	group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
+	group.generalShader = VK_SHADER_UNUSED_KHR;
+	group.closestHitShader = eClosestHit;
+	m_RTShaderGroups.push_back(group);
+
+	// Push constant: we want to be able to update constants used by the shaders
+	VkPushConstantRange pushConstant{ VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_MISS_BIT_KHR,
+									 0, sizeof(PushConstantRay) };
+
+
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+	pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+	pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstant;
+
+	// Descriptor sets: one specific to ray tracing, and one shared with the rasterization pipeline
+	std::vector<VkDescriptorSetLayout> rtDescSetLayouts = { 
+		set0_layout, // rtx tlas and out image
+		p_ObjectPipeline->set0_WorldLayout,
+		p_ObjectPipeline->set1_StorageBuffersLayout,
+		p_ObjectPipeline->set2_TexturesLayout,
+		p_ObjectPipeline->set3_CubemapLayout,
+		p_ObjectPipeline->set4_ShadowMapLayout,
+	};
+
+	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(rtDescSetLayouts.size());
+	pipelineLayoutCreateInfo.pSetLayouts = rtDescSetLayouts.data();
+
+	vkCreatePipelineLayout(VulkanContext::GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout);
+
+
+	// Assemble the shader stages and recursion depth info into the ray tracing pipeline
+	VkRayTracingPipelineCreateInfoKHR rayPipelineInfo{ VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR };
+	rayPipelineInfo.stageCount = static_cast<uint32_t>(stages.size());  // Stages are shaders
+	rayPipelineInfo.pStages = stages.data();
+
+	// In this case, m_RTShaderGroups.size() == 3: we have one raygen group,
+	// one miss shader group, and one hit group.
+	rayPipelineInfo.groupCount = static_cast<uint32_t>(m_RTShaderGroups.size());
+	rayPipelineInfo.pGroups = m_RTShaderGroups.data();
+
+	rayPipelineInfo.maxPipelineRayRecursionDepth = 1;  // Ray depth
+	rayPipelineInfo.layout = m_PipelineLayout;
+
+	vkCreateRayTracingPipelinesKHR(VulkanContext::GetDevice(), {}, {}, 1, & rayPipelineInfo, nullptr, & m_Pipeline);
+
+	NE_DEBUG("Built rtx pipeline", Logger::CYAN, Logger::BOLD);
 }
 
 void RaytracingPipeline::CreateShaderBindingTables()

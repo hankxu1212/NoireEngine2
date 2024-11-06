@@ -113,7 +113,16 @@ const vulkan_objs = [
 	maek.CPP('backend/pipeline/material_pipeline/MaterialPipeline.cpp'),
 	maek.CPP('backend/pipeline/ObjectPipeline.cpp'),
 	maek.CPP('backend/pipeline/VulkanGraphicsPipelineBuilder.cpp'),
-	maek.CPP('backend/pipeline/RaytracingPipeline.cpp'),
+]
+
+const rtx_shaders = [
+	maek.GLSLC('shaders/raytracing/raytrace.rchit'),
+	maek.GLSLC('shaders/raytracing/raytrace.rgen'),
+	maek.GLSLC('shaders/raytracing/raytrace.rmiss'),
+];
+
+const rtx_objs = [
+	maek.CPP('backend/pipeline/RaytracingPipeline.cpp', undefined, { depends: [...rtx_shaders] }),
 	maek.CPP('backend/raytracing/RTCore.cpp'),
 	maek.CPP('backend/raytracing/BLASBuilder.cpp'),
 	maek.CPP('backend/raytracing/RaytracingBuilderKHR.cpp')
@@ -187,6 +196,7 @@ const main_exe = maek.LINK
 		...component_objs,
 		...imgui_objs,
 		...scripting_objs,
+		...rtx_objs
 	],
 	'bin/main'
 );
@@ -202,6 +212,7 @@ const cube_exe = maek.LINK
 		...component_objs,
 		...imgui_objs,
 		...scripting_objs,
+		...rtx_objs
 	], 'bin/cube'
 );
 

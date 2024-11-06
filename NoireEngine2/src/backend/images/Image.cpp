@@ -147,7 +147,7 @@ void Image::CreateImageSampler(VkSampler& sampler, VkFilter filter, VkSamplerAdd
 	samplerCreateInfo.addressModeV = addressMode;
 	samplerCreateInfo.addressModeW = addressMode;
 	samplerCreateInfo.mipLodBias = 0.0f;
-	samplerCreateInfo.anisotropyEnable = static_cast<VkBool32>(anisotropic);
+	samplerCreateInfo.anisotropyEnable = anisotropic ? VK_TRUE : VK_FALSE;
 	samplerCreateInfo.maxAnisotropy =
 		(anisotropic && VulkanContext::Get()->getLogicalDevice()->getEnabledFeatures().samplerAnisotropy) ? min(ANISOTROPY, VulkanContext::Get()->getPhysicalDevice()->getProperties().limits.maxSamplerAnisotropy) : 1.0f;
 	//samplerCreateInfo.compareEnable = VK_FALSE;
