@@ -3,7 +3,6 @@
 #include "core/resources/Resources.hpp"
 #include "core/Bitmap.hpp"
 #include "backend/buffers/Buffer.hpp"
-#include "renderer/materials/MaterialLibrary.hpp"
 #include "core/Timer.hpp"
 #include "utils/Logger.hpp"
 
@@ -15,8 +14,6 @@ std::shared_ptr<Image2D> Image2D::Create(const Node& node) {
 	Resources::Get()->Add(node, std::dynamic_pointer_cast<Resource>(result));
 	node >> *result;
 	result->Load();
-
-	result->g_TextureId = MaterialLibrary::Get()->Add(result);
 
 	return result;
 }

@@ -20,7 +20,6 @@
 #include "renderer/scene/SceneManager.hpp"
 
 #include "backend/pipeline/material_pipeline/MaterialPipelines.hpp"
-#include "renderer/materials/MaterialLibrary.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
@@ -219,7 +218,7 @@ void Renderer::CreateTextureDescriptors()
 		.pBindingFlags = descriptorBindingFlags.data()
 	};
 
-	const auto& textures = MaterialLibrary::Get()->GetTextures();
+	const auto& textures = Resources::Get()->FindAllOfType<Image2D>();
 
 	std::vector<uint32_t> variableDesciptorCounts = {
 		static_cast<uint32_t>(textures.size())
@@ -233,13 +232,12 @@ void Renderer::CreateTextureDescriptors()
 	};
 
 	// grab all texture information
-	std::vector<VkDescriptorImageInfo> textureDescriptors(textures.size());
-	for (uint32_t i = 0; i < textures.size(); ++i)
+	std::vector<VkDescriptorImageInfo> textureDescriptors;
+	textureDescriptors.reserve(textures.size());
+	for (const auto& tex : textures)
 	{
-		auto& tex = textures[i];
-		textureDescriptors[i].sampler = tex->getSampler();
-		textureDescriptors[i].imageView = tex->getView();
-		textureDescriptors[i].imageLayout = tex->getLayout();
+		std::shared_ptr<Image2D> rTex = std::dynamic_pointer_cast<Image2D>(tex);
+		textureDescriptors.emplace_back(rTex->GetDescriptorInfo());
 	}
 
 	// actually build the descriptor set now

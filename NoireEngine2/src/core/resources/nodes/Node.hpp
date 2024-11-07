@@ -46,8 +46,6 @@ public:
 	template<typename ...Args>
 	Node &Append(const Args &...args);
 	
-	//Node &Merge(Node &&node);
-
 	bool HasProperty(const std::string &name) const;
 	bool HasProperty(uint32_t index) const;
 	NodeConstView GetProperty(const std::string &name) const;

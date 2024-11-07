@@ -142,7 +142,7 @@ void PBRMaterial::Load()
 	if (m_CreateInfo.texturePath != NE_NULL_STR)
 	{
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.texturePath);
-		m_AlbedoMapId = tex->getTextureId();
+		m_AlbedoMapId = tex->getID();
 	}
 
 	// normal
@@ -150,7 +150,7 @@ void PBRMaterial::Load()
 	{
 		// rgba, create mips
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.normalPath, VK_FORMAT_R8G8B8A8_UNORM);
-		m_NormalMapId = tex->getTextureId();
+		m_NormalMapId = tex->getID();
 	}
 
 	// TODO: combine normal and displacement map
@@ -158,21 +158,21 @@ void PBRMaterial::Load()
 	{
 		// srgb, dont create mipmaps
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.displacementPath, VK_FORMAT_R8G8B8A8_SRGB, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, true, false, true);
-		m_DisplacementMapId = tex->getTextureId();
+		m_DisplacementMapId = tex->getID();
 	}
 
 	// metallic
 	if (m_CreateInfo.metallicPath != NE_NULL_STR)
 	{
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.metallicPath);
-		m_MetallicMapId = tex->getTextureId();
+		m_MetallicMapId = tex->getID();
 	}
 
 	// metallic
 	if (m_CreateInfo.roughnessPath != NE_NULL_STR)
 	{
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.roughnessPath);
-		m_RoughnessMapId = tex->getTextureId();
+		m_RoughnessMapId = tex->getID();
 	}
 
 }

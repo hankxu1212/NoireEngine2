@@ -107,7 +107,6 @@
     <ClCompile Include="src\backend\renderpass\Renderpass.cpp" />
     <ClCompile Include="src\backend\pipeline\LinesPipeline.cpp" />
     <ClCompile Include="src\math\color\Color.cpp" />
-    <ClCompile Include="src\renderer\materials\MaterialLibrary.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\material_pipeline\MaterialPipeline.cpp" />
     <ClCompile Include="src\renderer\materials\EnvironmentMaterial.cpp" />
@@ -267,7 +266,6 @@
     <ClInclude Include="src\backend\renderpass\Renderpass.hpp" />
     <ClInclude Include="src\backend\pipeline\LinesPipeline.hpp" />
     <ClInclude Include="src\renderer\gizmos\GizmosInstance.hpp" />
-    <ClInclude Include="src\renderer\materials\MaterialLibrary.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipeline.hpp" />
     <ClInclude Include="src\renderer\materials\EnvironmentMaterial.hpp" />

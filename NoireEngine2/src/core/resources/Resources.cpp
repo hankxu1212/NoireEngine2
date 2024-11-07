@@ -17,23 +17,36 @@ std::shared_ptr<Resource> Resources::Find(const std::type_index& typeIndex, cons
 
 void Resources::Add(const Node& node, const std::shared_ptr<Resource>& resource)
 {
-	if (Find(resource->getTypeIndex(), node))
+	std::type_index tid = resource->getTypeIndex();
+	if (Find(tid, node))
 		return;
 
-	resources[resource->getTypeIndex()].emplace(node, resource);
+	resources[tid].emplace(node, resource);
+	resourceIDs[tid].emplace_back(resource);
+
+	resource->ID = (uint32_t)resourceIDs[tid].size() - 1;
 }
 
 void Resources::Remove(const std::shared_ptr<Resource>& resource) 
 {
-	auto& node_rsc_map = this->resources[resource->getTypeIndex()];
-	
-	for (auto it = node_rsc_map.begin(); it != node_rsc_map.end(); ++it) 
-	{ // TODO: Clean remove.
-		if ((*it).second == resource)
-			node_rsc_map.erase(it);
-	}
+	std::type_index tid = resource->getTypeIndex();
+
+	ResourceMap& node_rsc_map = resources[tid];
+	std::erase_if(node_rsc_map, [&](const auto& pair) {
+		return pair.second == resource;
+	});
 
 	if (node_rsc_map.empty())
-		this->resources.erase(resource->getTypeIndex());
+		resources.erase(tid);
+
+	ReindexIDs(tid);
 }
 
+void Resources::ReindexIDs(std::type_index tid)
+{
+	ResourceList& ids = resourceIDs.at(tid);
+	for (auto i = 0; i < ids.size(); i++)
+	{
+		ids[i]->ID = i;
+	}
+}

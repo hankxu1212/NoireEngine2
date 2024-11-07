@@ -278,14 +278,9 @@ void RaytracingPipeline::CreateBottomLevelAccelerationStructure()
 	const auto& allMeshes = Resources::Get()->FindAllOfType<Mesh>();
 	std::vector<RaytracingBuilderKHR::BlasInput> allBlas;
 
-	uint32_t id = 0;
-
-	for (const auto& [node, resource] : allMeshes)
+	for (const auto& resource : allMeshes)
 	{
 		std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(resource);
-
-		mesh->SetBlasID(id++); // incremental blas id
-
 		allBlas.emplace_back(MeshToGeometry(mesh.get()));
 	}
 	m_RTBuilder.BuildBlas(allBlas, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
@@ -314,7 +309,7 @@ void RaytracingPipeline::CreateTopLevelAccelerationStructure()
 			VkAccelerationStructureInstanceKHR rayInst{};
 			rayInst.transform = toTransformMatrixKHR(workflowInstances[i].m_TransformUniform.modelMatrix); // Position of the instance
 			rayInst.instanceCustomIndex = customIndex; // gl_InstanceCustomIndexEXT
-			rayInst.accelerationStructureReference = m_RTBuilder.getBlasDeviceAddress(workflowInstances[i].mesh->getBlasID());
+			rayInst.accelerationStructureReference = m_RTBuilder.getBlasDeviceAddress(workflowInstances[i].mesh->getID());
 			rayInst.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 			rayInst.mask = 0xFF; //  Only be hit if rayMask & instance.mask != 0
 			rayInst.instanceShaderBindingTableRecordOffset = 0; // We will use the same hit group for all objects

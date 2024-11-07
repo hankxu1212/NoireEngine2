@@ -61,6 +61,8 @@ Application::Application(const ApplicationSpecification& specification)
 
 Application::~Application()
 {
+	VulkanContext::Get()->WaitGraphicsQueue();
+
 	DestroyStage(Module::DestroyStage::Pre);
 
 	m_LayerStack.Detach();
@@ -191,7 +193,7 @@ bool Application::OnWindowResize(WindowResizeEvent& e)
 		return true;
 	}
 
-	VulkanContext::Get()->OnWindowResize(e.m_Width, e.m_Height);
+	VulkanContext::Get()->OnWindowResize();
 	m_Minimized = false;
 	return false;
 }

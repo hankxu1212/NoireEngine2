@@ -204,13 +204,7 @@ bool Node::operator!=(const Node &rhs) const {
 }
 
 bool Node::operator<(const Node &rhs) const {
-	if (value < rhs.value) return true;
-	if (rhs.value < value) return false;
-
-	if (properties < rhs.properties) return true;
-	if (rhs.properties < properties) return false;
-
-	return false;
+	return std::tie(value, properties) < std::tie(rhs.value, rhs.properties);
 }
 
 // glm operators

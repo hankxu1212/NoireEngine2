@@ -32,7 +32,9 @@ VulkanContext::~VulkanContext()
 
 void VulkanContext::LateInitialize()
 {
+    // create a default image so texture descriptors dont segfault
     Image2D::Create(Files::Path("../textures/default.png"), VK_FORMAT_R8G8B8A8_SRGB, VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, false, true);
+
     s_Renderer = std::make_unique<Renderer>();
 }
 
@@ -79,14 +81,16 @@ void VulkanContext::Update()
     }
 }
 
-void VulkanContext::OnWindowResize(uint32_t width, uint32_t height)
+void VulkanContext::OnWindowResize()
 {
     RecreateSwapchain();
 }
 
 void VulkanContext::OnAddWindow(Window* window)
 {
+    // create a new surface
     m_Surfaces.emplace_back(std::make_unique<Surface>(*s_VulkanInstance, *s_PhysicalDevice, *s_LogicalDevice, window));
+
     s_Renderer->CreateRenderPass();
     RecreateSwapchain();
     s_Renderer->Create();

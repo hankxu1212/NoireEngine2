@@ -36,15 +36,16 @@
 	"type":"LIGHT",
 	"name":"Light.001",
 	"tint":[1, 1, 1],
-	"sphere":{
-		"radius":0.1,
-		"power":1000
-	}
+	"sphere": {
+		"radius": 0.1,
+		"power": 1000
+	},
+	"shadow" : {}
 },
 {
 	"type":"NODE",
 	"name":"Light.001",
-	"translation":[-2.1638,-1.98072,-4.3904],
+	"translation":[7.22,0.9, 3.74],
 	"rotation":[0.169076,0.272171,0.75588,0.570948],
 	"scale":[1,1,1],
 	"light":"Light.001"

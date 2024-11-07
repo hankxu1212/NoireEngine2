@@ -5,7 +5,6 @@
 #include "core/resources/Resources.hpp"
 #include "core/Bitmap.hpp"
 #include "backend/buffers/Buffer.hpp"
-#include "renderer/materials/MaterialLibrary.hpp"
 #include "utils/Logger.hpp"
 #include "core/resources/Files.hpp"
 
