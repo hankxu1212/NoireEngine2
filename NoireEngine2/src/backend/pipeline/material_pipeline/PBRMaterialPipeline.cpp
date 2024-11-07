@@ -17,7 +17,7 @@ void PBRMaterialPipeline::CreatePipelineLayout()
 		Renderer::Instance->set0_WorldLayout,
 		Renderer::Instance->set1_StorageBuffersLayout,
 		Renderer::Instance->set2_TexturesLayout,
-		Renderer::Instance->set3_CubemapLayout,
+		Renderer::Instance->set3_IBLLayout,
 		Renderer::Instance->set4_ShadowMapLayout,
 	};
 

@@ -10,21 +10,17 @@
 
 void PBRMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout)
 {
-	PBRMaterial::MaterialPush push
-	{
-		.albedo = m_CreateInfo.albedo,
-		.environmentLightIntensity = m_EnvironmentLightInfluence,
-		.albedoTexId = m_AlbedoMapId,
-		.normalTexId = m_NormalMapId,
-		.displacementTexId = m_DisplacementMapId,
-		.heightScale = m_HeightScale,
-		.roughnessTexId = m_RoughnessMapId,
-		.metallicTexId = m_MetallicMapId,
-		.roughness = m_CreateInfo.roughness,
-		.metallic = m_CreateInfo.metallic,
-		.normalStrength = m_NormalStrength,
-		.materialType = (uint32_t)Workflow::PBR
-	};
+	push.albedo = glm::vec4(m_CreateInfo.albedo, 0);
+	push.environmentLightIntensity = m_EnvironmentLightInfluence;
+	push.albedoTexId = m_AlbedoMapId;
+	push.normalTexId = m_NormalMapId;
+	push.displacementTexId = m_DisplacementMapId;
+	push.heightScale = m_HeightScale;
+	push.roughnessTexId = m_RoughnessMapId;
+	push.metallicTexId = m_MetallicMapId;
+	push.roughness = m_CreateInfo.roughness;
+	push.metallic = m_CreateInfo.metallic;
+	push.normalStrength = m_NormalStrength;
 
 	vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,
 		sizeof(PBRMaterial::MaterialPush), &push);

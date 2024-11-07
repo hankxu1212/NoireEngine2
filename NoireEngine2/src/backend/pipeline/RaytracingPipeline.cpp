@@ -101,7 +101,7 @@ void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& command
 		workspace.set0_World,
 		workspace.set1_StorageBuffers,
 		p_ObjectPipeline->set2_Textures,
-		p_ObjectPipeline->set3_Cubemap,
+		p_ObjectPipeline->set3_IBL,
 		p_ObjectPipeline->set4_ShadowMap
 	};
 	vkCmdBindDescriptorSets(
@@ -436,7 +436,7 @@ void RaytracingPipeline::CreateRayTracingPipeline()
 		p_ObjectPipeline->set0_WorldLayout,
 		p_ObjectPipeline->set1_StorageBuffersLayout,
 		p_ObjectPipeline->set2_TexturesLayout,
-		p_ObjectPipeline->set3_CubemapLayout,
+		p_ObjectPipeline->set3_IBLLayout,
 		p_ObjectPipeline->set4_ShadowMapLayout,
 	};
 

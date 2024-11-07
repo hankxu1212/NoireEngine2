@@ -32,5 +32,9 @@ public:
 	static std::shared_ptr<Material> CreateDefault();
 
 	virtual Workflow getWorkflow() const = 0;
+
+	virtual void* getPushPointer() const = 0;
+
+	size_t materialInstanceBufferOffset;
 };
 

@@ -19,13 +19,12 @@ public:
 
 	struct MaterialPush
 	{
-		glm::vec3 albedo;
+		glm::vec4 albedo;
 		float environmentLightIntensity;
 		float normalStrength;
 		int albedoTexId;
 		int normalTexId;
-		int materialType;
-	};
+	} push;
 
 public:
 	LambertianMaterial() = default;
@@ -49,6 +48,8 @@ public:
 	void Inspect() override;
 
 	Workflow getWorkflow() const override { return Workflow::Lambertian; }
+
+	void* getPushPointer() const override { return (void*)&push; };
 
 private:
 	LambertianMaterial(const CreateInfo& createInfo);

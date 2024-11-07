@@ -3,12 +3,14 @@
 #version 450
 
 #extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : enable
 
 layout(location=0) in vec3 inPosition;
 layout(location=1) in vec3 inNormal;
 layout(location=2) in vec2 inTexCoord;
 layout(location=3) in vec4 inTangent;
 layout(location=4) in vec3 inViewPos;
+layout(location=5) flat in uint instanceID;
 
 layout(location=0) out vec4 outColor;
 
@@ -40,22 +42,7 @@ float roughness, metalness, cosLo;
 vec3 CalcPBRDirectLighting(vec3 radiance, vec3 Li);
 vec3 DirectLightingPBR();
 
-
-layout( push_constant ) uniform constants
-{
-	vec3 albedo;
-	float environmentLightIntensity;
-	int albedoTexId;
-	int normalTexId;
-	int displacementTexId;
-	float heightScale;
-	int roughnessTexId;
-	int metallicTexId;
-	float roughness;
-	float metallic;
-	float normalStrength;
-	int materialType;
-} material;
+#include "glsl/materials.glsl"
 
 // parallax mappings
 const int parallax_numLayers = 32;
@@ -64,6 +51,8 @@ const float parallax_layerDepth = 1.0 / float(parallax_numLayers);
 
 void main() 
 {
+	PBRMaterial material = PBR_MATERIAL_ReadFrombuffer(OBJECTS[instanceID].offset);
+
     // calculate TBN
     n = normalize(inNormal);
     vec3 tangent = inTangent.xyz;
@@ -83,7 +72,7 @@ void main()
     vec3 tangentV = invTBN * V;
     if (material.displacementTexId >= 0 && material.heightScale > 0){
         // can use contact refinement parallax (ParallaxOcclusionMapping2), kinda broken tho
-        vec3 uvh = ParallaxOcclusionMapping(inTexCoord, tangentV);
+        vec3 uvh = ParallaxOcclusionMapping(inTexCoord, tangentV, material.heightScale, material.displacementTexId);
         UV = uvh.xy;
         height = uvh.z;
     }
@@ -98,7 +87,7 @@ void main()
 	}
 
 	// albedo 
-	albedo = material.albedo;
+	albedo = material.albedo.rgb;
 	if (material.albedoTexId >= 0)
 		albedo *= texture(textures[material.albedoTexId], UV).rgb;
 

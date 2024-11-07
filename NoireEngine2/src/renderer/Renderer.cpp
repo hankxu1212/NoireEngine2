@@ -15,6 +15,8 @@
 #include "core/resources/Files.hpp"
 
 #include "renderer/materials/Material.hpp"
+#include "renderer/materials/Materials.hpp"
+
 #include "renderer/object/Mesh.hpp"
 #include "renderer/scene/Scene.hpp"
 #include "renderer/scene/SceneManager.hpp"
@@ -60,6 +62,7 @@ Renderer::~Renderer()
 	{
 		workspace.TransformsSrc.Destroy();
 		workspace.Transforms.Destroy();
+
 		workspace.World.Destroy();
 		workspace.WorldSrc.Destroy();
 		
@@ -68,6 +71,12 @@ Renderer::~Renderer()
 			workspace.LightsSrc[i].Destroy();
 			workspace.Lights[i].Destroy();
 		}
+
+		workspace.MaterialInstancesSrc.Destroy();
+		workspace.MaterialInstances.Destroy();
+
+		workspace.ObjectDescriptions.Destroy();
+		workspace.ObjectDescriptionsSrc.Destroy();
 	}
 	workspaces.clear();
 
@@ -164,7 +173,7 @@ void Renderer::CreateDescriptors()
 
 	CreateWorkspaceDescriptors();
 	CreateTextureDescriptors();
-	CreateCubemapDescriptors();
+	CreateIBLDescriptors();
 	CreateShadowDescriptors();
 }
 
@@ -185,28 +194,23 @@ void Renderer::CreateWorkspaceDescriptors()
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
 
-		VkDescriptorBufferInfo World_info
-		{
-			.buffer = workspace.World.getBuffer(),
-			.offset = 0,
-			.range = workspace.World.getSize(),
-		};
-
 		// build world buffer descriptor
+		VkDescriptorBufferInfo World_info = workspace.World.GetDescriptorInfo();
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_RAYGEN_BIT_KHR)
 			.Build(workspace.set0_World, set0_WorldLayout);
 
-		// build transforms and lights storage buffers, no buffer allocation
+		// build storage buffers
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-			.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-			.AddBinding(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // dir lights
-			.AddBinding(2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // point lights
-			.AddBinding(3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // spot lights
+			.AddBinding(StorageBuffers::Transform, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT) // transforms
+			.AddBinding(StorageBuffers::DirLights, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // dir lights
+			.AddBinding(StorageBuffers::SpotLights, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // point lights
+			.AddBinding(StorageBuffers::PointLights, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // spot lights
+			.AddBinding(StorageBuffers::Materials, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // material instances
+			.AddBinding(StorageBuffers::Objects, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // object descriptions
 			.Build(workspace.set1_StorageBuffers, set1_StorageBuffersLayout);
 	}
-
 }
 
 void Renderer::CreateTextureDescriptors()
@@ -257,7 +261,7 @@ void Renderer::CreateTextureDescriptors()
 			, &variableDescriptorInfoAI);
 }
 
-void Renderer::CreateCubemapDescriptors()
+void Renderer::CreateIBLDescriptors()
 {
 	Scene* scene = SceneManager::Get()->getScene();
 	if (!scene->m_Skybox)
@@ -270,11 +274,11 @@ void Renderer::CreateCubemapDescriptors()
 
 	// first build lambertian LUT and specular BRDF info
 	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-		.BindImage(0, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.BindImage(1, &lambertianLUTInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.BindImage(2, &specularBRDFInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.BindImage(3, &prefilteredEnvMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.Build(set3_Cubemap, set3_CubemapLayout);
+		.BindImage(IBL::Skybox, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+		.BindImage(IBL::LambertianLUT, &lambertianLUTInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+		.BindImage(IBL::SpecularBRDF, &specularBRDFInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+		.BindImage(IBL::EnvMap, &prefilteredEnvMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+		.Build(set3_IBL, set3_IBLLayout);
 }
 
 // create set 4: shadow mapping with descriptor indexing
@@ -360,15 +364,6 @@ void Renderer::CreateShadowDescriptors()
 		0 /*VkDescriptorSetLayoutCreateFlags*/
 #endif
 		, &variableDescriptorInfoAI);
-}
-
-void Renderer::CreateMaterialDescriptors()
-{
-	std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
-		VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
-	};
-
-	[[maybe_unused]] const auto& materialInstances = Resources::Get()->FindAllOfType<Material>();
 }
 
 void Renderer::Rebuild()
@@ -465,6 +460,8 @@ void Renderer::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
 	PrepareSceneUniform(scene, commandBuffer);
 	PrepareTransforms(scene, commandBuffer);
 	PrepareLights(scene, commandBuffer);
+	PrepareMaterialInstances(commandBuffer);
+	PrepareObjectDescriptions(scene, commandBuffer);
 	PrepareIndirectDrawBuffer(scene);
 }
 
@@ -641,8 +638,151 @@ void Renderer::PrepareLights(const Scene* scene, const CommandBuffer& commandBuf
 	Buffer::CopyBuffer(commandBuffer, workspace.LightsSrc[2].getBuffer(), workspace.Lights[2].getBuffer(), spotSize);
 }
 
+void Renderer::PrepareObjectDescriptions(const Scene* scene, const CommandBuffer& commandBuffer)
+{
+	Workspace& workspace = workspaces[CURR_FRAME];
+
+	const auto& sceneObjectInstances = scene->getObjectInstances();
+
+	size_t needed_bytes = 0;
+	for (int i = 0; i < sceneObjectInstances.size(); ++i)
+		needed_bytes += sceneObjectInstances[i].size() * sizeof(ObjectDescription);
+
+	// resize as neccesary
+	if (workspace.ObjectDescriptionsSrc.getBuffer() == VK_NULL_HANDLE
+		|| workspace.ObjectDescriptionsSrc.getSize() < needed_bytes)
+	{
+		//round to next multiple of 4k to avoid re-allocating continuously if vertex count grows slowly:
+		size_t new_bytes = ((needed_bytes + 4096) / 4096) * 4096;
+
+		workspace.ObjectDescriptionsSrc.Destroy();
+		workspace.ObjectDescriptions.Destroy();
+
+		workspace.ObjectDescriptionsSrc = Buffer(
+			new_bytes,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			Buffer::Mapped
+		);
+		workspace.ObjectDescriptions = Buffer(
+			new_bytes,
+			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
+
+		//update the descriptor set:
+		VkDescriptorBufferInfo objBufferInfo = workspace.ObjectDescriptions.GetDescriptorInfo();
+		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+			.BindBuffer(StorageBuffers::Objects, &objBufferInfo, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.Write(workspace.set1_StorageBuffers);
+
+		NE_INFO("Reallocated object descriptions to {} bytes", new_bytes);
+	}
+
+	assert(workspace.ObjectDescriptionsSrc.getSize() == workspace.ObjectDescriptions.getSize());
+	assert(workspace.ObjectDescriptionsSrc.getSize() >= needed_bytes);
+
+	{ //copy ObjectDescriptions into Transforms_src:
+		ObjectDescription* start = reinterpret_cast<ObjectDescription*>(workspace.ObjectDescriptionsSrc.data());
+		ObjectDescription* out = start;
+
+		for (int i = 0; i < sceneObjectInstances.size(); ++i) 
+		{
+			for (auto& inst : sceneObjectInstances[i]) 
+			{
+				ObjectDescription description
+				{
+					.materialOffset = (uint32_t)inst.material->materialInstanceBufferOffset,
+					.materialID = inst.material->getID(),
+				};
+				*out = description;
+				++out;
+
+				//std::cout << inst.material->materialInstanceBufferOffset << " ";
+			}
+		}
+
+		size_t regionSize = reinterpret_cast<char*>(out) - reinterpret_cast<char*>(start);
+		Buffer::CopyBuffer(commandBuffer, workspace.ObjectDescriptionsSrc.getBuffer(), workspace.ObjectDescriptions.getBuffer(), regionSize);
+	}
+}
+
 void Renderer::PrepareMaterialInstances(const CommandBuffer& commandBuffer)
 {
+	Workspace& workspace = workspaces[CURR_FRAME];
+
+	size_t neededBytes = 0;
+	const auto& materialInstances = Resources::Get()->FindAllOfType<Material>();
+	for (const auto& resource : materialInstances)
+	{
+		std::shared_ptr<Material> mat = std::dynamic_pointer_cast<Material>(resource);
+
+		switch (mat->getWorkflow())
+		{
+		case Material::Workflow::Lambertian:
+			neededBytes += sizeof(LambertianMaterial::MaterialPush);
+			break;
+		case Material::Workflow::PBR:
+			neededBytes += sizeof(PBRMaterial::MaterialPush);
+			break;
+		default:
+			break;
+		}
+	}
+
+	// resize as neccesary
+	if (workspace.MaterialInstancesSrc.getBuffer() == VK_NULL_HANDLE
+		|| workspace.MaterialInstancesSrc.getSize() < neededBytes)
+	{
+		size_t new_bytes = ((neededBytes + 4096) / 4096) * 4096;
+
+		workspace.MaterialInstancesSrc.Destroy();
+		workspace.MaterialInstances.Destroy();
+
+		workspace.MaterialInstancesSrc = Buffer(
+			new_bytes,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			Buffer::Mapped
+		);
+		workspace.MaterialInstances = Buffer(
+			new_bytes,
+			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
+
+		//update the descriptor set:
+		VkDescriptorBufferInfo matInfo = workspace.MaterialInstances.GetDescriptorInfo();
+		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+			.BindBuffer(StorageBuffers::Materials, &matInfo, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.Write(workspace.set1_StorageBuffers);
+
+		NE_INFO("Reallocated material instances to {} bytes", new_bytes);
+	}
+
+	assert(workspace.MaterialInstancesSrc.getSize() == workspace.MaterialInstances.getSize());
+	assert(workspace.MaterialInstancesSrc.getSize() >= neededBytes);
+
+	void* start = workspace.MaterialInstancesSrc.data();
+	void* out = start;
+
+	for (const auto& resource : materialInstances)
+	{
+		std::shared_ptr<Material> mat = std::dynamic_pointer_cast<Material>(resource);
+		mat->materialInstanceBufferOffset = CALCULATE_OFFSET(start, out) / sizeof(float);
+		switch (mat->getWorkflow())
+		{
+		case Material::Workflow::Lambertian:
+			memcpy(out, mat->getPushPointer(), sizeof(LambertianMaterial::MaterialPush));
+			out = PTR_ADD(out, sizeof(LambertianMaterial::MaterialPush));
+			break;
+		case Material::Workflow::PBR:
+			memcpy(out, mat->getPushPointer(), sizeof(PBRMaterial::MaterialPush));
+			out = PTR_ADD(out, sizeof(PBRMaterial::MaterialPush));
+			break;
+		}
+	}
+	Buffer::CopyBuffer(commandBuffer, workspace.MaterialInstancesSrc.getBuffer(), workspace.MaterialInstances.getBuffer(), neededBytes);
 }
 
 void Renderer::CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t workflowIndex)

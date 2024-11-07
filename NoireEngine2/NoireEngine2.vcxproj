@@ -247,6 +247,7 @@
     <ClInclude Include="src\backend\pipeline\RaytracingPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\ShadowPipeline.hpp" />
     <ClInclude Include="src\backend\raytracing\RaytracingBuilderKHR.hpp" />
+    <ClInclude Include="src\renderer\materials\Materials.hpp" />
     <ClInclude Include="src\renderer\utils\EnvironmentBRDFBaker.hpp" />
     <ClInclude Include="src\renderer\utils\GGXSpecularEnvironmentBaker.hpp" />
     <ClInclude Include="src\renderer\utils\LambertianEnvironmentBaker.hpp" />
@@ -422,6 +423,7 @@
     <None Include="src\shaders\glsl\cubemap.glsl" />
     <None Include="src\shaders\glsl\hdr.glsl" />
     <None Include="src\shaders\glsl\lighting.glsl" />
+    <None Include="src\shaders\glsl\materials.glsl" />
     <None Include="src\shaders\glsl\parallax.glsl" />
     <None Include="src\shaders\glsl\pbr.glsl" />
     <None Include="src\shaders\glsl\random.glsl" />

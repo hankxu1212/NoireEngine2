@@ -59,19 +59,25 @@ public:
 
 	const std::vector<std::vector<IndirectBatch>>& getIndirectBatches() const { return m_IndirectBatches; }
 
+	struct ObjectDescription
+	{
+		uint32_t materialOffset; // where to look in the material buffer
+		uint32_t materialID; // interpret the buffer data as which material type?
+	};
+
 private:
 	void CreateDescriptors();
 	void CreateWorkspaceDescriptors();
 	void CreateTextureDescriptors();
-	void CreateCubemapDescriptors();
+	void CreateIBLDescriptors();
 	void CreateShadowDescriptors();
-	void CreateMaterialDescriptors();
 
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareSceneUniform(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareTransforms(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareLights(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareMaterialInstances(const CommandBuffer& commandBuffer);
+	void PrepareObjectDescriptions(const Scene* scene, const CommandBuffer& commandBuffer);
 
 	void CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t workflowIndex);
 
@@ -98,18 +104,29 @@ private:
 		Buffer MaterialInstancesSrc;
 		Buffer MaterialInstances;
 
+		// object descriptions
+		Buffer ObjectDescriptionsSrc;
+		Buffer ObjectDescriptions;
+
 		VkDescriptorSet set1_StorageBuffers = VK_NULL_HANDLE; //references Transforms and lights
 	};
 
 private:
-	friend class LambertianMaterialPipeline;
-	friend class MaterialPipeline;
-	friend class PBRMaterialPipeline;
-	friend class LinesPipeline;
-	friend class SkyboxPipeline;
-	friend class ShadowPipeline;
-	friend class RaytracingPipeline;
-	friend class ImGuiPipeline;
+	START_BINDING(StorageBuffers)
+		Transform = 0,
+		DirLights = 1,
+		PointLights = 2,
+		SpotLights = 3,
+		Materials = 4,
+		Objects = 5
+	END_BINDING();
+
+	START_BINDING(IBL)
+		Skybox = 0,
+		LambertianLUT = 1,
+		SpecularBRDF = 2,
+		EnvMap = 3,
+	END_BINDING();
 
 	std::vector<Workspace> workspaces;
 
@@ -120,8 +137,8 @@ private:
 	VkDescriptorSetLayout set2_TexturesLayout = VK_NULL_HANDLE;
 	VkDescriptorSet set2_Textures = VK_NULL_HANDLE;
 
-	VkDescriptorSetLayout set3_CubemapLayout = VK_NULL_HANDLE;
-	VkDescriptorSet set3_Cubemap = VK_NULL_HANDLE;
+	VkDescriptorSetLayout set3_IBLLayout = VK_NULL_HANDLE;
+	VkDescriptorSet set3_IBL = VK_NULL_HANDLE;
 
 	VkDescriptorSetLayout set4_ShadowMapLayout = VK_NULL_HANDLE;
 	VkDescriptorSet set4_ShadowMap = VK_NULL_HANDLE;
@@ -131,6 +148,16 @@ private:
 	std::unique_ptr<Renderpass>				m_Renderpass;
 
 	std::vector<std::vector<IndirectBatch>> m_IndirectBatches;
+
+private:
+	friend class LambertianMaterialPipeline;
+	friend class MaterialPipeline;
+	friend class PBRMaterialPipeline;
+	friend class LinesPipeline;
+	friend class SkyboxPipeline;
+	friend class ShadowPipeline;
+	friend class RaytracingPipeline;
+	friend class ImGuiPipeline;
 
 private: // material pipelines
 	std::vector<std::unique_ptr<MaterialPipeline>>	m_MaterialPipelines;

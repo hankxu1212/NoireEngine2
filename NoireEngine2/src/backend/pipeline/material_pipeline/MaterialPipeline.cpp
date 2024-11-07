@@ -30,7 +30,7 @@ void MaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer) const
 		workspace.set0_World,
 		workspace.set1_StorageBuffers,
 		Renderer::Instance->set2_Textures,
-		Renderer::Instance->set3_Cubemap,
+		Renderer::Instance->set3_IBL,
 		Renderer::Instance->set4_ShadowMap
 	};
 

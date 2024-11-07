@@ -22,7 +22,9 @@ const T& max(const T& a, const T& b)
 	return (b > a) ? b : a;
 }
 
+// pointer arithmetic
 #define PTR_ADD(ptr, offset) static_cast<void*>(static_cast<std::byte*>(ptr) + offset)
+#define CALCULATE_OFFSET(start, end) ((size_t)((char *)(end) - (char *)(start)))
 
 #define NE_ENTITY_TYPE "NEntity"
 #define NE_NULL_STR "none"

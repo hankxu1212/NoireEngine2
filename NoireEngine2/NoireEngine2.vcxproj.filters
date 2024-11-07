@@ -974,6 +974,9 @@
     <ClInclude Include="src\backend\raytracing\BLASBuilder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\materials\Materials.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />
@@ -1017,6 +1020,7 @@
     <None Include="src\shaders\raytracing\raytrace.rchit" />
     <None Include="src\shaders\raytracing\raytrace.rgen" />
     <None Include="src\shaders\raytracing\raytrace.rmiss" />
+    <None Include="src\shaders\glsl\materials.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

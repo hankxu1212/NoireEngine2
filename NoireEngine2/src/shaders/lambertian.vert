@@ -10,6 +10,7 @@ layout(location=1) out vec3 outNormal;
 layout(location=2) out vec2 outTexCoord;
 layout(location=3) out vec4 outTangent;
 layout(location=4) out vec3 outViewPos;
+layout(location=5) flat out uint instanceID;
 
 #include "glsl/transform_uniform.glsl"
 #include "glsl/world_uniform.glsl"
@@ -27,4 +28,6 @@ void main() {
 	outTangent = vec4(normalize(model * inTangent.xyz), inTangent.w);
 
 	outViewPos = (scene.view * vec4(inPosition, 1.0)).xyz;
+
+	instanceID = gl_InstanceIndex;
 }

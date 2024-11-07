@@ -23,7 +23,7 @@ public:
 
 	struct MaterialPush
 	{
-		glm::vec3 albedo;
+		glm::vec4 albedo;
 		float environmentLightIntensity;
 		int albedoTexId;
 		int normalTexId;
@@ -34,8 +34,7 @@ public:
 		float roughness;
 		float metallic;
 		float normalStrength;
-		int materialType;
-	};
+	}push;
 
 public:
 	PBRMaterial() = default;
@@ -59,6 +58,8 @@ public:
 	void Inspect() override;
 
 	Workflow getWorkflow() const override { return Workflow::PBR; }
+
+	void* getPushPointer() const override { return (void*)&push; };
 
 private:
 	PBRMaterial(const CreateInfo& createInfo);

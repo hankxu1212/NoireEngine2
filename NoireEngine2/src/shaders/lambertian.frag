@@ -1,12 +1,14 @@
 #version 450
 
 #extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : enable
 
 layout(location=0) in vec3 inPosition;
 layout(location=1) in vec3 inNormal;
 layout(location=2) in vec2 inTexCoord;
 layout(location=3) in vec4 inTangent;
 layout(location=4) in vec3 inViewPos;
+layout(location=5) flat in int instanceID;
 
 layout(location=0) out vec4 outColor;
 
@@ -20,18 +22,12 @@ layout (set = 4, binding = 0) uniform sampler2D shadowMaps[]; // shadow maps, in
 vec3 n;
 #include "glsl/lighting.glsl"
 
-layout( push_constant ) uniform constants
-{
-	vec3 albedo;
-	float environmentLightIntensity;
-	float normalStrength;
-	int albedoTexId;
-	int normalTexId;
-	int materialType;
-} material;
+#include "glsl/materials.glsl"
 
 void main() 
 {
+	LambertianMaterial material = LAMBERTIAN_MATERIAL_ReadFrombuffer(OBJECTS[instanceID].offset);
+
     // calculate TBN
     n = normalize(inNormal);
     vec3 tangent = inTangent.xyz;
@@ -52,7 +48,7 @@ void main()
 	vec3 ambientLighting = texture(lambertianIDL, n).rgb * material.environmentLightIntensity;
 
 	// material
-	vec3 texColor = material.albedo;
+	vec3 texColor = material.albedo.rgb;
 	if (material.albedoTexId >= 0)
 		texColor *= texture(textures[material.albedoTexId], inTexCoord).rgb;
 

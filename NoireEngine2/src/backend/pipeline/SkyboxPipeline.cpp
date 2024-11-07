@@ -107,7 +107,7 @@ void SkyboxPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 	{ //bind Camera descriptor set:
 		std::array< VkDescriptorSet, 2 > descriptor_sets{
 			workspace.set0_Camera,
-			p_ObjectPipeline->set3_Cubemap
+			p_ObjectPipeline->set3_IBL
 		};
 		vkCmdBindDescriptorSets(
 			commandBuffer, //command buffer
@@ -167,7 +167,7 @@ void SkyboxPipeline::CreatePipelineLayout()
 {
 	std::array< VkDescriptorSetLayout, 2 > layouts{
 		set0_CameraLayout,
-		p_ObjectPipeline->set3_CubemapLayout
+		p_ObjectPipeline->set3_IBLLayout
 	};
 
 	VkPipelineLayoutCreateInfo create_info{
