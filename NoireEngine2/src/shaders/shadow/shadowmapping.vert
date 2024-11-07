@@ -11,7 +11,17 @@ layout(set=0, binding=0, std140) readonly buffer Lightspaces {
 	mat4 LIGHTSPACES[];
 };
 
-#include "../glsl/transform_uniform.glsl"
+// transforms
+struct Transform 
+{
+	mat4 localToClip;
+	mat4 model;
+	mat4 modelNormal;
+};
+
+layout(set=1, binding=0, std140) readonly buffer Transforms {
+	Transform TRANSFORMS[];
+};
 
 void main()
 {

@@ -21,20 +21,20 @@ public:
 		CreateInfo() = default;
 	};
 
-	struct MaterialPush
+	struct MaterialUniform
 	{
-		glm::vec4 albedo;
-		float environmentLightIntensity;
-		int albedoTexId;
-		int normalTexId;
-		int displacementTexId;
-		float heightScale;
-		int roughnessTexId;
-		int metallicTexId;
-		float roughness;
-		float metallic;
-		float normalStrength;
-	}push;
+		glm::vec4 albedo = glm::vec4(1);
+		float environmentLightIntensity = 1;
+		int albedoTexId = -1;
+		int normalTexId = -1;
+		int displacementTexId = -1;
+		float heightScale = 0.1f;
+		int roughnessTexId = -1;
+		int metallicTexId = -1;
+		float roughness = 0.5f;
+		float metallic = 0;
+		float normalStrength = 1;
+	};
 
 public:
 	PBRMaterial() = default;
@@ -44,8 +44,6 @@ public:
 	static std::shared_ptr<Material> Create(const CreateInfo& createInfo);
 
 	void Load();
-
-	void Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout) override;
 
 	static Material* Deserialize(const Scene::TValueMap& obj);
 
@@ -59,19 +57,12 @@ public:
 
 	Workflow getWorkflow() const override { return Workflow::PBR; }
 
-	void* getPushPointer() const override { return (void*)&push; };
+	void* getPushPointer() const override { return (void*)&m_Uniform; };
 
 private:
 	PBRMaterial(const CreateInfo& createInfo);
 	static std::shared_ptr<Material> Create(const Node& node);
 
 	CreateInfo						m_CreateInfo;
-	int								m_AlbedoMapId = -1;
-	int								m_NormalMapId = -1;
-	int								m_DisplacementMapId = -1;
-	float							m_HeightScale = 0.1f;
-	int								m_RoughnessMapId = -1;
-	int								m_MetallicMapId = -1;
-	float							m_NormalStrength = 1;
-	float							m_EnvironmentLightInfluence = 1;
+	MaterialUniform					m_Uniform;
 };

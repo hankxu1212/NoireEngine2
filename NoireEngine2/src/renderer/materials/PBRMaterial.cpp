@@ -8,24 +8,6 @@
 #include "editor/ImGuiExtension.hpp"
 #include <limits>
 
-void PBRMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout)
-{
-	push.albedo = glm::vec4(m_CreateInfo.albedo, 0);
-	push.environmentLightIntensity = m_EnvironmentLightInfluence;
-	push.albedoTexId = m_AlbedoMapId;
-	push.normalTexId = m_NormalMapId;
-	push.displacementTexId = m_DisplacementMapId;
-	push.heightScale = m_HeightScale;
-	push.roughnessTexId = m_RoughnessMapId;
-	push.metallicTexId = m_MetallicMapId;
-	push.roughness = m_CreateInfo.roughness;
-	push.metallic = m_CreateInfo.metallic;
-	push.normalStrength = m_NormalStrength;
-
-	vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-		sizeof(PBRMaterial::MaterialPush), &push);
-}
-
 Material* PBRMaterial::Deserialize(const Scene::TValueMap& obj)
 {
 	try {
@@ -139,7 +121,7 @@ void PBRMaterial::Load()
 	if (m_CreateInfo.texturePath != NE_NULL_STR)
 	{
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.texturePath);
-		m_AlbedoMapId = tex->getID();
+		m_Uniform.albedoTexId = tex->getID();
 	}
 
 	// normal
@@ -147,7 +129,7 @@ void PBRMaterial::Load()
 	{
 		// rgba, create mips
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.normalPath, VK_FORMAT_R8G8B8A8_UNORM);
-		m_NormalMapId = tex->getID();
+		m_Uniform.normalTexId = tex->getID();
 	}
 
 	// TODO: combine normal and displacement map
@@ -155,23 +137,26 @@ void PBRMaterial::Load()
 	{
 		// srgb, dont create mipmaps
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.displacementPath, VK_FORMAT_R8G8B8A8_SRGB, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, true, false, true);
-		m_DisplacementMapId = tex->getID();
+		m_Uniform.displacementTexId = tex->getID();
 	}
 
 	// metallic
 	if (m_CreateInfo.metallicPath != NE_NULL_STR)
 	{
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.metallicPath);
-		m_MetallicMapId = tex->getID();
+		m_Uniform.metallicTexId = tex->getID();
 	}
 
 	// metallic
 	if (m_CreateInfo.roughnessPath != NE_NULL_STR)
 	{
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.roughnessPath);
-		m_RoughnessMapId = tex->getID();
+		m_Uniform.roughnessTexId = tex->getID();
 	}
 
+	m_Uniform.albedo = glm::vec4(m_CreateInfo.albedo, 0);
+	m_Uniform.roughness = m_CreateInfo.roughness;
+	m_Uniform.metallic = m_CreateInfo.metallic;
 }
 
 void PBRMaterial::Inspect()
@@ -197,26 +182,26 @@ void PBRMaterial::Inspect()
 	ImGui::PopID();
 
 	static const char* albedoIDs[]{ "###ALBEDOPATH",  "###ALBEDOID" };
-	ImGuiExt::InspectTexture(albedoIDs, "Albedo Texture", m_CreateInfo.texturePath.c_str(), &m_AlbedoMapId);
+	ImGuiExt::InspectTexture(albedoIDs, "Albedo Texture", m_CreateInfo.texturePath.c_str(), &m_Uniform.albedoTexId);
 
 	static const char* normalIDs[]{ "###NORMALPATH",  "###NORMALID", "###NORMALSTRENGTH"};
-	ImGuiExt::InspectTexture(normalIDs, "Normal Texture", m_CreateInfo.normalPath.c_str(), &m_NormalMapId, &m_NormalStrength);
+	ImGuiExt::InspectTexture(normalIDs, "Normal Texture", m_CreateInfo.normalPath.c_str(), &m_Uniform.normalTexId, &m_Uniform.normalStrength);
 
 	static const char* displaceIDs[]{ "###DISPPATH",  "###DISPID", "###DISPHEIGHT" };
-	ImGuiExt::InspectTexture(displaceIDs, "Displacement Texture", m_CreateInfo.displacementPath.c_str(), &m_DisplacementMapId, &m_HeightScale);
+	ImGuiExt::InspectTexture(displaceIDs, "Displacement Texture", m_CreateInfo.displacementPath.c_str(), &m_Uniform.displacementTexId, &m_Uniform.heightScale);
 
 	static const char* roughIDs[]{ "###ROUGHPATH",  "###ROUGHID", "###ROUGHNESS" };
-	ImGuiExt::InspectTexture(roughIDs, "Roughness Texture", m_CreateInfo.roughnessPath.c_str(), &m_RoughnessMapId, &m_CreateInfo.roughness, 1);
+	ImGuiExt::InspectTexture(roughIDs, "Roughness Texture", m_CreateInfo.roughnessPath.c_str(), &m_Uniform.roughnessTexId, &m_Uniform.roughness, 1);
 
 	static const char* metallicIDs[]{ "###METALLICPATH",  "###METALLICID", "###METALLIC" };
-	ImGuiExt::InspectTexture(metallicIDs, "Metallic Texture", m_CreateInfo.metallicPath.c_str(), &m_MetallicMapId, &m_CreateInfo.metallic, 1);
+	ImGuiExt::InspectTexture(metallicIDs, "Metallic Texture", m_CreateInfo.metallicPath.c_str(), &m_Uniform.metallicTexId, &m_Uniform.metallic, 1);
 
 	ImGui::SeparatorText("Environmental Lighting");
 	ImGui::PushID("###EnvironmentLightingIntensity");
 	ImGui::Columns(2);
 	ImGui::Text("Environment Lighting Influence");
 	ImGui::NextColumn();
-	ImGui::DragFloat("####ETI", &m_EnvironmentLightInfluence, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::DragFloat("####ETI", &m_Uniform.environmentLightIntensity, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 	ImGui::Columns(1);
 	ImGui::PopID();
 }
@@ -225,13 +210,13 @@ const Node& operator>>(const Node& node, PBRMaterial& material)
 {
 	node["createInfo"].Get(material.m_CreateInfo);
 	node["workflow"].Get(material.getWorkflow());
-	node["albedoTexId"].Get(material.m_AlbedoMapId);
-	node["normalTexId"].Get(material.m_NormalMapId);
-	node["normalStrength"].Get(material.m_NormalStrength);
-	node["displacementTexId"].Get(material.m_DisplacementMapId);
-	node["roughnessTexId"].Get(material.m_RoughnessMapId);
-	node["metallicTexId"].Get(material.m_MetallicMapId);
-	node["environmentInfluence"].Get(material.m_EnvironmentLightInfluence);
+	node["albedoTexId"].Get(material.m_Uniform.albedoTexId);
+	node["normalTexId"].Get(material.m_Uniform.normalTexId);
+	node["normalStrength"].Get(material.m_Uniform.normalStrength);
+	node["displacementTexId"].Get(material.m_Uniform.displacementTexId);
+	node["roughnessTexId"].Get(material.m_Uniform.roughnessTexId);
+	node["metallicTexId"].Get(material.m_Uniform.metallicTexId);
+	node["environmentInfluence"].Get(material.m_Uniform.environmentLightIntensity);
 	return node;
 }
 
@@ -239,13 +224,13 @@ Node& operator<<(Node& node, const PBRMaterial& material)
 {
 	node["createInfo"].Set(material.m_CreateInfo);
 	node["workflow"].Set(material.getWorkflow());
-	node["albedoTexId"].Set(material.m_AlbedoMapId);
-	node["normalTexId"].Set(material.m_NormalMapId);
-	node["normalStrength"].Set(material.m_NormalStrength);
-	node["displacementTexId"].Set(material.m_DisplacementMapId);
-	node["roughnessTexId"].Set(material.m_RoughnessMapId);
-	node["metallicTexId"].Set(material.m_MetallicMapId);
-	node["environmentInfluence"].Set(material.m_EnvironmentLightInfluence);
+	node["albedoTexId"].Set(material.m_Uniform.albedoTexId);
+	node["normalTexId"].Set(material.m_Uniform.normalTexId);
+	node["normalStrength"].Set(material.m_Uniform.normalStrength);
+	node["displacementTexId"].Set(material.m_Uniform.displacementTexId);
+	node["roughnessTexId"].Set(material.m_Uniform.roughnessTexId);
+	node["metallicTexId"].Set(material.m_Uniform.metallicTexId);
+	node["environmentInfluence"].Set(material.m_Uniform.environmentLightIntensity);
 	return node;
 }
 

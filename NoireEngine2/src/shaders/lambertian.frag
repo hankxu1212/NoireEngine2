@@ -12,11 +12,8 @@ layout(location=5) flat in int instanceID;
 
 layout(location=0) out vec4 outColor;
 
-layout (set = 2, binding = 0) uniform sampler2D textures[]; // global texture array, indexed
-layout (set = 3, binding = 1) uniform samplerCube lambertianIDL;
-layout (set = 4, binding = 0) uniform sampler2D shadowMaps[]; // shadow maps, indexed
+#include "host.glsl"
 
-#include "glsl/world_uniform.glsl"
 #include "glsl/utils.glsl"
 
 vec3 n;
@@ -45,7 +42,7 @@ void main()
 	}
 
 	// sample diffuse irradiance
-	vec3 ambientLighting = texture(lambertianIDL, n).rgb * material.environmentLightIntensity;
+	vec3 ambientLighting = texture(diffuseIrradiance, n).rgb * material.environmentLightIntensity;
 
 	// material
 	vec3 texColor = material.albedo.rgb;

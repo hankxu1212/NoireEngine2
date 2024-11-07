@@ -1,27 +1,3 @@
-///////////////////////////////////////////////
-// Material Buffers: aliased for float and ints
-///////////////////////////////////////////////
-layout(set=1, binding=4, scalar) readonly buffer MaterialBufferInt {
-	int MATERIAL_BUFFER_INT[];
-};
-
-layout(set=1, binding=4, scalar) readonly buffer MaterialBufferFloat {
-	float MATERIAL_BUFFER_F[];
-};
-
-///////////////////////////////////////////////
-// Object buffers: passing in object information
-///////////////////////////////////////////////
-struct ObjectDesc
-{
-	uint offset;
-	uint id;
-};
-
-layout(set=1, binding=5, std430) readonly buffer Objects {
-	ObjectDesc OBJECTS[];
-};
-
 struct LambertianMaterial
 {
 	vec4 albedo;

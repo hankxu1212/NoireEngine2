@@ -14,33 +14,22 @@ layout(location=5) flat in uint instanceID;
 
 layout(location=0) out vec4 outColor;
 
-layout (set = 2, binding = 0) uniform sampler2D textures[];
+#include "host.glsl"
 
-// IDL
-#define GGX_MIP_LEVELS 6
-#define MAX_REFLECTION_LOD 6.0;
-layout (set = 3, binding = 0) uniform samplerCube skybox;
-layout (set = 3, binding = 1) uniform samplerCube diffuseIrradiance;
-layout (set = 3, binding = 2) uniform sampler2D specularBRDF;
-layout (set = 3, binding = 3) uniform samplerCube prefilterEnvMap;
-
-// shadowmapping
-layout (set = 4, binding = 0) uniform sampler2D shadowMaps[]; // shadow maps, indexed
-
-#include "glsl/world_uniform.glsl"
 #include "glsl/utils.glsl"
 
 // Constant normal incidence Fresnel factor for all dielectrics.
+#define MAX_REFLECTION_LOD 6
+#define GGX_MIP_LEVELS 6
 const vec3 Fdielectric = vec3(0.04);
 #include "glsl/pbr.glsl"
 
 // global variables so no need to pass ton of variables
 vec3 n, F0, V, albedo;
 float roughness, metalness, cosLo; 
-#include "glsl/lighting.glsl"
-
 vec3 CalcPBRDirectLighting(vec3 radiance, vec3 Li);
 vec3 DirectLightingPBR();
+#include "glsl/lighting.glsl"
 
 #include "glsl/materials.glsl"
 

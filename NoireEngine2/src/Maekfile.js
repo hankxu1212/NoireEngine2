@@ -35,6 +35,14 @@ const core_objs = [
 	maek.CPP('core/input/NativeInput.cpp')
 ];
 
+
+const material_shaders = [
+	maek.GLSLC('shaders/lambertian.vert'),
+	maek.GLSLC('shaders/lambertian.frag'),
+	maek.GLSLC('shaders/pbr.vert'),
+	maek.GLSLC('shaders/pbr.frag'),
+]
+
 const renderer_objs = [
 	maek.CPP('renderer/vertices/Vertex.cpp'),
 	maek.CPP('renderer/vertices/PosColVertex.cpp'),
@@ -57,7 +65,7 @@ const renderer_objs = [
 	maek.CPP('renderer/animation/Animator.cpp'),
 	maek.CPP('renderer/animation/Keyframe.cpp'),
 	maek.CPP('renderer/lighting/Light.cpp'),
-	maek.CPP('renderer/Renderer.cpp'),
+	maek.CPP('renderer/Renderer.cpp', undefined, { depends: [...material_shaders] } ),
 ]
 
 const component_objs = [
@@ -107,7 +115,6 @@ const vulkan_objs = [
 	maek.CPP('backend/descriptor/DescriptorAllocator.cpp'),
 	maek.CPP('backend/descriptor/DescriptorLayoutCache.cpp'),
 	maek.CPP('backend/descriptor/DescriptorBuilder.cpp'),
-	maek.CPP('backend/pipeline/material_pipeline/MaterialPipeline.cpp'),
 	maek.CPP('backend/pipeline/VulkanGraphicsPipelineBuilder.cpp'),
 ]
 
@@ -132,10 +139,8 @@ function use_vert_frag(name, pipeline) {
 	vulkan_objs.push(maek.CPP(pipeline, undefined, { depends: [...shaders] }));
 }
 
-use_vert_frag('shaders/lambertian', 'backend/pipeline/material_pipeline/LambertianMaterialPipeline.cpp');
 use_vert_frag('shaders/lines', 'backend/pipeline/LinesPipeline.cpp');
 use_vert_frag('shaders/skybox', 'backend/pipeline/SkyboxPipeline.cpp');
-use_vert_frag('shaders/pbr', 'backend/pipeline/material_pipeline/PBRMaterialPipeline.cpp');
 
 // shadow
 const shadowmapping_shaders = [

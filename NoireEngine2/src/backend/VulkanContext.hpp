@@ -29,7 +29,7 @@
 #include "renderer/Renderer.hpp"
 
 #include "backend/descriptor/DescriptorLayoutCache.hpp"
-
+#include "core/resources/Resources.hpp"
 
 /**
  * Manages Instance, Physical/Logical devices, Swapchains (to a certain extent) and surfaces.

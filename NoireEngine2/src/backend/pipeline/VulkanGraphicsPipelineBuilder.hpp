@@ -2,7 +2,8 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
-#include "backend/VulkanContext.hpp"
+#include <string>
+#include <cstdint>
 
 struct VulkanGraphicsPipelineBuilder
 {
@@ -16,7 +17,7 @@ struct VulkanGraphicsPipelineBuilder
     VulkanGraphicsPipelineBuilder& SetDepthStencil(VkBool32 depthTest=VK_TRUE, VkBool32 depthWrite=VK_TRUE, VkBool32 depthBounds=VK_FALSE, VkBool32 stencilTest=VK_FALSE, VkCompareOp op=VK_COMPARE_OP_LESS);
     VulkanGraphicsPipelineBuilder& SetColorBlending(uint32_t attachmentCount, const VkPipelineColorBlendAttachmentState* attachments);
     
-    void Build(const std::string& vert, const std::string& frag, VkPipeline* pipeline, VkPipelineLayout layout, VkRenderPass renderpass, uint32_t subpass = 0);
+    VulkanGraphicsPipelineBuilder& Build(const std::string& vert, const std::string& frag, VkPipeline* pipeline, VkPipelineLayout layout, VkRenderPass renderpass, uint32_t subpass = 0);
 
     // Add members for pipeline creation information
     VkPipelineDynamicStateCreateInfo dynamicState{};

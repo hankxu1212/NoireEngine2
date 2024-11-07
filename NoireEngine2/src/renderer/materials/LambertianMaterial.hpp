@@ -17,14 +17,14 @@ public:
 		CreateInfo() = default;
 	};
 
-	struct MaterialPush
+	struct MaterialUniform
 	{
 		glm::vec4 albedo;
-		float environmentLightIntensity;
-		float normalStrength;
-		int albedoTexId;
-		int normalTexId;
-	} push;
+		float environmentLightIntensity = 1;
+		float normalStrength = 1;
+		int albedoTexId = -1;
+		int normalTexId = -1;
+	};
 
 public:
 	LambertianMaterial() = default;
@@ -34,8 +34,6 @@ public:
 	static std::shared_ptr<Material> Create(const CreateInfo& createInfo);
 
 	void Load();
-
-	void Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout) override;
 
 	static Material* Deserialize(const Scene::TValueMap& obj);
 
@@ -49,15 +47,12 @@ public:
 
 	Workflow getWorkflow() const override { return Workflow::Lambertian; }
 
-	void* getPushPointer() const override { return (void*)&push; };
+	void* getPushPointer() const override { return (void*)&m_Uniform; };
 
 private:
 	LambertianMaterial(const CreateInfo& createInfo);
 	static std::shared_ptr<Material> Create(const Node& node);
 
-	CreateInfo						m_CreateInfo;
-	int								m_AlbedoMapId = -1; // index into global texture array
-	int								m_NormalMapId = -1; // index into global texture array
-	float							m_NormalStrength = 1;
-	float							m_EnvironmentLightInfluence = 0.1f;
+	MaterialUniform m_Uniform;
+	CreateInfo m_CreateInfo;
 };

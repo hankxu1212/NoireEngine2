@@ -6,20 +6,7 @@
 #include "core/Timer.hpp"
 
 #include "editor/ImGuiExtension.hpp"
-
 #include <limits>
-
-void LambertianMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout)
-{
-	push.albedo = glm::vec4(m_CreateInfo.albedo, 0);
-	push.environmentLightIntensity = m_EnvironmentLightInfluence;
-	push.normalStrength = m_NormalStrength;
-	push.albedoTexId = m_AlbedoMapId;
-	push.normalTexId = m_NormalMapId;
-
-	vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-		sizeof(LambertianMaterial::MaterialPush), &push);
-}
 
 Material* LambertianMaterial::Deserialize(const Scene::TValueMap& obj)
 {
@@ -109,13 +96,15 @@ void LambertianMaterial::Load()
 	if (m_CreateInfo.texturePath != NE_NULL_STR)
 	{
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.texturePath);
-		m_AlbedoMapId = tex->getID();
+		m_Uniform.albedoTexId = tex->getID();
 	}
 	if (m_CreateInfo.normalPath != NE_NULL_STR)
 	{
 		auto tex = Image2D::Create(rootPath.parent_path() / m_CreateInfo.normalPath, VK_FORMAT_R8G8B8A8_UNORM, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, true, false, true);
-		m_NormalMapId = tex->getID();
+		m_Uniform.normalTexId = tex->getID();
 	}
+
+	m_Uniform.albedo = glm::vec4(m_CreateInfo.albedo, 0);
 }
 
 void LambertianMaterial::Inspect()
@@ -137,20 +126,20 @@ void LambertianMaterial::Inspect()
 	ImGui::PopID();
 
 	ImGui::PushID("###Albedo");
-	ImGui::ColorEdit3("Albedo", (float*)&m_CreateInfo.albedo);
+	ImGui::ColorEdit3("Albedo", (float*)&m_Uniform.albedo);
 	ImGui::PopID();
 
 	static const char* albedoIDs[]{ "###ALBEDOPATH",  "###ALBEDOID" };
-	ImGuiExt::InspectTexture(albedoIDs, "Albedo Texture", m_CreateInfo.texturePath.c_str(), &m_AlbedoMapId);
+	ImGuiExt::InspectTexture(albedoIDs, "Albedo Texture", m_CreateInfo.texturePath.c_str(), &m_Uniform.albedoTexId);
 
 	static const char* normalIDs[]{ "###NORMALPATH",  "###NORMALID", "###NORMALSTRENGTH" };
-	ImGuiExt::InspectTexture(normalIDs, "Normal Texture", m_CreateInfo.normalPath.c_str(), &m_NormalMapId, &m_NormalStrength);
+	ImGuiExt::InspectTexture(normalIDs, "Normal Texture", m_CreateInfo.normalPath.c_str(), &m_Uniform.normalTexId, &m_Uniform.normalStrength);
 
 	ImGui::PushID("###EnvironmentLightingIntensity");
 	ImGui::Columns(2);
 	ImGui::Text("Environment Lighting Influence");
 	ImGui::NextColumn();
-	ImGui::DragFloat("####ETI", &m_EnvironmentLightInfluence, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::DragFloat("####ETI", &m_Uniform.environmentLightIntensity, 0.01f, 0.0f, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 	ImGui::Columns(1);
 	ImGui::PopID();
 }
@@ -158,10 +147,10 @@ void LambertianMaterial::Inspect()
 const Node& operator>>(const Node& node, LambertianMaterial& material)
 {
 	node["createInfo"].Get(material.m_CreateInfo);
-	node["albedoTexId"].Get(material.m_AlbedoMapId);
-	node["normalTexId"].Get(material.m_NormalMapId);
-	node["normalStrength"].Get(material.m_NormalStrength);
-	node["environmentInfluence"].Get(material.m_EnvironmentLightInfluence);
+	node["albedoTexId"].Get(material.m_Uniform.albedoTexId);
+	node["normalTexId"].Get(material.m_Uniform.normalTexId);
+	node["normalStrength"].Get(material.m_Uniform.normalStrength);
+	node["environmentInfluence"].Get(material.m_Uniform.environmentLightIntensity);
 	node["workflow"].Get(material.getWorkflow());
 	return node;
 }
@@ -169,10 +158,10 @@ const Node& operator>>(const Node& node, LambertianMaterial& material)
 Node& operator<<(Node& node, const LambertianMaterial& material)
 {
 	node["createInfo"].Set(material.m_CreateInfo);
-	node["albedoTexId"].Set(material.m_AlbedoMapId);
-	node["normalTexId"].Set(material.m_NormalMapId);
-	node["normalStrength"].Set(material.m_NormalStrength);
-	node["environmentInfluence"].Set(material.m_EnvironmentLightInfluence);
+	node["albedoTexId"].Set(material.m_Uniform.albedoTexId);
+	node["normalTexId"].Set(material.m_Uniform.normalTexId);
+	node["normalStrength"].Set(material.m_Uniform.normalStrength);
+	node["environmentInfluence"].Set(material.m_Uniform.environmentLightIntensity);
 	node["workflow"].Set(material.getWorkflow());
 	return node;
 }

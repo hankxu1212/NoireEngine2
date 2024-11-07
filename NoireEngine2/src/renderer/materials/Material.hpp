@@ -5,10 +5,7 @@
 #include <vulkan/vulkan.h>
 #include "backend/commands/CommandBuffer.hpp"
 #include "renderer/scene/Scene.hpp"
-
-class MaterialPipeline;
-
-#define NUM_WORKFLOWS 2
+#include "core/Core.hpp"
 
 class Material : public Resource
 {
@@ -21,8 +18,6 @@ public:
 
 public:
 	virtual std::type_index getTypeIndex() const { return typeid(Material); }
-
-	virtual void Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout) {}
 
 	virtual void Inspect() {}
 	virtual void Debug() { Inspect(); }

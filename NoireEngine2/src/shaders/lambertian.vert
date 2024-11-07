@@ -1,5 +1,7 @@
 #version 450
 
+#extension GL_EXT_scalar_block_layout : enable
+
 layout(location=0) in vec3 inPosition;
 layout(location=1) in vec3 inNormal;
 layout(location=2) in vec4 inTangent;
@@ -12,8 +14,7 @@ layout(location=3) out vec4 outTangent;
 layout(location=4) out vec3 outViewPos;
 layout(location=5) flat out uint instanceID;
 
-#include "glsl/transform_uniform.glsl"
-#include "glsl/world_uniform.glsl"
+#include "host.glsl"
 
 void main() {
 	gl_Position = TRANSFORMS[gl_InstanceIndex].localToClip * vec4(inPosition, 1.0);

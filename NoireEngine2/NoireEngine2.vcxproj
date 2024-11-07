@@ -97,7 +97,6 @@
     <ClCompile Include="src\renderer\utils\EnvironmentBRDFBaker.cpp" />
     <ClCompile Include="src\renderer\utils\GGXSpecularEnvironmentBaker.cpp" />
     <ClCompile Include="src\renderer\utils\LambertianEnvironmentBaker.cpp" />
-    <ClCompile Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.cpp" />
     <ClCompile Include="src\core\layers\LayerStack.cpp" />
     <ClCompile Include="src\renderer\utils\IBLUtilsApplication.cpp" />
     <ClCompile Include="src\backend\pipeline\SkyboxPipeline.cpp" />
@@ -105,8 +104,6 @@
     <ClCompile Include="src\backend\renderpass\Renderpass.cpp" />
     <ClCompile Include="src\backend\pipeline\LinesPipeline.cpp" />
     <ClCompile Include="src\math\color\Color.cpp" />
-    <ClCompile Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.cpp" />
-    <ClCompile Include="src\backend\pipeline\material_pipeline\MaterialPipeline.cpp" />
     <ClCompile Include="src\renderer\materials\LambertianMaterial.cpp" />
     <ClCompile Include="src\renderer\materials\PBRMaterial.cpp" />
     <ClCompile Include="src\backend\descriptor\DescriptorAllocator.cpp" />
@@ -251,18 +248,14 @@
     <ClInclude Include="src\renderer\utils\EnvironmentBRDFBaker.hpp" />
     <ClInclude Include="src\renderer\utils\GGXSpecularEnvironmentBaker.hpp" />
     <ClInclude Include="src\renderer\utils\LambertianEnvironmentBaker.hpp" />
-    <ClInclude Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.hpp" />
     <ClInclude Include="src\core\layers\Layer.hpp" />
     <ClInclude Include="src\core\layers\LayerStack.hpp" />
     <ClInclude Include="src\renderer\utils\IBLUtilsApplication.hpp" />
-    <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipelines.hpp" />
     <ClInclude Include="src\backend\pipeline\SkyboxPipeline.hpp" />
     <ClInclude Include="src\backend\images\ImageCube.hpp" />
     <ClInclude Include="src\backend\renderpass\Renderpass.hpp" />
     <ClInclude Include="src\backend\pipeline\LinesPipeline.hpp" />
     <ClInclude Include="src\renderer\gizmos\GizmosInstance.hpp" />
-    <ClInclude Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.hpp" />
-    <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipeline.hpp" />
     <ClInclude Include="src\renderer\materials\LambertianMaterial.hpp" />
     <ClInclude Include="src\renderer\materials\PBRMaterial.hpp" />
     <ClInclude Include="src\backend\descriptor\DescriptorBuilder.hpp" />
@@ -422,6 +415,7 @@
     <None Include="src\shaders\compute\ggx\ggx_prefilter_env.comp" />
     <None Include="src\shaders\glsl\cubemap.glsl" />
     <None Include="src\shaders\glsl\hdr.glsl" />
+    <None Include="src\shaders\host.glsl" />
     <None Include="src\shaders\glsl\lighting.glsl" />
     <None Include="src\shaders\glsl\materials.glsl" />
     <None Include="src\shaders\glsl\parallax.glsl" />
@@ -429,7 +423,6 @@
     <None Include="src\shaders\glsl\random.glsl" />
     <None Include="src\shaders\glsl\sampling.glsl" />
     <None Include="src\shaders\glsl\shadows.glsl" />
-    <None Include="src\shaders\glsl\transform_uniform.glsl" />
     <None Include="src\shaders\glsl\utils.glsl" />
     <None Include="src\shaders\lambertian.frag" />
     <None Include="src\shaders\lambertian.vert" />
@@ -443,7 +436,6 @@
     <None Include="src\shaders\shadow\shadowmapping.vert" />
     <None Include="src\shaders\skybox.frag" />
     <None Include="src\shaders\skybox.vert" />
-    <None Include="src\shaders\glsl\world_uniform.glsl" />
     <None Include="src\shaders\lines.frag" />
     <None Include="src\shaders\lines.vert" />
     <None Include="tutorial\maek-cache.json" />

@@ -21,7 +21,7 @@
 #include "renderer/scene/Scene.hpp"
 #include "renderer/scene/SceneManager.hpp"
 
-#include "backend/pipeline/material_pipeline/MaterialPipelines.hpp"
+#include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/matrix_transform.hpp> //translate, rotate, scale, perspective 
@@ -82,7 +82,18 @@ Renderer::~Renderer()
 
 	m_DescriptorAllocator.Cleanup(); // destroy pool and sets
 	
-	m_MaterialPipelines.clear();
+	if (m_MaterialPipelineLayout != VK_NULL_HANDLE) {
+		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_MaterialPipelineLayout, nullptr);
+		m_MaterialPipelineLayout = VK_NULL_HANDLE;
+	}
+
+	for (auto& pipeline : m_MaterialPipelines) 
+	{
+		if (pipeline != VK_NULL_HANDLE) {
+			vkDestroyPipeline(VulkanContext::GetDevice(), pipeline, nullptr);
+			pipeline = VK_NULL_HANDLE;
+		}
+	}
 }
 
 void Renderer::CreateRenderPass()
@@ -165,6 +176,50 @@ void Renderer::CreateRenderPass()
 	);
 
 	s_UIPipeline->CreateRenderPass();
+}
+
+void Renderer::CreateMaterialPipelineLayout()
+{
+	std::array< VkDescriptorSetLayout, 5 > layouts{
+		set0_WorldLayout,
+		set1_StorageBuffersLayout,
+		set2_TexturesLayout,
+		set3_IBLLayout,
+		set4_ShadowMapLayout,
+	};
+
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+		.setLayoutCount = uint32_t(layouts.size()),
+		.pSetLayouts = layouts.data(),
+		.pushConstantRangeCount = 0,
+		.pPushConstantRanges = nullptr,
+	};
+
+	VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_MaterialPipelineLayout));
+}
+
+void Renderer::CreateMaterialPipelines()
+{
+	std::vector< VkDynamicState > dynamic_states{
+		VK_DYNAMIC_STATE_VIEWPORT,
+		VK_DYNAMIC_STATE_SCISSOR,
+		VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
+	};
+
+	std::array< VkPipelineColorBlendAttachmentState, 1 > attachment_states{
+		VkPipelineColorBlendAttachmentState{
+			.blendEnable = VK_FALSE,
+			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+		},
+	};
+
+	VulkanGraphicsPipelineBuilder::Start()
+		.SetDynamicStates(dynamic_states)
+		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
+		.Build("../spv/shaders/lambertian.vert.spv", "../spv/shaders/lambertian.frag.spv", &m_MaterialPipelines[0], m_MaterialPipelineLayout, m_Renderpass->renderpass)
+		.Build("../spv/shaders/pbr.vert.spv", "../spv/shaders/pbr.frag.spv", &m_MaterialPipelines[1], m_MaterialPipelineLayout, m_Renderpass->renderpass);
 }
 
 void Renderer::CreateDescriptors()
@@ -374,11 +429,6 @@ void Renderer::Rebuild()
 
 void Renderer::Create()
 {
-	m_MaterialPipelines.resize(NUM_WORKFLOWS);
-	for (int i = 0; i < NUM_WORKFLOWS; i++) {
-		m_MaterialPipelines[i] = MaterialPipeline::Create(Material::Workflow(i));
-	}
-
 	s_RaytracingPipeline = std::make_unique<RaytracingPipeline>(this);
 
 	s_LinesPipeline = std::make_unique<LinesPipeline>(this);
@@ -390,15 +440,13 @@ void Renderer::Create()
 
 	// this relies on shadow pipeline's depth attachment
 	CreateDescriptors();
+	CreateMaterialPipelineLayout();
+	CreateMaterialPipelines();
 
 	// the following pipelines rely on Renderer's descriptor sets
 	s_ShadowPipeline->CreatePipeline();
 
 	s_RaytracingPipeline->CreatePipeline();
-
-	for (int i = 0; i < NUM_WORKFLOWS; i++) {
-		m_MaterialPipelines[i]->Create();
-	}
 
 	s_LinesPipeline->CreatePipeline();
 	s_SkyboxPipeline->CreatePipeline();
@@ -697,8 +745,6 @@ void Renderer::PrepareObjectDescriptions(const Scene* scene, const CommandBuffer
 				};
 				*out = description;
 				++out;
-
-				//std::cout << inst.material->materialInstanceBufferOffset << " ";
 			}
 		}
 
@@ -720,10 +766,10 @@ void Renderer::PrepareMaterialInstances(const CommandBuffer& commandBuffer)
 		switch (mat->getWorkflow())
 		{
 		case Material::Workflow::Lambertian:
-			neededBytes += sizeof(LambertianMaterial::MaterialPush);
+			neededBytes += sizeof(LambertianMaterial::MaterialUniform);
 			break;
 		case Material::Workflow::PBR:
-			neededBytes += sizeof(PBRMaterial::MaterialPush);
+			neededBytes += sizeof(PBRMaterial::MaterialUniform);
 			break;
 		default:
 			break;
@@ -773,12 +819,12 @@ void Renderer::PrepareMaterialInstances(const CommandBuffer& commandBuffer)
 		switch (mat->getWorkflow())
 		{
 		case Material::Workflow::Lambertian:
-			memcpy(out, mat->getPushPointer(), sizeof(LambertianMaterial::MaterialPush));
-			out = PTR_ADD(out, sizeof(LambertianMaterial::MaterialPush));
+			memcpy(out, mat->getPushPointer(), sizeof(LambertianMaterial::MaterialUniform));
+			out = PTR_ADD(out, sizeof(LambertianMaterial::MaterialUniform));
 			break;
 		case Material::Workflow::PBR:
-			memcpy(out, mat->getPushPointer(), sizeof(PBRMaterial::MaterialPush));
-			out = PTR_ADD(out, sizeof(PBRMaterial::MaterialPush));
+			memcpy(out, mat->getPushPointer(), sizeof(PBRMaterial::MaterialUniform));
+			out = PTR_ADD(out, sizeof(PBRMaterial::MaterialUniform));
 			break;
 		}
 	}
@@ -847,11 +893,30 @@ void Renderer::PrepareIndirectDrawBuffer(const Scene* scene)
 //draw with the objects pipeline:
 void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 {
+	Workspace& workspace = workspaces[CURR_FRAME];
 	const auto& allInstances = scene->getObjectInstances();
 
 	//draw all instances in relation to a certain material:
 	uint32_t offsetIndex = 0; 
 	VertexInput* previouslyBindedVertex = nullptr;
+
+	// bind descriptor sets
+	std::array< VkDescriptorSet, 5 > descriptor_sets{
+		workspace.set0_World,
+		workspace.set1_StorageBuffers,
+		set2_Textures,
+		set3_IBL,
+		set4_ShadowMap
+	};
+
+	vkCmdBindDescriptorSets(
+		commandBuffer, //command buffer
+		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+		m_MaterialPipelineLayout, //pipeline layout
+		0, //first set
+		uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+		0, nullptr //dynamic offsets count, ptr
+	);
 
 	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
 	{
@@ -860,10 +925,7 @@ void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 			continue;
 
 		// bind pipeline
-		m_MaterialPipelines[workflowIndex]->BindPipeline(commandBuffer);
-
-		// bind descriptor sets
-		m_MaterialPipelines[workflowIndex]->BindDescriptors(commandBuffer);
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MaterialPipelines[workflowIndex]);
 
 		uint32_t instanceCount = (uint32_t)workflowInstances.size();
 
@@ -877,7 +939,6 @@ void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 			}
 
 			draw.mesh->Bind(commandBuffer);
-			draw.material->Push(commandBuffer, m_MaterialPipelines[workflowIndex]->getPipelineLayout());
 
 			constexpr uint32_t stride = sizeof(VkDrawIndexedIndirectCommand);
 			VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * stride;

@@ -1,5 +1,6 @@
 #include "VulkanGraphicsPipelineBuilder.hpp"
 #include "backend/shader/VulkanShader.h"
+#include "backend/VulkanContext.hpp"
 
 VulkanGraphicsPipelineBuilder VulkanGraphicsPipelineBuilder::Start()
 {
@@ -102,7 +103,7 @@ VulkanGraphicsPipelineBuilder& VulkanGraphicsPipelineBuilder::SetColorBlending(u
     return *this;
 }
 
-void VulkanGraphicsPipelineBuilder::Build(const std::string& vert, const std::string& frag, VkPipeline* pipeline, VkPipelineLayout layout, VkRenderPass renderpass, uint32_t subpass)
+VulkanGraphicsPipelineBuilder& VulkanGraphicsPipelineBuilder::Build(const std::string& vert, const std::string& frag, VkPipeline* pipeline, VkPipelineLayout layout, VkRenderPass renderpass, uint32_t subpass)
 {
     VulkanShader vertModule(vert, VulkanShader::ShaderStage::Vertex);
     VulkanShader fragModule(frag, VulkanShader::ShaderStage::Frag);
@@ -132,4 +133,6 @@ void VulkanGraphicsPipelineBuilder::Build(const std::string& vert, const std::st
     VulkanContext::VK(
         vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VulkanContext::Get()->getPipelineCache(), 1, &create_info, nullptr, pipeline),
         "[Vulkan] Create pipeline failed");
+
+    return *this;
 }

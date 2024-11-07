@@ -37,3 +37,5 @@ const T& max(const T& a, const T& b)
 #define START_BINDING(a)  const uint
 #define END_BINDING() 
 #endif
+
+#define N_MATERIAL_WORKFLOWS 2

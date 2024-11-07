@@ -369,12 +369,6 @@
     <ClCompile Include="src\renderer\materials\PBRMaterial.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\backend\pipeline\material_pipeline\MaterialPipeline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\backend\pipeline\LinesPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -439,9 +433,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\core\layers\LayerStack.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer\utils\LambertianEnvironmentBaker.cpp">
@@ -863,12 +854,6 @@
     <ClInclude Include="src\renderer\materials\PBRMaterial.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipeline.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\backend\pipeline\material_pipeline\LambertianMaterialPipeline.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\backend\pipeline\LinesPipeline.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -932,9 +917,6 @@
     <ClInclude Include="src\renderer\vertices\PosVertex.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\backend\pipeline\material_pipeline\MaterialPipelines.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -945,9 +927,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\core\layers\LayerStack.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\backend\pipeline\material_pipeline\PBRMaterialPipeline.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\utils\LambertianEnvironmentBaker.hpp">
@@ -999,8 +978,6 @@
     <None Include="src\shaders\lambertian.vert" />
     <None Include="src\shaders\skybox.frag" />
     <None Include="src\shaders\skybox.vert" />
-    <None Include="src\shaders\glsl\world_uniform.glsl" />
-    <None Include="src\shaders\glsl\transform_uniform.glsl" />
     <None Include="src\shaders\glsl\utils.glsl" />
     <None Include="src\shaders\glsl\cubemap.glsl" />
     <None Include="src\shaders\glsl\hdr.glsl" />
@@ -1021,6 +998,7 @@
     <None Include="src\shaders\raytracing\raytrace.rgen" />
     <None Include="src\shaders\raytracing\raytrace.rmiss" />
     <None Include="src\shaders\glsl\materials.glsl" />
+    <None Include="src\shaders\host.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

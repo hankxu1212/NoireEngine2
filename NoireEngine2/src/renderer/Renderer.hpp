@@ -7,7 +7,6 @@
 #include "backend/descriptor/DescriptorBuilder.hpp"
 #include "backend/renderpass/Renderpass.hpp"
 
-#include "backend/pipeline/material_pipeline/MaterialPipeline.hpp"
 #include "backend/pipeline/SkyboxPipeline.hpp"
 #include "backend/pipeline/LinesPipeline.hpp"
 #include "backend/pipeline/ShadowPipeline.hpp"
@@ -59,13 +58,9 @@ public:
 
 	const std::vector<std::vector<IndirectBatch>>& getIndirectBatches() const { return m_IndirectBatches; }
 
-	struct ObjectDescription
-	{
-		uint32_t materialOffset; // where to look in the material buffer
-		uint32_t materialID; // interpret the buffer data as which material type?
-	};
-
 private:
+	void CreateMaterialPipelineLayout();
+	void CreateMaterialPipelines();
 	void CreateDescriptors();
 	void CreateWorkspaceDescriptors();
 	void CreateTextureDescriptors();
@@ -84,6 +79,12 @@ private:
 	void PrepareIndirectDrawBuffer(const Scene* scene);
 
 	void DrawScene(const Scene* scene, const CommandBuffer& commandBuffer);
+
+	struct ObjectDescription
+	{
+		uint32_t materialOffset; // where to look in the material buffer
+		uint32_t materialID; // interpret the buffer data as which material type?
+	};
 
 	struct Workspace
 	{
@@ -108,10 +109,10 @@ private:
 		Buffer ObjectDescriptionsSrc;
 		Buffer ObjectDescriptions;
 
+		// all storage buffers are binded to this
 		VkDescriptorSet set1_StorageBuffers = VK_NULL_HANDLE; //references Transforms and lights
 	};
 
-private:
 	START_BINDING(StorageBuffers)
 		Transform = 0,
 		DirLights = 1,
@@ -149,10 +150,10 @@ private:
 
 	std::vector<std::vector<IndirectBatch>> m_IndirectBatches;
 
+	std::array<VkPipeline, N_MATERIAL_WORKFLOWS>	m_MaterialPipelines{};
+	VkPipelineLayout	m_MaterialPipelineLayout = VK_NULL_HANDLE;
+
 private:
-	friend class LambertianMaterialPipeline;
-	friend class MaterialPipeline;
-	friend class PBRMaterialPipeline;
 	friend class LinesPipeline;
 	friend class SkyboxPipeline;
 	friend class ShadowPipeline;
@@ -160,7 +161,6 @@ private:
 	friend class ImGuiPipeline;
 
 private: // material pipelines
-	std::vector<std::unique_ptr<MaterialPipeline>>	m_MaterialPipelines;
 	std::unique_ptr<LinesPipeline>					s_LinesPipeline;
 	std::unique_ptr<SkyboxPipeline>					s_SkyboxPipeline;
 	std::unique_ptr<ShadowPipeline>					s_ShadowPipeline;
