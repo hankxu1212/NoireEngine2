@@ -11,12 +11,14 @@
 
 void LambertianMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipelineLayout)
 {
-	LambertianMaterial::MaterialPush push{
-		.albedo = { m_CreateInfo.albedo.x, m_CreateInfo.albedo.y, m_CreateInfo.albedo.z, 0 },
+	LambertianMaterial::MaterialPush push
+	{
+		.albedo = m_CreateInfo.albedo,
+		.environmentLightIntensity = m_EnvironmentLightInfluence,
+		.normalStrength = m_NormalStrength,
 		.albedoTexId = m_AlbedoMapId,
 		.normalTexId = m_NormalMapId,
-		.normalStrength = m_NormalStrength,
-		.environmentLightIntensity = m_EnvironmentLightInfluence
+		.materialType = (uint32_t)Workflow::Lambertian
 	};
 
 	vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,

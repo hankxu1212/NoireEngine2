@@ -5,10 +5,6 @@
 #include "backend/VulkanContext.hpp"
 #include "utils/Logger.hpp"
 
-MaterialPipeline::MaterialPipeline(Renderer* renderer) :
-	p_ObjectPipeline(renderer) {
-}
-
 MaterialPipeline::~MaterialPipeline()
 {
 	if (m_PipelineLayout != VK_NULL_HANDLE) {
@@ -22,23 +18,40 @@ MaterialPipeline::~MaterialPipeline()
 	}
 }
 
-void MaterialPipeline::BindPipeline(const CommandBuffer& commandBuffer)
+void MaterialPipeline::BindPipeline(const CommandBuffer& commandBuffer) const
 {
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
 }
 
-std::unique_ptr<MaterialPipeline> MaterialPipeline::Create(Material::Workflow workflow, Renderer* renderer)
+void MaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer) const
+{
+	Renderer::Workspace& workspace = Renderer::Instance->workspaces[CURR_FRAME];
+	std::array< VkDescriptorSet, 5 > descriptor_sets{
+		workspace.set0_World,
+		workspace.set1_StorageBuffers,
+		Renderer::Instance->set2_Textures,
+		Renderer::Instance->set3_Cubemap,
+		Renderer::Instance->set4_ShadowMap
+	};
+
+	vkCmdBindDescriptorSets(
+		commandBuffer, //command buffer
+		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+		m_PipelineLayout, //pipeline layout
+		0, //first set
+		uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+		0, nullptr //dynamic offsets count, ptr
+	);
+}
+
+std::unique_ptr<MaterialPipeline> MaterialPipeline::Create(Material::Workflow workflow)
 {
 	switch (workflow)
 	{
 	case Material::Workflow::Lambertian:
-		return std::make_unique<LambertianMaterialPipeline>(renderer);
-	case Material::Workflow::Environment:
-		return std::make_unique<EnvironmentMaterialPipeline>(renderer);
-	case Material::Workflow::Mirror:
-		return std::make_unique<MirrorMaterialPipeline>(renderer);
+		return std::make_unique<LambertianMaterialPipeline>();
 	case Material::Workflow::PBR:
-		return std::make_unique<PBRMaterialPipeline>(renderer);
+		return std::make_unique<PBRMaterialPipeline>();
 	default:
 		NE_ERROR("Did not find a pipeline of this workflow.");
 	}

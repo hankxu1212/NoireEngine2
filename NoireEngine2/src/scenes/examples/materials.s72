@@ -190,11 +190,15 @@
 	"scale":[0.49703,0.49703,0.49703],
 	"mesh":"EnvironmentLabel"
 },
-{
-	"type":"MATERIAL",
-	"name":"mirror:MirrorMaterial",
-	"mirror":{}
-},
+	{
+		"type": "MATERIAL",
+		"name": "mirror:MirrorMaterial",
+		"pbr": {
+			"albedo": [ 1, 1, 1 ],
+			"roughness": 0,
+			"metalness": 0
+		}
+	},
 {
 	"type":"MESH",
 	"name":"Complicated.001",

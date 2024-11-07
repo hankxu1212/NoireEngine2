@@ -8,7 +8,7 @@ class PBRMaterial : public Material
 public:
 	struct CreateInfo
 	{
-		std::string name = "Default Lambertian";
+		std::string name = "Lit PBR";
 		std::string texturePath = NE_NULL_STR;
 		std::string normalPath = NE_NULL_STR;
 		std::string displacementPath = NE_NULL_STR;
@@ -23,7 +23,8 @@ public:
 
 	struct MaterialPush
 	{
-		struct { float x, y, z, padding_; } albedo;
+		glm::vec3 albedo;
+		float environmentLightIntensity;
 		int albedoTexId;
 		int normalTexId;
 		int displacementTexId;
@@ -33,9 +34,8 @@ public:
 		float roughness;
 		float metallic;
 		float normalStrength;
-		float environmentLightIntensity;
+		int materialType;
 	};
-	static_assert(sizeof(MaterialPush) == 16 + 4 * 10);
 
 public:
 	PBRMaterial() = default;

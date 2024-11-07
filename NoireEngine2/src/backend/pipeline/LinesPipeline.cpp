@@ -87,7 +87,9 @@ void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuff
 
 	const std::vector<GizmosInstance*>& gizmos = scene->getGizmosInstances();
 	
-	if (!gizmos.empty()) { //upload lines vertices:
+	//upload lines vertices:
+	if (!gizmos.empty()) 
+	{
 		//[re-]allocate lines buffers if needed:
 		size_t needed_bytes = 0;
 		for (int i = 0; i < gizmos.size(); ++i)
@@ -113,7 +115,7 @@ void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuff
 				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT //GPU-local memory
 			);
 
-			std::cout << "Re-allocated lines buffers to " << new_bytes << " bytes." << std::endl;
+			NE_INFO("Re-allocated lines buffers to {} bytes ", new_bytes);
 		}
 
 		assert(workspace.LinesVerticesSrc.getSize() >= needed_bytes);
@@ -122,7 +124,7 @@ void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuff
 		size_t offset = 0;
 		for (int i = 0; i < gizmos.size(); ++i) {
 			auto size = gizmos[i]->m_LinesVertices.size() * sizeof(PosColVertex);
-			std::memcpy(
+			memcpy(
 				PTR_ADD(workspace.LinesVerticesSrc.data(), offset),
 				gizmos[i]->m_LinesVertices.data(), 
 				size
@@ -133,14 +135,8 @@ void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuff
 	}
 
 	{ //upload camera info:
-		LinesPipeline::CameraUniform camera{
-			.clipFromWorld = scene->GetRenderCam()->camera()->getWorldToClipMatrix()
-		};
-
-		//host-side copy into Camera_src:
-		memcpy(workspace.CameraSrc.data(), &camera, sizeof(camera));
-
-		Buffer::CopyBuffer(commandBuffer, workspace.CameraSrc.getBuffer(), workspace.Camera.getBuffer(), sizeof(camera));
+		pushCamera.clipFromWorld = scene->GetRenderCam()->camera()->getWorldToClipMatrix();
+		Buffer::CopyFromCPU(commandBuffer, workspace.CameraSrc, workspace.Camera, sizeof(CameraUniform), &pushCamera);
 	}
 }
 
@@ -200,13 +196,7 @@ void LinesPipeline::CreateDescriptors()
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
 
-		VkDescriptorBufferInfo CameraInfo
-		{
-			.buffer = workspace.Camera.getBuffer(),
-			.offset = 0,
-			.range = workspace.Camera.getSize(),
-		};
-
+		VkDescriptorBufferInfo CameraInfo = workspace.Camera.GetDescriptorInfo();
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindBuffer(0, &CameraInfo, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
 			.Build(workspace.set0_Camera, set0_CameraLayout);

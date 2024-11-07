@@ -5,45 +5,20 @@
 #include "backend/VulkanContext.hpp"
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 
-LambertianMaterialPipeline::LambertianMaterialPipeline(Renderer* renderer) :
-	MaterialPipeline(renderer)
-{
-}
-
 void LambertianMaterialPipeline::Create()
 {
 	CreatePipelineLayout();
 	CreateGraphicsPipeline();
 }
 
-void LambertianMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer)
-{
-	Renderer::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
-	std::array< VkDescriptorSet, 5 > descriptor_sets{
-		workspace.set0_World,
-		workspace.set1_StorageBuffers,
-		p_ObjectPipeline->set2_Textures,
-		p_ObjectPipeline->set3_Cubemap,
-		p_ObjectPipeline->set4_ShadowMap
-	};
-	vkCmdBindDescriptorSets(
-		commandBuffer, //command buffer
-		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-		m_PipelineLayout, //pipeline layout
-		0, //first set
-		uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
-		0, nullptr //dynamic offsets count, ptr
-	);
-}
-
 void LambertianMaterialPipeline::CreatePipelineLayout()
 {
 	std::array< VkDescriptorSetLayout, 5 > layouts{
-		p_ObjectPipeline->set0_WorldLayout,
-		p_ObjectPipeline->set1_StorageBuffersLayout,
-		p_ObjectPipeline->set2_TexturesLayout,
-		p_ObjectPipeline->set3_CubemapLayout,
-		p_ObjectPipeline->set4_ShadowMapLayout,
+		Renderer::Instance->set0_WorldLayout,
+		Renderer::Instance->set1_StorageBuffersLayout,
+		Renderer::Instance->set2_TexturesLayout,
+		Renderer::Instance->set3_CubemapLayout,
+		Renderer::Instance->set4_ShadowMapLayout,
 	};
 
 	VkPushConstantRange range{
@@ -83,5 +58,5 @@ void LambertianMaterialPipeline::CreateGraphicsPipeline()
 		.SetDynamicStates(dynamic_states)
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
 		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
-		.Build("../spv/shaders/lambertian.vert.spv", "../spv/shaders/lambertian.frag.spv", &m_Pipeline, m_PipelineLayout, p_ObjectPipeline->m_Renderpass->renderpass);
+		.Build("../spv/shaders/lambertian.vert.spv", "../spv/shaders/lambertian.frag.spv", &m_Pipeline, m_PipelineLayout, Renderer::Instance->m_Renderpass->renderpass);
 }

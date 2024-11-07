@@ -30,7 +30,7 @@ private:
 	//types for descriptors:
 	struct CameraUniform {
 		glm::mat4 clipFromWorld;
-	};
+	}pushCamera;
 	static_assert(sizeof(CameraUniform) == 64);
 
 	struct Workspace

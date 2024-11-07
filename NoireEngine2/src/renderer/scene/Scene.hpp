@@ -98,8 +98,6 @@ public:
 
 	inline const void* getSceneUniformPtr() const { return &m_SceneInfo; }
 
-	inline size_t getSceneUniformSize() const { return sizeof(SceneUniform); }
-
 	inline const std::vector<std::vector<ObjectInstance>>& getObjectInstances() const { return m_ObjectInstances; }
 
 	inline const std::vector<GizmosInstance*>& getGizmosInstances() const { return m_GizmosInstances; }

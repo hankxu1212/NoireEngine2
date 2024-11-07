@@ -8,7 +8,7 @@
 
 class MaterialPipeline;
 
-#define NUM_WORKFLOWS 4
+#define NUM_WORKFLOWS 2
 
 class Material : public Resource
 {
@@ -16,9 +16,7 @@ public:
 	enum class Workflow
 	{
 		Lambertian = 0,
-		Environment = 1,
-		Mirror = 2,
-		PBR = 3,
+		PBR = 1,
 	};
 
 public:

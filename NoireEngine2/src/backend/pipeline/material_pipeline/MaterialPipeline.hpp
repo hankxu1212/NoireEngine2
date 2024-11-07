@@ -11,20 +11,21 @@ class MaterialPipeline
 {
 public:
 	MaterialPipeline() = default;
-	MaterialPipeline(Renderer* renderer);
 	
 	virtual ~MaterialPipeline();
 
-	void BindPipeline(const CommandBuffer& commandBuffer);
+	void BindPipeline(const CommandBuffer& commandBuffer) const;
 
-	virtual void Create() {}
+	void BindDescriptors(const CommandBuffer& commandBuffer) const;
 
-	virtual void BindDescriptors(const CommandBuffer& commandBuffer) {}
+	virtual void Create() = 0;
 
-	static std::unique_ptr<MaterialPipeline> Create(Material::Workflow workflow, Renderer* renderer);
+	static std::unique_ptr<MaterialPipeline> Create(Material::Workflow workflow);
 
+	inline VkPipelineLayout getPipelineLayout() const { return m_PipelineLayout; }
+
+protected:
 	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
 	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
-	Renderer*		p_ObjectPipeline = nullptr;
 };
 

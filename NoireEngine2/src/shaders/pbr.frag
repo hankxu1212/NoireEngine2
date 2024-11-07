@@ -43,17 +43,18 @@ vec3 DirectLightingPBR();
 
 layout( push_constant ) uniform constants
 {
-	vec4 albedo;
+	vec3 albedo;
+	float environmentLightIntensity;
 	int albedoTexId;
 	int normalTexId;
-    int displacementTexId;
-    float heightScale;
+	int displacementTexId;
+	float heightScale;
 	int roughnessTexId;
 	int metallicTexId;
 	float roughness;
 	float metallic;
 	float normalStrength;
-	float environmentLightIntensity;
+	int materialType;
 } material;
 
 // parallax mappings
@@ -97,7 +98,7 @@ void main()
 	}
 
 	// albedo 
-	albedo = material.albedo.rgb;
+	albedo = material.albedo;
 	if (material.albedoTexId >= 0)
 		albedo *= texture(textures[material.albedoTexId], UV).rgb;
 

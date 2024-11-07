@@ -12,7 +12,8 @@ void PBRMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipe
 {
 	PBRMaterial::MaterialPush push
 	{
-		.albedo = { m_CreateInfo.albedo.x, m_CreateInfo.albedo.y, m_CreateInfo.albedo.z, 0 },
+		.albedo = m_CreateInfo.albedo,
+		.environmentLightIntensity = m_EnvironmentLightInfluence,
 		.albedoTexId = m_AlbedoMapId,
 		.normalTexId = m_NormalMapId,
 		.displacementTexId = m_DisplacementMapId,
@@ -22,7 +23,7 @@ void PBRMaterial::Push(const CommandBuffer& commandBuffer, VkPipelineLayout pipe
 		.roughness = m_CreateInfo.roughness,
 		.metallic = m_CreateInfo.metallic,
 		.normalStrength = m_NormalStrength,
-		.environmentLightIntensity = m_EnvironmentLightInfluence,
+		.materialType = (uint32_t)Workflow::PBR
 	};
 
 	vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,

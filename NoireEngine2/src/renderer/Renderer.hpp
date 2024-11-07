@@ -28,6 +28,8 @@ class MeshRenderInstance;
 class Renderer : Singleton
 {
 public:
+	inline static Renderer* Instance;
+
 	Renderer();
 	~Renderer();
 
@@ -63,12 +65,13 @@ private:
 	void CreateTextureDescriptors();
 	void CreateCubemapDescriptors();
 	void CreateShadowDescriptors();
+	void CreateMaterialDescriptors();
 
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareSceneUniform(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareTransforms(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareLights(const Scene* scene, const CommandBuffer& commandBuffer);
-
+	void PrepareMaterialInstances(const CommandBuffer& commandBuffer);
 
 	void CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t workflowIndex);
 
@@ -100,8 +103,7 @@ private:
 
 private:
 	friend class LambertianMaterialPipeline;
-	friend class EnvironmentMaterialPipeline;
-	friend class MirrorMaterialPipeline;
+	friend class MaterialPipeline;
 	friend class PBRMaterialPipeline;
 	friend class LinesPipeline;
 	friend class SkyboxPipeline;

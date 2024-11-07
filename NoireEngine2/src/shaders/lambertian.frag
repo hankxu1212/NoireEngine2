@@ -22,11 +22,12 @@ vec3 n;
 
 layout( push_constant ) uniform constants
 {
-	vec4 albedo;
+	vec3 albedo;
+	float environmentLightIntensity;
+	float normalStrength;
 	int albedoTexId;
 	int normalTexId;
-	float normalStrength;
-	float environmentLightIntensity;
+	int materialType;
 } material;
 
 void main() 
@@ -51,7 +52,7 @@ void main()
 	vec3 ambientLighting = texture(lambertianIDL, n).rgb * material.environmentLightIntensity;
 
 	// material
-	vec3 texColor = material.albedo.rgb;
+	vec3 texColor = material.albedo;
 	if (material.albedoTexId >= 0)
 		texColor *= texture(textures[material.albedoTexId], inTexCoord).rgb;
 

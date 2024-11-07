@@ -4,8 +4,6 @@
 #include "utils/Logger.hpp"
 
 #include "LambertianMaterial.hpp"
-#include "EnvironmentMaterial.hpp"
-#include "MirrorMaterial.hpp"
 #include "PBRMaterial.hpp"
 
 Material* Material::Deserialize(const Scene::TValueMap& obj)
@@ -18,18 +16,10 @@ Material* Material::Deserialize(const Scene::TValueMap& obj)
 	if (pbrIt != obj.end())
 		return PBRMaterial::Deserialize(obj);
 
-	auto mirrorIt = obj.find("mirror");
-	if (mirrorIt != obj.end())
-		return MirrorMaterial::Deserialize(obj);
-
-	auto environmentIt = obj.find("environment");
-	if (environmentIt != obj.end())
-		return EnvironmentMaterial::Deserialize(obj);
-
-	return nullptr;
+	return CreateDefault().get();
 }
 
 std::shared_ptr<Material> Material::CreateDefault()
 {
-	return LambertianMaterial::Create();
+	return PBRMaterial::Create();
 }

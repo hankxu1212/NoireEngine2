@@ -8,7 +8,7 @@ class LambertianMaterial : public Material
 public:
 	struct CreateInfo
 	{
-		std::string name = "Default Lambertian";
+		std::string name = "Lit Lambertian";
 		glm::vec3 albedo = glm::vec3(1);
 		std::string texturePath = NE_NULL_STR;
 		std::string normalPath = NE_NULL_STR;
@@ -19,13 +19,13 @@ public:
 
 	struct MaterialPush
 	{
-		struct { float x, y, z, padding_; } albedo;
-		int albedoTexId = -1;
-		int normalTexId = -1;
-		float normalStrength = 1;
+		glm::vec3 albedo;
 		float environmentLightIntensity;
+		float normalStrength;
+		int albedoTexId;
+		int normalTexId;
+		int materialType;
 	};
-	static_assert(sizeof(MaterialPush) == 16 + 4 + 4 + 4 + 4);
 
 public:
 	LambertianMaterial() = default;

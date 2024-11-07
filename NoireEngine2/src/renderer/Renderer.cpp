@@ -49,6 +49,9 @@ Renderer::Renderer()
 	m_Renderpass = std::make_unique<Renderpass>(true);
 	
 	s_UIPipeline = std::make_unique<ImGuiPipeline>();
+
+	assert(!Instance && "More than one renderer instance found!");
+	Instance = this;
 }
 
 Renderer::~Renderer()
@@ -274,16 +277,16 @@ void Renderer::CreateCubemapDescriptors()
 		.Build(set3_Cubemap, set3_CubemapLayout);
 }
 
-void Renderer::CreateShadowDescriptors()
 // create set 4: shadow mapping with descriptor indexing
+void Renderer::CreateShadowDescriptors()
 {
 	const auto& shadowPasses = s_ShadowPipeline->getShadowPasses();
 	const auto& cascadePasses = s_ShadowPipeline->getCascadePasses();
 	const auto& omniPasses = s_ShadowPipeline->getOmniPasses();
 
-	NE_INFO("Found {} shadow maps.", shadowPasses.size());
-	NE_INFO("Found {} cascaded shadow maps.", cascadePasses.size());
-	NE_INFO("Found {} omnidirectional shadow maps.", omniPasses.size());
+	NE_DEBUG(std::format("Found {} shadow maps.", shadowPasses.size()), Logger::CYAN, Logger::BOLD);
+	NE_DEBUG(std::format("Found {} cascaded shadow maps.", cascadePasses.size()), Logger::CYAN, Logger::BOLD);
+	NE_DEBUG(std::format("Found {} omnidirectional shadow maps.", omniPasses.size()), Logger::CYAN, Logger::BOLD);
 
 	std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
 		VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
@@ -359,6 +362,15 @@ void Renderer::CreateShadowDescriptors()
 		, &variableDescriptorInfoAI);
 }
 
+void Renderer::CreateMaterialDescriptors()
+{
+	std::vector<VkDescriptorBindingFlagsEXT> descriptorBindingFlags = {
+		VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT,
+	};
+
+	[[maybe_unused]] const auto& materialInstances = Resources::Get()->FindAllOfType<Material>();
+}
+
 void Renderer::Rebuild()
 {
 	m_Renderpass->RebuildFromSwapchain();
@@ -369,7 +381,7 @@ void Renderer::Create()
 {
 	m_MaterialPipelines.resize(NUM_WORKFLOWS);
 	for (int i = 0; i < NUM_WORKFLOWS; i++) {
-		m_MaterialPipelines[i] = MaterialPipeline::Create(Material::Workflow(i), this);
+		m_MaterialPipelines[i] = MaterialPipeline::Create(Material::Workflow(i));
 	}
 
 	s_RaytracingPipeline = std::make_unique<RaytracingPipeline>(this);
@@ -459,7 +471,7 @@ void Renderer::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
 void Renderer::PrepareSceneUniform(const Scene* scene, const CommandBuffer& commandBuffer)
 {
 	Workspace& workspace = workspaces[CURR_FRAME];
-	Buffer::CopyFromCPU(commandBuffer, workspace.WorldSrc, workspace.World, scene->getSceneUniformSize(), scene->getSceneUniformPtr());
+	Buffer::CopyFromCPU(commandBuffer, workspace.WorldSrc, workspace.World, sizeof(Scene::SceneUniform), scene->getSceneUniformPtr());
 }
 
 void Renderer::PrepareTransforms(const Scene* scene, const CommandBuffer& commandBuffer)
@@ -512,17 +524,19 @@ void Renderer::PrepareTransforms(const Scene* scene, const CommandBuffer& comman
 	assert(workspace.TransformsSrc.getSize() >= needed_bytes);
 
 	{ //copy transforms into Transforms_src:
-		assert(workspace.TransformsSrc.data() != nullptr);
-		ObjectInstance::TransformUniform* out = reinterpret_cast<ObjectInstance::TransformUniform*>(workspace.TransformsSrc.data());
+		ObjectInstance::TransformUniform* start = reinterpret_cast<ObjectInstance::TransformUniform*>(workspace.TransformsSrc.data());
+		ObjectInstance::TransformUniform* out = start;
+
 		for (int i = 0; i < sceneObjectInstances.size(); ++i) {
 			for (auto& inst : sceneObjectInstances[i]) {
 				*out = inst.m_TransformUniform;
 				++out;
 			}
 		}
-	}
 
-	Buffer::CopyBuffer(commandBuffer, workspace.TransformsSrc.getBuffer(), workspace.Transforms.getBuffer(), workspace.TransformsSrc.getSize());
+		size_t regionSize = reinterpret_cast<char*>(out) - reinterpret_cast<char*>(start);
+		Buffer::CopyBuffer(commandBuffer, workspace.TransformsSrc.getBuffer(), workspace.Transforms.getBuffer(), regionSize);
+	}
 }
 
 void Renderer::PrepareLights(const Scene* scene, const CommandBuffer& commandBuffer)
@@ -588,10 +602,15 @@ void Renderer::PrepareLights(const Scene* scene, const CommandBuffer& commandBuf
 		assert(bufSrc.getSize() >= neededBytes);
 	}
 
-	// copy into buffers
-	DirectionalLightUniform* directionalIt = reinterpret_cast<DirectionalLightUniform*>(workspace.LightsSrc[0].data());
-	PointLightUniform* pointIt = reinterpret_cast<PointLightUniform*>(workspace.LightsSrc[1].data());
-	SpotLightUniform* spotIt = reinterpret_cast<SpotLightUniform*>(workspace.LightsSrc[2].data());
+	// Get pointers to the start of each region
+	DirectionalLightUniform* directionalStart = reinterpret_cast<DirectionalLightUniform*>(workspace.LightsSrc[0].data());
+	PointLightUniform* pointStart = reinterpret_cast<PointLightUniform*>(workspace.LightsSrc[1].data());
+	SpotLightUniform* spotStart = reinterpret_cast<SpotLightUniform*>(workspace.LightsSrc[2].data());
+
+	// Pointers to track current positions
+	DirectionalLightUniform* directionalIt = directionalStart;
+	PointLightUniform* pointIt = pointStart;
+	SpotLightUniform* spotIt = spotStart;
 
 	for (int i = 0; i < lightInstances.size(); ++i)
 	{
@@ -612,9 +631,18 @@ void Renderer::PrepareLights(const Scene* scene, const CommandBuffer& commandBuf
 		}
 	}
 
-	// copy all 3
-	for (int i = 0; i < 3; i++)
-		Buffer::CopyBuffer(commandBuffer, workspace.LightsSrc[i].getBuffer(), workspace.Lights[i].getBuffer(), workspace.LightsSrc[i].getSize());
+	// Calculate the sizes for each buffer
+	size_t directionalSize = reinterpret_cast<char*>(directionalIt) - reinterpret_cast<char*>(directionalStart);
+	size_t pointSize = reinterpret_cast<char*>(pointIt) - reinterpret_cast<char*>(pointStart);
+	size_t spotSize = reinterpret_cast<char*>(spotIt) - reinterpret_cast<char*>(spotStart);
+
+	Buffer::CopyBuffer(commandBuffer, workspace.LightsSrc[0].getBuffer(), workspace.Lights[0].getBuffer(), directionalSize);
+	Buffer::CopyBuffer(commandBuffer, workspace.LightsSrc[1].getBuffer(), workspace.Lights[1].getBuffer(), pointSize);
+	Buffer::CopyBuffer(commandBuffer, workspace.LightsSrc[2].getBuffer(), workspace.Lights[2].getBuffer(), spotSize);
+}
+
+void Renderer::PrepareMaterialInstances(const CommandBuffer& commandBuffer)
+{
 }
 
 void Renderer::CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t workflowIndex)
@@ -709,7 +737,7 @@ void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 			}
 
 			draw.mesh->Bind(commandBuffer);
-			draw.material->Push(commandBuffer, m_MaterialPipelines[workflowIndex]->m_PipelineLayout);
+			draw.material->Push(commandBuffer, m_MaterialPipelines[workflowIndex]->getPipelineLayout());
 
 			constexpr uint32_t stride = sizeof(VkDrawIndexedIndirectCommand);
 			VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * stride;

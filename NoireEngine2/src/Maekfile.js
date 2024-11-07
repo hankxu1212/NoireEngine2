@@ -50,8 +50,6 @@ const renderer_objs = [
 	maek.CPP('renderer/object/ObjectInstance.cpp'),
 	maek.CPP('renderer/materials/Material.cpp'),
 	maek.CPP('renderer/materials/LambertianMaterial.cpp'),
-	maek.CPP('renderer/materials/EnvironmentMaterial.cpp'),
-	maek.CPP('renderer/materials/MirrorMaterial.cpp'),
 	maek.CPP('renderer/materials/PBRMaterial.cpp'),
 	maek.CPP('renderer/AABB.cpp'),
 	maek.CPP('renderer/scene/SceneManager.cpp'),
@@ -137,8 +135,6 @@ function use_vert_frag(name, pipeline) {
 use_vert_frag('shaders/lambertian', 'backend/pipeline/material_pipeline/LambertianMaterialPipeline.cpp');
 use_vert_frag('shaders/lines', 'backend/pipeline/LinesPipeline.cpp');
 use_vert_frag('shaders/skybox', 'backend/pipeline/SkyboxPipeline.cpp');
-use_vert_frag('shaders/environment', 'backend/pipeline/material_pipeline/EnvironmentMaterialPipeline.cpp');
-use_vert_frag('shaders/mirror', 'backend/pipeline/material_pipeline/MirrorMaterialPipeline.cpp');
 use_vert_frag('shaders/pbr', 'backend/pipeline/material_pipeline/PBRMaterialPipeline.cpp');
 
 // shadow
