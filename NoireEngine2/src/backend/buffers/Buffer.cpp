@@ -36,7 +36,7 @@ void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryP
 		.usage = usage,
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
 	};
-	VulkanContext::VK_CHECK(vkCreateBuffer(logicalDevice, &bufferCreateInfo, nullptr, &buffer),
+	VulkanContext::VK(vkCreateBuffer(logicalDevice, &bufferCreateInfo, nullptr, &buffer),
 		"[vulkan] Error: failed to create buffer");
 
 	// Create the memory backing up the buffer handle.
@@ -49,18 +49,18 @@ void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryP
 		.allocationSize = memoryRequirements.size,
 		.memoryTypeIndex = VulkanContext::FindMemoryType(memoryRequirements.memoryTypeBits, properties),
 	};
-	VulkanContext::VK_CHECK(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &bufferMemory),
+	VulkanContext::VK(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &bufferMemory),
 		"[vulkan] Error: cannot allocate buffer memory");
 
 	if (map == Mapped)
 		MapMemory(&mapped);
 
 	// Attach the memory to the buffer object.
-	VulkanContext::VK_CHECK(vkBindBufferMemory(logicalDevice, buffer, bufferMemory, 0), "[vulkan] Error: cannot bind buffer memory");
+	VulkanContext::VK(vkBindBufferMemory(logicalDevice, buffer, bufferMemory, 0), "[vulkan] Error: cannot bind buffer memory");
 }
 
 void Buffer::MapMemory(void **data) const {
-	VulkanContext::VK_CHECK(vkMapMemory(VulkanContext::GetDevice(), bufferMemory, 0, m_Size, 0, data), "[vulkan] Error: failed to map buffer memory");
+	VulkanContext::VK(vkMapMemory(VulkanContext::GetDevice(), bufferMemory, 0, m_Size, 0, data), "[vulkan] Error: failed to map buffer memory");
 }
 
 void Buffer::UnmapMemory() {

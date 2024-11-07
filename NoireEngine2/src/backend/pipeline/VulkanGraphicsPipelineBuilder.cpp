@@ -129,7 +129,7 @@ void VulkanGraphicsPipelineBuilder::Build(const std::string& vert, const std::st
         .subpass = subpass,
     };
 
-    VulkanContext::VK_CHECK(
+    VulkanContext::VK(
         vkCreateGraphicsPipelines(VulkanContext::GetDevice(), VulkanContext::Get()->getPipelineCache(), 1, &create_info, nullptr, pipeline),
         "[Vulkan] Create pipeline failed");
 }

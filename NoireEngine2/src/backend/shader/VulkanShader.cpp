@@ -1,8 +1,6 @@
 #include "VulkanShader.h"
 
 #include "backend/VulkanContext.hpp"
-#include "core/resources/Files.hpp"
-#include "utils/Logger.hpp"
 
 VulkanShader::VulkanShader(const std::string& path, ShaderStage stage)
 {
@@ -14,7 +12,7 @@ VulkanShader::VulkanShader(const std::string& path, ShaderStage stage)
 		.pCode = (const uint32_t*)bytes.data()
 	};
 
-	VulkanContext::VK_CHECK(vkCreateShaderModule(VulkanContext::GetDevice(), &create_info, nullptr, &m_ShaderModule),
+	VulkanContext::VK(vkCreateShaderModule(VulkanContext::GetDevice(), &create_info, nullptr, &m_ShaderModule),
 		"[Vulkan] Creating shader module failed");
 
 	m_ShaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

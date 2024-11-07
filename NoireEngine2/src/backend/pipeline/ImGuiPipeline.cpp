@@ -1,11 +1,6 @@
 #include "ImGuiPipeline.hpp"
-#include "core/window/Window.hpp"
 #include "backend/VulkanContext.hpp"
-#include "utils/Logger.hpp"
-#include "core/resources/Files.hpp"
 #include "imguizmo/ImGuizmo.h"
-
-#include <vulkan/vk_enum_string_helper.h>
 #include "glm/gtx/string_cast.hpp"
 
 #include "RaytracingPipeline.hpp"
@@ -36,7 +31,7 @@ static void CreateImGuiDescriptorPool(VkDevice logicalDevice, VkDescriptorPool& 
         .pPoolSizes = pool_sizes
     };
 
-    VulkanContext::VK_CHECK(vkCreateDescriptorPool(logicalDevice, &pool_info, nullptr, &descriptorPool));
+    VulkanContext::VK(vkCreateDescriptorPool(logicalDevice, &pool_info, nullptr, &descriptorPool));
 }
 
 ImGuiPipeline::ImGuiPipeline()
@@ -165,7 +160,7 @@ void ImGuiPipeline::CreateRenderPass()
         .pDependencies = &dependency
     };
 
-    VulkanContext::VK_CHECK(
+    VulkanContext::VK(
         vkCreateRenderPass(VulkanContext::GetDevice(), &info, nullptr, &s_Renderpass->renderpass),
         "[Vulkan] Create Render pass in ImGui pipeline failed"
     );
@@ -197,7 +192,7 @@ void ImGuiPipeline::CreatePipeline()
         .PipelineCache = context->getPipelineCache(),
         .Subpass = 0,
         .Allocator = nullptr,
-        .CheckVkResultFn = VulkanContext::VK_CHECK,
+        .CheckVkResultFn = VulkanContext::VK,
     };
 
     ImGui_ImplVulkan_Init(&init_info);

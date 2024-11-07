@@ -54,6 +54,8 @@ public:
 
 		static T* Get() { return moduleInstance; }
 
+		virtual void LateInitialize() {}
+
 	protected:
 		/**
 		  * Creates a new module singleton instance and registers into the module registry map.
@@ -68,6 +70,7 @@ public:
 			ModuleFactory::GetRegistry()[index] = {
 				[]() {
 					moduleInstance = new T();
+					moduleInstance->LateInitialize();
 					return std::unique_ptr<Base>(moduleInstance);
 				}, stage, destroyStage, requiredModules.Get()
 			};
@@ -98,7 +101,7 @@ public:
 	using StageIndex = std::pair<UpdateStage, TypeId>;
 
 	virtual ~Module() = default;
-	virtual void Update() = 0;
+	virtual void Update() {};
 };
 
 template class Type<Module>;

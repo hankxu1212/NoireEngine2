@@ -490,7 +490,7 @@ void RaytracingPipeline::CreateShaderBindingTables()
 	// Get the shader group handles
 	uint32_t dataSize = handleCount * handleSize;
 	std::vector<uint8_t> handles(dataSize);
-	VulkanContext::VK_CHECK(vkGetRayTracingShaderGroupHandlesKHR(VulkanContext::GetDevice(), m_Pipeline, 0, handleCount, dataSize, handles.data()));
+	VulkanContext::VK(vkGetRayTracingShaderGroupHandlesKHR(VulkanContext::GetDevice(), m_Pipeline, 0, handleCount, dataSize, handles.data()));
 
 	// Allocate a buffer for storing the SBT.
 	VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };

@@ -47,8 +47,6 @@ static inline void InsertPipelineMemoryBarrier(const CommandBuffer& buf)
 
 Renderer::Renderer()
 {
-	Image2D::Create(Files::Path("../textures/default.png"), VK_FORMAT_R8G8B8A8_SRGB, VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, false, true);
-
 	m_Renderpass = std::make_unique<Renderpass>(true);
 	
 	s_UIPipeline = std::make_unique<ImGuiPipeline>();
@@ -150,7 +148,7 @@ void Renderer::CreateRenderPass()
 		.pDependencies = dependencies.data(),
 	};
 
-	VulkanContext::VK_CHECK(
+	VulkanContext::VK(
 		vkCreateRenderPass(VulkanContext::GetDevice(), &create_info, nullptr, &m_Renderpass->renderpass),
 		"[Vulkan] Create Render pass failed"
 	);

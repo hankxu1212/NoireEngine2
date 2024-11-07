@@ -2,7 +2,6 @@
 
 #include "BLASBuilder.h"
 #include "RaytracingBuilderKHR.hpp"
-#include "utils/Logger.hpp"
 #include "backend/VulkanContext.hpp"
 
 // Destroying all allocations

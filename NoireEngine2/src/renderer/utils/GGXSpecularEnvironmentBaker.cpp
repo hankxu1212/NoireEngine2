@@ -99,7 +99,7 @@ void GGXSpecularEnvironmentBaker::Prepare()
         .pPushConstantRanges = nullptr,
     };
 
-    VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
+    VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
 
     std::string shaderName = std::format("../spv/shaders/compute/ggx/ggx_prefilter_env.comp.spv", miplevel);
 

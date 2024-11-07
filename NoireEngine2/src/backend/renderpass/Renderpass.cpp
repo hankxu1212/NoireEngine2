@@ -46,7 +46,7 @@ void Renderpass::RebuildFromSwapchain()
 			.layers = 1,
 		};
 
-		VulkanContext::VK_CHECK(
+		VulkanContext::VK(
 			vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_Framebuffers[i]),
 			"[vulkan] Creating frame buffer failed"
 		);

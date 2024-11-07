@@ -1,16 +1,13 @@
 #include "backend/VulkanContext.hpp"
-#include "utils/Logger.hpp"
-
-#include <vulkan/vk_enum_string_helper.h>
 
 Surface::Surface(const VulkanInstance& instance, const PhysicalDevice& physicalDevice, const LogicalDevice& logicalDevice, Window* window) :
 	m_Window(window)
 {
 	// Creates the glfw surface.
-	VulkanContext::VK_CHECK(glfwCreateWindowSurface(instance, window->m_Window, nullptr, &m_Surface),
+	VulkanContext::VK(glfwCreateWindowSurface(instance, window->m_Window, nullptr, &m_Surface),
 		"[vulkan] Error: Cannot create surface");
 
-	VulkanContext::VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &m_Capabilities),
+	VulkanContext::VK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &m_Capabilities),
 		"[vulkan] Error: cannot get surface capabilities.");
 
 	uint32_t surfaceFormatCount = 0;
@@ -56,6 +53,6 @@ Surface::~Surface()
 
 void Surface::UpdateCapabilities()
 {
-	VulkanContext::VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*(VulkanContext::Get()->getPhysicalDevice()), m_Surface, &m_Capabilities),
+	VulkanContext::VK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*(VulkanContext::Get()->getPhysicalDevice()), m_Surface, &m_Capabilities),
 		"[vulkan] Error: cannot get surface capabilities.");
 }

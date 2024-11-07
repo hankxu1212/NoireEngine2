@@ -7,9 +7,13 @@
 #include <array>
 
 #include <vulkan/vulkan.h>
+#include <vulkan/vk_enum_string_helper.h>
 
 #include "core/Core.hpp"
 #include "core/window/Window.hpp"
+#include "utils/Logger.hpp"
+#include "core/Timer.hpp"
+#include "core/resources/Files.hpp"
 
 #include "devices/VulkanInstance.hpp"
 #include "devices/PhysicalDevice.hpp"
@@ -23,28 +27,34 @@
 #include "renderpass/Swapchain.hpp"
 
 #include "renderer/Renderer.hpp"
+#include "renderer/materials/MaterialLibrary.hpp"
 
 #include "backend/descriptor/DescriptorLayoutCache.hpp"
+
 
 /**
  * Manages Instance, Physical/Logical devices, Swapchains (to a certain extent) and surfaces.
  */
 class VulkanContext : public Module::Registrar<VulkanContext>
 {
-	inline static const bool Registered = Register(UpdateStage::Render, DestroyStage::Post, Requires<Window>());
+	inline static const bool Registered = Register(
+		UpdateStage::Render, 
+		DestroyStage::Post, 
+		Requires<Window, Resources, MaterialLibrary>()
+	);
 
 public:
 	VulkanContext();
 
 	virtual ~VulkanContext();
 
+	void LateInitialize() override;
+
 	void Update();
 
 	void OnWindowResize(uint32_t width, uint32_t height);
 
 	void OnAddWindow(Window* window);
-
-	void InitializeRenderer();
 
 	void WaitGraphicsQueue();
 
@@ -61,8 +71,8 @@ public:
 	static VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
 public:
-	static void VK_CHECK(VkResult err, const char* msg);
-	static void VK_CHECK(VkResult err);
+	static void VK(VkResult err, const char* msg);
+	static void VK(VkResult err);
 
 	static inline const VkDevice			GetDevice() { return *(VulkanContext::Get()->getLogicalDevice()); }
 	inline const LogicalDevice*				getLogicalDevice() const { return s_LogicalDevice.get(); }
@@ -137,7 +147,7 @@ private:
 private:
 	void CreatePipelineCache();
 	void RecreateSwapchain();
-	void CleanPerSurfaceStructs();
+	void DestroyPerSurfaceStructs();
 };
 
 #define CURR_FRAME VulkanContext::Get()->getCurrentFrame()

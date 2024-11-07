@@ -67,7 +67,7 @@ void EnvironmentBRDFBaker::Setup()
         .pPushConstantRanges = nullptr,
     };
 
-    VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
+    VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
 
     std::string shaderName = "../spv/shaders/compute/ggx/ggx_brdf.comp.spv";
     NE_INFO("Executing compute shader:{}", shaderName);
@@ -78,7 +78,7 @@ void EnvironmentBRDFBaker::Setup()
     pipelineInfo.layout = m_PipelineLayout;
     pipelineInfo.stage = vertModule.shaderStage();
 
-    VulkanContext::VK_CHECK(vkCreateComputePipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline));
+    VulkanContext::VK(vkCreateComputePipelines(VulkanContext::GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline));
 
     VkFenceCreateInfo fenceInfo{};
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;

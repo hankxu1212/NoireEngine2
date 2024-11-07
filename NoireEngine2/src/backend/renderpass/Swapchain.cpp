@@ -3,8 +3,6 @@
 #include "backend/VulkanContext.hpp"
 #include "backend/images/Image.hpp"
 #include "math/Math.hpp"
-#include <vulkan/vk_enum_string_helper.h>
-#include "utils/Logger.hpp"
 
 static const std::vector<VkCompositeAlphaFlagBitsKHR> COMPOSITE_ALPHA_FLAGS = {
 	VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR, VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
@@ -107,14 +105,14 @@ SwapChain::SwapChain(const PhysicalDevice& physicalDevice, Surface& surface, con
 		swapchainCreateInfo.pQueueFamilyIndices = queueFamily.data();
 	}
 
-	VulkanContext::VK_CHECK(vkCreateSwapchainKHR(logicalDevice, &swapchainCreateInfo, nullptr, &swapchain),
+	VulkanContext::VK(vkCreateSwapchainKHR(logicalDevice, &swapchainCreateInfo, nullptr, &swapchain),
 		"[vulkan] Error creating swapchain");
 
-	VulkanContext::VK_CHECK(vkGetSwapchainImagesKHR(logicalDevice, swapchain, &imageCount, nullptr),
+	VulkanContext::VK(vkGetSwapchainImagesKHR(logicalDevice, swapchain, &imageCount, nullptr),
 		"[vulkan] Error get swapchain image count");
 	images.resize(imageCount);
 	imageViews.resize(imageCount);
-	VulkanContext::VK_CHECK(vkGetSwapchainImagesKHR(logicalDevice, swapchain, &imageCount, images.data()),
+	VulkanContext::VK(vkGetSwapchainImagesKHR(logicalDevice, swapchain, &imageCount, images.data()),
 		"[vulkan] Error creating swapchain images");
 
 	for (uint32_t i = 0; i < imageCount; i++) {
@@ -135,7 +133,7 @@ SwapChain::~SwapChain() {
 
 VkResult SwapChain::AcquireNextImage(const VkSemaphore& presentCompleteSemaphore, VkFence fence) {
 	if (fence != VK_NULL_HANDLE)
-		VulkanContext::VK_CHECK(vkWaitForFences(logicalDevice, 1, &fence, VK_TRUE, UINT64_MAX),
+		VulkanContext::VK(vkWaitForFences(logicalDevice, 1, &fence, VK_TRUE, UINT64_MAX),
 			"[vulkan] Error waiting for fences while trying to acquire next image in swapchain");
 
 	return vkAcquireNextImageKHR(logicalDevice, swapchain, UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE, &activeImageIndex);

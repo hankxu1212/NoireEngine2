@@ -1,5 +1,4 @@
 #include "backend/VulkanContext.hpp"
-#include "utils/Logger.hpp"
 
 static bool CheckValidationLayerSupport(const std::vector<const char*>& g_ValidationLayers) {
     uint32_t layerCount;
@@ -173,11 +172,11 @@ VulkanInstance::VulkanInstance()
     // Create Vulkan Instance
     instance_create_info.enabledExtensionCount = (uint32_t)extensions.size();
     instance_create_info.ppEnabledExtensionNames = extensions.data();
-    VulkanContext::VK_CHECK(vkCreateInstance(&instance_create_info, nullptr, &m_Instance),
+    VulkanContext::VK(vkCreateInstance(&instance_create_info, nullptr, &m_Instance),
         "[vulkan] Error: cannot create instance");
 
     if (ValidationLayersEnabled) {
-        VulkanContext::VK_CHECK(CreateDebugUtilsMessengerEXT(m_Instance, &debug_create_info, nullptr, &m_DebugMessenger),
+        VulkanContext::VK(CreateDebugUtilsMessengerEXT(m_Instance, &debug_create_info, nullptr, &m_DebugMessenger),
             "[vulkan] Error: cannot create debug messenger");
     }
 }

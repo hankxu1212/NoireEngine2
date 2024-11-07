@@ -9,7 +9,7 @@ CommandPool::CommandPool(const TID& threadId) :
 		.queueFamilyIndex = VulkanContext::Get()->getLogicalDevice()->getGraphicsFamily(),
 	};
 
-	VulkanContext::VK_CHECK(vkCreateCommandPool(VulkanContext::GetDevice(), &poolInfo, nullptr, &m_CommandPool),
+	VulkanContext::VK(vkCreateCommandPool(VulkanContext::GetDevice(), &poolInfo, nullptr, &m_CommandPool),
 		"[vulkan] Error: cannot create command pool");
 }
 

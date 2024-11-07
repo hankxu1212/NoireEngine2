@@ -3,7 +3,6 @@
 #include <sstream>
 
 #include "backend/VulkanContext.hpp"
-#include "utils/Logger.hpp"
 #include "utils/Enumerate.hpp"
 
 static void LogVulkanDevice(const VkPhysicalDeviceProperties& physicalDeviceProperties, const std::vector<VkExtensionProperties>& extensionProperties) 
@@ -105,13 +104,13 @@ PhysicalDevice::PhysicalDevice(const VulkanInstance& m_Instance) :
     m_Instance(m_Instance)
 {
     uint32_t gpu_count;
-    VulkanContext::VK_CHECK(vkEnumeratePhysicalDevices(m_Instance, &gpu_count, nullptr), 
+    VulkanContext::VK(vkEnumeratePhysicalDevices(m_Instance, &gpu_count, nullptr), 
         "[vulkan] Error: cannot enumerate physical devices");
     assert(gpu_count > 0 && "[vulkan] Error: gpu count = 0");
 
     std::vector<VkPhysicalDevice> gpus;
     gpus.resize(gpu_count);
-    VulkanContext::VK_CHECK(vkEnumeratePhysicalDevices(m_Instance, &gpu_count, gpus.data()),
+    VulkanContext::VK(vkEnumeratePhysicalDevices(m_Instance, &gpu_count, gpus.data()),
         "[vulkan] Error: cannot enumerate gpus");
 
     // Use an ordered map to automatically sort candidates by increasing score

@@ -1,7 +1,6 @@
 #include <optional>
 
 #include "backend/VulkanContext.hpp"
-#include "utils/Logger.hpp"
 
 const std::vector<const char*> LogicalDevice::DeviceExtensions = { 
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -28,7 +27,7 @@ LogicalDevice::LogicalDevice(const VulkanInstance& instance, const PhysicalDevic
 }
 
 LogicalDevice::~LogicalDevice() {
-	VulkanContext::VK_CHECK(vkDeviceWaitIdle(m_LogicalDevice), "[vulkan] Error: Wait idle on destroy vulkan context failed");
+	VulkanContext::VK(vkDeviceWaitIdle(m_LogicalDevice), "[vulkan] Error: Wait idle on destroy vulkan context failed");
 	vkDestroyDevice(m_LogicalDevice, nullptr);
 }
 
@@ -266,7 +265,7 @@ void LogicalDevice::CreateLogicalDevice()
 	deviceCreateInfo.ppEnabledExtensionNames = DeviceExtensions.data();
 	deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
 
-	VulkanContext::VK_CHECK(vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_LogicalDevice), 
+	VulkanContext::VK(vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_LogicalDevice), 
 		"[vulkan] Error: cannot create physical device");
 
 	vkGetDeviceQueue(m_LogicalDevice, m_GraphicsFamily, 0, &m_GraphicsQueue);

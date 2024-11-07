@@ -1,12 +1,7 @@
 #include "VulkanContext.hpp"
 
-#include <format>
 #include <atomic>
-#include <vulkan/vk_enum_string_helper.h>
-
 #include "utils/Enumerate.hpp"
-#include "utils/Logger.hpp"
-#include "core/Timer.hpp"
 
 #define MAX_DRAW_COMMANDS 1000000
 
@@ -27,12 +22,18 @@ VulkanContext::~VulkanContext()
     vkDestroyPipelineCache(*s_LogicalDevice, m_PipelineCache, nullptr);
     m_CommandPools.clear();
 
-    CleanPerSurfaceStructs();
+    DestroyPerSurfaceStructs();
 
     m_DescriptorLayoutCache.Cleanup();
 
     if (s_Renderer)
         s_Renderer.reset();
+}
+
+void VulkanContext::LateInitialize()
+{
+    Image2D::Create(Files::Path("../textures/default.png"), VK_FORMAT_R8G8B8A8_SRGB, VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, false, true);
+    s_Renderer = std::make_unique<Renderer>();
 }
 
 void VulkanContext::Update()
@@ -72,7 +73,7 @@ void VulkanContext::Update()
         if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
             RecreateSwapchain();
         }
-        VK_CHECK(presentResult/*, "[vulkan] Failed to present swap chain image!"*/);
+        VK(presentResult/*, "[vulkan] Failed to present swap chain image!"*/);
 
         perSurfaceBuffer->currentFrame = (perSurfaceBuffer->currentFrame + 1) % swapchain->getImageCount();
     }
@@ -91,14 +92,9 @@ void VulkanContext::OnAddWindow(Window* window)
     s_Renderer->Create();
 }
 
-void VulkanContext::InitializeRenderer()
-{
-    s_Renderer = std::make_unique<Renderer>();
-}
-
 void VulkanContext::WaitGraphicsQueue()
 {
-    VK_CHECK(vkQueueWaitIdle(s_LogicalDevice->getGraphicsQueue()));
+    VK(vkQueueWaitIdle(s_LogicalDevice->getGraphicsQueue()));
 }
 
 uint32_t VulkanContext::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
@@ -127,10 +123,10 @@ VkFormat VulkanContext::FindSupportedFormat(const std::vector<VkFormat>& candida
         }
     }
 
-    throw std::runtime_error("[vulkan] Error: failed to find supported format!");
+    NE_ERROR("[vulkan] Error: failed to find supported format!");
 }
 
-void VulkanContext::VK_CHECK(VkResult err, const char* msg)
+void VulkanContext::VK(VkResult err, const char* msg)
 {
     if (err == VK_SUCCESS)
         return;
@@ -138,7 +134,7 @@ void VulkanContext::VK_CHECK(VkResult err, const char* msg)
     NE_ERROR(std::format("[vulkan] Error: {} with errorno: {}", msg, string_VkResult(err)));
 }
 
-void VulkanContext::VK_CHECK(VkResult err)
+void VulkanContext::VK(VkResult err)
 {
     if (err == VK_SUCCESS)
         return;
@@ -166,10 +162,8 @@ std::shared_ptr<CommandPool> VulkanContext::GetCommandPool(const TID& threadId)
 
 void VulkanContext::CreatePipelineCache()
 {
-    VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
-    pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-    VK_CHECK(vkCreatePipelineCache(*s_LogicalDevice, &pipelineCacheCreateInfo, nullptr, &m_PipelineCache),
-        "[vulkan] Error creating pipeline cache");
+    VkPipelineCacheCreateInfo pipelineCacheCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
+    VK(vkCreatePipelineCache(*s_LogicalDevice, &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));
 }
 
 void VulkanContext::RecreateSwapchain()
@@ -183,11 +177,9 @@ void VulkanContext::RecreateSwapchain()
         h = wd->m_Data.Height;
     } while (!w || !h);
 
-    VkExtent2D extent;
-    extent.width = w;
-    extent.height = h;
+    VkExtent2D extent{ w, h };
 
-    CleanPerSurfaceStructs();
+    DestroyPerSurfaceStructs();
 
     m_Swapchains.resize(m_Surfaces.size());
     m_PerSurfaceBuffers.resize(m_Surfaces.size());
@@ -215,14 +207,9 @@ void VulkanContext::RecreateSwapchain()
         fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
         for (std::size_t i = 0; i < img_cnt; ++i) {
-            VK_CHECK(vkCreateSemaphore(*s_LogicalDevice, &semaphoreCreateInfo, nullptr, &perSurfaceBuffer->presentCompletesSemaphores[i]),
-                "[vulkan] Error creating semaphores");
-
-            VK_CHECK(vkCreateSemaphore(*s_LogicalDevice, &semaphoreCreateInfo, nullptr, &perSurfaceBuffer->renderCompletesSemaphores[i]),
-                "[vulkan] Error creating semaphores");
-
-            VK_CHECK(vkCreateFence(*s_LogicalDevice, &fenceCreateInfo, nullptr, &perSurfaceBuffer->flightFences[i]),
-                "[vulkan] Error creating semaphores");
+            VK(vkCreateSemaphore(*s_LogicalDevice, &semaphoreCreateInfo, nullptr, &perSurfaceBuffer->presentCompletesSemaphores[i]));
+            VK(vkCreateSemaphore(*s_LogicalDevice, &semaphoreCreateInfo, nullptr, &perSurfaceBuffer->renderCompletesSemaphores[i]));
+            VK(vkCreateFence(*s_LogicalDevice, &fenceCreateInfo, nullptr, &perSurfaceBuffer->flightFences[i]));
 
             perSurfaceBuffer->commandBuffers[i] = std::make_unique<CommandBuffer>(false);
 
@@ -238,7 +225,7 @@ void VulkanContext::RecreateSwapchain()
     s_Renderer->Rebuild();
 }
 
-void VulkanContext::CleanPerSurfaceStructs()
+void VulkanContext::DestroyPerSurfaceStructs()
 {
     for (const auto& [id, perSurfaceBuffer] : Enumerate(m_PerSurfaceBuffers))
     {

@@ -9,7 +9,7 @@ CommandBuffer::CommandBuffer(bool begin, VkQueueFlagBits queueType, VkCommandBuf
 	cmdBufferInfo.commandPool = *r_CommandPool;
 	cmdBufferInfo.level = bufferLevel;
 	cmdBufferInfo.commandBufferCount = 1;
-	VulkanContext::VK_CHECK(vkAllocateCommandBuffers(VulkanContext::GetDevice(), &cmdBufferInfo, &m_CommandBuffer),
+	VulkanContext::VK(vkAllocateCommandBuffers(VulkanContext::GetDevice(), &cmdBufferInfo, &m_CommandBuffer),
 		"[vulkan] Error: cannot create command buffers");
 
 	if (begin)
@@ -31,7 +31,7 @@ void CommandBuffer::Begin(VkCommandBufferUsageFlags usage, const VkCommandBuffer
 		.flags = usage,
 		.pInheritanceInfo = inheritance
 	};
-	VulkanContext::VK_CHECK(vkBeginCommandBuffer(m_CommandBuffer, &beginInfo), 
+	VulkanContext::VK(vkBeginCommandBuffer(m_CommandBuffer, &beginInfo), 
 		"[vulkan] Error: cannot begin command buffer");
 
 	running = true;
@@ -40,7 +40,7 @@ void CommandBuffer::Begin(VkCommandBufferUsageFlags usage, const VkCommandBuffer
 void CommandBuffer::End() {
 	if (!running) return;
 
-	VulkanContext::VK_CHECK(vkEndCommandBuffer(m_CommandBuffer), 
+	VulkanContext::VK(vkEndCommandBuffer(m_CommandBuffer), 
 		"[vulkan] Error: cannot end command buffer");
 	running = false;
 }
@@ -65,7 +65,7 @@ void CommandBuffer::SubmitWait()
 	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
 	VkFence fence;
-	VulkanContext::VK_CHECK(vkCreateFence(VulkanContext::GetDevice(), &fenceCreateInfo, nullptr, &fence));
+	VulkanContext::VK(vkCreateFence(VulkanContext::GetDevice(), &fenceCreateInfo, nullptr, &fence));
 	Submit(VK_NULL_HANDLE, VK_NULL_HANDLE, fence);
 
 	vkQueueWaitIdle(GetQueue());

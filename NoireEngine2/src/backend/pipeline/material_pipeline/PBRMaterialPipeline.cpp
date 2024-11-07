@@ -61,7 +61,7 @@ void PBRMaterialPipeline::CreatePipelineLayout()
 		.pPushConstantRanges = &range,
 	};
 
-	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout),
+	VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout),
 		"[Vulkan] Create pipeline layout failed.");
 }
 

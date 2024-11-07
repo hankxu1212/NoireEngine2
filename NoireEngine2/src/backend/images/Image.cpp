@@ -123,7 +123,7 @@ void Image::CreateImage(VkImage& image, VkDeviceMemory& memory, const VkExtent3D
 	imageCreateInfo.usage = usage;
 	imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	VulkanContext::VK_CHECK(vkCreateImage(logicalDevice, &imageCreateInfo, nullptr, &image), "[vulkan] Error: failed to create image!");
+	VulkanContext::VK(vkCreateImage(logicalDevice, &imageCreateInfo, nullptr, &image), "[vulkan] Error: failed to create image!");
 
 	VkMemoryRequirements memoryRequirements;
 	vkGetImageMemoryRequirements(logicalDevice, image, &memoryRequirements);
@@ -132,9 +132,9 @@ void Image::CreateImage(VkImage& image, VkDeviceMemory& memory, const VkExtent3D
 	memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	memoryAllocateInfo.allocationSize = memoryRequirements.size;
 	memoryAllocateInfo.memoryTypeIndex = VulkanContext::FindMemoryType(memoryRequirements.memoryTypeBits, properties);
-	VulkanContext::VK_CHECK(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &memory), "[vulkan] Error: cannot allocate image memory.");
+	VulkanContext::VK(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &memory), "[vulkan] Error: cannot allocate image memory.");
 
-	VulkanContext::VK_CHECK(vkBindImageMemory(logicalDevice, image, memory, 0), "[vulkan] Error: cannot bind image memory.");
+	VulkanContext::VK(vkBindImageMemory(logicalDevice, image, memory, 0), "[vulkan] Error: cannot bind image memory.");
 }
 
 void Image::CreateImageSampler(VkSampler& sampler, VkFilter filter, VkSamplerAddressMode addressMode, bool anisotropic, uint32_t mipLevels) {
@@ -157,7 +157,7 @@ void Image::CreateImageSampler(VkSampler& sampler, VkFilter filter, VkSamplerAdd
 	samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 	samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
 
-	VulkanContext::VK_CHECK(vkCreateSampler(VulkanContext::GetDevice(), &samplerCreateInfo, nullptr, &sampler),
+	VulkanContext::VK(vkCreateSampler(VulkanContext::GetDevice(), &samplerCreateInfo, nullptr, &sampler),
 		"[vulkan] Error: failed to create texture sampler.");
 }
 
@@ -175,7 +175,7 @@ void Image::CreateImageView(const VkImage& image, VkImageView& imageView, VkImag
 	imageViewCreateInfo.subresourceRange.levelCount = mipLevels;
 	imageViewCreateInfo.subresourceRange.baseArrayLayer = baseArrayLayer;
 	imageViewCreateInfo.subresourceRange.layerCount = layerCount;
-	VulkanContext::VK_CHECK(vkCreateImageView(VulkanContext::GetDevice(), &imageViewCreateInfo, nullptr, &imageView),
+	VulkanContext::VK(vkCreateImageView(VulkanContext::GetDevice(), &imageViewCreateInfo, nullptr, &imageView),
 		"[vulkan] Cannot create image view");
 }
 

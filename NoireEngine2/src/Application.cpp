@@ -38,9 +38,6 @@ Application::Application(const ApplicationSpecification& specification)
 	// load default scene
 	SceneManager::Get()->LoadDefault();
 
-	// renderer initialized here, include renderpass and all pipelines are intiialized
-	VulkanContext::Get()->InitializeRenderer();
-
 	// all objects pushed here
 
 	// imgui context initialized here

@@ -82,5 +82,5 @@ void MirrorMaterialPipeline::CreatePipelineLayout()
 		.pPushConstantRanges = nullptr,
 	};
 
-	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
+	VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
 }

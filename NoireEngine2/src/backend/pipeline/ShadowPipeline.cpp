@@ -151,7 +151,7 @@ void ShadowPipeline::CreateRenderPass()
 	};
 
 	// create shadow render pass
-	VulkanContext::VK_CHECK(
+	VulkanContext::VK(
 		vkCreateRenderPass(VulkanContext::GetDevice(), &renderpassCreateInfo, nullptr, &m_ShadowMapRenderPass),
 		"[Vulkan] Create Render pass failed"
 	);
@@ -495,7 +495,7 @@ void ShadowPipeline::ShadowMap_CreateRenderPasses(uint32_t numPasses)
 			.layers = 1,
 		};
 
-		VulkanContext::VK_CHECK(
+		VulkanContext::VK(
 			vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_ShadowMapPasses[i].frameBuffer),
 			"[vulkan] Creating frame buffer failed"
 		);
@@ -536,7 +536,7 @@ void ShadowPipeline::CreatePipelineLayout()
 		.pPushConstantRanges = &push_constant,
 	};
 
-	VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_ShadowMapPassPipelineLayout));
+	VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_ShadowMapPassPipelineLayout));
 }
 
 void ShadowPipeline::CreateGraphicsPipeline()
@@ -615,7 +615,7 @@ void ShadowPipeline::Cascade_CreateRenderPasses(uint32_t numPasses)
 				.layers = 1,
 			};
 
-			VulkanContext::VK_CHECK(
+			VulkanContext::VK(
 				vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_CascadePasses[i].cascades[cascadeIndex].frameBuffer),
 				"[vulkan] Creating frame buffer failed"
 			);
@@ -646,7 +646,7 @@ void ShadowPipeline::Omni_CreateRenderPasses(uint32_t numPasses)
 				.layers = 1,
 			};
 
-			VulkanContext::VK_CHECK(
+			VulkanContext::VK(
 				vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_OmniPasses[i].cubefaces[faceIndex].frameBuffer),
 				"[vulkan] Creating frame buffer failed"
 			);

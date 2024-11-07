@@ -77,7 +77,7 @@ void LambertianEnvironmentBaker::Prepare()
         .pPushConstantRanges = nullptr,
     };
 
-    VulkanContext::VK_CHECK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
+    VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &create_info, nullptr, &m_PipelineLayout));
 
     uint32_t HDR_CONST = specs->isHDR ? 1 : 0;
 
