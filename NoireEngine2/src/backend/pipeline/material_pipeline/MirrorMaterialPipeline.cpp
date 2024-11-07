@@ -8,8 +8,8 @@
 #include "core/resources/Files.hpp"
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 
-MirrorMaterialPipeline::MirrorMaterialPipeline(ObjectPipeline* objectPipeline) :
-	MaterialPipeline(objectPipeline)
+MirrorMaterialPipeline::MirrorMaterialPipeline(Renderer* renderer) :
+	MaterialPipeline(renderer)
 {
 }
 
@@ -26,7 +26,7 @@ void MirrorMaterialPipeline::Create()
 
 void MirrorMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer)
 {
-	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
+	Renderer::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
 	std::array< VkDescriptorSet, 4 > descriptor_sets{
 		workspace.set0_World,
 		workspace.set1_StorageBuffers,

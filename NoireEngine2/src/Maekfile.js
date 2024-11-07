@@ -59,7 +59,8 @@ const renderer_objs = [
 	maek.CPP('renderer/animation/Animation.cpp'),
 	maek.CPP('renderer/animation/Animator.cpp'),
 	maek.CPP('renderer/animation/Keyframe.cpp'),
-	maek.CPP('renderer/lighting/Light.cpp')
+	maek.CPP('renderer/lighting/Light.cpp'),
+	maek.CPP('renderer/Renderer.cpp'),
 ]
 
 const component_objs = [
@@ -105,13 +106,11 @@ const vulkan_objs = [
 	maek.CPP('backend/buffers/Buffer.cpp'),
 	maek.CPP('backend/renderpass/Swapchain.cpp'),
 	maek.CPP('backend/renderpass/Renderpass.cpp'),
-	maek.CPP('backend/renderer/Renderer.cpp'),
 	maek.CPP('backend/shader/VulkanShader.cpp'),
 	maek.CPP('backend/descriptor/DescriptorAllocator.cpp'),
 	maek.CPP('backend/descriptor/DescriptorLayoutCache.cpp'),
 	maek.CPP('backend/descriptor/DescriptorBuilder.cpp'),
 	maek.CPP('backend/pipeline/material_pipeline/MaterialPipeline.cpp'),
-	maek.CPP('backend/pipeline/ObjectPipeline.cpp'),
 	maek.CPP('backend/pipeline/VulkanGraphicsPipelineBuilder.cpp'),
 ]
 

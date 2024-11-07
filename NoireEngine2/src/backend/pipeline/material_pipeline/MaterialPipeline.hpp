@@ -5,13 +5,13 @@
 #include "backend/commands/CommandBuffer.hpp"
 #include "renderer/materials/Material.hpp"
 
-class ObjectPipeline;
+class Renderer;
 
 class MaterialPipeline
 {
 public:
 	MaterialPipeline() = default;
-	MaterialPipeline(ObjectPipeline* objectPipeline);
+	MaterialPipeline(Renderer* renderer);
 	
 	virtual ~MaterialPipeline();
 
@@ -21,10 +21,10 @@ public:
 
 	virtual void BindDescriptors(const CommandBuffer& commandBuffer) {}
 
-	static std::unique_ptr<MaterialPipeline> Create(Material::Workflow workflow, ObjectPipeline* objectPipeline);
+	static std::unique_ptr<MaterialPipeline> Create(Material::Workflow workflow, Renderer* renderer);
 
 	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
 	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
-	ObjectPipeline*		p_ObjectPipeline = nullptr;
+	Renderer*		p_ObjectPipeline = nullptr;
 };
 

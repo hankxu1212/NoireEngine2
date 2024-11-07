@@ -11,8 +11,8 @@
 
 #pragma warning (disable:4702)
 
-RaytracingPipeline::RaytracingPipeline(ObjectPipeline* objectPipeline) :
-	p_ObjectPipeline(objectPipeline)
+RaytracingPipeline::RaytracingPipeline(Renderer* renderer) :
+	p_ObjectPipeline(renderer)
 {
 	VkDevice device = VulkanContext::GetDevice();
 
@@ -95,7 +95,7 @@ void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& command
 {
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_Pipeline);
 
-	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
+	Renderer::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
 	std::vector<VkDescriptorSet> descriptor_sets{
 		set0,
 		workspace.set0_World,

@@ -1,7 +1,7 @@
 #include "Light.hpp"
 #include "renderer/scene/Entity.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include "backend/pipeline/ObjectPipeline.hpp"
+#include "renderer/Renderer.hpp"
 #include "renderer/scene/SceneManager.hpp"
 #include "imgui/imgui.h"
 
@@ -87,7 +87,7 @@ void Light::Update()
 
 void Light::Render(const glm::mat4& model)
 {
-	if (!ObjectPipeline::UseGizmos || !useGizmos)
+	if (!Renderer::UseGizmos || !useGizmos)
 		return;
 
 	Color4_4 c{

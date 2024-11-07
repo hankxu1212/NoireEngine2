@@ -9,8 +9,8 @@
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 #include "renderer/scene/SceneManager.hpp"
 
-EnvironmentMaterialPipeline::EnvironmentMaterialPipeline(ObjectPipeline* objectPipeline) :
-	MaterialPipeline(objectPipeline)
+EnvironmentMaterialPipeline::EnvironmentMaterialPipeline(Renderer* renderer) :
+	MaterialPipeline(renderer)
 {
 }
 
@@ -27,7 +27,7 @@ void EnvironmentMaterialPipeline::Create()
 
 void EnvironmentMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer)
 {
-	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
+	Renderer::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
 	std::array< VkDescriptorSet, 4 > descriptor_sets{
 		workspace.set0_World,
 		workspace.set1_StorageBuffers,

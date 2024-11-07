@@ -6,7 +6,7 @@
 class PBRMaterialPipeline : public MaterialPipeline
 {
 public:
-	PBRMaterialPipeline(ObjectPipeline* objectPipeline);
+	PBRMaterialPipeline(Renderer* renderer);
 
 	void Create() override;
 	void BindDescriptors(const CommandBuffer& commandBuffer) override;

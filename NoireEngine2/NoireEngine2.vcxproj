@@ -139,8 +139,7 @@
     <ClCompile Include="src\renderer\Frustum.cpp" />
     <ClCompile Include="src\renderer\scene\Entity.cpp" />
     <ClCompile Include="src\renderer\scene\Scene.cpp" />
-    <ClCompile Include="src\backend\pipeline\ObjectPipeline.cpp" />
-    <ClCompile Include="src\backend\renderer\Renderer.cpp" />
+    <ClCompile Include="src\renderer\Renderer.cpp" />
     <ClCompile Include="src\backend\buffers\Buffer.cpp" />
     <ClCompile Include="src\core\resources\Files.cpp" />
     <ClCompile Include="src\core\Bitmap.cpp" />
@@ -306,9 +305,8 @@
     <ClInclude Include="src\renderer\Frustum.hpp" />
     <ClInclude Include="src\renderer\scene\Entity.hpp" />
     <ClInclude Include="src\renderer\scene\Scene.hpp" />
-    <ClInclude Include="src\backend\pipeline\ObjectPipeline.hpp" />
+    <ClInclude Include="src\renderer\Renderer.hpp" />
     <ClInclude Include="src\backend\pipeline\VulkanPipeline.hpp" />
-    <ClInclude Include="src\backend\renderer\Renderer.hpp" />
     <ClInclude Include="src\backend\buffers\Buffer.hpp" />
     <ClInclude Include="src\core\resources\Files.hpp" />
     <ClInclude Include="src\core\Bitmap.hpp" />

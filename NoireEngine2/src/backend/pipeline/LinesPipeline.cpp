@@ -6,8 +6,8 @@
 #include "renderer/scene/Scene.hpp"
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 
-LinesPipeline::LinesPipeline(ObjectPipeline* objectPipeline) :
-	p_ObjectPipeline(objectPipeline)
+LinesPipeline::LinesPipeline(Renderer* renderer) :
+	p_ObjectPipeline(renderer)
 {
 }
 

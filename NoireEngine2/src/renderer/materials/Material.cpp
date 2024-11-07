@@ -1,5 +1,5 @@
 #include "Material.hpp"
-#include "backend/pipeline/ObjectPipeline.hpp"
+#include "renderer/Renderer.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "utils/Logger.hpp"
 

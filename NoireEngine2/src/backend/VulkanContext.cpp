@@ -32,7 +32,7 @@ VulkanContext::~VulkanContext()
     m_DescriptorLayoutCache.Cleanup();
 
     if (s_Renderer)
-        s_Renderer->Cleanup();
+        s_Renderer.reset();
 }
 
 void VulkanContext::Update()
@@ -41,8 +41,6 @@ void VulkanContext::Update()
 
     for (auto [surfaceId, swapchain] : Enumerate(m_Swapchains))
     {
-        Timer timer;
-
         auto& perSurfaceBuffer = m_PerSurfaceBuffers[surfaceId];
 
         VkResult acquireResult = swapchain->AcquireNextImage(
@@ -55,17 +53,12 @@ void VulkanContext::Update()
             return;
         }
 
-        if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR) {
-            std::cerr << "[vulkan] Acquiring swapchain image resulted in " << string_VkResult(acquireResult) << std::endl;
-            return;
-        }
+        if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+            NE_ERROR("[vulkan] Acquiring swapchain image resulted in ", string_VkResult(acquireResult));
 
         std::unique_ptr<CommandBuffer>& commandBuffer = perSurfaceBuffer->commandBuffers[swapchain->getActiveImageIndex()];
 
         commandBuffer->Begin();
-
-        if (Application::StatsDirty)
-            WaitForSwapchainTime = timer.GetElapsed(true);
 
         s_Renderer->Render(*commandBuffer);
 
@@ -79,12 +72,7 @@ void VulkanContext::Update()
         if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
             RecreateSwapchain();
         }
-        else if (presentResult != VK_SUCCESS) {
-            VK_CHECK(presentResult, "[vulkan] Failed to present swap chain image!");
-        }
-
-        if (Application::StatsDirty)
-            RenderTime = timer.GetElapsed(false);
+        VK_CHECK(presentResult/*, "[vulkan] Failed to present swap chain image!"*/);
 
         perSurfaceBuffer->currentFrame = (perSurfaceBuffer->currentFrame + 1) % swapchain->getImageCount();
     }
@@ -100,7 +88,7 @@ void VulkanContext::OnAddWindow(Window* window)
     m_Surfaces.emplace_back(std::make_unique<Surface>(*s_VulkanInstance, *s_PhysicalDevice, *s_LogicalDevice, window));
     s_Renderer->CreateRenderPass();
     RecreateSwapchain();
-    s_Renderer->CreatePipelines();
+    s_Renderer->Create();
 }
 
 void VulkanContext::InitializeRenderer()
@@ -122,7 +110,7 @@ uint32_t VulkanContext::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlag
         }
     }
 
-    throw std::runtime_error("[vulkan] Error: failed to find suitable memory type!");
+    NE_ERROR("[vulkan] Error: failed to find suitable memory type!");
 }
 
 VkFormat VulkanContext::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)

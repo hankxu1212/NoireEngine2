@@ -60,7 +60,6 @@ public:
 	*/
 	static VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
-
 public:
 	static void VK_CHECK(VkResult err, const char* msg);
 	static void VK_CHECK(VkResult err);
@@ -95,8 +94,6 @@ public:
 	inline const uint32_t					getFramesInFlight() const { return m_Swapchains[0]->getImageCount(); }
 
 	inline DescriptorLayoutCache*			getDescriptorLayoutCache() { return &m_DescriptorLayoutCache; }
-
-	inline static float WaitForSwapchainTime, RenderTime;
 
 private:
 	std::unique_ptr<VulkanInstance>				s_VulkanInstance;

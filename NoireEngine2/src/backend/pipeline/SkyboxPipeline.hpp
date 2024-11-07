@@ -6,12 +6,12 @@
 #include "backend/descriptor/DescriptorBuilder.hpp"
 #include "backend/images/ImageCube.hpp"
 
-class ObjectPipeline;
+class Renderer;
 
 class SkyboxPipeline : public VulkanPipeline
 {
 public:
-	SkyboxPipeline(ObjectPipeline*);
+	SkyboxPipeline(Renderer*);
 
 	~SkyboxPipeline();
 	void CreatePipeline() override;
@@ -45,7 +45,7 @@ private:
 
 	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
 	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
-	ObjectPipeline*		p_ObjectPipeline;
+	Renderer*		p_ObjectPipeline;
 
 	DescriptorAllocator						m_DescriptorAllocator;
 

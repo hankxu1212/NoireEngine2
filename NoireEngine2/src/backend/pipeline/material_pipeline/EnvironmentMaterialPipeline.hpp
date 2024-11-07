@@ -4,12 +4,12 @@
 #include "backend/descriptor/DescriptorBuilder.hpp"
 #include "backend/images/ImageCube.hpp"
 
-class ObjectPipeline;
+class Renderer;
 
 class EnvironmentMaterialPipeline : public MaterialPipeline
 {
 public:
-	EnvironmentMaterialPipeline(ObjectPipeline* objectPipeline);
+	EnvironmentMaterialPipeline(Renderer* renderer);
 	~EnvironmentMaterialPipeline();
 
 	void Create() override;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VulkanPipeline.hpp"
+#include "backend/pipeline/VulkanPipeline.hpp"
 #include "backend/buffers/Buffer.hpp"
 #include "backend/images/Image2D.hpp"
 #include "renderer/object/ObjectInstance.hpp"
@@ -8,10 +8,11 @@
 #include "backend/renderpass/Renderpass.hpp"
 
 #include "backend/pipeline/material_pipeline/MaterialPipeline.hpp"
-#include "SkyboxPipeline.hpp"
-#include "LinesPipeline.hpp"
-#include "ShadowPipeline.hpp"
-#include "RaytracingPipeline.hpp"
+#include "backend/pipeline/SkyboxPipeline.hpp"
+#include "backend/pipeline/LinesPipeline.hpp"
+#include "backend/pipeline/ShadowPipeline.hpp"
+#include "backend/pipeline/RaytracingPipeline.hpp"
+#include "backend/pipeline/ImGuiPipeline.hpp"
 
 #include <type_traits>
 #include "glm/glm.hpp"
@@ -24,25 +25,26 @@ class MeshRenderInstance;
 /**
  * Manages all the material pipelines and the main geometry render pass.
  */
-class ObjectPipeline : public VulkanPipeline
+class Renderer : Singleton
 {
 public:
-	ObjectPipeline();
-	virtual ~ObjectPipeline();
+	Renderer();
+	~Renderer();
 
+	// UI statistics
 	inline static size_t ObjectsDrawn, VerticesDrawn, NumDrawCalls;
 	inline static bool UseGizmos = false;
 
 public:
-	void CreateRenderPass() override;
+	void CreateRenderPass();
 
-	void Rebuild() override;
+	void Rebuild();
 
-	void CreatePipeline() override;
+	void Create();
 
-	void Update(const Scene* scene) override;
+	void Update();
 
-	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
+	void Render(const CommandBuffer& commandBuffer);
 
 	// for draw indirect
 	struct IndirectBatch
@@ -57,8 +59,16 @@ public:
 
 private:
 	void CreateDescriptors();
+	void CreateWorkspaceDescriptors();
+	void CreateTextureDescriptors();
+	void CreateCubemapDescriptors();
+	void CreateShadowDescriptors();
 
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
+	void PrepareSceneUniform(const Scene* scene, const CommandBuffer& commandBuffer);
+	void PrepareTransforms(const Scene* scene, const CommandBuffer& commandBuffer);
+	void PrepareLights(const Scene* scene, const CommandBuffer& commandBuffer);
+
 
 	void CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t workflowIndex);
 
@@ -68,19 +78,24 @@ private:
 
 	struct Workspace
 	{
-		//location for ObjectsPipeline::World data: (streamed to GPU per-frame)
-		Buffer World_src; //host coherent; mapped
+		// world, scene uniform
+		Buffer WorldSrc; //host coherent; mapped
 		Buffer World; //device-local
-		VkDescriptorSet set0_World; //references World
+		VkDescriptorSet set0_World = VK_NULL_HANDLE;
 
-		//location for ObjectsPipeline::Transforms data: (streamed to GPU per-frame)
-		Buffer Transforms_src; //host coherent; mapped
+		// transforms
+		Buffer TransformsSrc; //host coherent; mapped
 		Buffer Transforms; //device-local
 
-		std::array<Buffer, 3> Lights_src;
+		// light list by type
+		std::array<Buffer, 3> LightsSrc;
 		std::array<Buffer, 3> Lights;
 
-		VkDescriptorSet set1_StorageBuffers; //references Transforms and lights
+		// material instances
+		Buffer MaterialInstancesSrc;
+		Buffer MaterialInstances;
+
+		VkDescriptorSet set1_StorageBuffers = VK_NULL_HANDLE; //references Transforms and lights
 	};
 
 private:
@@ -102,7 +117,7 @@ private:
 	VkDescriptorSetLayout set1_StorageBuffersLayout = VK_NULL_HANDLE;
 
 	VkDescriptorSetLayout set2_TexturesLayout = VK_NULL_HANDLE;
-	VkDescriptorSet set2_Textures;
+	VkDescriptorSet set2_Textures = VK_NULL_HANDLE;
 
 	VkDescriptorSetLayout set3_CubemapLayout = VK_NULL_HANDLE;
 	VkDescriptorSet set3_Cubemap = VK_NULL_HANDLE;
@@ -122,5 +137,6 @@ private: // material pipelines
 	std::unique_ptr<SkyboxPipeline>					s_SkyboxPipeline;
 	std::unique_ptr<ShadowPipeline>					s_ShadowPipeline;
 	std::unique_ptr<RaytracingPipeline>				s_RaytracingPipeline;
+	std::unique_ptr<ImGuiPipeline>					s_UIPipeline;
 };
 

@@ -56,8 +56,8 @@ float skyboxVertices[] = {
 #define SKYBOX_SIZE_BYTES 36 * 12
 static_assert(sizeof(skyboxVertices) == SKYBOX_SIZE_BYTES);
 
-SkyboxPipeline::SkyboxPipeline(ObjectPipeline* objectPipeline) :
-	p_ObjectPipeline(objectPipeline)
+SkyboxPipeline::SkyboxPipeline(Renderer* renderer) :
+	p_ObjectPipeline(renderer)
 {
 }
 

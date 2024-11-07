@@ -2,7 +2,7 @@
 
 #include "Application.hpp"
 #include "renderer/scene/SceneManager.hpp"
-#include "backend/pipeline/ObjectPipeline.hpp"
+#include "renderer/Renderer.hpp"
 #include "imguizmo/ImGuizmo.h"
 
 Editor* Editor::g_Editor = nullptr;
@@ -287,7 +287,7 @@ void Editor::ShowStats()
         ImGui::Checkbox("Stats Only", &statsOnly);
         ImGui::Separator(); // -----------------------------------------------------
 
-        ImGui::Checkbox("Use Gizmos", &ObjectPipeline::UseGizmos);
+        ImGui::Checkbox("Use Gizmos", &Renderer::UseGizmos);
         ImGui::Separator(); // -----------------------------------------------------
 
         ImGui::SeparatorText("Shadows"); // -----------------------------------------------------
@@ -309,19 +309,13 @@ void Editor::ShowStats()
         ImGui::SeparatorText("Rendering"); // -----------------------------------------------------
         
         // num objects drawn
-        ImGui::Text("Objects Drawn: %I64u", ObjectPipeline::ObjectsDrawn);
-        ImGui::Text("Vertices Drawn: %I64u", ObjectPipeline::VerticesDrawn);
-        ImGui::Text("Indirect Indexed Draw Calls: %I64u", ObjectPipeline::NumDrawCalls);
+        ImGui::Text("Objects Drawn: %I64u", Renderer::ObjectsDrawn);
+        ImGui::Text("Vertices Drawn: %I64u", Renderer::VerticesDrawn);
+        ImGui::Text("Indirect Indexed Draw Calls: %I64u", Renderer::NumDrawCalls);
         ImGui::Separator(); // -----------------------------------------------------
 
         ImGui::BulletText("Application Update Time: %.3fms", Application::ApplicationUpdateTime);
         ImGui::BulletText("Application Render Time: %.3fms", Application::ApplicationRenderTime);
-        ImGui::Indent(20);
-            ImGui::BulletText("Present Time: %.3fms", VulkanContext::WaitForSwapchainTime);
-            ImGui::BulletText("Draw Call Time: %.3fms", VulkanContext::RenderTime);
-            ImGui::Indent(20);
-                ImGui::BulletText("Object Render Time: %.3fms", Renderer::ObjectRenderTime);
-                ImGui::BulletText("UI Render Time: %.3fms", Renderer::UIRenderTime);
         ImGui::Unindent(40);
 
         if (ImGui::BeginPopupContextWindow())

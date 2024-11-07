@@ -3,12 +3,12 @@
 #include "MaterialPipeline.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
 
-class ObjectPipeline;
+class Renderer;
 
 class MirrorMaterialPipeline : public MaterialPipeline
 {
 public:
-	MirrorMaterialPipeline(ObjectPipeline* objectPipeline);
+	MirrorMaterialPipeline(Renderer* renderer);
 	~MirrorMaterialPipeline();
 
 	void Create() override;

@@ -9,7 +9,7 @@
 #include "backend/buffers/Buffer.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
 
-class ObjectPipeline;
+class Renderer;
 
 #define SHADOW_MAP_CASCADE_COUNT 4
 #define OMNI_SHADOWMAPS_COUNT 6
@@ -17,7 +17,7 @@ class ObjectPipeline;
 class ShadowPipeline : public VulkanPipeline
 {
 public:
-	ShadowPipeline(ObjectPipeline* objectPipeline);
+	ShadowPipeline(Renderer* renderer);
 	~ShadowPipeline();
 
 	// creates as many render passes as there are shadow casters in the scene
@@ -77,7 +77,7 @@ public:
 
 private:
 	// Global pipeline variables ////////////////////////////////////////////
-	ObjectPipeline*		p_ObjectPipeline = nullptr;
+	Renderer*		p_ObjectPipeline = nullptr;
 
 	struct Workspace
 	{

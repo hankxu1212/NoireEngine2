@@ -96,10 +96,7 @@
     <ClCompile Include="src\core\resources\nodes\NodeView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\backend\renderer\Renderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\backend\pipeline\ObjectPipeline.cpp">
+    <ClCompile Include="src\renderer\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\backend\shader\VulkanShader.cpp">
@@ -629,10 +626,7 @@
     <ClInclude Include="src\core\resources\nodes\NodeView.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\backend\renderer\Renderer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\backend\pipeline\ObjectPipeline.hpp">
+    <ClInclude Include="src\renderer\Renderer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\backend\shader\VulkanShader.h">

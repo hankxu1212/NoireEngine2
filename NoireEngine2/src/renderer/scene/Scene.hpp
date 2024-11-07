@@ -130,7 +130,7 @@ private:
 
 private:
 	friend class SceneManager;
-	friend class ObjectPipeline;
+	friend class Renderer;
 
 	std::filesystem::path sceneRootAbsolutePath;
 

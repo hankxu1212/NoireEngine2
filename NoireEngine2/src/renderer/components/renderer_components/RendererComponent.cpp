@@ -5,7 +5,7 @@
 #include "renderer/object/Mesh.hpp"
 #include "renderer/materials/Material.hpp"
 #include "Application.hpp"
-#include "backend/pipeline/ObjectPipeline.hpp"
+#include "renderer/Renderer.hpp"
 
 #include "imgui/imgui.h"
 #include "editor/ImGuiExtension.hpp"
@@ -50,7 +50,7 @@ void RendererComponent::Render(const glm::mat4& model)
 			material // material pointer
 		);
 
-	if (ObjectPipeline::UseGizmos && useGizmos) {
+	if (Renderer::UseGizmos && useGizmos) {
 		gizmos.DrawWireCube1(mesh->getAABB().min, mesh->getAABB().max, Color4_4::Green);
 		GetScene()->PushGizmosInstance(&gizmos);
 	}

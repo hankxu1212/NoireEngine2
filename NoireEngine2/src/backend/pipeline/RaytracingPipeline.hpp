@@ -8,12 +8,12 @@
 #include "backend/images/Image2D.hpp"
 #include "core/Core.hpp"
 
-class ObjectPipeline;
+class Renderer;
 
 class RaytracingPipeline : public VulkanPipeline
 {
 public:
-	RaytracingPipeline(ObjectPipeline*);
+	RaytracingPipeline(Renderer*);
 
 	~RaytracingPipeline();
 
@@ -59,7 +59,7 @@ public: // ray tracing helpers
 private:
 	friend class ImGuiPipeline;
 
-	ObjectPipeline* p_ObjectPipeline;
+	Renderer* p_ObjectPipeline;
 
 	START_BINDING(RTXBindings)
 		TLAS = 0,  // Top-level acceleration structure

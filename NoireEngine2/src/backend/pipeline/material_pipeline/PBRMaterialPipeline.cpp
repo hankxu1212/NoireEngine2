@@ -5,8 +5,8 @@
 #include "backend/VulkanContext.hpp"
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 
-PBRMaterialPipeline::PBRMaterialPipeline(ObjectPipeline* objectPipeline) :
-	MaterialPipeline(objectPipeline)
+PBRMaterialPipeline::PBRMaterialPipeline(Renderer* renderer) :
+	MaterialPipeline(renderer)
 {
 }
 
@@ -18,7 +18,7 @@ void PBRMaterialPipeline::Create()
 
 void PBRMaterialPipeline::BindDescriptors(const CommandBuffer& commandBuffer)
 {
-	ObjectPipeline::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
+	Renderer::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
 	std::array< VkDescriptorSet, 5 > descriptor_sets{
 		workspace.set0_World,
 		workspace.set1_StorageBuffers,

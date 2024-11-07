@@ -75,6 +75,12 @@ void Buffer::CopyBuffer(VkCommandBuffer cmdBuffer, VkBuffer srcBuffer, VkBuffer 
 	vkCmdCopyBuffer(cmdBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 }
 
+void Buffer::CopyFromCPU(VkCommandBuffer cmdBuffer, const Buffer& hostBuffer, Buffer& deviceBuffer, VkDeviceSize size, const void* data)
+{
+	memcpy(hostBuffer.data(), data, size);
+	CopyBuffer(cmdBuffer, hostBuffer.getBuffer(), deviceBuffer.getBuffer(), size);
+}
+
 void Buffer::TransferToBufferIdle(void* data, size_t size, VkBuffer dstBuffer)
 {
 	Buffer transferSource = Buffer(
@@ -92,6 +98,15 @@ void Buffer::TransferToBufferIdle(void* data, size_t size, VkBuffer dstBuffer)
 
 	commandBuffer.SubmitIdle();
 	transferSource.Destroy();
+}
+
+VkDescriptorBufferInfo Buffer::GetDescriptorInfo()
+{
+	return VkDescriptorBufferInfo {
+		.buffer = buffer,
+		.offset = 0,
+		.range = m_Size
+	};
 }
 
 VkBufferMemoryBarrier Buffer::CreateBufferMemoryBarrier(VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, uint32_t offset)

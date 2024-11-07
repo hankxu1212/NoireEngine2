@@ -3,7 +3,7 @@
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 #include "backend/shader/VulkanShader.h"
 
-#include "ObjectPipeline.hpp"
+#include "renderer/Renderer.hpp"
 
 #include "core/Time.hpp"
 #include "utils/Logger.hpp"
@@ -28,8 +28,8 @@ static std::array< VkClearValue, 1 > clear_values{
 	VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
 };
 
-ShadowPipeline::ShadowPipeline(ObjectPipeline* objectPipeline) :
-	p_ObjectPipeline(objectPipeline)
+ShadowPipeline::ShadowPipeline(Renderer* renderer) :
+	p_ObjectPipeline(renderer)
 {
 }
 
@@ -450,7 +450,7 @@ void ShadowPipeline::T_RenderShadows(uint32_t tid, VkCommandBufferInheritanceInf
 			uint32_t instanceCount = (uint32_t)workflowInstances.size();
 
 			// draw each batch
-			for (const ObjectPipeline::IndirectBatch& draw : indirectBatches[workflowIndex])
+			for (const Renderer::IndirectBatch& draw : indirectBatches[workflowIndex])
 			{
 				VertexInput* vertexInputPtr = draw.mesh->getVertexInput();
 				if (vertexInputPtr != previouslyBindedVertex) {
@@ -464,7 +464,7 @@ void ShadowPipeline::T_RenderShadows(uint32_t tid, VkCommandBufferInheritanceInf
 				VkDeviceSize offset = (draw.firstInstanceIndex + offsetIndex) * stride;
 
 				vkCmdDrawIndexedIndirect(cmdBuf, VulkanContext::Get()->getIndirectBuffer()->getBuffer(), offset, draw.count, stride);
-				ObjectPipeline::NumDrawCalls++;
+				Renderer::NumDrawCalls++;
 			}
 			offsetIndex += instanceCount;
 		}

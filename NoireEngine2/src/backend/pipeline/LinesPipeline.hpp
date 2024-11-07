@@ -6,12 +6,12 @@
 #include "renderer/vertices/PosColVertex.hpp"
 #include "backend/descriptor/DescriptorBuilder.hpp"
 
-class ObjectPipeline;
+class Renderer;
 
 class LinesPipeline : public VulkanPipeline
 {
 public:
-	LinesPipeline(ObjectPipeline*);
+	LinesPipeline(Renderer*);
 	~LinesPipeline();
 
 	void CreatePipeline() override;
@@ -48,7 +48,7 @@ private:
 
 	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
 	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
-	ObjectPipeline*		p_ObjectPipeline;
+	Renderer*		p_ObjectPipeline;
 
 	DescriptorAllocator						m_DescriptorAllocator;
 };
