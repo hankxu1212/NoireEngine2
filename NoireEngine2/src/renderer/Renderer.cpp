@@ -262,8 +262,8 @@ void Renderer::CreateWorkspaceDescriptors()
 			.AddBinding(StorageBuffers::DirLights, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // dir lights
 			.AddBinding(StorageBuffers::SpotLights, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // point lights
 			.AddBinding(StorageBuffers::PointLights, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // spot lights
-			.AddBinding(StorageBuffers::Materials, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // material instances
-			.AddBinding(StorageBuffers::Objects, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // object descriptions
+			.AddBinding(StorageBuffers::Materials, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) // material instances
+			.AddBinding(StorageBuffers::Objects, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) // object descriptions
 			.Build(workspace.set1_StorageBuffers, set1_StorageBuffersLayout);
 	}
 }
@@ -740,8 +740,10 @@ void Renderer::PrepareObjectDescriptions(const Scene* scene, const CommandBuffer
 			{
 				ObjectDescription description
 				{
+					.vertexAddress = inst.mesh->getVertexBufferAddress(),
+					.indexAddress = inst.mesh->getIndexBufferAddress(),
 					.materialOffset = (uint32_t)inst.material->materialInstanceBufferOffset,
-					.materialID = inst.material->getID(),
+					.materialWorkflow = (uint32_t)inst.material->getWorkflow()
 				};
 				*out = description;
 				++out;
@@ -800,7 +802,9 @@ void Renderer::PrepareMaterialInstances(const CommandBuffer& commandBuffer)
 		//update the descriptor set:
 		VkDescriptorBufferInfo matInfo = workspace.MaterialInstances.GetDescriptorInfo();
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-			.BindBuffer(StorageBuffers::Materials, &matInfo, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.BindBuffer(StorageBuffers::Materials, &matInfo, 
+				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 
+				VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR)
 			.Write(workspace.set1_StorageBuffers);
 
 		NE_INFO("Reallocated material instances to {} bytes", new_bytes);

@@ -104,14 +104,35 @@ layout(set=1, binding=4, scalar) readonly buffer MaterialBufferFloat {
 
 ///////////////////////////////////////////////
 // Set 1.5: Object buffers: passing in object information
+// including vertex and index buffer addresses
 ///////////////////////////////////////////////
-struct ObjectDesc
+struct Vertex
 {
-	uint offset;
-	uint id;
+	vec3 pos;
+	vec3 nrm;
+	vec4 tangent;
+	vec2 texCoord;
 };
 
-layout(set=1, binding=5, std430) readonly buffer Objects {
+layout(buffer_reference, scalar) buffer Vertices 
+{ 
+    Vertex v[]; 
+}; // Positions of an object
+
+layout(buffer_reference, scalar) buffer Indices 
+{ 
+    ivec3 i[]; 
+}; // Triangle indices
+
+struct ObjectDesc
+{
+    Vertices vertexAddress;         // Address of the Vertex buffer
+    Indices indexAddress;          // Address of the index buffer
+	uint offset;
+	uint materialType;
+};
+
+layout(set=1, binding=5, scalar) readonly buffer Objects {
 	ObjectDesc OBJECTS[];
 };
 

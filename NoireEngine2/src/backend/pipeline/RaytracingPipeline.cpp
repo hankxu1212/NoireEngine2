@@ -6,6 +6,7 @@
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 #include "utils/Logger.hpp"
 #include "renderer/object/Mesh.hpp"
+#include "renderer/materials/Material.hpp"
 #include "backend/raytracing/RaytracingBuilderKHR.hpp"
 #include "core/Bitmap.hpp"
 
@@ -64,7 +65,6 @@ RaytracingPipeline::~RaytracingPipeline()
 
 	m_RTBuilder.Destroy();
 	m_rtSBTBuffer.Destroy();
-	m_ObjDescBuffer.Destroy();
 
 	if (m_PipelineLayout != VK_NULL_HANDLE) {
 		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_PipelineLayout, nullptr);
@@ -80,15 +80,12 @@ RaytracingPipeline::~RaytracingPipeline()
 
 void RaytracingPipeline::CreatePipeline()
 {
-	// Create the acceleration structures used to render the ray traced scene
 	CreateBottomLevelAccelerationStructure();
 	CreateTopLevelAccelerationStructure();
 	CreateStorageImage();
-	CreateObjectDescriptionBuffer();
 	CreateDescriptorSets();
 	CreateRayTracingPipeline();
 	CreateShaderBindingTables();
-	return;
 }
 
 void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
@@ -97,13 +94,14 @@ void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& command
 
 	Renderer::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
 	std::vector<VkDescriptorSet> descriptor_sets{
-		set0,
 		workspace.set0_World,
 		workspace.set1_StorageBuffers,
 		p_ObjectPipeline->set2_Textures,
 		p_ObjectPipeline->set3_IBL,
-		p_ObjectPipeline->set4_ShadowMap
+		p_ObjectPipeline->set4_ShadowMap,
+		set0,
 	};
+
 	vkCmdBindDescriptorSets(
 		commandBuffer, //command buffer
 		VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, //pipeline bind point
@@ -114,7 +112,7 @@ void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& command
 	);
 
 	// Initializing push constant values
-	m_pcRay.clearColor = glm::vec4(1,0.5f,0,1);
+	m_pcRay.clearColor = glm::vec4(0,0,0,1);
 	vkCmdPushConstants(commandBuffer, m_PipelineLayout,
 		VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_MISS_BIT_KHR,
 		0, sizeof(PushConstantRay), &m_pcRay);
@@ -233,13 +231,15 @@ VkStridedDeviceAddressRegionKHR RaytracingPipeline::GetSbtEntryStridedDeviceAddr
 	return stridedDeviceAddressRegionKHR;
 }
 
-RaytracingBuilderKHR::BlasInput MeshToGeometry(const Mesh* mesh)
+RaytracingBuilderKHR::BlasInput MeshToGeometry(Mesh* mesh)
 {
 	VkDeviceOrHostAddressConstKHR vertexBufferDeviceAddress{};
 	VkDeviceOrHostAddressConstKHR indexBufferDeviceAddress{};
 
-	vertexBufferDeviceAddress.deviceAddress = RaytracingPipeline::GetBufferDeviceAddress(mesh->getVertexBuffer().getBuffer());
-	indexBufferDeviceAddress.deviceAddress = RaytracingPipeline::GetBufferDeviceAddress(mesh->getIndexBuffer().getBuffer());
+	mesh->UpdateDeviceAddress();
+
+	vertexBufferDeviceAddress.deviceAddress = mesh->getVertexBufferAddress();
+	indexBufferDeviceAddress.deviceAddress = mesh->getIndexBufferAddress();
 
 	uint32_t numTriangles = mesh->getIndexCount() / 3;
 
@@ -342,41 +342,6 @@ void RaytracingPipeline::CreateStorageImage()
 	m_RtxImage->Load();
 }
 
-void RaytracingPipeline::CreateObjectDescriptionBuffer()
-{
-	const auto& allInstances = SceneManager::Get()->getScene()->getObjectInstances();
-
-	uint32_t totalSize = 0;
-	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
-		totalSize += (uint32_t)allInstances[workflowIndex].size();
-
-	std::vector<ObjectDescription> objectDescriptions;
-	objectDescriptions.reserve(totalSize);
-
-	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
-	{
-		const auto& workflowInstances = allInstances[workflowIndex];
-		uint32_t instanceCount = (uint32_t)workflowInstances.size();
-		for (uint32_t i = 0; i < instanceCount; i++)
-		{
-			ObjectDescription desc;
-			desc.vertexAddress = GetBufferDeviceAddress(workflowInstances[i].mesh->getVertexBuffer().getBuffer());
-			desc.indexAddress = GetBufferDeviceAddress(workflowInstances[i].mesh->getIndexBuffer().getBuffer());
-
-			objectDescriptions.emplace_back(desc);
-		}
-	}
-
-	m_ObjDescBuffer = Buffer(
-		totalSize * sizeof(ObjectDescription),
-		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		Buffer::Unmapped
-	);
-
-	Buffer::TransferToBufferIdle(objectDescriptions.data(), totalSize * sizeof(ObjectDescription), m_ObjDescBuffer.getBuffer());
-}
-
 void RaytracingPipeline::CreateRayTracingPipeline()
 {
 	enum StageIndices
@@ -430,19 +395,17 @@ void RaytracingPipeline::CreateRayTracingPipeline()
 	pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 	pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstant;
 
-	// Descriptor sets: one specific to ray tracing, and one shared with the rasterization pipeline
-	std::vector<VkDescriptorSetLayout> rtDescSetLayouts = { 
-		set0_layout, // rtx tlas and out image
+	std::array< VkDescriptorSetLayout, 6 > layouts{
 		p_ObjectPipeline->set0_WorldLayout,
 		p_ObjectPipeline->set1_StorageBuffersLayout,
 		p_ObjectPipeline->set2_TexturesLayout,
 		p_ObjectPipeline->set3_IBLLayout,
 		p_ObjectPipeline->set4_ShadowMapLayout,
+		set0_layout
 	};
 
-	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(rtDescSetLayouts.size());
-	pipelineLayoutCreateInfo.pSetLayouts = rtDescSetLayouts.data();
-
+	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+	pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 	vkCreatePipelineLayout(VulkanContext::GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout);
 
 
@@ -456,7 +419,7 @@ void RaytracingPipeline::CreateRayTracingPipeline()
 	rayPipelineInfo.groupCount = static_cast<uint32_t>(m_RTShaderGroups.size());
 	rayPipelineInfo.pGroups = m_RTShaderGroups.data();
 
-	rayPipelineInfo.maxPipelineRayRecursionDepth = 1;  // Ray depth
+	rayPipelineInfo.maxPipelineRayRecursionDepth = 10;  // Ray depth
 	rayPipelineInfo.layout = m_PipelineLayout;
 
 	vkCreateRayTracingPipelinesKHR(VulkanContext::GetDevice(), {}, {}, 1, & rayPipelineInfo, nullptr, & m_Pipeline);
@@ -561,16 +524,8 @@ void RaytracingPipeline::CreateDescriptorSets()
 	descASInfo.accelerationStructureCount = 1;
 	descASInfo.pAccelerationStructures = &as;
 
-	VkDescriptorBufferInfo objDescInfo
-	{
-		.buffer = m_ObjDescBuffer.getBuffer(),
-		.offset = 0,
-		.range = m_ObjDescBuffer.getSize(),
-	};
-
 	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 		.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
 		.BindImage(RTXBindings::OutImage, &rtxImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
-		.BindBuffer(RTXBindings::ObjDesc, &objDescInfo, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR)
 		.Build(set0, set0_layout);
 }

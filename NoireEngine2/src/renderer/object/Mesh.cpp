@@ -15,6 +15,8 @@
 #include "glm/gtx/string_cast.hpp"
 #include "glm/gtx/extended_min_max.hpp"
 
+#include "backend/pipeline/RaytracingPipeline.hpp"
+
 Mesh::Mesh(const CreateInfo& createInfo) :
 	m_CreateInfo(createInfo)
 {
@@ -233,6 +235,13 @@ void Mesh::CreateIndexBuffer(std::vector<uint32_t>& indices)
 void Mesh::Update(const glm::mat4& model)
 {
 	m_AABB.Update(model);
+}
+
+void Mesh::UpdateDeviceAddress()
+{
+	// get device address
+	m_VertexBufferDeviceAddress = RaytracingPipeline::GetBufferDeviceAddress(m_VertexBuffer.getBuffer());
+	m_IndexBufferDeviceAddress = RaytracingPipeline::GetBufferDeviceAddress(m_IndexBuffer.getBuffer());
 }
 
 void Mesh::Bind(const CommandBuffer& commandBuffer)

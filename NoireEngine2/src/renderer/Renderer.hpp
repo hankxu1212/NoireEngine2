@@ -82,8 +82,10 @@ private:
 
 	struct ObjectDescription
 	{
+		uint64_t vertexAddress;         // Address of the Vertex buffer
+		uint64_t indexAddress;          // Address of the index buffer
 		uint32_t materialOffset; // where to look in the material buffer
-		uint32_t materialID; // interpret the buffer data as which material type?
+		uint32_t materialWorkflow; // interpret the buffer data as which material type?
 	};
 
 	struct Workspace

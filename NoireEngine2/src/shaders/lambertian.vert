@@ -1,6 +1,7 @@
 #version 450
 
 #extension GL_EXT_scalar_block_layout : enable
+#extension GL_EXT_buffer_reference2 : require
 
 layout(location=0) in vec3 inPosition;
 layout(location=1) in vec3 inNormal;

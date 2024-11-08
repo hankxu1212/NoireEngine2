@@ -74,6 +74,8 @@ public: // loading and initialization
 public:
 	void Update(const glm::mat4& model);
 
+	void UpdateDeviceAddress();
+
 	virtual std::type_index getTypeIndex() const { return typeid(Mesh); }
 
 	inline const Buffer& getVertexBuffer() const { return m_VertexBuffer; }
@@ -83,6 +85,10 @@ public:
 	inline uint32_t getVertexCount() const { return numVertices; }
 
 	inline uint32_t getIndexCount() const { return numIndices; }
+
+	inline uint64_t getVertexBufferAddress() const { return m_VertexBufferDeviceAddress; }
+
+	inline uint64_t getIndexBufferAddress() const { return m_IndexBufferDeviceAddress; }
 
 	inline VertexInput* getVertexInput() { return m_Vertex; }
 
@@ -109,4 +115,6 @@ private:
 	VertexInput*					m_Vertex;
 	CreateInfo						m_CreateInfo;
 	AABB							m_AABB;
+	uint64_t						m_IndexBufferDeviceAddress;
+	uint64_t						m_VertexBufferDeviceAddress;
 };
