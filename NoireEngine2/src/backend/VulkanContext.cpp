@@ -15,7 +15,7 @@ VulkanContext::VulkanContext() :
 
 VulkanContext::~VulkanContext()
 {
-    WaitGraphicsQueue();
+    WaitIdle();
 
     m_Swapchains.clear();
 
@@ -25,9 +25,6 @@ VulkanContext::~VulkanContext()
     DestroyPerSurfaceStructs();
 
     m_DescriptorLayoutCache.Cleanup();
-
-    if (s_Renderer)
-        s_Renderer.reset();
 }
 
 void VulkanContext::LateInitialize()
@@ -96,9 +93,9 @@ void VulkanContext::OnAddWindow(Window* window)
     s_Renderer->Create();
 }
 
-void VulkanContext::WaitGraphicsQueue()
+void VulkanContext::WaitIdle()
 {
-    VK(vkQueueWaitIdle(s_LogicalDevice->getGraphicsQueue()));
+    vkDeviceWaitIdle(*s_LogicalDevice);
 }
 
 uint32_t VulkanContext::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
@@ -172,7 +169,7 @@ void VulkanContext::CreatePipelineCache()
 
 void VulkanContext::RecreateSwapchain()
 {
-    WaitGraphicsQueue();
+    WaitIdle();
 
     auto wd = getSurface(0)->getWindow();
     uint32_t w, h;

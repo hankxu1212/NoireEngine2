@@ -56,11 +56,6 @@ float skyboxVertices[] = {
 #define SKYBOX_SIZE_BYTES 36 * 12
 static_assert(sizeof(skyboxVertices) == SKYBOX_SIZE_BYTES);
 
-SkyboxPipeline::SkyboxPipeline(Renderer* renderer) :
-	p_ObjectPipeline(renderer)
-{
-}
-
 SkyboxPipeline::~SkyboxPipeline()
 {
 	for (Workspace& workspace : workspaces)
@@ -107,7 +102,7 @@ void SkyboxPipeline::Render(const Scene* scene, const CommandBuffer& commandBuff
 	{ //bind Camera descriptor set:
 		std::array< VkDescriptorSet, 2 > descriptor_sets{
 			workspace.set0_Camera,
-			p_ObjectPipeline->set3_IBL
+			Renderer::Instance->set3_IBL
 		};
 		vkCmdBindDescriptorSets(
 			commandBuffer, //command buffer
@@ -160,14 +155,14 @@ void SkyboxPipeline::CreateGraphicsPipeline()
 		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_CLOCKWISE)
 		.SetDepthStencil(VK_TRUE, VK_TRUE, VK_FALSE, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL)
 		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
-		.Build("../spv/shaders/skybox.vert.spv", "../spv/shaders/skybox.frag.spv", &m_Pipeline, m_PipelineLayout, p_ObjectPipeline->m_Renderpass->renderpass);
+		.Build("../spv/shaders/skybox.vert.spv", "../spv/shaders/skybox.frag.spv", &m_Pipeline, m_PipelineLayout, Renderer::Instance->m_Renderpass->renderpass);
 }
 
 void SkyboxPipeline::CreatePipelineLayout()
 {
 	std::array< VkDescriptorSetLayout, 2 > layouts{
 		set0_CameraLayout,
-		p_ObjectPipeline->set3_IBLLayout
+		Renderer::Instance->set3_IBLLayout
 	};
 
 	VkPipelineLayoutCreateInfo create_info{

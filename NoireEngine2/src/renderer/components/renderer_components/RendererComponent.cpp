@@ -88,8 +88,6 @@ void RendererComponent::Inspect()
 
 void RendererComponent::PrepareAcceleration(const glm::mat4& model)
 {
-	mesh->Update(model);
-
 	const Camera* renderCam = GetScene()->GetRenderCam()->camera();
 	GetScene()->GetObjectInstances((uint32_t)material->getWorkflow())
 		.emplace_back(

@@ -12,8 +12,7 @@
 
 #pragma warning (disable:4702)
 
-RaytracingPipeline::RaytracingPipeline(Renderer* renderer) :
-	p_ObjectPipeline(renderer)
+RaytracingPipeline::RaytracingPipeline()
 {
 	VkDevice device = VulkanContext::GetDevice();
 
@@ -81,7 +80,7 @@ RaytracingPipeline::~RaytracingPipeline()
 void RaytracingPipeline::CreatePipeline()
 {
 	CreateBottomLevelAccelerationStructure();
-	CreateTopLevelAccelerationStructure();
+	CreateTopLevelAccelerationStructure(false);
 	CreateStorageImage();
 	CreateDescriptorSets();
 	CreateRayTracingPipeline();
@@ -90,15 +89,17 @@ void RaytracingPipeline::CreatePipeline()
 
 void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
+	CreateTopLevelAccelerationStructure(true);
+
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_Pipeline);
 
-	Renderer::Workspace& workspace = p_ObjectPipeline->workspaces[CURR_FRAME];
+	Renderer::Workspace& workspace = Renderer::Instance->workspaces[CURR_FRAME];
 	std::vector<VkDescriptorSet> descriptor_sets{
 		workspace.set0_World,
 		workspace.set1_StorageBuffers,
-		p_ObjectPipeline->set2_Textures,
-		p_ObjectPipeline->set3_IBL,
-		p_ObjectPipeline->set4_ShadowMap,
+		Renderer::Instance->set2_Textures,
+		Renderer::Instance->set3_IBL,
+		Renderer::Instance->set4_ShadowMap,
 		set0,
 	};
 
@@ -231,7 +232,7 @@ VkStridedDeviceAddressRegionKHR RaytracingPipeline::GetSbtEntryStridedDeviceAddr
 	return stridedDeviceAddressRegionKHR;
 }
 
-RaytracingBuilderKHR::BlasInput MeshToGeometry(Mesh* mesh)
+static RaytracingBuilderKHR::BlasInput MeshToGeometry(Mesh* mesh)
 {
 	VkDeviceOrHostAddressConstKHR vertexBufferDeviceAddress{};
 	VkDeviceOrHostAddressConstKHR indexBufferDeviceAddress{};
@@ -288,23 +289,17 @@ void RaytracingPipeline::CreateBottomLevelAccelerationStructure()
 	NE_DEBUG(std::format("Built {} bottom level triangle geometries", allBlas.size()), Logger::CYAN, Logger::BOLD);
 }
 
-void RaytracingPipeline::CreateTopLevelAccelerationStructure()
+void RaytracingPipeline::CreateTopLevelAccelerationStructure(bool update)
 {
-	std::vector<VkAccelerationStructureInstanceKHR> tlas;
+	m_TlasBuildStructs.clear();
 	const auto& allInstances = SceneManager::Get()->getScene()->getObjectInstances();
-
-	uint32_t totalSize = 0;
-	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
-		totalSize += (uint32_t)allInstances[workflowIndex].size();
-	tlas.reserve(totalSize);
 
 	uint32_t customIndex = 0;
 
 	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
 	{
 		const auto& workflowInstances = allInstances[workflowIndex];
-		uint32_t instanceCount = (uint32_t)workflowInstances.size();
-		for (uint32_t i = 0; i < instanceCount; i++)
+		for (uint32_t i = 0; i < workflowInstances.size(); i++)
 		{
 			VkAccelerationStructureInstanceKHR rayInst{};
 			rayInst.transform = toTransformMatrixKHR(workflowInstances[i].m_TransformUniform.modelMatrix); // Position of the instance
@@ -314,14 +309,12 @@ void RaytracingPipeline::CreateTopLevelAccelerationStructure()
 			rayInst.mask = 0xFF; //  Only be hit if rayMask & instance.mask != 0
 			rayInst.instanceShaderBindingTableRecordOffset = 0; // We will use the same hit group for all objects
 
-			tlas.emplace_back(rayInst);
+			m_TlasBuildStructs.emplace_back(rayInst);
 			customIndex++;
 		}
 	}
 
-	m_RTBuilder.BuildTlas(tlas, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
-
-	NE_DEBUG(std::format("Built {} top level instances", totalSize), Logger::CYAN, Logger::BOLD);
+	m_RTBuilder.BuildTlas(m_TlasBuildStructs, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR, update);
 }
 
 void RaytracingPipeline::CreateStorageImage()
@@ -396,11 +389,11 @@ void RaytracingPipeline::CreateRayTracingPipeline()
 	pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstant;
 
 	std::array< VkDescriptorSetLayout, 6 > layouts{
-		p_ObjectPipeline->set0_WorldLayout,
-		p_ObjectPipeline->set1_StorageBuffersLayout,
-		p_ObjectPipeline->set2_TexturesLayout,
-		p_ObjectPipeline->set3_IBLLayout,
-		p_ObjectPipeline->set4_ShadowMapLayout,
+		Renderer::Instance->set0_WorldLayout,
+		Renderer::Instance->set1_StorageBuffersLayout,
+		Renderer::Instance->set2_TexturesLayout,
+		Renderer::Instance->set3_IBLLayout,
+		Renderer::Instance->set4_ShadowMapLayout,
 		set0_layout
 	};
 

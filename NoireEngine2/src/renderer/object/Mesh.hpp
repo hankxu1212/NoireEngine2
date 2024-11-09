@@ -115,6 +115,6 @@ private:
 	VertexInput*					m_Vertex;
 	CreateInfo						m_CreateInfo;
 	AABB							m_AABB;
-	uint64_t						m_IndexBufferDeviceAddress;
-	uint64_t						m_VertexBufferDeviceAddress;
+	uint64_t						m_IndexBufferDeviceAddress = 0;
+	uint64_t						m_VertexBufferDeviceAddress = 0;
 };

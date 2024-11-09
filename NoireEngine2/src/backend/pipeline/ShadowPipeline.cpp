@@ -28,11 +28,6 @@ static std::array< VkClearValue, 1 > clear_values{
 	VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
 };
 
-ShadowPipeline::ShadowPipeline(Renderer* renderer) :
-	p_ObjectPipeline(renderer)
-{
-}
-
 ShadowPipeline::~ShadowPipeline()
 {
 	for (Workspace& workspace : workspaces)
@@ -414,7 +409,7 @@ void ShadowPipeline::T_RenderShadows(uint32_t tid, VkCommandBufferInheritanceInf
 		// bind descriptors
 		std::array< VkDescriptorSet, 2 > descriptor_sets{
 			workspaces[CURR_FRAME].set0_Lightspaces,
-			p_ObjectPipeline->workspaces[CURR_FRAME].set1_StorageBuffers // for transforms
+			Renderer::Instance->workspaces[CURR_FRAME].set1_StorageBuffers // for transforms
 		};
 
 		vkCmdBindDescriptorSets(
@@ -432,7 +427,7 @@ void ShadowPipeline::T_RenderShadows(uint32_t tid, VkCommandBufferInheritanceInf
 		SetViewports(cmdBuf, width, height);
 
 		const auto& allInstances = scene->getObjectInstances();
-		const auto& indirectBatches = p_ObjectPipeline->getIndirectBatches();
+		const auto& indirectBatches = Renderer::Instance->getIndirectBatches();
 
 		Push push{ .lightspaceID = (int)tid };
 		vkCmdPushConstants(cmdBuf, m_ShadowMapPassPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Push), &push);
@@ -518,7 +513,7 @@ void ShadowPipeline::CreatePipelineLayout()
 {
 	std::array< VkDescriptorSetLayout, 2 > layouts{
 		set0_LightspacesLayout,
-		p_ObjectPipeline->set1_StorageBuffersLayout
+		Renderer::Instance->set1_StorageBuffersLayout
 	};
 
 	//setup push constants

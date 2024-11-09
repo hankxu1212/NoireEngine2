@@ -18,8 +18,7 @@
 
 #include "utils/ThreadPool.hpp"
 
-class Renderer;
-class MeshRenderInstance;
+#define _NE_USE_RTX
 
 /**
  * Manages all the material pipelines and the main geometry render pass.

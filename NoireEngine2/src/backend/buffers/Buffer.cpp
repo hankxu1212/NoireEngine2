@@ -78,7 +78,7 @@ void Buffer::CopyBuffer(VkCommandBuffer cmdBuffer, VkBuffer srcBuffer, VkBuffer 
 	vkCmdCopyBuffer(cmdBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 }
 
-void Buffer::CopyFromCPU(VkCommandBuffer cmdBuffer, const Buffer& hostBuffer, Buffer& deviceBuffer, VkDeviceSize size, const void* data)
+void Buffer::CopyFromHost(VkCommandBuffer cmdBuffer, const Buffer& hostBuffer, Buffer& deviceBuffer, VkDeviceSize size, const void* data)
 {
 	memcpy(hostBuffer.data(), data, size);
 	CopyBuffer(cmdBuffer, hostBuffer.getBuffer(), deviceBuffer.getBuffer(), size);

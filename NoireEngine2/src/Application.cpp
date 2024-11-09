@@ -61,7 +61,7 @@ Application::Application(const ApplicationSpecification& specification)
 
 Application::~Application()
 {
-	VulkanContext::Get()->WaitGraphicsQueue();
+	VulkanContext::Get()->WaitIdle();
 
 	DestroyStage(Module::DestroyStage::Pre);
 

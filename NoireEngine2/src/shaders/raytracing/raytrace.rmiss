@@ -7,5 +7,5 @@ layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 void main()
 {
-    prd.hitValue = rayConstants.clearColor.xyz * 0.8 * prd.attenuation;
+    prd.hitValue = rayConstants.clearColor.xyz;
 }

@@ -60,7 +60,7 @@ ImGuiPipeline::ImGuiPipeline()
 
 ImGuiPipeline::~ImGuiPipeline()
 {
-    VulkanContext::Get()->WaitGraphicsQueue();
+    VulkanContext::Get()->WaitIdle();
 
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -85,11 +85,13 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
         layer->OnViewportRender();
 
     // render rtx info:
+#ifdef _NE_USE_RTX
     if (ImGui::Begin("Ray Tracing")) {
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         ImGui::Image(m_RTXOutImage, ImVec2{ viewportPanelSize.x, viewportPanelSize.y });
         ImGui::End();
     }
+#endif
 
     ImGui::Render();
 

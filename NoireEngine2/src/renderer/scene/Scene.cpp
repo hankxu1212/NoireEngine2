@@ -469,7 +469,7 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type, bool isDefault)
 	};
 
 	// skybox itself
-	m_Skybox = ImageCube::Create(FormatPath(path), isHDR);
+	m_Skybox = ImageCube::Create(FormatPath(path), isHDR, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, false);
 
 	// diffuse irradiance
 	m_SkyboxLambertian = ImageCube::Create(FormatPath(lambertianPath), isHDR);

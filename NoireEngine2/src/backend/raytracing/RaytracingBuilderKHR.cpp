@@ -4,7 +4,6 @@
 #include "RaytracingBuilderKHR.hpp"
 #include "backend/VulkanContext.hpp"
 
-// Destroying all allocations
 void RaytracingBuilderKHR::Destroy()
 {
     for(auto& b : m_blas)
@@ -14,9 +13,7 @@ void RaytracingBuilderKHR::Destroy()
     RaytracingPipeline::DeleteAccelerationStructure(m_tlas);
 }
 
-//--------------------------------------------------------------------------------------------------
 // Return the device address of a Blas previously created.
-//
 VkDeviceAddress RaytracingBuilderKHR::getBlasDeviceAddress(uint32_t blasId)
 {
     assert(size_t(blasId) < m_blas.size());
@@ -96,9 +93,7 @@ void RaytracingBuilderKHR::BuildBlas(const std::vector<BlasInput>& input, VkBuil
     blasScratchBuffer.Destroy();
 }
 
-//--------------------------------------------------------------------------------------------------
 // Refit BLAS number blasIdx from updated buffer contents.
-//
 void RaytracingBuilderKHR::UpdateBlas(uint32_t blasIdx, BlasInput& blas, VkBuildAccelerationStructureFlagsKHR flags)
 {
     assert(size_t(blasIdx) < m_blas.size());
@@ -148,9 +143,7 @@ void RaytracingBuilderKHR::BuildTlas(const std::vector<VkAccelerationStructureIn
         Buffer::Mapped
     );
 
-    std::memcpy(transferSource.data(), (void*)instances.data(), sizeInBytes);
-
-    Buffer::CopyBuffer(cmd, transferSource.getBuffer(), instancesBuffer.getBuffer(), sizeInBytes);
+    Buffer::CopyFromHost(cmd, transferSource, instancesBuffer, sizeInBytes, (void*)instances.data());
 
     VkBufferDeviceAddressInfo bufferInfo{ VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, nullptr, instancesBuffer.getBuffer()};
     VkDeviceAddress           instBufferAddr = vkGetBufferDeviceAddress(VulkanContext::GetDevice(), &bufferInfo);
@@ -172,7 +165,7 @@ void RaytracingBuilderKHR::BuildTlas(const std::vector<VkAccelerationStructureIn
     CmdCreateTlas(cmd, countInstance, instBufferAddr, scratchBuffer, flags, update);
 
     // Finalizing and destroying temporary data
-    cmd.SubmitWait();
+    cmd.SubmitIdle();
     instancesBuffer.Destroy();
     transferSource.Destroy();
     scratchBuffer.Destroy();

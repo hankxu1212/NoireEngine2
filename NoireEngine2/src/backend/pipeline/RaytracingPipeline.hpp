@@ -13,7 +13,7 @@ class Renderer;
 class RaytracingPipeline : public VulkanPipeline
 {
 public:
-	RaytracingPipeline(Renderer*);
+	RaytracingPipeline();
 
 	~RaytracingPipeline();
 
@@ -59,8 +59,6 @@ public: // ray tracing helpers
 private:
 	friend class ImGuiPipeline;
 
-	Renderer* p_ObjectPipeline;
-
 	START_BINDING(RTXBindings)
 		TLAS = 0,  // Top-level acceleration structure
 		OutImage = 1,   // Ray tracer output image
@@ -75,9 +73,6 @@ private:
 	struct PushConstantRay
 	{
 		glm::vec4  clearColor;
-		glm::vec3  lightPosition;
-		float lightIntensity;
-		int   lightType;
 	};
 
 	PushConstantRay m_pcRay{};
@@ -95,12 +90,13 @@ private:
 	VkStridedDeviceAddressRegionKHR m_callRegion{};
 
 private:
-	//void MeshTo
 	void CreateBottomLevelAccelerationStructure();
-	void CreateTopLevelAccelerationStructure();
+	void CreateTopLevelAccelerationStructure(bool update);
 	void CreateStorageImage();
 	void CreateDescriptorSets();
 	void CreateRayTracingPipeline();
 	void CreateShaderBindingTables();
+
+	std::vector<VkAccelerationStructureInstanceKHR> m_TlasBuildStructs;
 };
 

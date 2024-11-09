@@ -11,8 +11,6 @@ class Renderer;
 class SkyboxPipeline : public VulkanPipeline
 {
 public:
-	SkyboxPipeline(Renderer*);
-
 	~SkyboxPipeline();
 	void CreatePipeline() override;
 
@@ -45,8 +43,7 @@ private:
 
 	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
 	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
-	Renderer*		p_ObjectPipeline;
-
+	
 	DescriptorAllocator						m_DescriptorAllocator;
 
 	Buffer m_VertexBuffer;

@@ -37,7 +37,7 @@ public:
 	static void CopyBuffer(VkCommandBuffer cmdBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 	// executes a memcpy and a copy buffer command
-	static void CopyFromCPU(VkCommandBuffer cmdBuffer, const Buffer& hostBuffer, Buffer& deviceBuffer, VkDeviceSize size, const void* data);
+	static void CopyFromHost(VkCommandBuffer cmdBuffer, const Buffer& hostBuffer, Buffer& deviceBuffer, VkDeviceSize size, const void* data);
 	
 	// transfer to a device local buffer using memcpy. Allocates a new command buffer and idle submits.
 	// This is quite slow cuz it waits idle on the graphics queue. Should NOT be called in a loop

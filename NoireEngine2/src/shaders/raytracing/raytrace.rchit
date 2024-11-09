@@ -26,7 +26,6 @@ void main()
     Indices indices = Indices(objResource.indexAddress);
     Vertices vertices = Vertices(objResource.vertexAddress);
 
-
     // Indices of the triangle
     ivec3 ind = indices.i[gl_PrimitiveID];
 

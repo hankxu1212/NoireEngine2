@@ -17,7 +17,6 @@ class Renderer;
 class ShadowPipeline : public VulkanPipeline
 {
 public:
-	ShadowPipeline(Renderer* renderer);
 	~ShadowPipeline();
 
 	// creates as many render passes as there are shadow casters in the scene
@@ -77,8 +76,6 @@ public:
 
 private:
 	// Global pipeline variables ////////////////////////////////////////////
-	Renderer*		p_ObjectPipeline = nullptr;
-
 	struct Workspace
 	{
 		Buffer LightSpaces_Src;

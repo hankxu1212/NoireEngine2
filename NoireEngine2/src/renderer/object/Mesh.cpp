@@ -24,7 +24,7 @@ Mesh::Mesh(const CreateInfo& createInfo) :
 
 Mesh::~Mesh()
 {
-	VulkanContext::Get()->WaitGraphicsQueue();
+	VulkanContext::Get()->WaitIdle();
 
 	m_VertexBuffer.Destroy();
 	m_IndexBuffer.Destroy();
@@ -192,10 +192,14 @@ void Mesh::TransformToIndexedMesh(Vertex* vertices, uint32_t count)
 
 void Mesh::CreateVertexBuffer(std::vector<Vertex>& vertices)
 {
-	VkBufferUsageFlags accelerationStructureFlags = 
-		VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | 
-		VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | 
+	VkBufferUsageFlags accelerationStructureFlags =
+#ifdef _NE_USE_RTX
+		VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+		VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
 		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+#else
+		0;
+#endif
 
 	VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };
 	flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
@@ -214,9 +218,13 @@ void Mesh::CreateVertexBuffer(std::vector<Vertex>& vertices)
 void Mesh::CreateIndexBuffer(std::vector<uint32_t>& indices)
 {
 	VkBufferUsageFlags accelerationStructureFlags =
+#ifdef _NE_USE_RTX
 		VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
 		VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
 		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+#else
+		0;
+#endif
 
 	VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };
 	flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;

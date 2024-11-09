@@ -6,11 +6,6 @@
 #include "renderer/scene/Scene.hpp"
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
 
-LinesPipeline::LinesPipeline(Renderer* renderer) :
-	p_ObjectPipeline(renderer)
-{
-}
-
 LinesPipeline::~LinesPipeline()
 {
 	for (Workspace& workspace : workspaces)
@@ -136,7 +131,7 @@ void LinesPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuff
 
 	{ //upload camera info:
 		pushCamera.clipFromWorld = scene->GetRenderCam()->camera()->getWorldToClipMatrix();
-		Buffer::CopyFromCPU(commandBuffer, workspace.CameraSrc, workspace.Camera, sizeof(CameraUniform), &pushCamera);
+		Buffer::CopyFromHost(commandBuffer, workspace.CameraSrc, workspace.Camera, sizeof(CameraUniform), &pushCamera);
 	}
 }
 
@@ -177,7 +172,7 @@ void LinesPipeline::CreateGraphicsPipeline()
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_LINE_LIST)
 		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, 2.0f)
 		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
-		.Build("../spv/shaders/lines.vert.spv", "../spv/shaders/lines.frag.spv", &m_Pipeline, m_PipelineLayout, p_ObjectPipeline->m_Renderpass->renderpass);
+		.Build("../spv/shaders/lines.vert.spv", "../spv/shaders/lines.frag.spv", &m_Pipeline, m_PipelineLayout, Renderer::Instance->m_Renderpass->renderpass);
 }
 
 void LinesPipeline::CreateDescriptors()

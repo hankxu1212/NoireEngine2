@@ -32,13 +32,14 @@ static inline void InsertPipelineMemoryBarrier(const CommandBuffer& buf)
 {
 	VkMemoryBarrier memory_barrier{
 		.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
-		.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
-		.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+		.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+		.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
 	};
 
+	// ensures all transfer bit writes are done. before streaming vertices or writing to buffers again
 	vkCmdPipelineBarrier(buf,
 		VK_PIPELINE_STAGE_TRANSFER_BIT, //srcStageMask
-		VK_PIPELINE_STAGE_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, //dstStageMask
+		VK_PIPELINE_STAGE_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT, //dstStageMask
 		0, //dependencyFlags
 		1, &memory_barrier, //memoryBarriers (count, data)
 		0, nullptr, //bufferMemoryBarriers (count, data)
@@ -429,13 +430,11 @@ void Renderer::Rebuild()
 
 void Renderer::Create()
 {
-	s_RaytracingPipeline = std::make_unique<RaytracingPipeline>(this);
-
-	s_LinesPipeline = std::make_unique<LinesPipeline>(this);
-	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>(this);
+	s_LinesPipeline = std::make_unique<LinesPipeline>();
+	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>();
 	
 	// create shadow pipeline and initialize its shadow frame buffer and render pass
-	s_ShadowPipeline = std::make_unique<ShadowPipeline>(this);
+	s_ShadowPipeline = std::make_unique<ShadowPipeline>();
 	s_ShadowPipeline->CreateRenderPass();
 
 	// this relies on shadow pipeline's depth attachment
@@ -446,13 +445,17 @@ void Renderer::Create()
 	// the following pipelines rely on Renderer's descriptor sets
 	s_ShadowPipeline->CreatePipeline();
 
-	s_RaytracingPipeline->CreatePipeline();
-
 	s_LinesPipeline->CreatePipeline();
+
 	s_SkyboxPipeline->CreatePipeline();
 
 	s_UIPipeline->CreatePipeline();
+
+#ifdef _NE_USE_RTX
+	s_RaytracingPipeline = std::make_unique<RaytracingPipeline>();
+	s_RaytracingPipeline->CreatePipeline();
 	s_UIPipeline->SetupRaytracingViewport(s_RaytracingPipeline.get());
+#endif
 }
 
 void Renderer::Render(const CommandBuffer& commandBuffer)
@@ -476,11 +479,13 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 
 	// render objects
 	{
+		// draw rtx
+#ifdef _NE_USE_RTX
+		s_RaytracingPipeline->Render(scene, commandBuffer);
+#endif
+
 		// render shadow passes
 		s_ShadowPipeline->Render(scene, commandBuffer);
-
-		// draw rtx
-		s_RaytracingPipeline->Render(scene, commandBuffer);
 
 		m_Renderpass->Begin(commandBuffer);
 		{
@@ -516,7 +521,7 @@ void Renderer::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
 void Renderer::PrepareSceneUniform(const Scene* scene, const CommandBuffer& commandBuffer)
 {
 	Workspace& workspace = workspaces[CURR_FRAME];
-	Buffer::CopyFromCPU(commandBuffer, workspace.WorldSrc, workspace.World, sizeof(Scene::SceneUniform), scene->getSceneUniformPtr());
+	Buffer::CopyFromHost(commandBuffer, workspace.WorldSrc, workspace.World, sizeof(Scene::SceneUniform), scene->getSceneUniformPtr());
 }
 
 void Renderer::PrepareTransforms(const Scene* scene, const CommandBuffer& commandBuffer)
@@ -730,7 +735,7 @@ void Renderer::PrepareObjectDescriptions(const Scene* scene, const CommandBuffer
 	assert(workspace.ObjectDescriptionsSrc.getSize() == workspace.ObjectDescriptions.getSize());
 	assert(workspace.ObjectDescriptionsSrc.getSize() >= needed_bytes);
 
-	{ //copy ObjectDescriptions into Transforms_src:
+	{
 		ObjectDescription* start = reinterpret_cast<ObjectDescription*>(workspace.ObjectDescriptionsSrc.data());
 		ObjectDescription* out = start;
 

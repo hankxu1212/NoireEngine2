@@ -8,14 +8,16 @@ const std::vector<const char*> LogicalDevice::DeviceExtensions = {
 	VK_EXT_VERTEX_INPUT_DYNAMIC_STATE_EXTENSION_NAME, // dynamic vertex binding
 	VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME, // descriptor indexing
 	VK_EXT_SCALAR_BLOCK_LAYOUT_EXTENSION_NAME, // enables scalar buffers
+	VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME, // enable device addressing
 
+#ifdef _NE_USE_RTX
 	// ray tracing
 	VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
 	VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
-	VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
 	VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
 	VK_KHR_SPIRV_1_4_EXTENSION_NAME, // Required for VK_KHR_ray_tracing_pipeline,
 	VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME // Required by VK_KHR_spirv_1_4
+#endif
 };
 
 LogicalDevice::LogicalDevice(const VulkanInstance& instance, const PhysicalDevice& physicalDevice) :
@@ -227,32 +229,34 @@ void LogicalDevice::CreateLogicalDevice()
 
 	physicalDeviceDescriptorIndexingFeatures.pNext = &sync2Ext;
 
+	// enable device addressing
+	VkPhysicalDeviceBufferDeviceAddressFeatures enabledBufferDeviceAddresFeatures{};
+	enabledBufferDeviceAddresFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+	enabledBufferDeviceAddresFeatures.bufferDeviceAddress = VK_TRUE;
+	sync2Ext.pNext = &enabledBufferDeviceAddresFeatures;
+
+#ifdef _NE_USE_RTX
 	// add ray tracing features
 	{
-		VkPhysicalDeviceBufferDeviceAddressFeatures enabledBufferDeviceAddresFeatures{};
-		enabledBufferDeviceAddresFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
-		enabledBufferDeviceAddresFeatures.bufferDeviceAddress = VK_TRUE;
-
 		VkPhysicalDeviceRayTracingPipelineFeaturesKHR enabledRayTracingPipelineFeatures{};
 		enabledRayTracingPipelineFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
 		enabledRayTracingPipelineFeatures.rayTracingPipeline = VK_TRUE;
-		enabledRayTracingPipelineFeatures.pNext = &enabledBufferDeviceAddresFeatures;
+		enabledBufferDeviceAddresFeatures.pNext = &enabledRayTracingPipelineFeatures;
 
 		VkPhysicalDeviceAccelerationStructureFeaturesKHR enabledAccelerationStructureFeatures{};
 		enabledAccelerationStructureFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
 		enabledAccelerationStructureFeatures.accelerationStructure = VK_TRUE;
-		enabledAccelerationStructureFeatures.pNext = &enabledRayTracingPipelineFeatures;
-
-		sync2Ext.pNext = &enabledAccelerationStructureFeatures;
+		enabledRayTracingPipelineFeatures.pNext = &enabledAccelerationStructureFeatures;
 
 		// add scalar buffer blockout extension
 		{
 			VkPhysicalDeviceScalarBlockLayoutFeatures scalarBlockLayoutFeatures{};
 			scalarBlockLayoutFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES;
 			scalarBlockLayoutFeatures.scalarBlockLayout = VK_TRUE; // Enable scalar block layout
-			enabledBufferDeviceAddresFeatures.pNext = &scalarBlockLayoutFeatures;
+			enabledAccelerationStructureFeatures.pNext = &scalarBlockLayoutFeatures;
 		}
 	}
+#endif
 
 	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());

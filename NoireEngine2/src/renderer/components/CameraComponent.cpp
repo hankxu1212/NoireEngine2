@@ -87,6 +87,9 @@ CameraComponent::CameraComponent(int priority_) :
 	priority(priority_)
 {
 	s_Camera = std::make_unique<Camera>();
+	
+	// make an initial update
+	s_Camera->Update(*GetTransform());
 }
 
 template<>

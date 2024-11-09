@@ -11,7 +11,4 @@ struct hitPayload
 layout(push_constant) uniform constants 
 { 
     vec4  clearColor;
-	vec3  lightPosition;
-	float lightIntensity;
-	int   lightType;
 } rayConstants;
