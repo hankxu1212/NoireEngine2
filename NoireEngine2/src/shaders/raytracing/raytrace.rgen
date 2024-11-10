@@ -63,7 +63,7 @@ void main()
     hitValue += prd.hitValue * prd.attenuation;
 
     prd.depth++;
-    if(prd.done == 1 || prd.depth >= 10)
+    if(prd.done == 1 || prd.depth >= rayConstants.rayDepth)
       break;
 
     origin.xyz    = prd.rayOrigin;

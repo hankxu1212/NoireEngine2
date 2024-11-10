@@ -4,6 +4,7 @@
 #include "glm/gtx/string_cast.hpp"
 
 #include "RaytracingPipeline.hpp"
+#include "renderer/Renderer.hpp"
 
 // allocates a seperate custom descriptor pool for imgui
 static void CreateImGuiDescriptorPool(VkDevice logicalDevice, VkDescriptorPool& descriptorPool)
@@ -113,9 +114,9 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
 void ImGuiPipeline::SetupRaytracingViewport(RaytracingPipeline* rtxPipeline)
 {
     m_RTXOutImage = ImGui_ImplVulkan_AddTexture(
-        rtxPipeline->m_RtxImage->getSampler(),
-        rtxPipeline->m_RtxImage->getView(), 
-        rtxPipeline->m_RtxImage->getLayout()
+        Renderer::Instance->m_RtxImage->getSampler(),
+        Renderer::Instance->m_RtxImage->getView(), 
+        Renderer::Instance->m_RtxImage->getLayout()
     );
 }
 

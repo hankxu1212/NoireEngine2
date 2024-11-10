@@ -60,8 +60,6 @@ RaytracingPipeline::RaytracingPipeline()
 
 RaytracingPipeline::~RaytracingPipeline()
 {
-	m_DescriptorAllocator.Cleanup(); // destroy pool and sets
-
 	m_RTBuilder.Destroy();
 	m_rtSBTBuffer.Destroy();
 
@@ -74,17 +72,18 @@ RaytracingPipeline::~RaytracingPipeline()
 		vkDestroyPipeline(VulkanContext::GetDevice(), m_Pipeline, nullptr);
 		m_Pipeline = VK_NULL_HANDLE;
 	}
-
 }
 
 void RaytracingPipeline::CreatePipeline()
 {
-	CreateBottomLevelAccelerationStructure();
-	CreateTopLevelAccelerationStructure(false);
-	CreateStorageImage();
-	CreateDescriptorSets();
 	CreateRayTracingPipeline();
 	CreateShaderBindingTables();
+}
+
+void RaytracingPipeline::CreateAccelerationStructures()
+{
+	CreateBottomLevelAccelerationStructure();
+	CreateTopLevelAccelerationStructure(false);
 }
 
 void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
@@ -98,7 +97,7 @@ void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& command
 		Renderer::Instance->set2_Textures,
 		Renderer::Instance->set3_IBL,
 		Renderer::Instance->set4_ShadowMap,
-		set0,
+		Renderer::Instance->set5_RayTracing
 	};
 
 	vkCmdBindDescriptorSets(
@@ -112,6 +111,8 @@ void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& command
 
 	// Initializing push constant values
 	m_pcRay.clearColor = glm::vec4(0,0,0,1);
+	m_pcRay.rayDepth = 5;
+
 	vkCmdPushConstants(commandBuffer, m_PipelineLayout,
 		VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_MISS_BIT_KHR,
 		0, sizeof(PushConstantRay), &m_pcRay);
@@ -314,24 +315,6 @@ void RaytracingPipeline::CreateTopLevelAccelerationStructure(bool update)
 	m_RTBuilder.BuildTlas(m_TlasBuildStructs, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR, update);
 }
 
-void RaytracingPipeline::CreateStorageImage()
-{
-	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain();
-
-	glm::uvec2 extent = swapchain->getExtentVec2();
-	//VkFormat format = VulkanContext::Get()->getSurface()->getFormat().format;
-	VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
-
-	m_RtxImage = std::make_unique<Image2D>(
-		extent.x, extent.y, format, 
-		VK_IMAGE_LAYOUT_GENERAL,
-		VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-		false
-	);
-
-	m_RtxImage->Load();
-}
-
 void RaytracingPipeline::CreateRayTracingPipeline()
 {
 	enum StageIndices
@@ -391,7 +374,7 @@ void RaytracingPipeline::CreateRayTracingPipeline()
 		Renderer::Instance->set2_TexturesLayout,
 		Renderer::Instance->set3_IBLLayout,
 		Renderer::Instance->set4_ShadowMapLayout,
-		set0_layout
+		Renderer::Instance->set5_RayTracingLayout
 	};
 
 	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
@@ -492,30 +475,4 @@ void RaytracingPipeline::CreateShaderBindingTables()
 	m_rtSBTBuffer.UnmapMemory();
 
 	NE_DEBUG("Built RTX SBT", Logger::CYAN, Logger::BOLD);
-}
-
-void RaytracingPipeline::CreateDescriptorSets()
-{
-	std::vector<VkDescriptorPoolSize> poolSizes = 
-	{
-		{ VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, 1 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
-		//{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2 }
-	};
-
-	m_DescriptorAllocator.SetCustomPoolParams(poolSizes, 100);
-
-	VkDescriptorImageInfo rtxImageInfo = m_RtxImage->GetDescriptorInfo();
-
-	auto as = m_RTBuilder.getAccelerationStructure();
-
-	VkWriteDescriptorSetAccelerationStructureKHR descASInfo{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR };
-	descASInfo.accelerationStructureCount = 1;
-	descASInfo.pAccelerationStructures = &as;
-
-	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-		.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
-		.BindImage(RTXBindings::OutImage, &rtxImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
-		.Build(set0, set0_layout);
 }

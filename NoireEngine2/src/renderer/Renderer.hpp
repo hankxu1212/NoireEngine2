@@ -60,11 +60,13 @@ public:
 private:
 	void CreateMaterialPipelineLayout();
 	void CreateMaterialPipelines();
+
 	void CreateDescriptors();
 	void CreateWorkspaceDescriptors();
 	void CreateTextureDescriptors();
 	void CreateIBLDescriptors();
 	void CreateShadowDescriptors();
+	void CreateRayTracingDescriptors();
 
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareSceneUniform(const Scene* scene, const CommandBuffer& commandBuffer);
@@ -130,6 +132,11 @@ private:
 		EnvMap = 3,
 	END_BINDING();
 
+	START_BINDING(RTXBindings)
+		TLAS = 0,  // Top-level acceleration structure
+		OutImage = 1,   // Ray tracer output image
+	END_BINDING();
+
 	std::vector<Workspace> workspaces;
 
 	VkDescriptorSetLayout set0_WorldLayout = VK_NULL_HANDLE;
@@ -145,6 +152,9 @@ private:
 	VkDescriptorSetLayout set4_ShadowMapLayout = VK_NULL_HANDLE;
 	VkDescriptorSet set4_ShadowMap = VK_NULL_HANDLE;
 
+	VkDescriptorSetLayout set5_RayTracingLayout = VK_NULL_HANDLE;
+	VkDescriptorSet set5_RayTracing = VK_NULL_HANDLE;
+
 	DescriptorAllocator						m_DescriptorAllocator;
 
 	std::unique_ptr<Renderpass>				m_Renderpass;
@@ -153,6 +163,8 @@ private:
 
 	std::array<VkPipeline, N_MATERIAL_WORKFLOWS>	m_MaterialPipelines{};
 	VkPipelineLayout	m_MaterialPipelineLayout = VK_NULL_HANDLE;
+
+	std::unique_ptr<Image2D>				m_RtxImage;
 
 private:
 	friend class LinesPipeline;

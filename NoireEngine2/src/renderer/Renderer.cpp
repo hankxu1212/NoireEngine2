@@ -47,6 +47,20 @@ static inline void InsertPipelineMemoryBarrier(const CommandBuffer& buf)
 	);
 }
 
+static inline void InsertRTXBarrier(const CommandBuffer& buf)
+{
+	// ensures ray tracing is completed before fragment shader
+	vkCmdPipelineBarrier(
+		buf,
+		VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, // SrcStageMask
+		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,         // DstStageMask
+		0,
+		0, nullptr,                                    // MemoryBarriers
+		0, nullptr,                                    // BufferMemoryBarriers
+		0, nullptr                                     // ImageMemoryBarriers
+	);
+}
+
 Renderer::Renderer()
 {
 	m_Renderpass = std::make_unique<Renderpass>(true);
@@ -181,12 +195,13 @@ void Renderer::CreateRenderPass()
 
 void Renderer::CreateMaterialPipelineLayout()
 {
-	std::array< VkDescriptorSetLayout, 5 > layouts{
+	std::array< VkDescriptorSetLayout, 6 > layouts{
 		set0_WorldLayout,
 		set1_StorageBuffersLayout,
 		set2_TexturesLayout,
 		set3_IBLLayout,
 		set4_ShadowMapLayout,
+		set5_RayTracingLayout
 	};
 
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
@@ -231,6 +246,7 @@ void Renderer::CreateDescriptors()
 	CreateTextureDescriptors();
 	CreateIBLDescriptors();
 	CreateShadowDescriptors();
+	CreateRayTracingDescriptors();
 }
 
 void Renderer::CreateWorkspaceDescriptors()
@@ -422,6 +438,41 @@ void Renderer::CreateShadowDescriptors()
 		, &variableDescriptorInfoAI);
 }
 
+void Renderer::CreateRayTracingDescriptors()
+{
+	// create storage image
+	{
+		const SwapChain* swapchain = VulkanContext::Get()->getSwapChain();
+		glm::uvec2 extent = swapchain->getExtentVec2();
+		//VkFormat format = VulkanContext::Get()->getSurface()->getFormat().format;
+		VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
+
+		m_RtxImage = std::make_unique<Image2D>(
+			extent.x, extent.y, format,
+			VK_IMAGE_LAYOUT_GENERAL,
+			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+			false
+		);
+
+		m_RtxImage->Load();
+	}
+
+	// create the descriptors
+	{
+		auto as = s_RaytracingPipeline->GetTLAS();
+
+		VkWriteDescriptorSetAccelerationStructureKHR descASInfo{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR };
+		descASInfo.accelerationStructureCount = 1;
+		descASInfo.pAccelerationStructures = &as;
+
+		VkDescriptorImageInfo rtxImageInfo = m_RtxImage->GetDescriptorInfo();
+		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+			.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
+			.BindImage(RTXBindings::OutImage, &rtxImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
+			.Build(set5_RayTracing, set5_RayTracingLayout);
+	}
+}
+
 void Renderer::Rebuild()
 {
 	m_Renderpass->RebuildFromSwapchain();
@@ -437,7 +488,12 @@ void Renderer::Create()
 	s_ShadowPipeline = std::make_unique<ShadowPipeline>();
 	s_ShadowPipeline->CreateRenderPass();
 
-	// this relies on shadow pipeline's depth attachment
+#ifdef _NE_USE_RTX
+	s_RaytracingPipeline = std::make_unique<RaytracingPipeline>();
+	s_RaytracingPipeline->CreateAccelerationStructures();
+#endif
+
+	// this relies on shadow pipeline's depth attachment and ray tracing's acceleration structures
 	CreateDescriptors();
 	CreateMaterialPipelineLayout();
 	CreateMaterialPipelines();
@@ -452,7 +508,6 @@ void Renderer::Create()
 	s_UIPipeline->CreatePipeline();
 
 #ifdef _NE_USE_RTX
-	s_RaytracingPipeline = std::make_unique<RaytracingPipeline>();
 	s_RaytracingPipeline->CreatePipeline();
 	s_UIPipeline->SetupRaytracingViewport(s_RaytracingPipeline.get());
 #endif
@@ -482,6 +537,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		// draw rtx
 #ifdef _NE_USE_RTX
 		s_RaytracingPipeline->Render(scene, commandBuffer);
+		InsertRTXBarrier(commandBuffer);
 #endif
 
 		// render shadow passes
@@ -910,12 +966,13 @@ void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 	VertexInput* previouslyBindedVertex = nullptr;
 
 	// bind descriptor sets
-	std::array< VkDescriptorSet, 5 > descriptor_sets{
+	std::array< VkDescriptorSet, 6 > descriptor_sets{
 		workspace.set0_World,
 		workspace.set1_StorageBuffers,
 		set2_Textures,
 		set3_IBL,
-		set4_ShadowMap
+		set4_ShadowMap,
+		set5_RayTracing
 	};
 
 	vkCmdBindDescriptorSets(

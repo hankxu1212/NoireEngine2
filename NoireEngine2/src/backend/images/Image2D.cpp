@@ -1,7 +1,6 @@
 #include "Image2D.hpp"
 
 #include "core/resources/Resources.hpp"
-#include "core/Bitmap.hpp"
 #include "backend/buffers/Buffer.hpp"
 #include "core/Timer.hpp"
 #include "utils/Logger.hpp"

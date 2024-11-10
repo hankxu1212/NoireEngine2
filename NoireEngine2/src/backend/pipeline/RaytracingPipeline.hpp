@@ -19,9 +19,13 @@ public:
 
 	void CreatePipeline() override;
 
+	void CreateAccelerationStructures();
+
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
+
+	VkAccelerationStructureKHR GetTLAS() { return m_RTBuilder.getAccelerationStructure(); }
 
 public: // ray tracing helpers
 	// Function pointers for ray tracing related stuff
@@ -66,21 +70,17 @@ private:
 
 	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
 	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
-	VkDescriptorSet set0;
-	VkDescriptorSetLayout set0_layout;
+
 	std::vector<VkRayTracingShaderGroupCreateInfoKHR> m_RTShaderGroups;
 
 	struct PushConstantRay
 	{
-		glm::vec4  clearColor;
+		glm::vec4 clearColor;
+		uint32_t rayDepth;
 	};
-
 	PushConstantRay m_pcRay{};
 
-	DescriptorAllocator						m_DescriptorAllocator;
 	RaytracingBuilderKHR					m_RTBuilder;
-
-	std::unique_ptr<Image2D>				m_RtxImage;
 
 	// SBT
 	Buffer                    m_rtSBTBuffer;
@@ -92,8 +92,6 @@ private:
 private:
 	void CreateBottomLevelAccelerationStructure();
 	void CreateTopLevelAccelerationStructure(bool update);
-	void CreateStorageImage();
-	void CreateDescriptorSets();
 	void CreateRayTracingPipeline();
 	void CreateShaderBindingTables();
 

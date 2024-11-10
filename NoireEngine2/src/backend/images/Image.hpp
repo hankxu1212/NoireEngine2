@@ -4,9 +4,9 @@
 #include <vulkan/vulkan.h>
 #include <memory>
 #include <optional>
+#include "core/Bitmap.hpp"
 
 class CommandBuffer;
-class Bitmap;
 	
 // A representation of a Vulkan image, sampler, and view.
 class Image
