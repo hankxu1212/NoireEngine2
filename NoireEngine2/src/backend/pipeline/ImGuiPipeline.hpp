@@ -18,9 +18,9 @@ public:
 public:
 	void CreateRenderPass() override;
 
-	void Rebuild() override;
-
 	void CreatePipeline() override;
+
+	void Rebuild() override;
 
 	void Update(const Scene* scene) override;
 
@@ -29,6 +29,8 @@ public:
 	void SetupRaytracingViewport(RaytracingPipeline* rtxPipeline);
 
 private:
+	void DestroyFrameBuffers();
+
 	void SetTheme();
 
 private:
@@ -38,6 +40,7 @@ private:
 
 	VkDescriptorPool						m_DescriptorPool = VK_NULL_HANDLE;
 	std::unique_ptr<Renderpass>				s_Renderpass;
+	std::vector<VkFramebuffer>				m_FrameBuffers;
 
 	VkDescriptorSet							m_RTXOutImage;
 };

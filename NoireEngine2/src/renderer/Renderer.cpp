@@ -63,7 +63,7 @@ static inline void InsertRTXBarrier(const CommandBuffer& buf)
 
 Renderer::Renderer()
 {
-	m_Renderpass = std::make_unique<Renderpass>(true);
+	s_MainPass = std::make_unique<Renderpass>();
 	
 	s_UIPipeline = std::make_unique<ImGuiPipeline>();
 
@@ -97,6 +97,8 @@ Renderer::~Renderer()
 
 	m_DescriptorAllocator.Cleanup(); // destroy pool and sets
 	
+	DestroyFrameBuffers();
+
 	if (m_MaterialPipelineLayout != VK_NULL_HANDLE) {
 		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_MaterialPipelineLayout, nullptr);
 		m_MaterialPipelineLayout = VK_NULL_HANDLE;
@@ -113,82 +115,10 @@ Renderer::~Renderer()
 
 void Renderer::CreateRenderPass()
 {
-	std::array< VkAttachmentDescription, 2 > attachments{
-		VkAttachmentDescription { //0 - color attachment:
-			.format = VulkanContext::Get()->getSurface(0)->getFormat().format,
-			.samples = VK_SAMPLE_COUNT_1_BIT,
-			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-			.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-			.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-			.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-			.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-		},
-		VkAttachmentDescription{ //1 - depth attachment:
-			.format = VK_FORMAT_D32_SFLOAT_S8_UINT,
-			.samples = VK_SAMPLE_COUNT_1_BIT,
-			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-			.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-			.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-			.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-			.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-			.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-		},
-	};
-
-	VkAttachmentReference color_attachment_ref{
-		.attachment = 0,
-		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-	};
-
-	VkAttachmentReference depth_attachment_ref{
-		.attachment = 1,
-		.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-	};
-
-	VkSubpassDescription subpass{
-		.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-		.inputAttachmentCount = 0,
-		.pInputAttachments = nullptr,
-		.colorAttachmentCount = 1,
-		.pColorAttachments = &color_attachment_ref,
-		.pDepthStencilAttachment = &depth_attachment_ref,
-	};
-
-	//this defers the image load actions for the attachments:
-	std::array< VkSubpassDependency, 2 > dependencies{
-		VkSubpassDependency{
-			.srcSubpass = VK_SUBPASS_EXTERNAL,
-			.dstSubpass = 0,
-			.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-			.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-			.srcAccessMask = 0,
-			.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-		},
-		VkSubpassDependency{
-			.srcSubpass = VK_SUBPASS_EXTERNAL,
-			.dstSubpass = 0,
-			.srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-			.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-			.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-			.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-		}
-	};
-
-	VkRenderPassCreateInfo create_info{
-		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-		.attachmentCount = uint32_t(attachments.size()),
-		.pAttachments = attachments.data(),
-		.subpassCount = 1,
-		.pSubpasses = &subpass,
-		.dependencyCount = uint32_t(dependencies.size()),
-		.pDependencies = dependencies.data(),
-	};
-
-	VulkanContext::VK(
-		vkCreateRenderPass(VulkanContext::GetDevice(), &create_info, nullptr, &m_Renderpass->renderpass),
-		"[Vulkan] Create Render pass failed"
-	);
+	s_MainPass->CreateRenderPass(
+		{ VulkanContext::Get()->getSurface(0)->getFormat().format },
+		VK_FORMAT_D32_SFLOAT_S8_UINT,
+		1, true, true);
 
 	s_UIPipeline->CreateRenderPass();
 }
@@ -234,8 +164,8 @@ void Renderer::CreateMaterialPipelines()
 		.SetDynamicStates(dynamic_states)
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
 		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
-		.Build("../spv/shaders/lambertian.vert.spv", "../spv/shaders/lambertian.frag.spv", &m_MaterialPipelines[0], m_MaterialPipelineLayout, m_Renderpass->renderpass)
-		.Build("../spv/shaders/pbr.vert.spv", "../spv/shaders/pbr.frag.spv", &m_MaterialPipelines[1], m_MaterialPipelineLayout, m_Renderpass->renderpass);
+		.Build("../spv/shaders/lambertian.vert.spv", "../spv/shaders/lambertian.frag.spv", &m_MaterialPipelines[0], m_MaterialPipelineLayout, s_MainPass->renderpass)
+		.Build("../spv/shaders/pbr.vert.spv", "../spv/shaders/pbr.frag.spv", &m_MaterialPipelines[1], m_MaterialPipelineLayout, s_MainPass->renderpass);
 }
 
 void Renderer::CreateDescriptors()
@@ -482,7 +412,37 @@ void Renderer::CreateRayTracingDescriptors()
 
 void Renderer::Rebuild()
 {
-	m_Renderpass->RebuildFromSwapchain();
+	DestroyFrameBuffers();
+
+	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
+
+	s_MainDepth = std::make_unique<ImageDepth>(swapchain->getExtentVec2());
+
+	//Make framebuffers for each swapchain image:
+	m_FrameBuffers.assign(swapchain->getImageViews().size(), VK_NULL_HANDLE);
+	for (size_t i = 0; i < swapchain->getImageViews().size(); ++i)
+	{
+		std::vector<VkImageView> attachments;
+		attachments.emplace_back(swapchain->getImageViews()[i]);
+		attachments.emplace_back(s_MainDepth->getView());
+
+		VkFramebufferCreateInfo create_info
+		{
+			.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+			.renderPass = s_MainPass->renderpass,
+			.attachmentCount = uint32_t(attachments.size()),
+			.pAttachments = attachments.data(),
+			.width = swapchain->getExtent().width,
+			.height = swapchain->getExtent().height,
+			.layers = 1,
+		};
+
+		VulkanContext::VK(
+			vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_FrameBuffers[i]),
+			"[vulkan] Creating frame buffer failed"
+		);
+	}
+
 	s_UIPipeline->Rebuild();
 }
 
@@ -550,7 +510,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		// render shadow passes
 		s_ShadowPipeline->Render(scene, commandBuffer);
 
-		m_Renderpass->Begin(commandBuffer);
+		s_MainPass->Begin(commandBuffer, m_FrameBuffers[CURR_FRAME]);
 		{
 			DrawScene(scene, commandBuffer);
 
@@ -560,7 +520,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 
 			s_SkyboxPipeline->Render(scene, commandBuffer);
 		}
-		m_Renderpass->End(commandBuffer);
+		s_MainPass->End(commandBuffer);
 
 		s_UIPipeline->Render(scene, commandBuffer);
 	}
@@ -1021,4 +981,16 @@ void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 		}
 		offsetIndex += instanceCount;
 	}
+}
+
+void Renderer::DestroyFrameBuffers()
+{
+	for (VkFramebuffer& framebuffer : m_FrameBuffers)
+	{
+		if (framebuffer != VK_NULL_HANDLE) {
+			vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
+			framebuffer = VK_NULL_HANDLE;
+		}
+	}
+	m_FrameBuffers.clear();
 }

@@ -58,9 +58,11 @@ public:
 	const std::vector<std::vector<IndirectBatch>>& getIndirectBatches() const { return m_IndirectBatches; }
 
 private:
+	// material pipelines
 	void CreateMaterialPipelineLayout();
 	void CreateMaterialPipelines();
 
+	// descriptor management
 	void CreateDescriptors();
 	void CreateWorkspaceDescriptors();
 	void CreateTextureDescriptors();
@@ -68,18 +70,13 @@ private:
 	void CreateShadowDescriptors();
 	void CreateRayTracingDescriptors();
 
+	// prepping and copy/update buffers
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareSceneUniform(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareTransforms(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareLights(const Scene* scene, const CommandBuffer& commandBuffer);
 	void PrepareMaterialInstances(const CommandBuffer& commandBuffer);
 	void PrepareObjectDescriptions(const Scene* scene, const CommandBuffer& commandBuffer);
-
-	void CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t workflowIndex);
-
-	void PrepareIndirectDrawBuffer(const Scene* scene);
-
-	void DrawScene(const Scene* scene, const CommandBuffer& commandBuffer);
 
 	struct ObjectDescription
 	{
@@ -89,6 +86,14 @@ private:
 		uint32_t materialWorkflow; // interpret the buffer data as which material type?
 	};
 
+	// drawing
+	void CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t workflowIndex);
+	void PrepareIndirectDrawBuffer(const Scene* scene);
+	void DrawScene(const Scene* scene, const CommandBuffer& commandBuffer);
+
+	std::vector<std::vector<IndirectBatch>> m_IndirectBatches;
+
+	// workspace and bindings
 	struct Workspace
 	{
 		// world, scene uniform
@@ -157,14 +162,15 @@ private:
 
 	DescriptorAllocator						m_DescriptorAllocator;
 
-	std::unique_ptr<Renderpass>				m_Renderpass;
+	// render pass management
 
-	std::vector<std::vector<IndirectBatch>> m_IndirectBatches;
+	std::unique_ptr<Renderpass> s_MainPass;
+	std::unique_ptr<ImageDepth> s_MainDepth;
+	std::vector<VkFramebuffer> m_FrameBuffers;
 
-	std::array<VkPipeline, N_MATERIAL_WORKFLOWS>	m_MaterialPipelines{};
-	VkPipelineLayout	m_MaterialPipelineLayout = VK_NULL_HANDLE;
+	void DestroyFrameBuffers();
 
-	std::unique_ptr<Image2D>				m_RtxImage;
+	std::unique_ptr<Image2D> m_RtxImage;
 
 private:
 	friend class LinesPipeline;
@@ -174,6 +180,9 @@ private:
 	friend class ImGuiPipeline;
 
 private: // material pipelines
+	std::array<VkPipeline, N_MATERIAL_WORKFLOWS>	m_MaterialPipelines{};
+	VkPipelineLayout	m_MaterialPipelineLayout = VK_NULL_HANDLE;
+
 	std::unique_ptr<LinesPipeline>					s_LinesPipeline;
 	std::unique_ptr<SkyboxPipeline>					s_SkyboxPipeline;
 	std::unique_ptr<ShadowPipeline>					s_ShadowPipeline;

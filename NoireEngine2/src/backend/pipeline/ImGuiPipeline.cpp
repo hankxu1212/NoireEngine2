@@ -55,13 +55,15 @@ ImGuiPipeline::ImGuiPipeline()
     GLFWwindow* window = Window::Get()->m_Window;
     ImGui_ImplGlfw_InitForVulkan(window, true);
 
-    // no depth 
-    s_Renderpass = std::make_unique<Renderpass>(false);
+    // render pass with no depth 
+    s_Renderpass = std::make_unique<Renderpass>();
 }
 
 ImGuiPipeline::~ImGuiPipeline()
 {
     VulkanContext::Get()->WaitIdle();
+
+    DestroyFrameBuffers();
 
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -106,7 +108,7 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
     }
 
     // begin render pass
-    s_Renderpass->Begin(commandBuffer);
+    s_Renderpass->Begin(commandBuffer, m_FrameBuffers[CURR_FRAME]);
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
     s_Renderpass->End(commandBuffer);
 }
@@ -122,56 +124,10 @@ void ImGuiPipeline::SetupRaytracingViewport(RaytracingPipeline* rtxPipeline)
 
 void ImGuiPipeline::CreateRenderPass()
 {
-    VkAttachmentDescription color_attachment {
-        .format = VulkanContext::Get()->getSurface(0)->getFormat().format,
-        .samples = VK_SAMPLE_COUNT_1_BIT,
-        .loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-        .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-        .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-        .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-    };
-
-    VkAttachmentReference color_attachment_reference {
-        .attachment = 0,
-        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-    };
-
-    VkSubpassDescription subpass {
-        .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-        .colorAttachmentCount = 1,
-        .pColorAttachments = &color_attachment_reference,
-    };
-
-    VkSubpassDependency dependency {
-       .srcSubpass = VK_SUBPASS_EXTERNAL,
-       .dstSubpass = 0,
-       .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-       .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-       .srcAccessMask = 0,
-       .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
-    };
-
-    VkRenderPassCreateInfo info = {
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-        .attachmentCount = 1,
-        .pAttachments = &color_attachment,
-        .subpassCount = 1,
-        .pSubpasses = &subpass,
-        .dependencyCount = 1,
-        .pDependencies = &dependency
-    };
-
-    VulkanContext::VK(
-        vkCreateRenderPass(VulkanContext::GetDevice(), &info, nullptr, &s_Renderpass->renderpass),
-        "[Vulkan] Create Render pass in ImGui pipeline failed"
-    );
-}
-
-void ImGuiPipeline::Rebuild()
-{
-    s_Renderpass->RebuildFromSwapchain();
+    s_Renderpass->CreateRenderPass(
+        { VulkanContext::Get()->getSurface(0)->getFormat().format },
+        VK_FORMAT_UNDEFINED, /* no depth*/
+        1, false, false);
 }
 
 void ImGuiPipeline::CreatePipeline()
@@ -201,8 +157,51 @@ void ImGuiPipeline::CreatePipeline()
     ImGui_ImplVulkan_Init(&init_info);
 }
 
+void ImGuiPipeline::Rebuild()
+{
+    DestroyFrameBuffers();
+
+    const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
+
+    //Make framebuffers for each swapchain image:
+    m_FrameBuffers.assign(swapchain->getImageViews().size(), VK_NULL_HANDLE);
+    for (size_t i = 0; i < swapchain->getImageViews().size(); ++i)
+    {
+        std::vector<VkImageView> attachments;
+        attachments.emplace_back(swapchain->getImageViews()[i]);
+
+        VkFramebufferCreateInfo create_info
+        {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .renderPass = s_Renderpass->renderpass,
+            .attachmentCount = uint32_t(attachments.size()),
+            .pAttachments = attachments.data(),
+            .width = swapchain->getExtent().width,
+            .height = swapchain->getExtent().height,
+            .layers = 1,
+        };
+
+        VulkanContext::VK(
+            vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_FrameBuffers[i]),
+            "[vulkan] Creating frame buffer failed"
+        );
+    }
+}
+
 void ImGuiPipeline::Update(const Scene* scene)
 {
+}
+
+void ImGuiPipeline::DestroyFrameBuffers()
+{
+    for (VkFramebuffer& framebuffer : m_FrameBuffers)
+    {
+        if (framebuffer != VK_NULL_HANDLE) {
+            vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
+            framebuffer = VK_NULL_HANDLE;
+        }
+    }
+    m_FrameBuffers.clear();
 }
 
 void ImGuiPipeline::SetTheme()

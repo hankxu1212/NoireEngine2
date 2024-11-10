@@ -2,26 +2,23 @@
 
 #include "backend/images/ImageDepth.hpp"
 
-class Renderpass
+struct Renderpass
 {
-public:
-	Renderpass(bool hasDepth_);
-
 	~Renderpass();
 
-	void RebuildFromSwapchain();
+	void CreateRenderPass(
+		const std::vector<VkFormat>& colorAttachmentFormats,
+		VkFormat                     depthAttachmentFormat,
+		uint32_t                     subpassCount = 1,
+		bool                         clearColor = true,
+		bool                         clearDepth = true,
+		VkImageLayout                initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+		VkImageLayout                finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
-	void Begin(const CommandBuffer& commandBuffer);
+	void Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb);
 
 	void End(const CommandBuffer& commandBuffer);
 
-	VkRenderPass							renderpass = VK_NULL_HANDLE;
-
-private:
-	void DestroyFrameBuffers();
-
-	std::unique_ptr<ImageDepth>				s_DepthImage;
-	std::vector<VkFramebuffer>				m_Framebuffers;
-	bool hasDepth;
+	VkRenderPass renderpass = VK_NULL_HANDLE;
 };
 
