@@ -25,7 +25,7 @@ public:
 
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
 
-	VkAccelerationStructureKHR GetTLAS() { return m_RTBuilder.getAccelerationStructure(); }
+	inline VkAccelerationStructureKHR GetTLAS() const { return m_RTBuilder.getAccelerationStructure(); }
 
 public: // ray tracing helpers
 	// Function pointers for ray tracing related stuff
@@ -83,7 +83,7 @@ private:
 	RaytracingBuilderKHR					m_RTBuilder;
 
 	// SBT
-	Buffer                    m_rtSBTBuffer;
+	Buffer m_rtSBTBuffer;
 	VkStridedDeviceAddressRegionKHR m_rgenRegion{};
 	VkStridedDeviceAddressRegionKHR m_missRegion{};
 	VkStridedDeviceAddressRegionKHR m_hitRegion{};

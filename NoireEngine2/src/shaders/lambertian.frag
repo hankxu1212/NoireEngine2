@@ -45,6 +45,10 @@ void main()
 	// sample diffuse irradiance
 	vec3 ambientLighting = texture(diffuseIrradiance, n).rgb * material.environmentLightIntensity;
 
+	// obtain reflection color from rtx
+    ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
+    vec3 reflectionColor = imageLoad(raytracedReflections, pixelCoord).rgb;
+
 	// material
 	vec3 texColor = material.albedo.rgb;
 	if (material.albedoTexId >= 0)
@@ -53,7 +57,7 @@ void main()
 	// direct lighting and shadows
 	vec3 directLighting = DirectLighting();
 
-	vec3 color = texColor * (directLighting + ambientLighting);
+	vec3 color = texColor * (directLighting + ambientLighting + reflectionColor * 0.5); // just an arbitrary multiplier
 	
 	color = ACES(color);
 	outColor = vec4(color, 1);

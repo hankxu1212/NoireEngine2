@@ -116,12 +116,16 @@ void main()
         vec3 diffuseIBL = kd * albedo * irradiance;
 
         // Specular IBL from pre-filtered environment map
-	    float lod = roughness * MAX_REFLECTION_LOD;
-        vec3 specularIrradiance = textureLod(prefilterEnvMap, R, lod).rgb;
+	    //float lod = roughness * MAX_REFLECTION_LOD;
+        //vec3 specularIrradiance = textureLod(prefilterEnvMap, R, lod).rgb;
+
+        // obtain reflection color from rtx
+        ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
+        vec3 reflectionColor = imageLoad(raytracedReflections, pixelCoord).rgb;
 
         // Cook-Torrance specular split-sum approximation
         vec2 specularBRDF = texture(specularBRDF, vec2(cosLo, roughness)).rg;
-        vec3 specularIBL = (F * specularBRDF.x + specularBRDF.y) * specularIrradiance;
+        vec3 specularIBL = (F * specularBRDF.x + specularBRDF.y) * reflectionColor;
 
         ambientLighting = diffuseIBL + specularIBL * material.environmentLightIntensity;
     }

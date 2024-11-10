@@ -153,3 +153,9 @@ layout (set = 3, binding = 3) uniform samplerCube prefilterEnvMap;
 // Set 4: Descriptor indexed shadowmaps
 ///////////////////////////////////////////////
 layout (set = 4, binding = 0) uniform sampler2D shadowMaps[];
+
+///////////////////////////////////////////////
+// Set 4: Ray tracing images: acceleration structure not exposed to fragment shader
+///////////////////////////////////////////////
+//layout(set = 5, binding = 0) uniform accelerationStructureEXT topLevelAS;
+layout(set = 5, binding = 1, rgba32f) uniform image2D raytracedReflections;

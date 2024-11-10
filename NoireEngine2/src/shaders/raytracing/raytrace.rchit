@@ -19,6 +19,11 @@ layout(set = 5, binding = 0) uniform accelerationStructureEXT topLevelAS;
 
 #include "../glsl/materials.glsl"
 
+#define MAX_REFLECTION_LOD 6
+#define GGX_MIP_LEVELS 6
+const vec3 Fdielectric = vec3(0.04);
+#include "../glsl/pbr.glsl"
+
 void main()
 {
     // Object data
@@ -42,24 +47,78 @@ void main()
 
     // Computing the normal at hit position
     const vec3 nrm      = v0.nrm * barycentrics.x + v1.nrm * barycentrics.y + v2.nrm * barycentrics.z;
-    const vec3 worldNrm = normalize(vec3(nrm * gl_WorldToObjectEXT));  // Transforming the normal to world space
+    const vec3 n = normalize(vec3(nrm * gl_WorldToObjectEXT));  // Transforming the normal to world space
+
+    const vec2 UV = v0.texCoord * barycentrics.x + v1.texCoord * barycentrics.y + v2.texCoord * barycentrics.z;
 
     uint matWorkflow = objResource.materialType;
     vec3 color;
     if (matWorkflow == 0) // lambertian
     {
         LambertianMaterial material = LAMBERTIAN_MATERIAL_ReadFrombuffer(objResource.offset);
-        color = material.albedo.rgb;
+
+        // sample diffuse irradiance
+	    vec3 ambientLighting = texture(diffuseIrradiance, n).rgb * material.environmentLightIntensity;
+
+	    // material
+	    vec3 texColor = material.albedo.rgb;
+	    if (material.albedoTexId >= 0)
+		    texColor *= texture(textures[material.albedoTexId], UV).rgb;
+
+	    color = texColor * ambientLighting;
     }
     else if (matWorkflow == 1) // pbr
     {
     	PBRMaterial material = PBR_MATERIAL_ReadFrombuffer(objResource.offset);
-        color = material.albedo.rgb;
+        vec3 V = normalize(vec3(scene.cameraPos) - worldPos);
+
+        // albedo 
+	    vec3 albedo = material.albedo.rgb;
+	    if (material.albedoTexId >= 0)
+		    albedo *= texture(textures[material.albedoTexId], UV).rgb;
+
+        // roughness
+        float roughness = material.roughness;
+        if (material.roughnessTexId >= 0)
+            roughness *= texture(textures[material.roughnessTexId], UV).a;
+
+        // metallic
+        float metalness = material.metallic;
+        if (material.metallicTexId >= 0)
+            metalness *= texture(textures[material.metallicTexId], UV).a;
+
+       	// light out
+        float cosLo = max(0.0, dot(n, V));
+
+        // specular reflection
+        vec3 R = reflect(-V, n);
+
+        // Fresnel
+        vec3 F0 = mix(Fdielectric, albedo, metalness);
+
+        // lambertian diffuse irradiance
+        vec3 irradiance = texture(diffuseIrradiance, n).rgb / PI;
+
+        vec3 F = FresnelSchlickRoughness(F0, cosLo, roughness);
+
+        // Diffuse contribution for ambient light
+        vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
+        vec3 diffuseIBL = kd * albedo * irradiance;
+
+        // Specular IBL from pre-filtered environment map
+	    float lod = roughness * MAX_REFLECTION_LOD;
+        vec3 specularIrradiance = textureLod(prefilterEnvMap, R, lod).rgb;
+
+        // Cook-Torrance specular split-sum approximation
+        vec2 specularBRDF = texture(specularBRDF, vec2(cosLo, roughness)).rg;
+        vec3 specularIBL = (F * specularBRDF.x + specularBRDF.y) * specularIrradiance;
+
+        color = diffuseIBL + specularIBL * material.environmentLightIntensity;
     }
 
     // Reflection
     vec3 origin = worldPos;
-    vec3 rayDir = reflect(gl_WorldRayDirectionEXT, worldNrm);
+    vec3 rayDir = reflect(gl_WorldRayDirectionEXT, n);
     prd.attenuation *= 1;
     prd.done      = 0;
     prd.rayOrigin = origin;

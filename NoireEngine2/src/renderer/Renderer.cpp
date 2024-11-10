@@ -267,10 +267,12 @@ void Renderer::CreateWorkspaceDescriptors()
 		);
 
 		// build world buffer descriptor
+		auto stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT |
+			VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+
 		VkDescriptorBufferInfo World_info = workspace.World.GetDescriptorInfo();
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_RAYGEN_BIT_KHR)
+			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, stages)
 			.Build(workspace.set0_World, set0_WorldLayout);
 
 		// build storage buffers
@@ -320,9 +322,11 @@ void Renderer::CreateTextureDescriptors()
 	}
 
 	// actually build the descriptor set now
+	auto stages = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_FRAGMENT_BIT;
+
 	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 		.BindImage(0, textureDescriptors.data(),
-			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<uint32_t>(textures.size()))
+			VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages, static_cast<uint32_t>(textures.size()))
 		.Build(set2_Textures, set2_TexturesLayout, &setLayoutBindingFlags,
 #if (defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
 			// SRS - increase the per-stage descriptor samplers limit on macOS (maxPerStageDescriptorUpdateAfterBindSamplers > maxPerStageDescriptorSamplers)
@@ -345,11 +349,14 @@ void Renderer::CreateIBLDescriptors()
 	VkDescriptorImageInfo prefilteredEnvMapInfo = scene->m_PrefilteredEnvMap->GetDescriptorInfo();
 
 	// first build lambertian LUT and specular BRDF info
+	
+	auto stages = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+
 	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-		.BindImage(IBL::Skybox, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.BindImage(IBL::LambertianLUT, &lambertianLUTInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.BindImage(IBL::SpecularBRDF, &specularBRDFInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.BindImage(IBL::EnvMap, &prefilteredEnvMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+		.BindImage(IBL::Skybox, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages)
+		.BindImage(IBL::LambertianLUT, &lambertianLUTInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages)
+		.BindImage(IBL::SpecularBRDF, &specularBRDFInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages)
+		.BindImage(IBL::EnvMap, &prefilteredEnvMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages)
 		.Build(set3_IBL, set3_IBLLayout);
 }
 
@@ -468,7 +475,7 @@ void Renderer::CreateRayTracingDescriptors()
 		VkDescriptorImageInfo rtxImageInfo = m_RtxImage->GetDescriptorInfo();
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
-			.BindImage(RTXBindings::OutImage, &rtxImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
+			.BindImage(RTXBindings::OutImage, &rtxImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_FRAGMENT_BIT)
 			.Build(set5_RayTracing, set5_RayTracingLayout);
 	}
 }
