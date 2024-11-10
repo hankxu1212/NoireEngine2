@@ -89,8 +89,6 @@ void RaytracingPipeline::CreatePipeline()
 
 void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	CreateTopLevelAccelerationStructure(true);
-
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_Pipeline);
 
 	Renderer::Workspace& workspace = Renderer::Instance->workspaces[CURR_FRAME];
@@ -313,7 +311,6 @@ void RaytracingPipeline::CreateTopLevelAccelerationStructure(bool update)
 			customIndex++;
 		}
 	}
-
 	m_RTBuilder.BuildTlas(m_TlasBuildStructs, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR, update);
 }
 

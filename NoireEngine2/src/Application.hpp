@@ -32,7 +32,7 @@ struct ApplicationSpecification
 	uint32_t height = 1080;
 	ApplicationCommandLineArgs CommandLineArgs;
 	
-	enum class Culling { None, Frustum } Culling = Culling::Frustum;
+	enum class Culling { None, Frustum } Culling = Culling::None;
 	std::optional<std::string> PhysicalDeviceName = std::nullopt;
 	std::optional<std::string> CameraName = std::nullopt;
 	std::optional<std::string> InitialScene = std::nullopt;

@@ -67,8 +67,7 @@ static Application* CreateApplication(ApplicationCommandLineArgs args)
         .Name = "Noire Editor",
         .width = 1920,
         .height = 1080,
-        .CommandLineArgs = args,
-        .Culling = ApplicationSpecification::Culling::Frustum
+        .CommandLineArgs = args
     };
 
     Parse(args, spec);
