@@ -26,7 +26,7 @@ public:
 	// create an empty image with specified width, height, format, layout, and usage
 	explicit Image2D(uint32_t w, uint32_t h, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage, bool mipmap);
 
-	void Load(std::unique_ptr<Bitmap> loadBitmap = nullptr);
+	void Load(std::unique_ptr<Bitmap> loadBitmap = nullptr, bool useSampler=true);
 
 	/**
 	  * Sets the pixels of this image.

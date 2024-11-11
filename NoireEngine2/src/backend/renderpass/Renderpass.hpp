@@ -14,11 +14,14 @@ struct Renderpass
 		bool                         clearDepth = true,
 		VkImageLayout                initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 		VkImageLayout                finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+	
+	void SetClearValues(const std::vector<VkClearValue>& values);
 
-	void Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb, const std::vector<VkClearValue>& clearValues);
+	void Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb);
 
 	void End(const CommandBuffer& commandBuffer);
 
 	VkRenderPass renderpass = VK_NULL_HANDLE;
+	std::vector<VkClearValue> clearValues;
 };
 

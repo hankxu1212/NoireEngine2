@@ -99,7 +99,12 @@ void Renderpass::CreateRenderPass(
 	VulkanContext::VK(vkCreateRenderPass(VulkanContext::GetDevice(), &renderPassInfo, nullptr, &renderpass));
 }
 
-void Renderpass::Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb, const std::vector<VkClearValue>& clearValues)
+void Renderpass::SetClearValues(const std::vector<VkClearValue>& values)
+{
+	clearValues = values;
+}
+
+void Renderpass::Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb)
 {
 	VkExtent2D swapChainExtent = VulkanContext::Get()->getSwapChain()->getExtent();
 

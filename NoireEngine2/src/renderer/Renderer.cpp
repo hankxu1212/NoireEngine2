@@ -49,20 +49,6 @@ static inline void InsertPipelineMemoryBarrier(const CommandBuffer& buf)
 	);
 }
 
-static inline void InsertRTXBarrier(const CommandBuffer& buf)
-{
-	// ensures ray tracing is completed before fragment shader
-	vkCmdPipelineBarrier(
-		buf,
-		VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, // SrcStageMask
-		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,         // DstStageMask
-		0,
-		0, nullptr,                                    // MemoryBarriers
-		0, nullptr,                                    // BufferMemoryBarriers
-		0, nullptr                                     // ImageMemoryBarriers
-	);
-}
-
 Renderer::Renderer()
 {
 	assert(!Instance && "More than one renderer instance found!");
@@ -148,11 +134,22 @@ void Renderer::CreateRenderPass()
 		1, true, true, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL
 	);
 
+	s_OffscreenPass->SetClearValues({
+		{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear color to black
+		{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear normal to black
+		{.depthStencil = { 1.0f, 0 } }               // Clear depth to 1.0, stencil to 0
+	});
+
 	// present to the swapchain
 	s_CompositionPass->CreateRenderPass(
 		{ VulkanContext::Get()->getSurface(0)->getFormat().format },
 		VK_FORMAT_D32_SFLOAT_S8_UINT, // todo: actually check
 		1, true, true);
+
+	s_CompositionPass->SetClearValues({
+			{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear color to black
+			{.depthStencil = { 1.0f, 0 } }               // Clear depth to 1.0, stencil to 0
+	});
 
 	s_UIPipeline->CreateRenderPass();
 }
@@ -279,8 +276,9 @@ void Renderer::CreateMaterialPipelines()
 
 void Renderer::CreatePostPipelineLayout()
 {
-	std::array< VkDescriptorSetLayout, 1 > layouts{
+	std::vector<VkDescriptorSetLayout> layouts{
 		set0_WorldLayout,
+		set5_RayTracingLayout
 	};
 
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
@@ -329,6 +327,7 @@ void Renderer::CreatePostPipeline()
 void Renderer::CreateComputeAOPipeline()
 {
 	std::vector<VkDescriptorSetLayout> layouts{
+		set0_WorldLayout,
 		set5_RayTracingLayout,
 	};
 
@@ -360,8 +359,6 @@ void Renderer::CreateComputeAOPipeline()
 
 void Renderer::CreateDescriptors()
 {
-	workspaces.resize(VulkanContext::Get()->getFramesInFlight());
-
 #ifdef _NE_USE_RTX
 	CreateRaytracingDescriptors();
 #endif
@@ -394,16 +391,15 @@ void Renderer::CreateWorkspaceDescriptors()
 		auto stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT |
 			VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 
-		VkDescriptorImageInfo gBufferColorInfo = s_GBufferColors[wid]->GetDescriptorInfo();
-		VkDescriptorImageInfo gBufferNormalInfo = s_GBufferNormals[wid]->GetDescriptorInfo();
+		VkDescriptorImageInfo gBufferColorInfo = workspace.GBufferColors->GetDescriptorInfo();
+		VkDescriptorImageInfo gBufferNormalInfo = workspace.GBufferNormals->GetDescriptorInfo();
 		VkDescriptorImageInfo rtxAOSamplerInfo = s_RaytracedAOImage->GetDescriptorInfo();
 
 		VkDescriptorBufferInfo World_info = workspace.World.GetDescriptorInfo();
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindBuffer(World::SceneUniform, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, stages)
-			.BindImage(World::GBufferColor, &gBufferColorInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.BindImage(World::GBufferNormalSampler, &gBufferNormalInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.BindImage(World::AOImageSampler, &rtxAOSamplerInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
+			.BindImage(World::GBufferColor, &gBufferColorInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.BindImage(World::GBufferNormal, &gBufferNormalInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
 			.Build(workspace.set0_World, set0_WorldLayout);
 
 		// build storage buffers
@@ -619,19 +615,19 @@ void Renderer::CreateRaytracingDescriptors()
 
 		VkDescriptorImageInfo reflectImageInfo = s_RaytracedReflectionsImage->GetDescriptorInfo();
 		VkDescriptorImageInfo aoImageInfo = s_RaytracedAOImage->GetDescriptorInfo();
-		VkDescriptorImageInfo gBufferNormalInfo = s_GBufferNormals[0]->GetDescriptorInfo();
 
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_COMPUTE_BIT)
 			.BindImage(RTXBindings::ReflectionImage, &reflectImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.BindImage(RTXBindings::AOImageStorage, &aoImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
-			.BindImage(RTXBindings::GBufferNormalStorage, &gBufferNormalInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
+			.BindImage(RTXBindings::AOImage, &aoImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
 			.Build(set5_RayTracing, set5_RayTracingLayout);
 	}
 }
 
 void Renderer::Rebuild()
 {
+	workspaces.resize(VulkanContext::Get()->getFramesInFlight());
+
 	DestroyFrameBuffers();
 	CreateFrameBufferImages();
 
@@ -668,8 +664,8 @@ void Renderer::Rebuild()
 		// create all offscreen frame buffers
 		{
 			std::vector<VkImageView> offscreenAttachments {
-				s_GBufferColors[i]->getView(),
-				s_GBufferNormals[i]->getView(),
+				workspaces[i].GBufferColors->getView(),
+				workspaces[i].GBufferNormals->getView(),
 				s_MainDepth->getView()
 			};
 
@@ -751,19 +747,13 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 	{
 		// draw rtx
 #ifdef _NE_USE_RTX
-		s_RaytracingPipeline->Render(scene, commandBuffer);
-		InsertRTXBarrier(commandBuffer);
+		RunRTXReflection(scene, commandBuffer);
 #endif
 
 		// render shadow passes
 		s_ShadowPipeline->Render(scene, commandBuffer);
 
-		std::vector<VkClearValue> clearValues = {
-			{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear color to black
-			{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear normal to black
-			{.depthStencil = { 1.0f, 0 } }               // Clear depth to 1.0, stencil to 0
-		};
-		s_OffscreenPass->Begin(commandBuffer, m_OffscreenFrameBuffers[CURR_FRAME], clearValues);
+		s_OffscreenPass->Begin(commandBuffer, m_OffscreenFrameBuffers[CURR_FRAME]);
 		{
 			DrawScene(scene, commandBuffer);
 
@@ -775,11 +765,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 
 		RunAOCompute(commandBuffer);
 
-		std::vector<VkClearValue> clearValues2 = {
-			{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear color to black
-			{.depthStencil = { 1.0f, 0 } }               // Clear depth to 1.0, stencil to 0
-		};
-		s_CompositionPass->Begin(commandBuffer, m_CompositionFrameBuffers[CURR_FRAME], clearValues2);
+		s_CompositionPass->Begin(commandBuffer, m_CompositionFrameBuffers[CURR_FRAME]);
 		{
 			RunPost(commandBuffer);
 
@@ -1189,7 +1175,6 @@ void Renderer::PrepareIndirectDrawBuffer(const Scene* scene)
 	ObjectsDrawn = instanceIndex;
 }
 
-//draw with the objects pipeline:
 void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 {
 	Workspace& workspace = workspaces[CURR_FRAME];
@@ -1265,27 +1250,37 @@ void Renderer::RunAOCompute(const CommandBuffer& commandBuffer)
 
 	// Adding a barrier to be sure the fragment has finished writing to the G-Buffer
 	// before the compute shader is using the buffer
-	VkImageSubresourceRange range{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-	VkImageMemoryBarrier    imgMemBarrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-	imgMemBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-	imgMemBarrier.image = s_GBufferNormals[CURR_FRAME]->getImage();
-	imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
-	imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
-	imgMemBarrier.subresourceRange = range;
-
-	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-		VK_DEPENDENCY_DEVICE_GROUP_BIT, 0, nullptr, 0, nullptr, 1, &imgMemBarrier);
+	Image::InsertImageMemoryBarrier(commandBuffer, workspaces[CURR_FRAME].GBufferNormals->getImage(),
+		VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+		VK_ACCESS_SHADER_READ_BIT,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+		VK_IMAGE_ASPECT_COLOR_BIT,
+		1, 0, 1, 0);
 
 	// Preparing for the compute shader
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_RaytracedAOComputePipeline);
 
+	auto& workspace = workspaces[CURR_FRAME];
+
 	// bind descriptor sets
-	std::array< VkDescriptorSet, 1 > descriptor_sets{
+	std::vector<VkDescriptorSet> descriptor_sets{
+		workspace.set0_World,
+#ifdef _NE_USE_RTX
 		set5_RayTracing
+#endif
 	};
 
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_RaytracedAOComputePipelineLayout, 0, 1, descriptor_sets.data(), 0, nullptr);
+	vkCmdBindDescriptorSets(
+		commandBuffer, //command buffer
+		VK_PIPELINE_BIND_POINT_COMPUTE, //pipeline bind point
+		m_RaytracedAOComputePipelineLayout, //pipeline layout
+		0, //first set
+		uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+		0, nullptr //dynamic offsets count, ptr
+	);
 
 	// Sending the push constant information
 	vkCmdPushConstants(commandBuffer, m_RaytracedAOComputePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(AOPush), &m_AOControl);
@@ -1297,20 +1292,46 @@ void Renderer::RunAOCompute(const CommandBuffer& commandBuffer)
 
 	// Adding a barrier to be sure the compute shader has finished
 	// writing to the AO buffer before the post shader is using it
-	imgMemBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-	imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-	imgMemBarrier.image = s_RaytracedAOImage->getImage();
-	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-		VK_DEPENDENCY_DEVICE_GROUP_BIT, 0, nullptr, 0, nullptr, 1, &imgMemBarrier);
+	Image::InsertImageMemoryBarrier(commandBuffer, s_RaytracedAOImage->getImage(),
+		VK_ACCESS_SHADER_WRITE_BIT,
+		VK_ACCESS_SHADER_READ_BIT,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		VK_IMAGE_ASPECT_COLOR_BIT,
+		1, 0, 1, 0);
+}
+
+void Renderer::RunRTXReflection(const Scene* scene, const CommandBuffer& commandBuffer)
+{
+	s_RaytracingPipeline->Render(scene, commandBuffer);
+
+	// Adding a barrier to be sure the ray tracing pipeline shader has finished
+	// writing to the reflection image before fragment shader reads from it
+	Image::InsertImageMemoryBarrier(commandBuffer, s_RaytracedAOImage->getImage(),
+		VK_ACCESS_SHADER_WRITE_BIT,
+		VK_ACCESS_SHADER_READ_BIT,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		VK_IMAGE_ASPECT_COLOR_BIT,
+		1, 0, 1, 0);
 }
 
 void Renderer::RunPost(const CommandBuffer& commandBuffer)
 {
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PostPipeline);
 
+	auto& workspace = workspaces[CURR_FRAME];
+
 	// bind descriptor sets
-	std::array< VkDescriptorSet, 1 > descriptor_sets{
-		workspaces[CURR_FRAME].set0_World,
+	std::vector<VkDescriptorSet> descriptor_sets{
+		workspace.set0_World,
+#ifdef _NE_USE_RTX
+		set5_RayTracing
+#endif
 	};
 
 	vkCmdBindDescriptorSets(
@@ -1353,35 +1374,32 @@ void Renderer::CreateFrameBufferImages()
 
 	uint32_t imageCnt = swapchain->getImageCount();
 
-	s_GBufferColors.resize(imageCnt);
-	s_GBufferNormals.resize(imageCnt);
-
 	// the G-buffer color image, using swapchain format
 	for (uint32_t i = 0; i < imageCnt; ++i)
 	{
 		{
-			s_GBufferColors[i] = std::make_unique<Image2D>(
+			workspaces[i].GBufferColors = std::make_unique<Image2D>(
 				extent.x, extent.y,
 				VK_FORMAT_R32G32B32A32_SFLOAT,
 				VK_IMAGE_LAYOUT_GENERAL,
-				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
 				false
 			);
 
-			s_GBufferColors[i]->Load();
+			workspaces[i].GBufferColors->Load(nullptr, false);
 		}
 
 		// the G-Buffer (rgba32f) - position(xyz) / normal(w-compressed)
 		{
-			s_GBufferNormals[i] = std::make_unique<Image2D>(
+			workspaces[i].GBufferNormals = std::make_unique<Image2D>(
 				extent.x, extent.y,
 				VK_FORMAT_R32G32B32A32_SFLOAT,
 				VK_IMAGE_LAYOUT_GENERAL,
-				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
 				false
 			);
 
-			s_GBufferNormals[i]->Load();
+			workspaces[i].GBufferNormals->Load(nullptr, false);
 		}
 	}
 

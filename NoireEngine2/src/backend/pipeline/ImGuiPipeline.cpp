@@ -107,11 +107,7 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
         glfwMakeContextCurrent(backup_current_context);
     }
 
-    // begin render pass
-    std::vector<VkClearValue> clearValues = {
-        {.color = { { 0.0f, 0.0f, 0.0f, 1.0f } } },  // Clear color to black
-    };
-    s_Renderpass->Begin(commandBuffer, m_FrameBuffers[CURR_FRAME], clearValues);
+    s_Renderpass->Begin(commandBuffer, m_FrameBuffers[CURR_FRAME]);
     
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
@@ -133,6 +129,10 @@ void ImGuiPipeline::CreateRenderPass()
         { VulkanContext::Get()->getSurface(0)->getFormat().format },
         VK_FORMAT_UNDEFINED, /* no depth*/
         1, false, false);
+
+    s_Renderpass->SetClearValues({
+        {.color = { { 0.0f, 0.0f, 0.0f, 1.0f } } },  // Clear color to black
+    });
 }
 
 void ImGuiPipeline::CreatePipeline()

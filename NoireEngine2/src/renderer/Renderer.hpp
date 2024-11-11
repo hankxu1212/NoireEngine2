@@ -92,20 +92,30 @@ private:
 	};
 
 	// drawing
+	void DrawScene(const Scene* scene, const CommandBuffer& commandBuffer);
 	void CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t workflowIndex);
 	void PrepareIndirectDrawBuffer(const Scene* scene);
-	void DrawScene(const Scene* scene, const CommandBuffer& commandBuffer);
-	void RunAOCompute(const CommandBuffer& commandBuffer);
-	void RunPost(const CommandBuffer& commandBuffer);
-
 	std::vector<std::vector<IndirectBatch>> m_IndirectBatches;
 
-	// workspace and bindings
+	// dispatch ray queries from compute shader
+	void RunAOCompute(const CommandBuffer& commandBuffer);
+
+	// run ray tracing pipeline for reflection
+	void RunRTXReflection(const Scene* scene, const CommandBuffer& commandBuffer);
+
+	// composition pass, to compose ambient occlusion and color from G buffer
+	void RunPost(const CommandBuffer& commandBuffer);
+
+	// workspace and bindings: these are streamed to GPU per frame
 	struct Workspace
 	{
 		// world, scene uniform
 		Buffer WorldSrc; //host coherent; mapped
 		Buffer World; //device-local
+
+		std::unique_ptr<Image2D> GBufferNormals;
+		std::unique_ptr<Image2D> GBufferColors;
+
 		VkDescriptorSet set0_World = VK_NULL_HANDLE;
 
 		// transforms
@@ -131,8 +141,7 @@ private:
 	START_BINDING(World)
 		SceneUniform,
 		GBufferColor, // g buffer color sampler
-		GBufferNormalSampler,
-		AOImageSampler
+		GBufferNormal,
 	END_BINDING();
 
 	START_BINDING(StorageBuffers)
@@ -154,8 +163,7 @@ private:
 	START_BINDING(RTXBindings)
 		TLAS,  // Top-level acceleration structure
 		ReflectionImage,   // reflection
-		AOImageStorage,   // ao
-		GBufferNormalStorage  // storage image for normal
+		AOImage // ao image
 	END_BINDING();
 
 	std::vector<Workspace> workspaces;
@@ -176,7 +184,7 @@ private:
 	VkDescriptorSetLayout set5_RayTracingLayout = VK_NULL_HANDLE;
 	VkDescriptorSet set5_RayTracing = VK_NULL_HANDLE;
 
-	DescriptorAllocator						m_DescriptorAllocator;
+	DescriptorAllocator m_DescriptorAllocator;
 
 	// render pass management
 	std::unique_ptr<Renderpass> s_OffscreenPass;
@@ -186,16 +194,13 @@ private:
 	std::vector<VkFramebuffer> m_CompositionFrameBuffers;
 	std::vector<VkFramebuffer> m_OffscreenFrameBuffers;
 
+	void CreateFrameBufferImages();
 	void DestroyFrameBuffers();
 
-	// images
+	// images, depth, and ray tracing
 	std::unique_ptr<ImageDepth> s_MainDepth;
-	std::vector<std::unique_ptr<Image2D>> s_GBufferNormals;
-	std::vector<std::unique_ptr<Image2D>> s_GBufferColors;
-	std::unique_ptr<Image2D> s_RaytracedReflectionsImage;
 	std::unique_ptr<Image2D> s_RaytracedAOImage;
-
-	void CreateFrameBufferImages();
+	std::unique_ptr<Image2D> s_RaytracedReflectionsImage;
 
 	// post pipeline
 	VkPipeline m_PostPipeline = VK_NULL_HANDLE;
@@ -217,8 +222,8 @@ private:
 	VkPipelineLayout m_RaytracedAOComputePipelineLayout = VK_NULL_HANDLE;
 
 	// material pipelines
-	std::array<VkPipeline, N_MATERIAL_WORKFLOWS>	m_MaterialPipelines{};
-	VkPipelineLayout	m_MaterialPipelineLayout = VK_NULL_HANDLE;
+	std::array<VkPipeline, N_MATERIAL_WORKFLOWS> m_MaterialPipelines{};
+	VkPipelineLayout m_MaterialPipelineLayout = VK_NULL_HANDLE;
 
 private:
 	friend class LinesPipeline;

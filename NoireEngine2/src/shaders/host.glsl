@@ -12,8 +12,7 @@ layout(set=0,binding=0,std140) uniform World {
 	int occluderSamples;
 }scene;
 
-layout (set = 0, binding = 1) uniform sampler2D G_Color;
-// layout (set = 0, binding = 1) uniform sampler2D raytracedAO;
+//layout (set = 0, binding = 1) uniform image2D G_Color;
 
 ///////////////////////////////////////////////
 // Set 1.0: transforms

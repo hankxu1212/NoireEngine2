@@ -259,82 +259,97 @@ void Image::CreateMipmaps(const VkImage& image, const VkExtent3D& extent, VkForm
 }
 
 void Image::TransitionImageLayout(const VkImage& image, VkFormat format, VkImageLayout srcImageLayout, VkImageLayout dstImageLayout,
-	VkImageAspectFlags imageAspect, uint32_t mipLevels, uint32_t baseMipLevel, uint32_t layerCount, uint32_t baseArrayLayer) {
-
+	VkImageAspectFlags imageAspect, uint32_t mipLevels, uint32_t baseMipLevel, uint32_t layerCount, uint32_t baseArrayLayer) 
+{
+	// Create a command buffer for the transition
 	CommandBuffer commandBuffer(true, VK_QUEUE_TRANSFER_BIT);
 
-	VkImageMemoryBarrier imageMemoryBarrier = {};
-	imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	imageMemoryBarrier.oldLayout = srcImageLayout;
-	imageMemoryBarrier.newLayout = dstImageLayout;
-	imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	imageMemoryBarrier.image = image;
-	imageMemoryBarrier.subresourceRange.aspectMask = imageAspect;
-	imageMemoryBarrier.subresourceRange.baseMipLevel = baseMipLevel;
-	imageMemoryBarrier.subresourceRange.levelCount = mipLevels;
-	imageMemoryBarrier.subresourceRange.baseArrayLayer = baseArrayLayer;
-	imageMemoryBarrier.subresourceRange.layerCount = layerCount;
-
-	// Source access mask controls actions that have to be finished on the old layout before it will be transitioned to the new layout.
+	// Set up access masks and pipeline stages based on source layout
+	VkAccessFlags srcAccessMask = 0;
+	VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	switch (srcImageLayout) {
 	case VK_IMAGE_LAYOUT_UNDEFINED:
-		imageMemoryBarrier.srcAccessMask = 0;
+		srcAccessMask = 0;
+		srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_PREINITIALIZED:
-		imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+		srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+		srcStageMask = VK_PIPELINE_STAGE_HOST_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
-		imageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-		imageMemoryBarrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		srcStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
-		imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
-		imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-		imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 		break;
 	default:
-		std::runtime_error("Unsupported image layout transition source");
-		break;
+		throw std::runtime_error("Unsupported image layout transition source");
 	}
 
-	// Destination access mask controls the dependency for the new image layout.
+	// Set up access masks and pipeline stages based on destination layout
+	VkAccessFlags dstAccessMask = 0;
+	VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 	switch (dstImageLayout) {
 	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
-		imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
-		imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
-		imageMemoryBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-		imageMemoryBarrier.dstAccessMask = imageMemoryBarrier.dstAccessMask | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-		if (imageMemoryBarrier.srcAccessMask == 0) {
-			imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
-		}
-
-		imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 		break;
 	case VK_IMAGE_LAYOUT_GENERAL:
-		imageMemoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+		dstStageMask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
 		break;
 	default:
 		throw std::runtime_error("Unsupported image layout transition destination");
-		break;
 	}
 
-	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+	// Insert image memory barrier
+	InsertImageMemoryBarrier(
+		commandBuffer,
+		image,
+		srcAccessMask,
+		dstAccessMask,
+		srcImageLayout,
+		dstImageLayout,
+		srcStageMask,
+		dstStageMask,
+		imageAspect,
+		mipLevels,
+		baseMipLevel,
+		layerCount,
+		baseArrayLayer
+	);
 
+	// Submit the command buffer and wait for completion
 	commandBuffer.SubmitIdle();
 }
 
@@ -361,7 +376,7 @@ void Image::InsertImageMemoryBarrier(const CommandBuffer& commandBuffer, const V
 	imageMemoryBarrier.subresourceRange.levelCount = mipLevels;
 	imageMemoryBarrier.subresourceRange.baseArrayLayer = baseArrayLayer;
 	imageMemoryBarrier.subresourceRange.layerCount = layerCount;
-	vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+	vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, VK_DEPENDENCY_DEVICE_GROUP_BIT, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 }
 
 void Image::CopyBufferToImage(const VkBuffer& buffer, const VkImage& image, const VkExtent3D& extent, uint32_t layerCount, uint32_t baseArrayLayer, uint32_t miplevel) 

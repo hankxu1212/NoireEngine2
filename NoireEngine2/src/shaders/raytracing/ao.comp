@@ -12,9 +12,10 @@
 const int GROUP_SIZE = 16;
 layout(local_size_x = GROUP_SIZE, local_size_y = GROUP_SIZE) in;
 
-layout(set=0,binding=0) uniform accelerationStructureEXT topLevelAS;
-layout(set=0,binding=2, r32f) uniform image2D raytracedAO;
-layout(set=0,binding=3, rgba32f) uniform image2D G_Normal;
+layout(set=0,binding=2, rgba32f) uniform image2D G_Normal;
+
+layout(set=1,binding=0) uniform accelerationStructureEXT topLevelAS;
+layout(set=1,binding=2, r32f) uniform image2D raytracedAO;
 
 // See AoControl
 layout(push_constant) uniform params_

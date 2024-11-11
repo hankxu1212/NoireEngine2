@@ -66,7 +66,7 @@ void Image2D::SetPixels(const uint8_t* pixels, uint32_t layerCount, uint32_t bas
 	bufferStaging.Destroy();
 }
 
-void Image2D::Load(std::unique_ptr<Bitmap> loadBitmap) {
+void Image2D::Load(std::unique_ptr<Bitmap> loadBitmap, bool useSampler) {
 	if (!filename.empty() && !loadBitmap) {
 		loadBitmap = std::make_unique<Bitmap>(filename);
 		extent = { static_cast<uint32_t>(loadBitmap->size.x), static_cast<uint32_t>(loadBitmap->size.y), 1 };
@@ -80,7 +80,10 @@ void Image2D::Load(std::unique_ptr<Bitmap> loadBitmap) {
 
 	CreateImage(image, memory, extent, format, samples, VK_IMAGE_TILING_OPTIMAL, usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		mipLevels, arrayLayers, VK_IMAGE_TYPE_2D);
-	CreateImageSampler(sampler, filter, addressMode, anisotropic, mipLevels);
+	
+	if (useSampler)
+		CreateImageSampler(sampler, filter, addressMode, anisotropic, mipLevels);
+
 	CreateImageView(image, view, VK_IMAGE_VIEW_TYPE_2D, format, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels, 0, arrayLayers, 0);
 
 	if (loadBitmap || mipmap) {
