@@ -41,7 +41,7 @@ void Editor::Display()
     if (!open)
         return;
 
-    if (statsOnly) 
+    if (hideInspector) 
     {
         ShowStats();
         return;
@@ -221,6 +221,8 @@ void Editor::ShowAssetBrowser() {
     ImGui::End();
 }
 
+bool showShadowMenu = true;
+
 void Editor::ShowStats()
 {
     ImGuiWindowFlags window_flags = m_EditorInfo.window_flags
@@ -284,39 +286,28 @@ void Editor::ShowStats()
         ImGui::Separator(); // -----------------------------------------------------
 
         // enable UI
-        ImGui::Checkbox("Stats Only", &statsOnly);
+        ImGui::Checkbox("Hide Inspector", &hideInspector);
         ImGui::Separator(); // -----------------------------------------------------
 
-        ImGui::Checkbox("Use Gizmos", &Renderer::UseGizmos);
-        ImGui::Separator(); // -----------------------------------------------------
+        Renderer::Instance->OnUIRender();
 
-        ImGui::SeparatorText("Shadows"); // -----------------------------------------------------
-        ImGui::Columns(2);
-        ImGui::Text("PCF Samples");
-        ImGui::NextColumn();
-        ImGui::DragInt("##PCFSAMPLES", (int*)&ShadowPipeline::PCFSamples, 1, 1, 64);
-        ImGui::Columns(1);
-        ImGui::Separator(); // -----------------------------------------------------
+        if (ImGui::CollapsingHeader("Shadow Settings", &showShadowMenu))
+        {
+            ImGui::SeparatorText("Shadows"); // -----------------------------------------------------
+            ImGui::Columns(2);
+            ImGui::Text("PCF Samples");
+            ImGui::NextColumn();
+            ImGui::DragInt("##PCFSAMPLES", (int*)&ShadowPipeline::PCFSamples, 1, 1, 64);
+            ImGui::Columns(1);
+            ImGui::Separator(); // -----------------------------------------------------
 
-        ImGui::Columns(2);
-        ImGui::Text("PCSS Occluder Samples");
-        ImGui::NextColumn();
-        ImGui::DragInt("##PCSSOCCLUDERSAMPLES", (int*)&ShadowPipeline::PCSSOccluderSamples, 1, 1, 64);
-        ImGui::Columns(1);
-        ImGui::Separator(); // -----------------------------------------------------
-
-        // rendering stats
-        ImGui::SeparatorText("Rendering"); // -----------------------------------------------------
-        
-        // num objects drawn
-        ImGui::Text("Objects Drawn: %I64u", Renderer::ObjectsDrawn);
-        ImGui::Text("Vertices Drawn: %I64u", Renderer::VerticesDrawn);
-        ImGui::Text("Indirect Indexed Draw Calls: %I64u", Renderer::NumDrawCalls);
-        ImGui::Separator(); // -----------------------------------------------------
-
-        ImGui::BulletText("Application Update Time: %.3fms", Application::ApplicationUpdateTime);
-        ImGui::BulletText("Application Render Time: %.3fms", Application::ApplicationRenderTime);
-        ImGui::Unindent(40);
+            ImGui::Columns(2);
+            ImGui::Text("PCSS Occluder Samples");
+            ImGui::NextColumn();
+            ImGui::DragInt("##PCSSOCCLUDERSAMPLES", (int*)&ShadowPipeline::PCSSOccluderSamples, 1, 1, 64);
+            ImGui::Columns(1);
+            ImGui::Separator(); // -----------------------------------------------------
+        }
 
         if (ImGui::BeginPopupContextWindow())
         {

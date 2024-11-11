@@ -13,7 +13,7 @@ layout(set=0,binding=0,std140) uniform World {
 }scene;
 
 layout (set = 0, binding = 1) uniform sampler2D G_Color;
-layout (set = 0, binding = 2) uniform sampler2D G_Normal;
+// layout (set = 0, binding = 1) uniform sampler2D raytracedAO;
 
 ///////////////////////////////////////////////
 // Set 1.0: transforms
@@ -162,3 +162,4 @@ layout (set = 4, binding = 0) uniform sampler2D shadowMaps[];
 ///////////////////////////////////////////////
 //layout(set = 5, binding = 0) uniform accelerationStructureEXT topLevelAS;
 layout(set = 5, binding = 1, rgba32f) uniform image2D raytracedReflections;
+//layout(set = 5, binding = 2, r32f) uniform image2D raytracedAO;

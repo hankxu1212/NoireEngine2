@@ -124,6 +124,7 @@ const rtx_shaders = [
 	maek.GLSLC('shaders/raytracing/raytrace.rchit'),
 	maek.GLSLC('shaders/raytracing/raytrace.rgen'),
 	maek.GLSLC('shaders/raytracing/raytrace.rmiss'),
+	maek.GLSLC('shaders/raytracing/ao.comp'),
 ];
 
 const rtx_objs = [

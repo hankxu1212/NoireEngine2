@@ -63,11 +63,6 @@ public: // ray tracing helpers
 private:
 	friend class ImGuiPipeline;
 
-	START_BINDING(RTXBindings)
-		TLAS = 0,  // Top-level acceleration structure
-		OutImage = 1,   // Ray tracer output image
-	END_BINDING();
-
 	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
 	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
 

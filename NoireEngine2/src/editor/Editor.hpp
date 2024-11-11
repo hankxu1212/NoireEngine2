@@ -70,7 +70,7 @@ private:
 
 	EditorInfo		m_EditorInfo;
 	bool			open = true;
-	bool			statsOnly = false;
+	bool			hideInspector = false;
 	int				m_GizmoType = -1;
 };
 

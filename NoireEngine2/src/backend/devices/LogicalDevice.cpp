@@ -16,7 +16,8 @@ const std::vector<const char*> LogicalDevice::DeviceExtensions = {
 	VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
 	VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
 	VK_KHR_SPIRV_1_4_EXTENSION_NAME, // Required for VK_KHR_ray_tracing_pipeline,
-	VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME // Required by VK_KHR_spirv_1_4
+	VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME, // Required by VK_KHR_spirv_1_4
+	VK_KHR_RAY_QUERY_EXTENSION_NAME // enable ray querying
 #endif
 };
 
@@ -249,12 +250,15 @@ void LogicalDevice::CreateLogicalDevice()
 		enabledRayTracingPipelineFeatures.pNext = &enabledAccelerationStructureFeatures;
 
 		// add scalar buffer blockout extension
-		{
-			VkPhysicalDeviceScalarBlockLayoutFeatures scalarBlockLayoutFeatures{};
-			scalarBlockLayoutFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES;
-			scalarBlockLayoutFeatures.scalarBlockLayout = VK_TRUE; // Enable scalar block layout
-			enabledAccelerationStructureFeatures.pNext = &scalarBlockLayoutFeatures;
-		}
+		VkPhysicalDeviceScalarBlockLayoutFeatures scalarBlockLayoutFeatures{};
+		scalarBlockLayoutFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES;
+		scalarBlockLayoutFeatures.scalarBlockLayout = VK_TRUE; // Enable scalar block layout
+		enabledAccelerationStructureFeatures.pNext = &scalarBlockLayoutFeatures;
+
+		VkPhysicalDeviceRayQueryFeaturesKHR rayQueryFeatures = {};
+		rayQueryFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
+		rayQueryFeatures.rayQuery = VK_TRUE;
+		scalarBlockLayoutFeatures.pNext = &rayQueryFeatures;
 	}
 #endif
 

@@ -20,9 +20,6 @@
 
 #define _NE_USE_RTX
 
-/**
- * Manages all the material pipelines and the main geometry render pass.
- */
 class Renderer : Singleton
 {
 public:
@@ -34,6 +31,7 @@ public:
 	// UI statistics
 	inline static size_t ObjectsDrawn, VerticesDrawn, NumDrawCalls;
 	inline static bool UseGizmos = false;
+	inline static bool DrawSkybox = true;
 
 public:
 	void CreateRenderPass();
@@ -57,12 +55,17 @@ public:
 
 	const std::vector<std::vector<IndirectBatch>>& getIndirectBatches() const { return m_IndirectBatches; }
 
+	void OnUIRender();
+
 private:
 	// material pipelines
 	void CreateMaterialPipelineLayout();
 	void CreateMaterialPipelines();
+
 	void CreatePostPipelineLayout();
 	void CreatePostPipeline();
+
+	void CreateComputeAOPipeline();
 
 	// descriptor management
 	void CreateDescriptors();
@@ -92,6 +95,8 @@ private:
 	void CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t workflowIndex);
 	void PrepareIndirectDrawBuffer(const Scene* scene);
 	void DrawScene(const Scene* scene, const CommandBuffer& commandBuffer);
+	void RunAOCompute(const CommandBuffer& commandBuffer);
+	void RunPost(const CommandBuffer& commandBuffer);
 
 	std::vector<std::vector<IndirectBatch>> m_IndirectBatches;
 
@@ -125,29 +130,32 @@ private:
 
 	START_BINDING(World)
 		SceneUniform,
-		GBufferColor,
-		GBufferNormal
+		GBufferColor, // g buffer color sampler
+		GBufferNormalSampler,
+		AOImageSampler
 	END_BINDING();
 
 	START_BINDING(StorageBuffers)
-		Transform = 0,
-		DirLights = 1,
-		PointLights = 2,
-		SpotLights = 3,
-		Materials = 4,
-		Objects = 5
+		Transform,
+		DirLights,
+		PointLights,
+		SpotLights,
+		Materials,
+		Objects
 	END_BINDING();
 
 	START_BINDING(IBL)
-		Skybox = 0,
-		LambertianLUT = 1,
-		SpecularBRDF = 2,
-		EnvMap = 3,
+		Skybox,
+		LambertianLUT,
+		SpecularBRDF,
+		EnvMap,
 	END_BINDING();
 
 	START_BINDING(RTXBindings)
-		TLAS = 0,  // Top-level acceleration structure
-		OutImage = 1,   // Ray tracer output image
+		TLAS,  // Top-level acceleration structure
+		ReflectionImage,   // reflection
+		AOImageStorage,   // ao
+		GBufferNormalStorage  // storage image for normal
 	END_BINDING();
 
 	std::vector<Workspace> workspaces;
@@ -193,9 +201,20 @@ private:
 	VkPipeline m_PostPipeline = VK_NULL_HANDLE;
 	VkPipelineLayout m_PostPipelineLayout = VK_NULL_HANDLE;
 
-	// post pipeline
-	VkPipeline m_RaytracAOComputePipeline = VK_NULL_HANDLE;
-	VkPipelineLayout m_RaytracAOComputePipelineLayout = VK_NULL_HANDLE;
+	// ray tracing AO pipeline
+	struct AOPush
+	{
+		float radius{ 2.0f };       // Length of the ray
+		int   samples{ 4 };         // Nb samples at each iteration
+		float power{ 3.0f };        // Darkness is stronger for more hits
+		int   distanceBased{ 1 };  // Attenuate based on distance
+		int   frame{ 0 };                // Current frame
+		int   maxSamples{ 100'000 };    // Max samples before it stops
+	}m_AOControl;
+	bool m_AOIsDirty = false;
+
+	VkPipeline m_RaytracedAOComputePipeline = VK_NULL_HANDLE;
+	VkPipelineLayout m_RaytracedAOComputePipelineLayout = VK_NULL_HANDLE;
 
 	// material pipelines
 	std::array<VkPipeline, N_MATERIAL_WORKFLOWS>	m_MaterialPipelines{};
