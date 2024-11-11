@@ -23,17 +23,30 @@ vec2 SampleConcentricDisc(vec2 inVec)
     return r * vec2(cos(theta), sin(theta));
 }
 
-vec3 CosineSampleHemisphere(float u1, float u2) 
+vec3 CosineSampleHemisphereY(float u1, float u2) 
 {
     vec2 d = SampleConcentricDisc(vec2(u1, u2));
     float z = sqrt(max(0.0, 1.0 - d.x * d.x - d.y * d.y));
     return vec3(d.x, z, d.y);
 }
 
-vec3 CosineSampleHemisphere(vec2 u) 
+vec3 CosineSampleHemisphereZ(float u1, float u2) 
 {
-    return CosineSampleHemisphere(u.x, u.y);
+    vec2 d = SampleConcentricDisc(vec2(u1, u2));
+    float z = sqrt(max(0.0, 1.0 - d.x * d.x - d.y * d.y));
+    return vec3(d.x, d.y, z);
 }
+
+vec3 CosineSampleHemisphereY(vec2 u) 
+{
+    return CosineSampleHemisphereY(u.x, u.y);
+}
+
+vec3 CosineSampleHemisphereZ(vec2 u) 
+{
+    return CosineSampleHemisphereZ(u.x, u.y);
+}
+
 
 // Uniformly sample point on a hemisphere.
 // Cosine-weighted sampling would be a better fit for Lambertian BRDF but since this

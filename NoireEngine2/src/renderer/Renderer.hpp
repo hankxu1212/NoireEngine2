@@ -200,7 +200,7 @@ private:
 	void CreateFrameBuffers();
 	void DestroyFrameBuffers();
 
-	// images, depth, and ray tracing
+	// images: depth, ray tracing
 	std::unique_ptr<ImageDepth> s_MainDepth;
 	std::unique_ptr<Image2D> s_RaytracedAOImage;
 	std::unique_ptr<Image2D> s_RaytracedReflectionsImage;

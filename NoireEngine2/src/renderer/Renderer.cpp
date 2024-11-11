@@ -489,12 +489,9 @@ void Renderer::CreateIBLDescriptors()
 	VkDescriptorImageInfo specularBRDFInfo = scene->m_SpecularBRDF->GetDescriptorInfo();
 	VkDescriptorImageInfo prefilteredEnvMapInfo = scene->m_PrefilteredEnvMap->GetDescriptorInfo();
 
-	// first build lambertian LUT and specular BRDF info
-	
 	auto stages = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
-
 	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-		.BindImage(IBL::Skybox, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages)
+		.BindImage(IBL::Skybox, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages | VK_SHADER_STAGE_MISS_BIT_KHR)
 		.BindImage(IBL::LambertianLUT, &lambertianLUTInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages)
 		.BindImage(IBL::SpecularBRDF, &specularBRDFInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages)
 		.BindImage(IBL::EnvMap, &prefilteredEnvMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages)
@@ -746,7 +743,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		{
 			RunPost(commandBuffer);
 
-			// draw lines
+			// draw lines: TODO: move to ui render pass
 			if (UseGizmos)
 				s_LinesPipeline->Render(scene, commandBuffer);
 		}
@@ -1321,6 +1318,7 @@ void Renderer::RunPost(const CommandBuffer& commandBuffer)
 		0, nullptr //dynamic offsets count, ptr
 	);
 
+	// draw full screen quad
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
 

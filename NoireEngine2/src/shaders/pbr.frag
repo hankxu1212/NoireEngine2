@@ -22,7 +22,6 @@ layout(location=1) out vec4 outNormal;
 
 // Constant normal incidence Fresnel factor for all dielectrics.
 #define MAX_REFLECTION_LOD 6
-#define GGX_MIP_LEVELS 6
 const vec3 Fdielectric = vec3(0.04);
 #include "glsl/pbr.glsl"
 

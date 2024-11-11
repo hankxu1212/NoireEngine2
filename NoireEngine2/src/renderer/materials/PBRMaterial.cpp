@@ -178,7 +178,7 @@ void PBRMaterial::Inspect()
 	ImGui::PopID();
 
 	ImGui::PushID("###Albedo");
-	ImGui::ColorEdit3("Albedo", (float*)&m_CreateInfo.albedo);
+	ImGui::ColorEdit3("Albedo", (float*)&m_Uniform.albedo);
 	ImGui::PopID();
 
 	static const char* albedoIDs[]{ "###ALBEDOPATH",  "###ALBEDOID" };

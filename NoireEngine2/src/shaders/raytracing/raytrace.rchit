@@ -20,7 +20,6 @@ layout(set = 5, binding = 0) uniform accelerationStructureEXT topLevelAS;
 #include "../glsl/materials.glsl"
 
 #define MAX_REFLECTION_LOD 6
-#define GGX_MIP_LEVELS 6
 const vec3 Fdielectric = vec3(0.04);
 #include "../glsl/pbr.glsl"
 
@@ -51,6 +50,7 @@ void main()
 
     const vec2 UV = v0.texCoord * barycentrics.x + v1.texCoord * barycentrics.y + v2.texCoord * barycentrics.z;
 
+    // TODO: specialization constants and multiple entries in sbt
     uint matWorkflow = objResource.materialType;
     vec3 color;
     if (matWorkflow == 0) // lambertian
@@ -114,15 +114,14 @@ void main()
         vec3 specularIBL = (F * specularBRDF.x + specularBRDF.y) * specularIrradiance;
 
         color = diffuseIBL + specularIBL * material.environmentLightIntensity;
+
+        // multiply attenuation with specular
+        prd.attenuation *= F;
     }
 
     // Reflection
-    vec3 origin = worldPos;
-    vec3 rayDir = reflect(gl_WorldRayDirectionEXT, n);
-    prd.attenuation *= 1;
-    prd.done      = 0;
-    prd.rayOrigin = origin;
-    prd.rayDir    = rayDir;
-
-    prd.hitValue = color * 0.3;
+    prd.done      = matWorkflow == 0 ? 1 : 0; // done if hit a lambertian surface
+    prd.rayOrigin = worldPos;
+    prd.rayDir    = reflect(gl_WorldRayDirectionEXT, n);
+    prd.hitValue = color;
 }

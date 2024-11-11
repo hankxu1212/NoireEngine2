@@ -5,7 +5,9 @@
 
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
+layout (set = 3, binding = 0) uniform samplerCube skybox;
+
 void main()
 {
-    prd.hitValue = rayConstants.clearColor.xyz;
+    prd.hitValue = texture(skybox, prd.rayDir).rgb;
 }
