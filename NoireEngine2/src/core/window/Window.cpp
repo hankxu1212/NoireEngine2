@@ -96,14 +96,14 @@ Window::Window()
 	assert(glfwVulkanSupported() && "[glfw]: Vulkan Not Supported");
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	m_Window = glfwCreateWindow((int)props.width, (int)props.height, m_Data.Title.c_str(), nullptr, nullptr);
+	nativeWindow = glfwCreateWindow((int)props.width, (int)props.height, m_Data.Title.c_str(), nullptr, nullptr);
 
-	glfwSetWindowUserPointer(m_Window, &m_Data);
+	glfwSetWindowUserPointer(nativeWindow, &m_Data);
 	m_Data.VSync = true;
 
 	// event handlings, set GLFW callbacks
 	{
-		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
+		glfwSetWindowSizeCallback(nativeWindow, [](GLFWwindow* window, int width, int height)
 			{
 				if (width <= 0 || height <= 0) return;
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -114,21 +114,21 @@ Window::Window()
 				data.EventCallback(event);
 			});
 
-		glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* window, int iconfied)
+		glfwSetWindowIconifyCallback(nativeWindow, [](GLFWwindow* window, int iconfied)
 			{
 				WindowIconfyEvent event(iconfied);
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 				data.EventCallback(event);
 			});
 
-		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
+		glfwSetWindowCloseCallback(nativeWindow, [](GLFWwindow* window)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 				WindowCloseEvent event;
 				data.EventCallback(event);
 			});
 
-		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+		glfwSetKeyCallback(nativeWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -155,7 +155,7 @@ Window::Window()
 				}
 			});
 
-		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int keycode)
+		glfwSetCharCallback(nativeWindow, [](GLFWwindow* window, unsigned int keycode)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -163,7 +163,7 @@ Window::Window()
 				data.EventCallback(event);
 			});
 
-		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
+		glfwSetMouseButtonCallback(nativeWindow, [](GLFWwindow* window, int button, int action, int mods)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -184,7 +184,7 @@ Window::Window()
 				}
 			});
 
-		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xOffset, double yOffset)
+		glfwSetScrollCallback(nativeWindow, [](GLFWwindow* window, double xOffset, double yOffset)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -192,7 +192,7 @@ Window::Window()
 				data.EventCallback(event);
 			});
 
-		glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xPos, double yPos)
+		glfwSetCursorPosCallback(nativeWindow, [](GLFWwindow* window, double xPos, double yPos)
 			{
 				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -201,14 +201,14 @@ Window::Window()
 			});
 	}
 
-	glfwSetWindowCenter(m_Window);
+	glfwSetWindowCenter(nativeWindow);
 }
 
 Window::~Window()
 {
 	std::cout << "Destroyed window module\n" << std::flush;
 
-	glfwDestroyWindow(m_Window);
+	glfwDestroyWindow(nativeWindow);
 	--s_GLFWWindowCount;
 
 	if (s_GLFWWindowCount == 0)

@@ -52,7 +52,6 @@ void VulkanContext::Update()
             RecreateSwapchain();
             return;
         }
-
         if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
             NE_ERROR("[vulkan] Acquiring swapchain image resulted in ", string_VkResult(acquireResult));
 
@@ -69,10 +68,14 @@ void VulkanContext::Update()
 
         // queue present
         auto presentResult = swapchain->QueuePresent(s_LogicalDevice->getPresentQueue(), perSurfaceBuffer->getRenderSemaphore());
-        if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
+
+        if (presentResult == VK_ERROR_OUT_OF_DATE_KHR) {
             RecreateSwapchain();
+            return;
         }
-        VK(presentResult/*, "[vulkan] Failed to present swap chain image!"*/);
+        else if (presentResult != VK_SUCCESS && presentResult != VK_SUBOPTIMAL_KHR) {
+            NE_ERROR("[vulkan] Failed to acquire swap chain image!");
+        }
 
         perSurfaceBuffer->currentFrame = (perSurfaceBuffer->currentFrame + 1) % swapchain->getImageCount();
     }
@@ -169,16 +172,17 @@ void VulkanContext::CreatePipelineCache()
 
 void VulkanContext::RecreateSwapchain()
 {
+    int width = 0, height = 0;
+    auto* wd = getSurface(0)->getWindow()->nativeWindow;
+    glfwGetFramebufferSize(wd, &width, &height);
+    while (width == 0 || height == 0) {
+        glfwGetFramebufferSize(wd, &width, &height);
+        glfwWaitEvents();
+    }
+
     WaitIdle();
 
-    auto wd = getSurface(0)->getWindow();
-    uint32_t w, h;
-    do {
-        w = wd->m_Data.Width;
-        h = wd->m_Data.Height;
-    } while (!w || !h);
-
-    VkExtent2D extent{ w, h };
+    VkExtent2D extent{ (uint32_t)width, (uint32_t)height };
 
     DestroyPerSurfaceStructs();
 
@@ -214,6 +218,9 @@ void VulkanContext::RecreateSwapchain()
 
             perSurfaceBuffer->commandBuffers[i] = std::make_unique<CommandBuffer>(false);
 
+            if (perSurfaceBuffer->drawIndirectBuffers[i])
+                perSurfaceBuffer->drawIndirectBuffers[i]->Destroy();
+
             perSurfaceBuffer->drawIndirectBuffers[i] = std::make_unique<Buffer>(
                 MAX_DRAW_COMMANDS * sizeof(VkDrawIndexedIndirectCommand),
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
@@ -224,6 +231,8 @@ void VulkanContext::RecreateSwapchain()
     }
 
     s_Renderer->Rebuild();
+
+    NE_DEBUG(std::format("Resized window to {}x{}", extent.width, extent.height), Logger::MAGENTA, Logger::BOLD);
 }
 
 void VulkanContext::DestroyPerSurfaceStructs()

@@ -69,11 +69,14 @@ private:
 
 	// descriptor management
 	void CreateDescriptors();
-	void CreateWorkspaceDescriptors();
+	bool createdDescriptors = false;
+	void CreateWorldDescriptors(bool update);
+	void CreateStorageBufferDescriptors();
 	void CreateTextureDescriptors();
 	void CreateIBLDescriptors();
 	void CreateShadowDescriptors();
-	void CreateRaytracingDescriptors();
+	void CreateRayTracingImages();
+	void CreateRaytracingDescriptors(bool update);
 
 	// prepping and copy/update buffers
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
@@ -194,7 +197,7 @@ private:
 	std::vector<VkFramebuffer> m_CompositionFrameBuffers;
 	std::vector<VkFramebuffer> m_OffscreenFrameBuffers;
 
-	void CreateFrameBufferImages();
+	void CreateFrameBuffers();
 	void DestroyFrameBuffers();
 
 	// images, depth, and ray tracing

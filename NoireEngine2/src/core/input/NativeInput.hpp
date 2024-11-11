@@ -34,9 +34,17 @@ struct InputTypeVec3
 class NativeInput
 {
 public:
-	static bool IsKeyPressed(KeyCode key);
+	static bool GetKeyPressed(KeyCode key);
 
-	static bool IsMouseButtonPressed(MouseCode button);
+	static bool GetMouseButtonPressed(MouseCode button);
+
+	static bool GetKeyRepeat(KeyCode key);
+
+	static bool GetMouseButtonRepeat(MouseCode button);
+
+	static bool GetKeyRelease(KeyCode key);
+
+	static bool GetMouseButtonRelease(MouseCode button);
 
 	static glm::vec2 GetMousePosition();
 

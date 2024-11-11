@@ -23,7 +23,6 @@ public:
 	void Write(VkDescriptorSet& set);
 
 private:
-
 	std::vector<VkWriteDescriptorSet> writes;
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
 

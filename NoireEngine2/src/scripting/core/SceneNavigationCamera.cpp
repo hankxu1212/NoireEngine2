@@ -44,10 +44,10 @@ namespace Core {
 		{
 			// moves anchor point
 			bool isAnchorPressed = 
-				NativeInput::IsMouseButtonPressed(MOUSE_anchor) || 
-				(NativeInput::IsKeyPressed(KEY_anchor) && NativeInput::IsMouseButtonPressed(MOUSE_anchorMouseLeft));
+				NativeInput::GetMouseButtonPressed(MOUSE_anchor) || 
+				(NativeInput::GetKeyPressed(KEY_anchor) && NativeInput::GetMouseButtonPressed(MOUSE_anchorMouseLeft));
 
-			if (isAnchorPressed && NativeInput::IsKeyPressed(Key::LeftShift))
+			if (isAnchorPressed && NativeInput::GetKeyPressed(Key::LeftShift))
 			{
 				glm::vec3 offset = anchoredMoveSensitivity * (mouseDelta.x * transform->Left() + mouseDelta.y * transform->Up());
 				anchorPoint += offset;
@@ -68,7 +68,7 @@ namespace Core {
 		}
 			
 		// moving with keyboard -- with acceleration
-		if (NativeInput::IsMouseButtonPressed(MOUSE_move)) 
+		if (NativeInput::GetMouseButtonPressed(MOUSE_move)) 
 		{
 			if (auto keyboardInput = NativeInput::GetVec3Input(planeNavKeyBindings);
 				keyboardInput != Vec3::Zero)

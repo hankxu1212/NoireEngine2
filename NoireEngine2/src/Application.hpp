@@ -80,6 +80,8 @@ private:
 	bool OnWindowClose(WindowCloseEvent& e);
 	bool OnWindowIconfy(WindowIconfyEvent& e);
 	bool OnWindowResize(WindowResizeEvent& e);
+	void HandleWindowResizeComplete();
+	bool isResizing = false;;
 
 	void CreateModule(Module::RegistryMap::const_iterator it);
 	void DestroyModule(TypeId id, Module::DestroyStage stage);

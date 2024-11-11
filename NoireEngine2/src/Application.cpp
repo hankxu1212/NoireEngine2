@@ -111,6 +111,8 @@ void Application::Run()
 
 		if (!m_Minimized) 
 		{
+			HandleWindowResizeComplete();
+
 			RunRender();
 			if (StatsDirty)
 				ApplicationRenderTime = timer.GetElapsed(false);
@@ -193,9 +195,18 @@ bool Application::OnWindowResize(WindowResizeEvent& e)
 		return true;
 	}
 
-	VulkanContext::Get()->OnWindowResize();
+	isResizing = true;
 	m_Minimized = false;
 	return false;
+}
+
+void Application::HandleWindowResizeComplete()
+{
+	// only ever resize on release button
+	if (isResizing && NativeInput::GetMouseButtonRelease(Mouse::ButtonLeft)) {
+		VulkanContext::Get()->OnWindowResize();
+		isResizing = false;
+	}
 }
 
 void Application::PushLayer(Layer* layer)

@@ -417,7 +417,7 @@ void Editor::ShowGizmos()
         glm::mat4 transformMat = selectedEntity->transform()->LocalDirty();
 
         // Snapping
-        bool snap = NativeInput::IsKeyPressed(Key::LeftControl);
+        bool snap = NativeInput::GetKeyPressed(Key::LeftControl);
         float snapValue = 0.5f; // Snap to 0.5m for translation/scale
         // Snap to 45 degrees for rotation
         if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)

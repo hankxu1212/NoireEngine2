@@ -359,22 +359,26 @@ void Renderer::CreateComputeAOPipeline()
 
 void Renderer::CreateDescriptors()
 {
-#ifdef _NE_USE_RTX
-	CreateRaytracingDescriptors();
-#endif
-
-	CreateWorkspaceDescriptors();
+	CreateWorldDescriptors(false);
+	CreateStorageBufferDescriptors();
 	CreateTextureDescriptors();
 	CreateIBLDescriptors();
 	CreateShadowDescriptors();
+
+#ifdef _NE_USE_RTX
+	CreateRaytracingDescriptors(false);
+#endif
+
+	createdDescriptors = true;
 }
 
-void Renderer::CreateWorkspaceDescriptors()
+void Renderer::CreateWorldDescriptors(bool update)
 {
-	uint32_t wid = 0;
-	// create set 0 and set 1: world and transform descriptor
 	for (Workspace& workspace : workspaces)
 	{
+		workspace.World.Destroy();
+		workspace.WorldSrc.Destroy();
+
 		workspace.WorldSrc = Buffer(
 			sizeof(Scene::SceneUniform),
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -388,7 +392,7 @@ void Renderer::CreateWorkspaceDescriptors()
 		);
 
 		// build world buffer descriptor
-		auto stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT |
+		auto uniformStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT |
 			VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 
 		VkDescriptorImageInfo gBufferColorInfo = workspace.GBufferColors->GetDescriptorInfo();
@@ -396,13 +400,23 @@ void Renderer::CreateWorkspaceDescriptors()
 		VkDescriptorImageInfo rtxAOSamplerInfo = s_RaytracedAOImage->GetDescriptorInfo();
 
 		VkDescriptorBufferInfo World_info = workspace.World.GetDescriptorInfo();
-		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-			.BindBuffer(World::SceneUniform, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, stages)
+		DescriptorBuilder builder = DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+			.BindBuffer(World::SceneUniform, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, uniformStages)
 			.BindImage(World::GBufferColor, &gBufferColorInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.BindImage(World::GBufferNormal, &gBufferNormalInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
-			.Build(workspace.set0_World, set0_WorldLayout);
+			.BindImage(World::GBufferNormal, &gBufferNormalInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT);
 
-		// build storage buffers
+		if (update)
+			builder.Write(workspace.set0_World);
+		else
+			builder.Build(workspace.set0_World, set0_WorldLayout);
+	}
+}
+
+void Renderer::CreateStorageBufferDescriptors()
+{
+	// build storage buffers
+	for (Workspace& workspace : workspaces)
+	{
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.AddBinding(StorageBuffers::Transform, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT) // transforms
 			.AddBinding(StorageBuffers::DirLights, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // dir lights
@@ -411,8 +425,6 @@ void Renderer::CreateWorkspaceDescriptors()
 			.AddBinding(StorageBuffers::Materials, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) // material instances
 			.AddBinding(StorageBuffers::Objects, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) // object descriptions
 			.Build(workspace.set1_StorageBuffers, set1_StorageBuffersLayout);
-
-		wid++;
 	}
 }
 
@@ -574,7 +586,7 @@ void Renderer::CreateShadowDescriptors()
 		, &variableDescriptorInfoAI);
 }
 
-void Renderer::CreateRaytracingDescriptors()
+void Renderer::CreateRayTracingImages()
 {
 	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain();
 	glm::uvec2 extent = swapchain->getExtentVec2();
@@ -595,7 +607,7 @@ void Renderer::CreateRaytracingDescriptors()
 	// ray traced reflection (rgba32f)
 	{
 		s_RaytracedReflectionsImage = std::make_unique<Image2D>(
-			extent.x, extent.y, 
+			extent.x, extent.y,
 			VK_FORMAT_R32G32B32A32_SFLOAT,
 			VK_IMAGE_LAYOUT_GENERAL,
 			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
@@ -604,24 +616,29 @@ void Renderer::CreateRaytracingDescriptors()
 
 		s_RaytracedReflectionsImage->Load();
 	}
+}
 
+void Renderer::CreateRaytracingDescriptors(bool update)
+{
 	// create the descriptors
-	{
-		auto as = s_RaytracingPipeline->GetTLAS();
+	auto as = s_RaytracingPipeline->GetTLAS();
 
-		VkWriteDescriptorSetAccelerationStructureKHR descASInfo{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR };
-		descASInfo.accelerationStructureCount = 1;
-		descASInfo.pAccelerationStructures = &as;
+	VkWriteDescriptorSetAccelerationStructureKHR descASInfo{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR };
+	descASInfo.accelerationStructureCount = 1;
+	descASInfo.pAccelerationStructures = &as;
 
-		VkDescriptorImageInfo reflectImageInfo = s_RaytracedReflectionsImage->GetDescriptorInfo();
-		VkDescriptorImageInfo aoImageInfo = s_RaytracedAOImage->GetDescriptorInfo();
+	VkDescriptorImageInfo reflectImageInfo = s_RaytracedReflectionsImage->GetDescriptorInfo();
+	VkDescriptorImageInfo aoImageInfo = s_RaytracedAOImage->GetDescriptorInfo();
 
-		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-			.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_COMPUTE_BIT)
-			.BindImage(RTXBindings::ReflectionImage, &reflectImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.BindImage(RTXBindings::AOImage, &aoImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
-			.Build(set5_RayTracing, set5_RayTracingLayout);
-	}
+	DescriptorBuilder builder = DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+		.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_COMPUTE_BIT)
+		.BindImage(RTXBindings::ReflectionImage, &reflectImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_FRAGMENT_BIT)
+		.BindImage(RTXBindings::AOImage, &aoImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT);
+
+	if (update)
+		builder.Write(set5_RayTracing);
+	else
+		builder.Build(set5_RayTracing, set5_RayTracingLayout);
 }
 
 void Renderer::Rebuild()
@@ -629,62 +646,22 @@ void Renderer::Rebuild()
 	workspaces.resize(VulkanContext::Get()->getFramesInFlight());
 
 	DestroyFrameBuffers();
-	CreateFrameBufferImages();
+	CreateRayTracingImages();
+	CreateFrameBuffers();
 
-	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
-
-	//Make framebuffers for each swapchain image:
-	size_t framesInFlight = swapchain->getImageViews().size();
-	m_CompositionFrameBuffers.resize(framesInFlight);
-	m_OffscreenFrameBuffers.resize(framesInFlight);
-
-	for (size_t i = 0; i < framesInFlight; ++i)
+	if (createdDescriptors) 
 	{
-		// create all swapchain frame buffers
-		{
-			std::vector<VkImageView> swapchainAttachments{
-				swapchain->getImageViews()[i],
-				s_MainDepth->getView()
-			};
-
-			VkFramebufferCreateInfo create_info
-			{
-				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-				.renderPass = s_CompositionPass->renderpass,
-				.attachmentCount = uint32_t(swapchainAttachments.size()),
-				.pAttachments = swapchainAttachments.data(),
-				.width = swapchain->getExtent().width,
-				.height = swapchain->getExtent().height,
-				.layers = 1,
-			};
-
-			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_CompositionFrameBuffers[i]));
-		}
-
-		// create all offscreen frame buffers
-		{
-			std::vector<VkImageView> offscreenAttachments {
-				workspaces[i].GBufferColors->getView(),
-				workspaces[i].GBufferNormals->getView(),
-				s_MainDepth->getView()
-			};
-
-			VkFramebufferCreateInfo create_info
-			{
-				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-				.renderPass = s_OffscreenPass->renderpass,
-				.attachmentCount = uint32_t(offscreenAttachments.size()),
-				.pAttachments = offscreenAttachments.data(),
-				.width = swapchain->getExtent().width,
-				.height = swapchain->getExtent().height,
-				.layers = 1,
-			};
-
-			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_OffscreenFrameBuffers[i]));
-		}
+#ifdef _NE_USE_RTX
+		CreateRaytracingDescriptors(true);
+#endif
+		CreateWorldDescriptors(true);
 	}
 
 	s_UIPipeline->Rebuild();
+	if (s_RaytracedAOImage.get() != nullptr && createdDescriptors)
+		s_UIPipeline->SetupDebugViewport(s_RaytracedAOImage.get());
+
+	m_AOIsDirty = true;
 }
 
 void Renderer::Create()
@@ -719,7 +696,7 @@ void Renderer::Create()
 
 #ifdef _NE_USE_RTX
 	s_RaytracingPipeline->CreatePipeline();
-	s_UIPipeline->SetupRaytracingViewport(s_RaytracingPipeline.get());
+	s_UIPipeline->SetupDebugViewport(s_RaytracedAOImage.get());
 #endif
 }
 
@@ -1286,9 +1263,10 @@ void Renderer::RunAOCompute(const CommandBuffer& commandBuffer)
 	vkCmdPushConstants(commandBuffer, m_RaytracedAOComputePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(AOPush), &m_AOControl);
 
 	// Dispatching the compute shader
-	VkExtent2D m_size{ 1920, 1080 };
 	constexpr uint32_t GROUP_SIZE = 16;
-	vkCmdDispatch(commandBuffer, (m_size.width + (GROUP_SIZE - 1)) / GROUP_SIZE, (m_size.height + (GROUP_SIZE - 1)) / GROUP_SIZE, 1);
+	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
+	VkExtent2D extent = swapchain->getExtent();
+	vkCmdDispatch(commandBuffer, (extent.width + (GROUP_SIZE - 1)) / GROUP_SIZE, (extent.height + (GROUP_SIZE - 1)) / GROUP_SIZE, 1);
 
 	// Adding a barrier to be sure the compute shader has finished
 	// writing to the AO buffer before the post shader is using it
@@ -1367,16 +1345,21 @@ void Renderer::DestroyFrameBuffers()
 	m_OffscreenFrameBuffers.clear();
 }
 
-void Renderer::CreateFrameBufferImages()
+void Renderer::CreateFrameBuffers()
 {
 	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain();
 	glm::uvec2 extent = swapchain->getExtentVec2();
 
 	uint32_t imageCnt = swapchain->getImageCount();
+	m_CompositionFrameBuffers.resize(imageCnt);
+	m_OffscreenFrameBuffers.resize(imageCnt);
 
-	// the G-buffer color image, using swapchain format
+	s_MainDepth = std::make_unique<ImageDepth>(extent);
+
+
 	for (uint32_t i = 0; i < imageCnt; ++i)
 	{
+		// G-Buffer color (rgba32f)
 		{
 			workspaces[i].GBufferColors = std::make_unique<Image2D>(
 				extent.x, extent.y,
@@ -1389,7 +1372,7 @@ void Renderer::CreateFrameBufferImages()
 			workspaces[i].GBufferColors->Load(nullptr, false);
 		}
 
-		// the G-Buffer (rgba32f) - position(xyz) / normal(w-compressed)
+		// G-Buffer normals (rgba32f) - position(xyz) / normal(w-compressed)
 		{
 			workspaces[i].GBufferNormals = std::make_unique<Image2D>(
 				extent.x, extent.y,
@@ -1401,7 +1384,48 @@ void Renderer::CreateFrameBufferImages()
 
 			workspaces[i].GBufferNormals->Load(nullptr, false);
 		}
-	}
 
-	s_MainDepth = std::make_unique<ImageDepth>(extent);
+		// create all swapchain frame buffers
+		{
+			std::vector<VkImageView> swapchainAttachments{
+				swapchain->getImageViews()[i],
+				s_MainDepth->getView()
+			};
+
+			VkFramebufferCreateInfo create_info
+			{
+				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+				.renderPass = s_CompositionPass->renderpass,
+				.attachmentCount = uint32_t(swapchainAttachments.size()),
+				.pAttachments = swapchainAttachments.data(),
+				.width = swapchain->getExtent().width,
+				.height = swapchain->getExtent().height,
+				.layers = 1,
+			};
+
+			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_CompositionFrameBuffers[i]));
+		}
+
+		// create all offscreen frame buffers
+		{
+			std::vector<VkImageView> offscreenAttachments{
+				workspaces[i].GBufferColors->getView(),
+				workspaces[i].GBufferNormals->getView(),
+				s_MainDepth->getView()
+			};
+
+			VkFramebufferCreateInfo create_info
+			{
+				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+				.renderPass = s_OffscreenPass->renderpass,
+				.attachmentCount = uint32_t(offscreenAttachments.size()),
+				.pAttachments = offscreenAttachments.data(),
+				.width = swapchain->getExtent().width,
+				.height = swapchain->getExtent().height,
+				.layers = 1,
+			};
+
+			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_OffscreenFrameBuffers[i]));
+		}
+	}
 }

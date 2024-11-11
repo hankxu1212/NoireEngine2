@@ -8,6 +8,7 @@
 #include "imgui/backends/imgui_impl_glfw.h"
 
 class RaytracingPipeline;
+class Image2D;
 
 class ImGuiPipeline : public VulkanPipeline
 {
@@ -26,7 +27,7 @@ public:
 
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
-	void SetupRaytracingViewport(RaytracingPipeline* rtxPipeline);
+	void SetupDebugViewport(Image2D* image);
 
 private:
 	void DestroyFrameBuffers();
@@ -42,6 +43,6 @@ private:
 	std::unique_ptr<Renderpass>				s_Renderpass;
 	std::vector<VkFramebuffer>				m_FrameBuffers;
 
-	VkDescriptorSet							m_RTXOutImage;
+	VkDescriptorSet							m_DebugImage;
 };
 

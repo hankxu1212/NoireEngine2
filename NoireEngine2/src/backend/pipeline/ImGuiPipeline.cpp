@@ -52,7 +52,7 @@ ImGuiPipeline::ImGuiPipeline()
     SetTheme();
 
     // Setup Platform/Renderer backends
-    GLFWwindow* window = Window::Get()->m_Window;
+    GLFWwindow* window = Window::Get()->nativeWindow;
     ImGui_ImplGlfw_InitForVulkan(window, true);
 
     // render pass with no depth 
@@ -91,7 +91,7 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
 #ifdef _NE_USE_RTX
     if (ImGui::Begin("Ray Tracing")) {
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-        ImGui::Image(m_RTXOutImage, ImVec2{ viewportPanelSize.x, viewportPanelSize.y });
+        ImGui::Image(m_DebugImage, ImVec2{ viewportPanelSize.x, viewportPanelSize.y });
         ImGui::End();
     }
 #endif
@@ -114,12 +114,12 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
     s_Renderpass->End(commandBuffer);
 }
 
-void ImGuiPipeline::SetupRaytracingViewport(RaytracingPipeline* rtxPipeline)
+void ImGuiPipeline::SetupDebugViewport(Image2D* image)
 {
-    m_RTXOutImage = ImGui_ImplVulkan_AddTexture(
-        Renderer::Instance->s_RaytracedAOImage->getSampler(),
-        Renderer::Instance->s_RaytracedAOImage->getView(),
-        Renderer::Instance->s_RaytracedAOImage->getLayout()
+    m_DebugImage = ImGui_ImplVulkan_AddTexture(
+        image->getSampler(),
+        image->getView(),
+        image->getLayout()
     );
 }
 

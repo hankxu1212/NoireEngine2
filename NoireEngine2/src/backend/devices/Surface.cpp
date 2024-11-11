@@ -4,7 +4,7 @@ Surface::Surface(const VulkanInstance& instance, const PhysicalDevice& physicalD
 	m_Window(window)
 {
 	// Creates the glfw surface.
-	VulkanContext::VK(glfwCreateWindowSurface(instance, window->m_Window, nullptr, &m_Surface),
+	VulkanContext::VK(glfwCreateWindowSurface(instance, window->nativeWindow, nullptr, &m_Surface),
 		"[vulkan] Error: Cannot create surface");
 
 	VulkanContext::VK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &m_Capabilities),
@@ -44,6 +44,9 @@ Surface::Surface(const VulkanInstance& instance, const PhysicalDevice& physicalD
 	vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, logicalDevice.getPresentFamily(), m_Surface, &presentSupport);
 
 	assert(presentSupport && "[vulkan] Error: Present queue family does not have presentation support");
+
+	NE_DEBUG(string_VkFormat(m_Format.format), Logger::MAGENTA, Logger::BOLD);
+	NE_DEBUG(string_VkColorSpaceKHR(m_Format.colorSpace), Logger::MAGENTA, Logger::BOLD);
 }
 
 Surface::~Surface() 

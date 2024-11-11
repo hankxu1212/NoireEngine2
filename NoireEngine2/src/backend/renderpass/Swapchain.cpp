@@ -119,9 +119,6 @@ SwapChain::SwapChain(const PhysicalDevice& physicalDevice, Surface& surface, con
 		Image::CreateImageView(images.at(i), imageViews.at(i), VK_IMAGE_VIEW_TYPE_2D, surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT,
 			1, 0, 1, 0);
 	}
-
-	NE_DEBUG(string_VkFormat(surfaceFormat.format), Logger::MAGENTA, Logger::BOLD);
-	NE_DEBUG(string_VkColorSpaceKHR(surfaceFormat.colorSpace), Logger::MAGENTA, Logger::BOLD);
 }
 
 SwapChain::~SwapChain() {

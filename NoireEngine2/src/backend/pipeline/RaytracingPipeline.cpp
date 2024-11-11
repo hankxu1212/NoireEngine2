@@ -116,8 +116,11 @@ void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& command
 	vkCmdPushConstants(commandBuffer, m_PipelineLayout,
 		VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_MISS_BIT_KHR,
 		0, sizeof(PushConstantRay), &m_pcRay);
+	
+	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
+	VkExtent2D extent = swapchain->getExtent();
 
-	vkCmdTraceRaysKHR(commandBuffer, &m_rgenRegion, &m_missRegion, &m_hitRegion, &m_callRegion, 1920, 1080, 1);
+	vkCmdTraceRaysKHR(commandBuffer, &m_rgenRegion, &m_missRegion, &m_hitRegion, &m_callRegion, extent.width, extent.height, 1);
 }
 
 void RaytracingPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)

@@ -32,5 +32,5 @@ public:
 		EventCallbackFn EventCallback;
 	}m_Data;
 
-	GLFWwindow* m_Window;
+	GLFWwindow* nativeWindow;
 };
