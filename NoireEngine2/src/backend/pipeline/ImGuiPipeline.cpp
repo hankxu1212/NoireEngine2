@@ -116,9 +116,9 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
 void ImGuiPipeline::SetupRaytracingViewport(RaytracingPipeline* rtxPipeline)
 {
     m_RTXOutImage = ImGui_ImplVulkan_AddTexture(
-        Renderer::Instance->m_RtxImage->getSampler(),
-        Renderer::Instance->m_RtxImage->getView(), 
-        Renderer::Instance->m_RtxImage->getLayout()
+        Renderer::Instance->s_RaytracedReflectionsImage->getSampler(),
+        Renderer::Instance->s_RaytracedReflectionsImage->getView(), 
+        Renderer::Instance->s_RaytracedReflectionsImage->getLayout()
     );
 }
 

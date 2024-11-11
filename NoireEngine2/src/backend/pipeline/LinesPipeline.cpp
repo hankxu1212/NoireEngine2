@@ -172,7 +172,7 @@ void LinesPipeline::CreateGraphicsPipeline()
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_LINE_LIST)
 		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, 2.0f)
 		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
-		.Build("../spv/shaders/lines.vert.spv", "../spv/shaders/lines.frag.spv", &m_Pipeline, m_PipelineLayout, Renderer::Instance->s_MainPass->renderpass);
+		.Build("../spv/shaders/lines.vert.spv", "../spv/shaders/lines.frag.spv", &m_Pipeline, m_PipelineLayout, Renderer::Instance->s_PresentPass->renderpass);
 }
 
 void LinesPipeline::CreateDescriptors()

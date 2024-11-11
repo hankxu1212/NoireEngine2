@@ -68,7 +68,7 @@ private:
 	void CreateTextureDescriptors();
 	void CreateIBLDescriptors();
 	void CreateShadowDescriptors();
-	void CreateRayTracingDescriptors();
+	void CreateRaytracingDescriptors();
 
 	// prepping and copy/update buffers
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
@@ -163,14 +163,23 @@ private:
 	DescriptorAllocator						m_DescriptorAllocator;
 
 	// render pass management
+	std::unique_ptr<Renderpass> s_OffscreenPass;
+	std::unique_ptr<Renderpass> s_PresentPass;
 
-	std::unique_ptr<Renderpass> s_MainPass;
-	std::unique_ptr<ImageDepth> s_MainDepth;
-	std::vector<VkFramebuffer> m_FrameBuffers;
+	// frame buffers
+	std::vector<VkFramebuffer> m_SwapchainFrameBuffers;
+	std::vector<VkFramebuffer> m_OffscreenFrameBuffers;
 
 	void DestroyFrameBuffers();
 
-	std::unique_ptr<Image2D> m_RtxImage;
+	// images
+	std::unique_ptr<ImageDepth> s_MainDepth;
+	std::unique_ptr<Image2D> s_GBufferNormals;
+	std::unique_ptr<Image2D> s_GBufferColor;
+	std::unique_ptr<Image2D> s_RaytracedReflectionsImage;
+	std::unique_ptr<Image2D> s_RaytracedAOImage;
+
+	void CreateFrameBufferImages();
 
 private:
 	friend class LinesPipeline;

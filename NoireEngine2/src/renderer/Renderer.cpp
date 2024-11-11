@@ -63,12 +63,17 @@ static inline void InsertRTXBarrier(const CommandBuffer& buf)
 
 Renderer::Renderer()
 {
-	s_MainPass = std::make_unique<Renderpass>();
-	
-	s_UIPipeline = std::make_unique<ImGuiPipeline>();
-
 	assert(!Instance && "More than one renderer instance found!");
 	Instance = this;
+
+	s_OffscreenPass = std::make_unique<Renderpass>();
+	s_PresentPass = std::make_unique<Renderpass>();
+
+	// initialize a bunch of pipelines
+	s_UIPipeline = std::make_unique<ImGuiPipeline>();
+	s_LinesPipeline = std::make_unique<LinesPipeline>();
+	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>();
+	s_ShadowPipeline = std::make_unique<ShadowPipeline>();
 }
 
 Renderer::~Renderer()
@@ -115,10 +120,17 @@ Renderer::~Renderer()
 
 void Renderer::CreateRenderPass()
 {
-	s_MainPass->CreateRenderPass(
+	// present to the swapchain
+	s_PresentPass->CreateRenderPass(
 		{ VulkanContext::Get()->getSurface(0)->getFormat().format },
-		VK_FORMAT_D32_SFLOAT_S8_UINT,
+		VK_FORMAT_D32_SFLOAT_S8_UINT, // todo: actually check
 		1, true, true);
+
+	s_OffscreenPass->CreateRenderPass(
+		{ VK_FORMAT_R32G32B32A32_SFLOAT , VK_FORMAT_R32G32B32A32_SFLOAT },  // RGBA + G-Buffer
+		VK_FORMAT_D32_SFLOAT_S8_UINT, // todo: actually check
+		1, true, true, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL
+	);
 
 	s_UIPipeline->CreateRenderPass();
 }
@@ -164,8 +176,8 @@ void Renderer::CreateMaterialPipelines()
 		.SetDynamicStates(dynamic_states)
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
 		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
-		.Build("../spv/shaders/lambertian.vert.spv", "../spv/shaders/lambertian.frag.spv", &m_MaterialPipelines[0], m_MaterialPipelineLayout, s_MainPass->renderpass)
-		.Build("../spv/shaders/pbr.vert.spv", "../spv/shaders/pbr.frag.spv", &m_MaterialPipelines[1], m_MaterialPipelineLayout, s_MainPass->renderpass);
+		.Build("../spv/shaders/lambertian.vert.spv", "../spv/shaders/lambertian.frag.spv", &m_MaterialPipelines[0], m_MaterialPipelineLayout, s_PresentPass->renderpass)
+		.Build("../spv/shaders/pbr.vert.spv", "../spv/shaders/pbr.frag.spv", &m_MaterialPipelines[1], m_MaterialPipelineLayout, s_PresentPass->renderpass);
 }
 
 void Renderer::CreateDescriptors()
@@ -176,7 +188,7 @@ void Renderer::CreateDescriptors()
 	CreateTextureDescriptors();
 	CreateIBLDescriptors();
 	CreateShadowDescriptors();
-	CreateRayTracingDescriptors();
+	CreateRaytracingDescriptors();
 }
 
 void Renderer::CreateWorkspaceDescriptors()
@@ -375,23 +387,35 @@ void Renderer::CreateShadowDescriptors()
 		, &variableDescriptorInfoAI);
 }
 
-void Renderer::CreateRayTracingDescriptors()
+void Renderer::CreateRaytracingDescriptors()
 {
-	// create storage image
-	{
-		const SwapChain* swapchain = VulkanContext::Get()->getSwapChain();
-		glm::uvec2 extent = swapchain->getExtentVec2();
-		//VkFormat format = VulkanContext::Get()->getSurface()->getFormat().format;
-		VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain();
+	glm::uvec2 extent = swapchain->getExtentVec2();
 
-		m_RtxImage = std::make_unique<Image2D>(
-			extent.x, extent.y, format,
+	// ray traced ambient occlusion result (r32)
+	{
+		s_RaytracedAOImage = std::make_unique<Image2D>(
+			extent.x, extent.y,
+			VK_FORMAT_R32_SFLOAT,
 			VK_IMAGE_LAYOUT_GENERAL,
 			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
 			false
 		);
 
-		m_RtxImage->Load();
+		s_RaytracedAOImage->Load();
+	}
+
+	// ray traced reflection (rgba32f)
+	{
+		s_RaytracedReflectionsImage = std::make_unique<Image2D>(
+			extent.x, extent.y, 
+			VK_FORMAT_R32G32B32A32_SFLOAT,
+			VK_IMAGE_LAYOUT_GENERAL,
+			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+			false
+		);
+
+		s_RaytracedReflectionsImage->Load();
 	}
 
 	// create the descriptors
@@ -402,7 +426,7 @@ void Renderer::CreateRayTracingDescriptors()
 		descASInfo.accelerationStructureCount = 1;
 		descASInfo.pAccelerationStructures = &as;
 
-		VkDescriptorImageInfo rtxImageInfo = m_RtxImage->GetDescriptorInfo();
+		VkDescriptorImageInfo rtxImageInfo = s_RaytracedReflectionsImage->GetDescriptorInfo();
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR)
 			.BindImage(RTXBindings::OutImage, &rtxImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_FRAGMENT_BIT)
@@ -413,34 +437,59 @@ void Renderer::CreateRayTracingDescriptors()
 void Renderer::Rebuild()
 {
 	DestroyFrameBuffers();
+	CreateFrameBufferImages();
 
 	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
 
-	s_MainDepth = std::make_unique<ImageDepth>(swapchain->getExtentVec2());
-
 	//Make framebuffers for each swapchain image:
-	m_FrameBuffers.assign(swapchain->getImageViews().size(), VK_NULL_HANDLE);
-	for (size_t i = 0; i < swapchain->getImageViews().size(); ++i)
+	size_t framesInFlight = swapchain->getImageViews().size();
+	m_SwapchainFrameBuffers.resize(framesInFlight);
+	m_OffscreenFrameBuffers.resize(framesInFlight);
+
+	for (size_t i = 0; i < framesInFlight; ++i)
 	{
-		std::vector<VkImageView> attachments;
-		attachments.emplace_back(swapchain->getImageViews()[i]);
-		attachments.emplace_back(s_MainDepth->getView());
-
-		VkFramebufferCreateInfo create_info
+		// create all swapchain frame buffers
 		{
-			.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-			.renderPass = s_MainPass->renderpass,
-			.attachmentCount = uint32_t(attachments.size()),
-			.pAttachments = attachments.data(),
-			.width = swapchain->getExtent().width,
-			.height = swapchain->getExtent().height,
-			.layers = 1,
-		};
+			std::vector<VkImageView> swapchainAttachments{
+				swapchain->getImageViews()[i],
+				s_MainDepth->getView()
+			};
 
-		VulkanContext::VK(
-			vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_FrameBuffers[i]),
-			"[vulkan] Creating frame buffer failed"
-		);
+			VkFramebufferCreateInfo create_info
+			{
+				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+				.renderPass = s_PresentPass->renderpass,
+				.attachmentCount = uint32_t(swapchainAttachments.size()),
+				.pAttachments = swapchainAttachments.data(),
+				.width = swapchain->getExtent().width,
+				.height = swapchain->getExtent().height,
+				.layers = 1,
+			};
+
+			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_SwapchainFrameBuffers[i]));
+		}
+
+		// create all offscreen frame buffers
+		{
+			std::vector<VkImageView> offscreenAttachments {
+				s_GBufferColor->getView(),
+				s_GBufferNormals->getView(),
+				s_MainDepth->getView()
+			};
+
+			VkFramebufferCreateInfo create_info
+			{
+				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+				.renderPass = s_OffscreenPass->renderpass,
+				.attachmentCount = uint32_t(offscreenAttachments.size()),
+				.pAttachments = offscreenAttachments.data(),
+				.width = swapchain->getExtent().width,
+				.height = swapchain->getExtent().height,
+				.layers = 1,
+			};
+
+			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_OffscreenFrameBuffers[i]));
+		}
 	}
 
 	s_UIPipeline->Rebuild();
@@ -448,11 +497,7 @@ void Renderer::Rebuild()
 
 void Renderer::Create()
 {
-	s_LinesPipeline = std::make_unique<LinesPipeline>();
-	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>();
-	
 	// create shadow pipeline and initialize its shadow frame buffer and render pass
-	s_ShadowPipeline = std::make_unique<ShadowPipeline>();
 	s_ShadowPipeline->CreateRenderPass();
 
 #ifdef _NE_USE_RTX
@@ -510,7 +555,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		// render shadow passes
 		s_ShadowPipeline->Render(scene, commandBuffer);
 
-		s_MainPass->Begin(commandBuffer, m_FrameBuffers[CURR_FRAME]);
+		s_PresentPass->Begin(commandBuffer, m_SwapchainFrameBuffers[CURR_FRAME]);
 		{
 			DrawScene(scene, commandBuffer);
 
@@ -520,7 +565,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 
 			s_SkyboxPipeline->Render(scene, commandBuffer);
 		}
-		s_MainPass->End(commandBuffer);
+		s_PresentPass->End(commandBuffer);
 
 		s_UIPipeline->Render(scene, commandBuffer);
 	}
@@ -985,12 +1030,55 @@ void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 
 void Renderer::DestroyFrameBuffers()
 {
-	for (VkFramebuffer& framebuffer : m_FrameBuffers)
+	for (VkFramebuffer& framebuffer : m_SwapchainFrameBuffers)
 	{
 		if (framebuffer != VK_NULL_HANDLE) {
 			vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
 			framebuffer = VK_NULL_HANDLE;
 		}
 	}
-	m_FrameBuffers.clear();
+	m_SwapchainFrameBuffers.clear();
+
+	for (VkFramebuffer& framebuffer : m_OffscreenFrameBuffers)
+	{
+		if (framebuffer != VK_NULL_HANDLE) {
+			vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
+			framebuffer = VK_NULL_HANDLE;
+		}
+	}
+	m_OffscreenFrameBuffers.clear();
+}
+
+void Renderer::CreateFrameBufferImages()
+{
+	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain();
+	glm::uvec2 extent = swapchain->getExtentVec2();
+
+	// the G-buffer color image, using swapchain format
+	{
+		s_GBufferColor = std::make_unique<Image2D>(
+			extent.x, extent.y,
+			VK_FORMAT_R32G32B32A32_SFLOAT,
+			VK_IMAGE_LAYOUT_GENERAL,
+			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+			false
+		);
+
+		s_GBufferColor->Load();
+	}
+
+	// the G-Buffer (rgba32f) - position(xyz) / normal(w-compressed)
+	{
+		s_GBufferNormals = std::make_unique<Image2D>(
+			extent.x, extent.y,
+			VK_FORMAT_R32G32B32A32_SFLOAT,
+			VK_IMAGE_LAYOUT_GENERAL,
+			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+			false
+		);
+
+		s_GBufferNormals->Load();
+	}
+
+	s_MainDepth = std::make_unique<ImageDepth>(extent);
 }
