@@ -163,7 +163,7 @@ void LinesPipeline::CreateGraphicsPipeline()
 		VkPipelineColorBlendAttachmentState{
 			.blendEnable = VK_FALSE,
 			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-		},
+		}
 	};
 
 	VulkanGraphicsPipelineBuilder::Start()
@@ -172,7 +172,7 @@ void LinesPipeline::CreateGraphicsPipeline()
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_LINE_LIST)
 		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, 2.0f)
 		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
-		.Build("../spv/shaders/lines.vert.spv", "../spv/shaders/lines.frag.spv", &m_Pipeline, m_PipelineLayout, Renderer::Instance->s_PresentPass->renderpass);
+		.Build("../spv/shaders/lines.vert.spv", "../spv/shaders/lines.frag.spv", &m_Pipeline, m_PipelineLayout, Renderer::Instance->s_CompositionPass->renderpass);
 }
 
 void LinesPipeline::CreateDescriptors()

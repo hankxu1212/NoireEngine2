@@ -108,17 +108,22 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
     }
 
     // begin render pass
-    s_Renderpass->Begin(commandBuffer, m_FrameBuffers[CURR_FRAME]);
+    std::vector<VkClearValue> clearValues = {
+        {.color = { { 0.0f, 0.0f, 0.0f, 1.0f } } },  // Clear color to black
+    };
+    s_Renderpass->Begin(commandBuffer, m_FrameBuffers[CURR_FRAME], clearValues);
+    
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+
     s_Renderpass->End(commandBuffer);
 }
 
 void ImGuiPipeline::SetupRaytracingViewport(RaytracingPipeline* rtxPipeline)
 {
     m_RTXOutImage = ImGui_ImplVulkan_AddTexture(
-        Renderer::Instance->s_RaytracedReflectionsImage->getSampler(),
-        Renderer::Instance->s_RaytracedReflectionsImage->getView(), 
-        Renderer::Instance->s_RaytracedReflectionsImage->getLayout()
+        Renderer::Instance->s_GBufferColors[0]->getSampler(),
+        Renderer::Instance->s_GBufferColors[0]->getView(),
+        Renderer::Instance->s_GBufferColors[0]->getLayout()
     );
 }
 

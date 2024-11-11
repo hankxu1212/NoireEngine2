@@ -67,7 +67,7 @@ Renderer::Renderer()
 	Instance = this;
 
 	s_OffscreenPass = std::make_unique<Renderpass>();
-	s_PresentPass = std::make_unique<Renderpass>();
+	s_CompositionPass = std::make_unique<Renderpass>();
 
 	// initialize a bunch of pipelines
 	s_UIPipeline = std::make_unique<ImGuiPipeline>();
@@ -116,34 +116,46 @@ Renderer::~Renderer()
 			pipeline = VK_NULL_HANDLE;
 		}
 	}
+
+	if (m_PostPipelineLayout != VK_NULL_HANDLE) {
+		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_PostPipelineLayout, nullptr);
+		m_PostPipelineLayout = VK_NULL_HANDLE;
+	}
+
+	if (m_PostPipeline != VK_NULL_HANDLE) {
+		vkDestroyPipeline(VulkanContext::GetDevice(), m_PostPipeline, nullptr);
+		m_PostPipeline = VK_NULL_HANDLE;
+	}
 }
 
 void Renderer::CreateRenderPass()
 {
-	// present to the swapchain
-	s_PresentPass->CreateRenderPass(
-		{ VulkanContext::Get()->getSurface(0)->getFormat().format },
-		VK_FORMAT_D32_SFLOAT_S8_UINT, // todo: actually check
-		1, true, true);
-
 	s_OffscreenPass->CreateRenderPass(
 		{ VK_FORMAT_R32G32B32A32_SFLOAT , VK_FORMAT_R32G32B32A32_SFLOAT },  // RGBA + G-Buffer
 		VK_FORMAT_D32_SFLOAT_S8_UINT, // todo: actually check
 		1, true, true, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL
 	);
 
+	// present to the swapchain
+	s_CompositionPass->CreateRenderPass(
+		{ VulkanContext::Get()->getSurface(0)->getFormat().format },
+		VK_FORMAT_D32_SFLOAT_S8_UINT, // todo: actually check
+		1, true, true);
+
 	s_UIPipeline->CreateRenderPass();
 }
 
 void Renderer::CreateMaterialPipelineLayout()
 {
-	std::array< VkDescriptorSetLayout, 6 > layouts{
+	std::vector< VkDescriptorSetLayout> layouts{
 		set0_WorldLayout,
 		set1_StorageBuffersLayout,
 		set2_TexturesLayout,
 		set3_IBLLayout,
 		set4_ShadowMapLayout,
+#ifdef _NE_USE_RTX
 		set5_RayTracingLayout
+#endif
 	};
 
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
@@ -165,7 +177,11 @@ void Renderer::CreateMaterialPipelines()
 		VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
 	};
 
-	std::array< VkPipelineColorBlendAttachmentState, 1 > attachment_states{
+	std::array< VkPipelineColorBlendAttachmentState, 2 > attachment_states{
+		VkPipelineColorBlendAttachmentState{
+			.blendEnable = VK_FALSE,
+			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+		},
 		VkPipelineColorBlendAttachmentState{
 			.blendEnable = VK_FALSE,
 			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
@@ -176,8 +192,57 @@ void Renderer::CreateMaterialPipelines()
 		.SetDynamicStates(dynamic_states)
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
 		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
-		.Build("../spv/shaders/lambertian.vert.spv", "../spv/shaders/lambertian.frag.spv", &m_MaterialPipelines[0], m_MaterialPipelineLayout, s_PresentPass->renderpass)
-		.Build("../spv/shaders/pbr.vert.spv", "../spv/shaders/pbr.frag.spv", &m_MaterialPipelines[1], m_MaterialPipelineLayout, s_PresentPass->renderpass);
+		.Build("../spv/shaders/lambertian.vert.spv", "../spv/shaders/lambertian.frag.spv", &m_MaterialPipelines[0], m_MaterialPipelineLayout, s_OffscreenPass->renderpass)
+		.Build("../spv/shaders/pbr.vert.spv", "../spv/shaders/pbr.frag.spv", &m_MaterialPipelines[1], m_MaterialPipelineLayout, s_OffscreenPass->renderpass);
+}
+
+void Renderer::CreatePostPipelineLayout()
+{
+	std::array< VkDescriptorSetLayout, 1 > layouts{
+		set0_WorldLayout,
+	};
+
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+		.setLayoutCount = uint32_t(layouts.size()),
+		.pSetLayouts = layouts.data(),
+		.pushConstantRangeCount = 0,
+		.pPushConstantRanges = nullptr,
+	};
+
+	VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PostPipelineLayout));
+}
+
+void Renderer::CreatePostPipeline()
+{
+	std::vector< VkDynamicState > dynamic_states{
+		VK_DYNAMIC_STATE_VIEWPORT,
+		VK_DYNAMIC_STATE_SCISSOR,
+	};
+
+	std::array< VkPipelineColorBlendAttachmentState, 1 > attachment_states{
+		VkPipelineColorBlendAttachmentState{
+			.blendEnable = VK_FALSE,
+			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+		}
+	};
+
+	VkPipelineVertexInputStateCreateInfo vertexInput
+	{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		.vertexBindingDescriptionCount = 0,
+		.pVertexBindingDescriptions = nullptr,
+		.vertexAttributeDescriptionCount = 0,
+		.pVertexAttributeDescriptions = nullptr,
+	};
+
+	VulkanGraphicsPipelineBuilder::Start()
+		.SetDynamicStates(dynamic_states)
+		.SetVertexInput(&vertexInput)
+		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
+		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+		.Build("../spv/shaders/passthrough.vert.spv", "../spv/shaders/post.frag.spv", &m_PostPipeline, m_PostPipelineLayout, s_CompositionPass->renderpass);
 }
 
 void Renderer::CreateDescriptors()
@@ -188,11 +253,14 @@ void Renderer::CreateDescriptors()
 	CreateTextureDescriptors();
 	CreateIBLDescriptors();
 	CreateShadowDescriptors();
+#ifdef _NE_USE_RTX
 	CreateRaytracingDescriptors();
+#endif
 }
 
 void Renderer::CreateWorkspaceDescriptors()
 {
+	uint32_t wid = 0;
 	// create set 0 and set 1: world and transform descriptor
 	for (Workspace& workspace : workspaces)
 	{
@@ -212,9 +280,14 @@ void Renderer::CreateWorkspaceDescriptors()
 		auto stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT |
 			VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 
+		VkDescriptorImageInfo gBufferNormalInfo = s_GBufferNormals[wid]->GetDescriptorInfo();
+		VkDescriptorImageInfo gBufferColorInfo = s_GBufferColors[wid]->GetDescriptorInfo();
+
 		VkDescriptorBufferInfo World_info = workspace.World.GetDescriptorInfo();
 		DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
-			.BindBuffer(0, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, stages)
+			.BindBuffer(World::SceneUniform, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, stages)
+			.BindImage(World::GBufferColor, &gBufferColorInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.BindImage(World::GBufferNormal, &gBufferNormalInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.Build(workspace.set0_World, set0_WorldLayout);
 
 		// build storage buffers
@@ -226,6 +299,8 @@ void Renderer::CreateWorkspaceDescriptors()
 			.AddBinding(StorageBuffers::Materials, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) // material instances
 			.AddBinding(StorageBuffers::Objects, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) // object descriptions
 			.Build(workspace.set1_StorageBuffers, set1_StorageBuffersLayout);
+
+		wid++;
 	}
 }
 
@@ -443,7 +518,7 @@ void Renderer::Rebuild()
 
 	//Make framebuffers for each swapchain image:
 	size_t framesInFlight = swapchain->getImageViews().size();
-	m_SwapchainFrameBuffers.resize(framesInFlight);
+	m_CompositionFrameBuffers.resize(framesInFlight);
 	m_OffscreenFrameBuffers.resize(framesInFlight);
 
 	for (size_t i = 0; i < framesInFlight; ++i)
@@ -458,7 +533,7 @@ void Renderer::Rebuild()
 			VkFramebufferCreateInfo create_info
 			{
 				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-				.renderPass = s_PresentPass->renderpass,
+				.renderPass = s_CompositionPass->renderpass,
 				.attachmentCount = uint32_t(swapchainAttachments.size()),
 				.pAttachments = swapchainAttachments.data(),
 				.width = swapchain->getExtent().width,
@@ -466,14 +541,14 @@ void Renderer::Rebuild()
 				.layers = 1,
 			};
 
-			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_SwapchainFrameBuffers[i]));
+			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_CompositionFrameBuffers[i]));
 		}
 
 		// create all offscreen frame buffers
 		{
 			std::vector<VkImageView> offscreenAttachments {
-				s_GBufferColor->getView(),
-				s_GBufferNormals->getView(),
+				s_GBufferColors[i]->getView(),
+				s_GBufferNormals[i]->getView(),
 				s_MainDepth->getView()
 			};
 
@@ -509,6 +584,8 @@ void Renderer::Create()
 	CreateDescriptors();
 	CreateMaterialPipelineLayout();
 	CreateMaterialPipelines();
+	CreatePostPipelineLayout();
+	CreatePostPipeline();
 
 	// the following pipelines rely on Renderer's descriptor sets
 	s_ShadowPipeline->CreatePipeline();
@@ -555,17 +632,47 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		// render shadow passes
 		s_ShadowPipeline->Render(scene, commandBuffer);
 
-		s_PresentPass->Begin(commandBuffer, m_SwapchainFrameBuffers[CURR_FRAME]);
+		std::vector<VkClearValue> clearValues = {
+			{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear color to black
+			{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear normal to black
+			{.depthStencil = { 1.0f, 0 } }               // Clear depth to 1.0, stencil to 0
+		};
+		s_OffscreenPass->Begin(commandBuffer, m_OffscreenFrameBuffers[CURR_FRAME], clearValues);
 		{
 			DrawScene(scene, commandBuffer);
+			s_SkyboxPipeline->Render(scene, commandBuffer);
+		}
+		s_OffscreenPass->End(commandBuffer);
+
+		std::vector<VkClearValue> clearValues2 = {
+			{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear color to black
+			{.depthStencil = { 1.0f, 0 } }               // Clear depth to 1.0, stencil to 0
+		};
+		s_CompositionPass->Begin(commandBuffer, m_CompositionFrameBuffers[CURR_FRAME], clearValues2);
+		{
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PostPipeline);
+
+			// bind descriptor sets
+			std::array< VkDescriptorSet, 1 > descriptor_sets{
+				workspaces[CURR_FRAME].set0_World,
+			};
+
+			vkCmdBindDescriptorSets(
+				commandBuffer, //command buffer
+				VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+				m_PostPipelineLayout, //pipeline layout
+				0, //first set
+				uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+				0, nullptr //dynamic offsets count, ptr
+			);
+
+			vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
 			// draw lines
 			if (UseGizmos)
 				s_LinesPipeline->Render(scene, commandBuffer);
-
-			s_SkyboxPipeline->Render(scene, commandBuffer);
 		}
-		s_PresentPass->End(commandBuffer);
+		s_CompositionPass->End(commandBuffer);
 
 		s_UIPipeline->Render(scene, commandBuffer);
 	}
@@ -978,13 +1085,15 @@ void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 	VertexInput* previouslyBindedVertex = nullptr;
 
 	// bind descriptor sets
-	std::array< VkDescriptorSet, 6 > descriptor_sets{
+	std::vector<VkDescriptorSet> descriptor_sets{
 		workspace.set0_World,
 		workspace.set1_StorageBuffers,
 		set2_Textures,
 		set3_IBL,
 		set4_ShadowMap,
+#ifdef _NE_USE_RTX
 		set5_RayTracing
+#endif
 	};
 
 	vkCmdBindDescriptorSets(
@@ -1030,14 +1139,14 @@ void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 
 void Renderer::DestroyFrameBuffers()
 {
-	for (VkFramebuffer& framebuffer : m_SwapchainFrameBuffers)
+	for (VkFramebuffer& framebuffer : m_CompositionFrameBuffers)
 	{
 		if (framebuffer != VK_NULL_HANDLE) {
 			vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
 			framebuffer = VK_NULL_HANDLE;
 		}
 	}
-	m_SwapchainFrameBuffers.clear();
+	m_CompositionFrameBuffers.clear();
 
 	for (VkFramebuffer& framebuffer : m_OffscreenFrameBuffers)
 	{
@@ -1054,30 +1163,38 @@ void Renderer::CreateFrameBufferImages()
 	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain();
 	glm::uvec2 extent = swapchain->getExtentVec2();
 
+	uint32_t imageCnt = swapchain->getImageCount();
+
+	s_GBufferColors.resize(imageCnt);
+	s_GBufferNormals.resize(imageCnt);
+
 	// the G-buffer color image, using swapchain format
+	for (uint32_t i = 0; i < imageCnt; ++i)
 	{
-		s_GBufferColor = std::make_unique<Image2D>(
-			extent.x, extent.y,
-			VK_FORMAT_R32G32B32A32_SFLOAT,
-			VK_IMAGE_LAYOUT_GENERAL,
-			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-			false
-		);
+		{
+			s_GBufferColors[i] = std::make_unique<Image2D>(
+				extent.x, extent.y,
+				VK_FORMAT_R32G32B32A32_SFLOAT,
+				VK_IMAGE_LAYOUT_GENERAL,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+				false
+			);
 
-		s_GBufferColor->Load();
-	}
+			s_GBufferColors[i]->Load();
+		}
 
-	// the G-Buffer (rgba32f) - position(xyz) / normal(w-compressed)
-	{
-		s_GBufferNormals = std::make_unique<Image2D>(
-			extent.x, extent.y,
-			VK_FORMAT_R32G32B32A32_SFLOAT,
-			VK_IMAGE_LAYOUT_GENERAL,
-			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-			false
-		);
+		// the G-Buffer (rgba32f) - position(xyz) / normal(w-compressed)
+		{
+			s_GBufferNormals[i] = std::make_unique<Image2D>(
+				extent.x, extent.y,
+				VK_FORMAT_R32G32B32A32_SFLOAT,
+				VK_IMAGE_LAYOUT_GENERAL,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+				false
+			);
 
-		s_GBufferNormals->Load();
+			s_GBufferNormals[i]->Load();
+		}
 	}
 
 	s_MainDepth = std::make_unique<ImageDepth>(extent);

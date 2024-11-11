@@ -141,11 +141,15 @@ void SkyboxPipeline::CreateGraphicsPipeline()
 		VK_DYNAMIC_STATE_SCISSOR,
 	};
 
-	std::array< VkPipelineColorBlendAttachmentState, 1 > attachment_states{
+	std::array< VkPipelineColorBlendAttachmentState, 2 > attachment_states{
 		VkPipelineColorBlendAttachmentState{
 			.blendEnable = VK_FALSE,
 			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
 		},
+		VkPipelineColorBlendAttachmentState{
+			.blendEnable = VK_FALSE,
+			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+		}
 	};
 
 	VulkanGraphicsPipelineBuilder::Start()
@@ -155,7 +159,7 @@ void SkyboxPipeline::CreateGraphicsPipeline()
 		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_CLOCKWISE)
 		.SetDepthStencil(VK_TRUE, VK_TRUE, VK_FALSE, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL)
 		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
-		.Build("../spv/shaders/skybox.vert.spv", "../spv/shaders/skybox.frag.spv", &m_Pipeline, m_PipelineLayout, Renderer::Instance->s_PresentPass->renderpass);
+		.Build("../spv/shaders/skybox.vert.spv", "../spv/shaders/skybox.frag.spv", &m_Pipeline, m_PipelineLayout, Renderer::Instance->s_OffscreenPass->renderpass);
 }
 
 void SkyboxPipeline::CreatePipelineLayout()

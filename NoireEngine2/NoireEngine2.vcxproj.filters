@@ -999,6 +999,9 @@
     <None Include="src\shaders\raytracing\raytrace.rmiss" />
     <None Include="src\shaders\glsl\materials.glsl" />
     <None Include="src\shaders\host.glsl" />
+    <None Include="src\shaders\raytracing\ao.glsl" />
+    <None Include="src\shaders\passthrough.vert" />
+    <None Include="src\shaders\post.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

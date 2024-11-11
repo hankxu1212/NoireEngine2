@@ -99,14 +99,9 @@ void Renderpass::CreateRenderPass(
 	VulkanContext::VK(vkCreateRenderPass(VulkanContext::GetDevice(), &renderPassInfo, nullptr, &renderpass));
 }
 
-void Renderpass::Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb)
+void Renderpass::Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb, const std::vector<VkClearValue>& clearValues)
 {
 	VkExtent2D swapChainExtent = VulkanContext::Get()->getSwapChain()->getExtent();
-
-	static std::array< VkClearValue, 2 > clear_values{
-		VkClearValue{.color{.float32{0.5f, 0.5f, 0.5f, 1} } },
-		VkClearValue{.depthStencil{.depth = 1.0f, .stencil = 0 } },
-	};
 
 	VkRenderPassBeginInfo begin_info{
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -116,8 +111,8 @@ void Renderpass::Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb)
 			.offset = {.x = 0, .y = 0},
 			.extent = swapChainExtent,
 		},
-		.clearValueCount = uint32_t(clear_values.size()),
-		.pClearValues = clear_values.data(),
+		.clearValueCount = uint32_t(clearValues.size()),
+		.pClearValues = clearValues.data(),
 	};
 
 	vkCmdBeginRenderPass(commandBuffer, &begin_info, VK_SUBPASS_CONTENTS_INLINE);

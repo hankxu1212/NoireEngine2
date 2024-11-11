@@ -12,6 +12,7 @@ layout(location=4) in vec3 inViewPos;
 layout(location=5) flat in int instanceID;
 
 layout(location=0) out vec4 outColor;
+layout(location=1) out vec4 outNormal;
 
 #include "host.glsl"
 
@@ -61,4 +62,5 @@ void main()
 	
 	color = ACES(color);
 	outColor = vec4(color, 1);
+	outNormal.rgba = vec4(inPosition, uintBitsToFloat(CompressUnitVec(n)));
 }

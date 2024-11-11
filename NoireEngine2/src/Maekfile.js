@@ -41,6 +41,8 @@ const material_shaders = [
 	maek.GLSLC('shaders/lambertian.frag'),
 	maek.GLSLC('shaders/pbr.vert'),
 	maek.GLSLC('shaders/pbr.frag'),
+	maek.GLSLC('shaders/passthrough.vert'),
+	maek.GLSLC('shaders/post.frag'),
 ]
 
 const renderer_objs = [

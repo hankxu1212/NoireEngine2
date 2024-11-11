@@ -15,7 +15,7 @@ struct Renderpass
 		VkImageLayout                initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 		VkImageLayout                finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
-	void Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb);
+	void Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb, const std::vector<VkClearValue>& clearValues);
 
 	void End(const CommandBuffer& commandBuffer);
 

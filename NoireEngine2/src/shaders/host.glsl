@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////
-// Set 0: world
+// Set 0: world and G buffer
 ///////////////////////////////////////////////
 layout(set=0,binding=0,std140) uniform World {
 	mat4 view;
@@ -11,6 +11,9 @@ layout(set=0,binding=0,std140) uniform World {
 	int pcfSamples;
 	int occluderSamples;
 }scene;
+
+layout (set = 0, binding = 1) uniform sampler2D G_Color;
+layout (set = 0, binding = 2) uniform sampler2D G_Normal;
 
 ///////////////////////////////////////////////
 // Set 1.0: transforms

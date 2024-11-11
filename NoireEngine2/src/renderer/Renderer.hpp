@@ -61,6 +61,8 @@ private:
 	// material pipelines
 	void CreateMaterialPipelineLayout();
 	void CreateMaterialPipelines();
+	void CreatePostPipelineLayout();
+	void CreatePostPipeline();
 
 	// descriptor management
 	void CreateDescriptors();
@@ -121,6 +123,12 @@ private:
 		VkDescriptorSet set1_StorageBuffers = VK_NULL_HANDLE; //references Transforms and lights
 	};
 
+	START_BINDING(World)
+		SceneUniform,
+		GBufferColor,
+		GBufferNormal
+	END_BINDING();
+
 	START_BINDING(StorageBuffers)
 		Transform = 0,
 		DirLights = 1,
@@ -164,22 +172,34 @@ private:
 
 	// render pass management
 	std::unique_ptr<Renderpass> s_OffscreenPass;
-	std::unique_ptr<Renderpass> s_PresentPass;
+	std::unique_ptr<Renderpass> s_CompositionPass;
 
 	// frame buffers
-	std::vector<VkFramebuffer> m_SwapchainFrameBuffers;
+	std::vector<VkFramebuffer> m_CompositionFrameBuffers;
 	std::vector<VkFramebuffer> m_OffscreenFrameBuffers;
 
 	void DestroyFrameBuffers();
 
 	// images
 	std::unique_ptr<ImageDepth> s_MainDepth;
-	std::unique_ptr<Image2D> s_GBufferNormals;
-	std::unique_ptr<Image2D> s_GBufferColor;
+	std::vector<std::unique_ptr<Image2D>> s_GBufferNormals;
+	std::vector<std::unique_ptr<Image2D>> s_GBufferColors;
 	std::unique_ptr<Image2D> s_RaytracedReflectionsImage;
 	std::unique_ptr<Image2D> s_RaytracedAOImage;
 
 	void CreateFrameBufferImages();
+
+	// post pipeline
+	VkPipeline m_PostPipeline = VK_NULL_HANDLE;
+	VkPipelineLayout m_PostPipelineLayout = VK_NULL_HANDLE;
+
+	// post pipeline
+	VkPipeline m_RaytracAOComputePipeline = VK_NULL_HANDLE;
+	VkPipelineLayout m_RaytracAOComputePipelineLayout = VK_NULL_HANDLE;
+
+	// material pipelines
+	std::array<VkPipeline, N_MATERIAL_WORKFLOWS>	m_MaterialPipelines{};
+	VkPipelineLayout	m_MaterialPipelineLayout = VK_NULL_HANDLE;
 
 private:
 	friend class LinesPipeline;
@@ -188,10 +208,7 @@ private:
 	friend class RaytracingPipeline;
 	friend class ImGuiPipeline;
 
-private: // material pipelines
-	std::array<VkPipeline, N_MATERIAL_WORKFLOWS>	m_MaterialPipelines{};
-	VkPipelineLayout	m_MaterialPipelineLayout = VK_NULL_HANDLE;
-
+private:
 	std::unique_ptr<LinesPipeline>					s_LinesPipeline;
 	std::unique_ptr<SkyboxPipeline>					s_SkyboxPipeline;
 	std::unique_ptr<ShadowPipeline>					s_ShadowPipeline;
