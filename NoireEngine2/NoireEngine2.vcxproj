@@ -430,6 +430,8 @@
     <None Include="src\shaders\pbr.frag" />
     <None Include="src\shaders\pbr.vert" />
     <None Include="src\shaders\post.frag" />
+    <None Include="src\shaders\postprocessing\gaussianblur.frag" />
+    <None Include="src\shaders\postprocessing\gaussianblur.vert" />
     <None Include="src\shaders\raytracing\ao.comp" />
     <None Include="src\shaders\raytracing\raytrace.rchit" />
     <None Include="src\shaders\raytracing\raytrace.rgen" />

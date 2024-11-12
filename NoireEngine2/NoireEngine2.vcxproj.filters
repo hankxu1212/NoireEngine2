@@ -1002,6 +1002,8 @@
     <None Include="src\shaders\raytracing\ao.comp" />
     <None Include="src\shaders\passthrough.vert" />
     <None Include="src\shaders\post.frag" />
+    <None Include="src\shaders\postprocessing\gaussianblur.frag" />
+    <None Include="src\shaders\postprocessing\gaussianblur.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

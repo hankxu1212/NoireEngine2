@@ -15,6 +15,7 @@ layout(location=5) flat in uint instanceID;
 
 layout(location=0) out vec4 outColor;
 layout(location=1) out vec4 outNormal;
+layout(location=2) out vec4 outEmission;
 
 #include "host.glsl"
 
@@ -133,7 +134,12 @@ void main()
 	vec3 color = directLighting + ambientLighting;
 
 	outColor = vec4(color, 1);
-    outNormal.rgba = vec4(inPosition, uintBitsToFloat(CompressUnitVec(n)));
+    outNormal = vec4(inPosition, uintBitsToFloat(CompressUnitVec(n)));
+
+    outEmission = vec4(0.0, 0.0, 0.0, 1.0);
+    float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    if(brightness > 1.0)
+	    outEmission = outColor;
 }
 
 vec3 CalcPBRDirectLighting(vec3 radiance, vec3 Li)

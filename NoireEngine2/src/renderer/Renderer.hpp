@@ -67,9 +67,12 @@ private:
 
 	void CreateComputeAOPipeline();
 
+	void CreateBloomPipeline();
+
 	// descriptor management
 	void CreateDescriptors();
 	bool createdDescriptors = false;
+
 	void CreateWorldDescriptors(bool update);
 	void CreateStorageBufferDescriptors();
 	void CreateTextureDescriptors();
@@ -106,8 +109,10 @@ private:
 	// run ray tracing pipeline for reflection
 	void RunRTXReflection(const Scene* scene, const CommandBuffer& commandBuffer);
 
-	// composition pass, to compose ambient occlusion and color from G buffer
+	// composition pass, to compose ambient occlusion and color from G buffer and emission
 	void RunPost(const CommandBuffer& commandBuffer);
+
+	void RunBloomPass(const CommandBuffer& commandBuffer);
 
 	// workspace and bindings: these are streamed to GPU per frame
 	struct Workspace
@@ -118,6 +123,7 @@ private:
 
 		std::unique_ptr<Image2D> GBufferNormals;
 		std::unique_ptr<Image2D> GBufferColors;
+		std::unique_ptr<Image2D> GBufferEmission;
 
 		VkDescriptorSet set0_World = VK_NULL_HANDLE;
 
@@ -145,6 +151,7 @@ private:
 		SceneUniform,
 		GBufferColor, // g buffer color sampler
 		GBufferNormal,
+		GBufferEmissive
 	END_BINDING();
 
 	START_BINDING(StorageBuffers)
@@ -192,10 +199,12 @@ private:
 	// render pass management
 	std::unique_ptr<Renderpass> s_OffscreenPass;
 	std::unique_ptr<Renderpass> s_CompositionPass;
+	std::unique_ptr<Renderpass> s_BloomPass;
 
 	// frame buffers
 	std::vector<VkFramebuffer> m_CompositionFrameBuffers;
 	std::vector<VkFramebuffer> m_OffscreenFrameBuffers;
+	std::vector<VkFramebuffer> m_BloomFrameBuffers;
 
 	void CreateFrameBuffers();
 	void DestroyFrameBuffers();
@@ -229,6 +238,16 @@ private:
 
 	VkPipeline m_RaytracedAOComputePipeline = VK_NULL_HANDLE;
 	VkPipelineLayout m_RaytracedAOComputePipelineLayout = VK_NULL_HANDLE;
+
+	// HDR bloom pipelines
+	struct BloomPush
+	{
+		float blurScale;
+		float blurStrength;
+	}m_BloomPush;
+
+	VkPipeline m_BloomPipeline = VK_NULL_HANDLE;
+	VkPipelineLayout m_BloomPipelineLayout = VK_NULL_HANDLE;
 
 	// material pipelines
 	std::array<VkPipeline, N_MATERIAL_WORKFLOWS> m_MaterialPipelines{};

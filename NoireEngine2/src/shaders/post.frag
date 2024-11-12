@@ -3,7 +3,7 @@
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 fragColor;
 
-layout(set = 0, binding = 1, rgba32f) uniform image2D G_Color;
+layout(set = 0, binding = 1, rgba8) uniform image2D G_Color;
 layout(set = 1, binding = 2, r32f) uniform image2D raytracedAOSampler;
 
 #include "glsl/utils.glsl"

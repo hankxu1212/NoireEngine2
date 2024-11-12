@@ -30,6 +30,10 @@
 
 #define DEFAULT_SKYBOX "../textures/material_textures/Skybox.png"
 
+#define G_BUFFER_COLOR_FORMAT VK_FORMAT_R8G8B8A8_UNORM
+#define G_BUFFER_POSNORM_FORMAT VK_FORMAT_R32G32B32A32_SFLOAT
+#define G_BUFFER_EMISSION_FORMAT VK_FORMAT_R8G8B8A8_UNORM
+
 static inline void InsertPipelineMemoryBarrier(const CommandBuffer& buf)
 {
 	VkMemoryBarrier memory_barrier{
@@ -56,6 +60,7 @@ Renderer::Renderer()
 
 	s_OffscreenPass = std::make_unique<Renderpass>();
 	s_CompositionPass = std::make_unique<Renderpass>();
+	s_BloomPass = std::make_unique<Renderpass>();
 
 	// initialize a bunch of pipelines
 	s_UIPipeline = std::make_unique<ImGuiPipeline>();
@@ -124,12 +129,23 @@ Renderer::~Renderer()
 		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_RaytracedAOComputePipelineLayout, nullptr);
 		m_RaytracedAOComputePipelineLayout = VK_NULL_HANDLE;
 	}
+
+	if (m_BloomPipelineLayout != VK_NULL_HANDLE) {
+		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_BloomPipelineLayout, nullptr);
+		m_BloomPipelineLayout = VK_NULL_HANDLE;
+	}
+
+	if (m_BloomPipeline != VK_NULL_HANDLE) {
+		vkDestroyPipeline(VulkanContext::GetDevice(), m_BloomPipeline, nullptr);
+		m_BloomPipeline = VK_NULL_HANDLE;
+	}
 }
 
 void Renderer::CreateRenderPass()
 {
+	// render into g buffer
 	s_OffscreenPass->CreateRenderPass(
-		{ VK_FORMAT_R32G32B32A32_SFLOAT , VK_FORMAT_R32G32B32A32_SFLOAT },  // RGBA + G-Buffer
+		{ G_BUFFER_COLOR_FORMAT , G_BUFFER_POSNORM_FORMAT, G_BUFFER_EMISSION_FORMAT }, // color, pos+norm, emission
 		VK_FORMAT_D32_SFLOAT_S8_UINT, // todo: actually check
 		1, true, true, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL
 	);
@@ -137,7 +153,19 @@ void Renderer::CreateRenderPass()
 	s_OffscreenPass->SetClearValues({
 		{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear color to black
 		{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear normal to black
+		{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear emission to black
 		{.depthStencil = { 1.0f, 0 } }               // Clear depth to 1.0, stencil to 0
+	});
+
+	// bloom pass
+	s_BloomPass->CreateRenderPass(
+		{ G_BUFFER_EMISSION_FORMAT }, // color, pos+norm, emission
+		VK_FORMAT_UNDEFINED, // todo: actually check
+		1, true, true, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL
+	);
+
+	s_BloomPass->SetClearValues({
+		{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear emission to black
 	});
 
 	// present to the swapchain
@@ -147,8 +175,8 @@ void Renderer::CreateRenderPass()
 		1, true, true);
 
 	s_CompositionPass->SetClearValues({
-			{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear color to black
-			{.depthStencil = { 1.0f, 0 } }               // Clear depth to 1.0, stencil to 0
+		{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear color to black
+		{.depthStencil = { 1.0f, 0 } }               // Clear depth to 1.0, stencil to 0
 	});
 
 	s_UIPipeline->CreateRenderPass();
@@ -265,7 +293,11 @@ void Renderer::CreateMaterialPipelines()
 		VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
 	};
 
-	std::array< VkPipelineColorBlendAttachmentState, 2 > attachment_states{
+	std::vector<VkPipelineColorBlendAttachmentState> blendStates{
+		VkPipelineColorBlendAttachmentState{
+			.blendEnable = VK_FALSE,
+			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+		},
 		VkPipelineColorBlendAttachmentState{
 			.blendEnable = VK_FALSE,
 			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
@@ -279,7 +311,7 @@ void Renderer::CreateMaterialPipelines()
 	VulkanGraphicsPipelineBuilder::Start()
 		.SetDynamicStates(dynamic_states)
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
-		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
+		.SetColorBlending((uint32_t)blendStates.size(), blendStates.data())
 		.Build("../spv/shaders/lambertian.vert.spv", "../spv/shaders/lambertian.frag.spv", &m_MaterialPipelines[0], m_MaterialPipelineLayout, s_OffscreenPass->renderpass)
 		.Build("../spv/shaders/pbr.vert.spv", "../spv/shaders/pbr.frag.spv", &m_MaterialPipelines[1], m_MaterialPipelineLayout, s_OffscreenPass->renderpass);
 }
@@ -366,6 +398,56 @@ void Renderer::CreateComputeAOPipeline()
 	vkCreateComputePipelines(VulkanContext::GetDevice(), {}, 1, &cpCreateInfo, nullptr, &m_RaytracedAOComputePipeline);
 }
 
+void Renderer::CreateBloomPipeline()
+{
+	std::vector<VkDescriptorSetLayout> layouts{
+		set0_WorldLayout
+	};
+
+	VkPushConstantRange push_constants = { VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(BloomPush) };
+	VkPipelineLayoutCreateInfo plCreateInfo{
+		VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,  // sType
+		nullptr,                                        // pNext
+		0,                                              // flags
+		uint32_t(layouts.size()),                       // setLayoutCount
+		layouts.data(),                                 // pSetLayouts
+		1,                                              // pushConstantRangeCount
+		&push_constants                                 // pPushConstantRanges
+	};
+
+	VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &plCreateInfo, nullptr, &m_BloomPipelineLayout));
+
+	std::vector< VkDynamicState > dynamic_states{
+		VK_DYNAMIC_STATE_VIEWPORT,
+		VK_DYNAMIC_STATE_SCISSOR,
+	};
+
+	std::array< VkPipelineColorBlendAttachmentState, 1 > attachment_states{
+		VkPipelineColorBlendAttachmentState{
+			.blendEnable = VK_FALSE,
+			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+		}
+	};
+
+	// empty vertex input
+	VkPipelineVertexInputStateCreateInfo vertexInput
+	{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		.vertexBindingDescriptionCount = 0,
+		.pVertexBindingDescriptions = nullptr,
+		.vertexAttributeDescriptionCount = 0,
+		.pVertexAttributeDescriptions = nullptr,
+	};
+
+	VulkanGraphicsPipelineBuilder::Start()
+		.SetDynamicStates(dynamic_states)
+		.SetVertexInput(&vertexInput)
+		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
+		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
+		.Build("../spv/shaders/postprocessing/gaussianblur.vert.spv", "../spv/shaders/postprocessing/gaussianblur.frag.spv", &m_BloomPipeline, m_BloomPipelineLayout, s_BloomPass->renderpass);
+}
+
 void Renderer::CreateDescriptors()
 {
 	CreateWorldDescriptors(false);
@@ -406,13 +488,16 @@ void Renderer::CreateWorldDescriptors(bool update)
 
 		VkDescriptorImageInfo gBufferColorInfo = workspace.GBufferColors->GetDescriptorInfo();
 		VkDescriptorImageInfo gBufferNormalInfo = workspace.GBufferNormals->GetDescriptorInfo();
+		VkDescriptorImageInfo gBufferEmissionInfo = workspace.GBufferEmission->GetDescriptorInfo();
 		VkDescriptorImageInfo rtxAOSamplerInfo = s_RaytracedAOImage->GetDescriptorInfo();
+
 
 		VkDescriptorBufferInfo World_info = workspace.World.GetDescriptorInfo();
 		DescriptorBuilder builder = DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindBuffer(World::SceneUniform, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, uniformStages)
 			.BindImage(World::GBufferColor, &gBufferColorInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.BindImage(World::GBufferNormal, &gBufferNormalInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT);
+			.BindImage(World::GBufferNormal, &gBufferNormalInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
+			.BindImage(World::GBufferEmissive, &gBufferEmissionInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		if (update)
 			builder.Write(workspace.set0_World);
@@ -668,6 +753,9 @@ void Renderer::Rebuild()
 	{
 		s_UIPipeline->AppendDebugImage(s_RaytracedAOImage.get(), "Ray Traced AO");
 		s_UIPipeline->AppendDebugImage(s_RaytracedReflectionsImage.get(), "Ray Traced Reflection");
+		s_UIPipeline->AppendDebugImage(workspaces[0].GBufferColors.get(), "G Buffer Color");
+		s_UIPipeline->AppendDebugImage(workspaces[0].GBufferNormals.get(), "G Buffer Position Normals");
+		s_UIPipeline->AppendDebugImage(workspaces[0].GBufferEmission.get(), "G Buffer Emission");
 	}
 
 	m_AOIsDirty = true;
@@ -693,6 +781,8 @@ void Renderer::Create()
 	CreatePostPipeline();
 
 	CreateComputeAOPipeline();
+	
+	CreateBloomPipeline();
 
 	// the following pipelines rely on Renderer's descriptor sets
 	s_ShadowPipeline->CreatePipeline();
@@ -707,6 +797,9 @@ void Renderer::Create()
 	s_RaytracingPipeline->CreatePipeline();
 	s_UIPipeline->AppendDebugImage(s_RaytracedAOImage.get(), "Ray Traced AO");
 	s_UIPipeline->AppendDebugImage(s_RaytracedReflectionsImage.get(), "Ray Traced Reflection");
+	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferColors.get(), "G Buffer Color");
+	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferNormals.get(), "G Buffer Position Normals");
+	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferEmission.get(), "G Buffer Emission");
 #endif
 }
 
@@ -740,6 +833,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		// render shadow passes
 		s_ShadowPipeline->Render(scene, commandBuffer);
 
+		// draw scene
 		s_OffscreenPass->Begin(commandBuffer, m_OffscreenFrameBuffers[CURR_FRAME]);
 		{
 			DrawScene(scene, commandBuffer);
@@ -750,8 +844,16 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		}
 		s_OffscreenPass->End(commandBuffer);
 
+		// render bloom
+		//RunBloomPass(commandBuffer);
+
+		// Adding a barrier to be sure the fragment has finished writing to the G-Buffer normals
+		// before the compute shader is using the buffer
+
+		// ray traced AO
 		RunAOCompute(commandBuffer);
 
+		// compose together everything and get ready to present
 		s_CompositionPass->Begin(commandBuffer, m_CompositionFrameBuffers[CURR_FRAME]);
 		{
 			RunPost(commandBuffer);
@@ -762,6 +864,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		}
 		s_CompositionPass->End(commandBuffer);
 
+		// render UI on top
 		s_UIPipeline->Render(scene, commandBuffer);
 	}
 }
@@ -1235,7 +1338,7 @@ void Renderer::RunAOCompute(const CommandBuffer& commandBuffer)
 	}
 	m_AOControl.frame++;
 
-	// Adding a barrier to be sure the fragment has finished writing to the G-Buffer
+	// Adding a barrier to be sure the fragment has finished writing to the G-Buffer normals
 	// before the compute shader is using the buffer
 	Image::InsertImageMemoryBarrier(commandBuffer, workspaces[CURR_FRAME].GBufferNormals->getImage(),
 		VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
@@ -1279,7 +1382,7 @@ void Renderer::RunAOCompute(const CommandBuffer& commandBuffer)
 	vkCmdDispatch(commandBuffer, (extent.width + (GROUP_SIZE - 1)) / GROUP_SIZE, (extent.height + (GROUP_SIZE - 1)) / GROUP_SIZE, 1);
 
 	// Adding a barrier to be sure the compute shader has finished
-	// writing to the AO buffer before the post shader is using it
+	// writing to the AO image before the post shader is using it
 	Image::InsertImageMemoryBarrier(commandBuffer, s_RaytracedAOImage->getImage(),
 		VK_ACCESS_SHADER_WRITE_BIT,
 		VK_ACCESS_SHADER_READ_BIT,
@@ -1338,6 +1441,68 @@ void Renderer::RunPost(const CommandBuffer& commandBuffer)
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
 
+void Renderer::RunBloomPass(const CommandBuffer& commandBuffer)
+{
+	Image::InsertImageMemoryBarrier(commandBuffer, workspaces[CURR_FRAME].GBufferEmission->getImage(),
+		VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+		VK_ACCESS_SHADER_READ_BIT,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		VK_IMAGE_ASPECT_COLOR_BIT,
+		1, 0, 1, 0);
+
+	s_BloomPass->Begin(commandBuffer, m_BloomFrameBuffers[CURR_FRAME]);
+
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_BloomPipeline);
+
+	auto& workspace = workspaces[CURR_FRAME];
+
+	// bind descriptor sets
+	std::vector<VkDescriptorSet> descriptor_sets{
+		workspace.set0_World
+	};
+
+	vkCmdBindDescriptorSets(
+		commandBuffer, //command buffer
+		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
+		m_BloomPipelineLayout, //pipeline layout
+		0, //first set
+		uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
+		0, nullptr //dynamic offsets count, ptr
+	);
+
+	// Sending the push constant information
+	vkCmdPushConstants(commandBuffer, m_BloomPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(BloomPush), &m_BloomPush);
+
+	// draw full screen quad
+	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+
+	// Adding a barrier to be sure the fragment has finished writing to the G-Buffer emission before the post frag shader is using the buffer
+	//Image::InsertImageMemoryBarrier(commandBuffer, workspaces[CURR_FRAME].GBufferEmission->getImage(),
+	//	VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+	//	VK_ACCESS_SHADER_READ_BIT,
+	//	VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+	//	VK_IMAGE_LAYOUT_GENERAL,
+	//	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+	//	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+	//	VK_IMAGE_ASPECT_COLOR_BIT,
+	//	1, 0, 1, 0);
+
+	Image::InsertImageMemoryBarrier(commandBuffer, workspaces[CURR_FRAME].GBufferEmission->getImage(),
+		VK_ACCESS_SHADER_WRITE_BIT,
+		VK_ACCESS_SHADER_READ_BIT,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		VK_IMAGE_ASPECT_COLOR_BIT,
+		1, 0, 1, 0);
+
+	s_BloomPass->End(commandBuffer);
+}
+
 void Renderer::DestroyFrameBuffers()
 {
 	for (VkFramebuffer& framebuffer : m_CompositionFrameBuffers)
@@ -1357,6 +1522,15 @@ void Renderer::DestroyFrameBuffers()
 		}
 	}
 	m_OffscreenFrameBuffers.clear();
+
+	for (VkFramebuffer& framebuffer : m_BloomFrameBuffers)
+	{
+		if (framebuffer != VK_NULL_HANDLE) {
+			vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
+			framebuffer = VK_NULL_HANDLE;
+		}
+	}
+	m_BloomFrameBuffers.clear();
 }
 
 void Renderer::CreateFrameBuffers()
@@ -1365,40 +1539,54 @@ void Renderer::CreateFrameBuffers()
 	glm::uvec2 extent = swapchain->getExtentVec2();
 
 	uint32_t imageCnt = swapchain->getImageCount();
+
 	m_CompositionFrameBuffers.resize(imageCnt);
 	m_OffscreenFrameBuffers.resize(imageCnt);
+	m_BloomFrameBuffers.resize(imageCnt);
 
 	s_MainDepth = std::make_unique<ImageDepth>(extent);
 
 
 	for (uint32_t i = 0; i < imageCnt; ++i)
 	{
-		// G-Buffer color (rgba32f)
+		// G-Buffer color (rgba8)
 		{
 			workspaces[i].GBufferColors = std::make_unique<Image2D>(
 				extent.x, extent.y,
-				VK_FORMAT_R32G32B32A32_SFLOAT,
+				G_BUFFER_COLOR_FORMAT,
 				VK_IMAGE_LAYOUT_GENERAL,
-				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
 				false
 			);
 
-			// no sampler
-			workspaces[i].GBufferColors->Load(nullptr, false);
+			workspaces[i].GBufferColors->Load();
 		}
 
 		// G-Buffer normals (rgba32f) - position(xyz) / normal(w-compressed)
 		{
 			workspaces[i].GBufferNormals = std::make_unique<Image2D>(
 				extent.x, extent.y,
-				VK_FORMAT_R32G32B32A32_SFLOAT,
+				G_BUFFER_POSNORM_FORMAT,
 				VK_IMAGE_LAYOUT_GENERAL,
-				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
 				false
 			);
 
-			// no sampler
-			workspaces[i].GBufferNormals->Load(nullptr, false);
+			workspaces[i].GBufferNormals->Load();
+		}
+
+		// G-Buffer color (rgba8)
+		{
+			workspaces[i].GBufferEmission = std::make_unique<Image2D>(
+				extent.x, extent.y,
+				G_BUFFER_EMISSION_FORMAT,
+				VK_IMAGE_LAYOUT_GENERAL,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+				false
+			);
+
+			// sampler for debug
+			workspaces[i].GBufferEmission->Load();
 		}
 
 		// create all swapchain frame buffers
@@ -1427,6 +1615,7 @@ void Renderer::CreateFrameBuffers()
 			std::vector<VkImageView> offscreenAttachments{
 				workspaces[i].GBufferColors->getView(),
 				workspaces[i].GBufferNormals->getView(),
+				workspaces[i].GBufferEmission->getView(),
 				s_MainDepth->getView()
 			};
 
@@ -1442,6 +1631,26 @@ void Renderer::CreateFrameBuffers()
 			};
 
 			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_OffscreenFrameBuffers[i]));
+		}
+
+		// create all offscreen frame buffers
+		{
+			std::vector<VkImageView> bloomAttachments{
+				workspaces[i].GBufferEmission->getView(),
+			};
+
+			VkFramebufferCreateInfo create_info
+			{
+				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+				.renderPass = s_BloomPass->renderpass,
+				.attachmentCount = uint32_t(bloomAttachments.size()),
+				.pAttachments = bloomAttachments.data(),
+				.width = swapchain->getExtent().width,
+				.height = swapchain->getExtent().height,
+				.layers = 1,
+			};
+
+			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_BloomFrameBuffers[i]));
 		}
 	}
 }
