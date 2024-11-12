@@ -14,6 +14,7 @@ Noire Engine 2 supports a Forward+ rasterization pipeline, carrying a small comp
 - Omni-directional Shadow Maps
 - ImGui-based UI and Scene Hierarchy
 - Entity-Component System
+- Bloom
 
 ## Upcoming Features
 - Tile-based Clustered Light Culling
