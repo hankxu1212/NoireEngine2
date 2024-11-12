@@ -7,9 +7,6 @@ layout(push_constant) uniform BlurInfo {
     float blurStrength;
 };
 
-// layout (constant_id = 0) const int blurdirection = 0;
-const int blurdirection = 0;
-
 layout (location = 0) in vec2 inUV;
 
 layout (location = 0) out vec4 outFragColor;
@@ -22,18 +19,9 @@ void main()
 	vec3 result = texture(samplerColor, inUV).rgb * weight[0]; // current fragment's contribution
 	for(int i = 1; i < 5; ++i)
 	{
-		if (blurdirection == 1)
-		{
-			// H
-			result += texture(samplerColor, inUV + vec2(tex_offset.x * i, 0.0)).rgb * weight[i] * blurStrength;
-			result += texture(samplerColor, inUV - vec2(tex_offset.x * i, 0.0)).rgb * weight[i] * blurStrength;
-		}
-		else
-		{
-			// V
-			result += texture(samplerColor, inUV + vec2(0.0, tex_offset.y * i)).rgb * weight[i] * blurStrength;
-			result += texture(samplerColor, inUV - vec2(0.0, tex_offset.y * i)).rgb * weight[i] * blurStrength;
-		}
+		// H
+		result += texture(samplerColor, inUV + vec2(tex_offset.x * i, 0.0)).rgb * weight[i] * blurStrength;
+		result += texture(samplerColor, inUV - vec2(tex_offset.x * i, 0.0)).rgb * weight[i] * blurStrength;
 	}
 	outFragColor = vec4(result, 1.0);
 }

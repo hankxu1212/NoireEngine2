@@ -170,6 +170,7 @@
     <ClCompile Include="src\scripting\core\Input.cpp" />
     <ClCompile Include="src\scripting\core\SceneNavigationCamera.cpp" />
     <ClCompile Include="src\scripting\ScriptingEngine.cpp" />
+    <ClCompile Include="src\shaders\postprocessing\gaussianblurV.frag" />
     <ClCompile Include="src\utils\sejp\sejp.cpp" />
     <ClCompile Include="src\utils\String.cpp" />
     <ClCompile Include="src\renderer\scene\Transform.cpp" />
@@ -430,8 +431,7 @@
     <None Include="src\shaders\pbr.frag" />
     <None Include="src\shaders\pbr.vert" />
     <None Include="src\shaders\post.frag" />
-    <None Include="src\shaders\postprocessing\gaussianblur.frag" />
-    <None Include="src\shaders\postprocessing\gaussianblur.vert" />
+    <None Include="src\shaders\postprocessing\gaussianblurH.frag" />
     <None Include="src\shaders\raytracing\ao.comp" />
     <None Include="src\shaders\raytracing\raytrace.rchit" />
     <None Include="src\shaders\raytracing\raytrace.rgen" />

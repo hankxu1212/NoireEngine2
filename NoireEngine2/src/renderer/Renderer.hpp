@@ -58,6 +58,8 @@ public:
 	void OnUIRender();
 
 private:
+	void AddUIViewportImages();
+
 	// material pipelines
 	void CreateMaterialPipelineLayout();
 	void CreateMaterialPipelines();
@@ -112,7 +114,7 @@ private:
 	// composition pass, to compose ambient occlusion and color from G buffer and emission
 	void RunPost(const CommandBuffer& commandBuffer);
 
-	void RunBloomPass(const CommandBuffer& commandBuffer);
+	void RunBloomPass(const CommandBuffer& commandBuffer, uint32_t bloomPassIndex);
 
 	// workspace and bindings: these are streamed to GPU per frame
 	struct Workspace
@@ -124,6 +126,8 @@ private:
 		std::unique_ptr<Image2D> GBufferNormals;
 		std::unique_ptr<Image2D> GBufferColors;
 		std::unique_ptr<Image2D> GBufferEmission;
+		std::unique_ptr<Image2D> BloomHorizontalPass;
+		std::unique_ptr<Image2D> BloomVerticalPass;
 
 		VkDescriptorSet set0_World = VK_NULL_HANDLE;
 
@@ -151,7 +155,9 @@ private:
 		SceneUniform,
 		GBufferColor, // g buffer color sampler
 		GBufferNormal,
-		GBufferEmissive
+		GBufferEmissive,
+		BloomPassHorizontal,
+		BloomPassVertical
 	END_BINDING();
 
 	START_BINDING(StorageBuffers)
@@ -204,7 +210,7 @@ private:
 	// frame buffers
 	std::vector<VkFramebuffer> m_CompositionFrameBuffers;
 	std::vector<VkFramebuffer> m_OffscreenFrameBuffers;
-	std::vector<VkFramebuffer> m_BloomFrameBuffers;
+	std::vector<std::array<VkFramebuffer, 2>> m_BloomFrameBuffers;
 
 	void CreateFrameBuffers();
 	void DestroyFrameBuffers();
@@ -218,6 +224,8 @@ private:
 	struct PostPush
 	{
 		int useToneMapping = 1;
+		int useBloom = 1;
+		int useRaytracedAO = 1;
 	}m_PostPush;
 
 	VkPipeline m_PostPipeline = VK_NULL_HANDLE;
@@ -242,11 +250,11 @@ private:
 	// HDR bloom pipelines
 	struct BloomPush
 	{
-		float blurScale;
-		float blurStrength;
+		float blurScale = 1.0f;
+		float blurStrength = 1.5f;
 	}m_BloomPush;
 
-	VkPipeline m_BloomPipeline = VK_NULL_HANDLE;
+	std::array<VkPipeline, 2> m_BloomPipelines{};
 	VkPipelineLayout m_BloomPipelineLayout = VK_NULL_HANDLE;
 
 	// material pipelines

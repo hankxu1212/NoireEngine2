@@ -459,6 +459,9 @@
     <ClCompile Include="src\backend\raytracing\BLASBuilder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\shaders\postprocessing\gaussianblurV.frag">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h">
@@ -1002,8 +1005,7 @@
     <None Include="src\shaders\raytracing\ao.comp" />
     <None Include="src\shaders\passthrough.vert" />
     <None Include="src\shaders\post.frag" />
-    <None Include="src\shaders\postprocessing\gaussianblur.frag" />
-    <None Include="src\shaders\postprocessing\gaussianblur.vert" />
+    <None Include="src\shaders\postprocessing\gaussianblurH.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

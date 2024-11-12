@@ -43,8 +43,8 @@ const material_shaders = [
 	maek.GLSLC('shaders/pbr.frag'),
 	maek.GLSLC('shaders/passthrough.vert'),
 	maek.GLSLC('shaders/post.frag'),
-	maek.GLSLC('shaders/postprocessing/gaussianblur.frag'),
-	maek.GLSLC('shaders/postprocessing/gaussianblur.vert'),
+	maek.GLSLC('shaders/postprocessing/gaussianblurH.frag'),
+	maek.GLSLC('shaders/postprocessing/gaussianblurV.frag'),
 ]
 
 const renderer_objs = [

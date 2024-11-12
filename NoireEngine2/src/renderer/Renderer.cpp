@@ -33,6 +33,7 @@
 #define G_BUFFER_COLOR_FORMAT VK_FORMAT_R8G8B8A8_UNORM
 #define G_BUFFER_POSNORM_FORMAT VK_FORMAT_R32G32B32A32_SFLOAT
 #define G_BUFFER_EMISSION_FORMAT VK_FORMAT_R8G8B8A8_UNORM
+#define HDR_FORMAT VK_FORMAT_R16G16B16A16_SFLOAT
 
 static inline void InsertPipelineMemoryBarrier(const CommandBuffer& buf)
 {
@@ -135,9 +136,11 @@ Renderer::~Renderer()
 		m_BloomPipelineLayout = VK_NULL_HANDLE;
 	}
 
-	if (m_BloomPipeline != VK_NULL_HANDLE) {
-		vkDestroyPipeline(VulkanContext::GetDevice(), m_BloomPipeline, nullptr);
-		m_BloomPipeline = VK_NULL_HANDLE;
+	for (auto& bloomPipeline : m_BloomPipelines) {
+		if (bloomPipeline != VK_NULL_HANDLE) {
+			vkDestroyPipeline(VulkanContext::GetDevice(), bloomPipeline, nullptr);
+			bloomPipeline = VK_NULL_HANDLE;
+		}
 	}
 }
 
@@ -159,7 +162,7 @@ void Renderer::CreateRenderPass()
 
 	// bloom pass
 	s_BloomPass->CreateRenderPass(
-		{ G_BUFFER_EMISSION_FORMAT }, // color, pos+norm, emission
+		{ HDR_FORMAT },
 		VK_FORMAT_UNDEFINED, // todo: actually check
 		1, true, true, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL
 	);
@@ -258,7 +261,35 @@ void Renderer::OnUIRender()
 		ImGui::NextColumn();
 		ImGui::Checkbox("##PPUSETONEMAP", reinterpret_cast<bool*>(&m_PostPush.useToneMapping));
 		ImGui::NextColumn();
+
+		ImGui::Text("Bloom");
+		ImGui::NextColumn();
+		ImGui::Checkbox("##PPUSEBLOOM", reinterpret_cast<bool*>(&m_PostPush.useBloom));
+		ImGui::NextColumn();
+		
+		if (m_PostPush.useBloom) 
+		{
+			ImGui::SliderFloat("Blur Scale", &m_BloomPush.blurScale, 0.0f, 10.0f, "%.2f");
+			ImGui::SliderFloat("Blur Strength", &m_BloomPush.blurStrength, 0.0f, 10.0f, "%.2f");
+		}
+
+		ImGui::Text("Ray Traced AO");
+		ImGui::NextColumn();
+		ImGui::Checkbox("##PPUSERTXAO", reinterpret_cast<bool*>(&m_PostPush.useRaytracedAO));
+		ImGui::NextColumn();
+
 	}
+}
+
+void Renderer::AddUIViewportImages()
+{
+	s_UIPipeline->AppendDebugImage(s_RaytracedAOImage.get(), "Ray Traced AO");
+	s_UIPipeline->AppendDebugImage(s_RaytracedReflectionsImage.get(), "Ray Traced Reflection");
+	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferColors.get(), "G Buffer Color");
+	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferNormals.get(), "G Buffer Position Normals");
+	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferEmission.get(), "G Buffer Emission");
+	s_UIPipeline->AppendDebugImage(workspaces[0].BloomHorizontalPass.get(), "Bloom Horizontal Pass");
+	s_UIPipeline->AppendDebugImage(workspaces[0].BloomVerticalPass.get(), "Bloom Vertical Pass");
 }
 
 void Renderer::CreateMaterialPipelineLayout()
@@ -445,7 +476,8 @@ void Renderer::CreateBloomPipeline()
 		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
 		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
 		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-		.Build("../spv/shaders/postprocessing/gaussianblur.vert.spv", "../spv/shaders/postprocessing/gaussianblur.frag.spv", &m_BloomPipeline, m_BloomPipelineLayout, s_BloomPass->renderpass);
+		.Build("../spv/shaders/passthrough.vert.spv", "../spv/shaders/postprocessing/gaussianblurH.frag.spv", &m_BloomPipelines[0], m_BloomPipelineLayout, s_BloomPass->renderpass)
+		.Build("../spv/shaders/passthrough.vert.spv", "../spv/shaders/postprocessing/gaussianblurV.frag.spv", &m_BloomPipelines[1], m_BloomPipelineLayout, s_BloomPass->renderpass);
 }
 
 void Renderer::CreateDescriptors()
@@ -489,7 +521,11 @@ void Renderer::CreateWorldDescriptors(bool update)
 		VkDescriptorImageInfo gBufferColorInfo = workspace.GBufferColors->GetDescriptorInfo();
 		VkDescriptorImageInfo gBufferNormalInfo = workspace.GBufferNormals->GetDescriptorInfo();
 		VkDescriptorImageInfo gBufferEmissionInfo = workspace.GBufferEmission->GetDescriptorInfo();
+		
 		VkDescriptorImageInfo rtxAOSamplerInfo = s_RaytracedAOImage->GetDescriptorInfo();
+
+		VkDescriptorImageInfo bloomPassHInfo = workspace.BloomHorizontalPass->GetDescriptorInfo();
+		VkDescriptorImageInfo bloomPassVInfo = workspace.BloomVerticalPass->GetDescriptorInfo();
 
 
 		VkDescriptorBufferInfo World_info = workspace.World.GetDescriptorInfo();
@@ -497,7 +533,9 @@ void Renderer::CreateWorldDescriptors(bool update)
 			.BindBuffer(World::SceneUniform, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, uniformStages)
 			.BindImage(World::GBufferColor, &gBufferColorInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.BindImage(World::GBufferNormal, &gBufferNormalInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
-			.BindImage(World::GBufferEmissive, &gBufferEmissionInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+			.BindImage(World::GBufferEmissive, &gBufferEmissionInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.BindImage(World::BloomPassHorizontal, &bloomPassHInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.BindImage(World::BloomPassVertical, &bloomPassVInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		if (update)
 			builder.Write(workspace.set0_World);
@@ -751,11 +789,7 @@ void Renderer::Rebuild()
 	s_UIPipeline->Rebuild();
 	if (s_RaytracedAOImage.get() != nullptr && createdDescriptors)
 	{
-		s_UIPipeline->AppendDebugImage(s_RaytracedAOImage.get(), "Ray Traced AO");
-		s_UIPipeline->AppendDebugImage(s_RaytracedReflectionsImage.get(), "Ray Traced Reflection");
-		s_UIPipeline->AppendDebugImage(workspaces[0].GBufferColors.get(), "G Buffer Color");
-		s_UIPipeline->AppendDebugImage(workspaces[0].GBufferNormals.get(), "G Buffer Position Normals");
-		s_UIPipeline->AppendDebugImage(workspaces[0].GBufferEmission.get(), "G Buffer Emission");
+		AddUIViewportImages();
 	}
 
 	m_AOIsDirty = true;
@@ -795,11 +829,7 @@ void Renderer::Create()
 
 #ifdef _NE_USE_RTX
 	s_RaytracingPipeline->CreatePipeline();
-	s_UIPipeline->AppendDebugImage(s_RaytracedAOImage.get(), "Ray Traced AO");
-	s_UIPipeline->AppendDebugImage(s_RaytracedReflectionsImage.get(), "Ray Traced Reflection");
-	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferColors.get(), "G Buffer Color");
-	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferNormals.get(), "G Buffer Position Normals");
-	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferEmission.get(), "G Buffer Emission");
+	AddUIViewportImages();
 #endif
 }
 
@@ -844,11 +874,11 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		}
 		s_OffscreenPass->End(commandBuffer);
 
-		// render bloom
-		//RunBloomPass(commandBuffer);
+		// render bloom: horizontal pass
+		RunBloomPass(commandBuffer, 0);
 
-		// Adding a barrier to be sure the fragment has finished writing to the G-Buffer normals
-		// before the compute shader is using the buffer
+		// render bloom: vertical pass
+		RunBloomPass(commandBuffer, 1);
 
 		// ray traced AO
 		RunAOCompute(commandBuffer);
@@ -1441,27 +1471,15 @@ void Renderer::RunPost(const CommandBuffer& commandBuffer)
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
 
-void Renderer::RunBloomPass(const CommandBuffer& commandBuffer)
+void Renderer::RunBloomPass(const CommandBuffer& commandBuffer, uint32_t bloomPassIndex)
 {
-	Image::InsertImageMemoryBarrier(commandBuffer, workspaces[CURR_FRAME].GBufferEmission->getImage(),
-		VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-		VK_ACCESS_SHADER_READ_BIT,
-		VK_IMAGE_LAYOUT_GENERAL,
-		VK_IMAGE_LAYOUT_GENERAL,
-		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-		VK_IMAGE_ASPECT_COLOR_BIT,
-		1, 0, 1, 0);
+	s_BloomPass->Begin(commandBuffer, m_BloomFrameBuffers[CURR_FRAME][bloomPassIndex]);
 
-	s_BloomPass->Begin(commandBuffer, m_BloomFrameBuffers[CURR_FRAME]);
-
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_BloomPipeline);
-
-	auto& workspace = workspaces[CURR_FRAME];
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_BloomPipelines[bloomPassIndex]);
 
 	// bind descriptor sets
 	std::vector<VkDescriptorSet> descriptor_sets{
-		workspace.set0_World
+		workspaces[CURR_FRAME].set0_World
 	};
 
 	vkCmdBindDescriptorSets(
@@ -1478,27 +1496,6 @@ void Renderer::RunBloomPass(const CommandBuffer& commandBuffer)
 
 	// draw full screen quad
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-
-	// Adding a barrier to be sure the fragment has finished writing to the G-Buffer emission before the post frag shader is using the buffer
-	//Image::InsertImageMemoryBarrier(commandBuffer, workspaces[CURR_FRAME].GBufferEmission->getImage(),
-	//	VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-	//	VK_ACCESS_SHADER_READ_BIT,
-	//	VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-	//	VK_IMAGE_LAYOUT_GENERAL,
-	//	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-	//	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-	//	VK_IMAGE_ASPECT_COLOR_BIT,
-	//	1, 0, 1, 0);
-
-	Image::InsertImageMemoryBarrier(commandBuffer, workspaces[CURR_FRAME].GBufferEmission->getImage(),
-		VK_ACCESS_SHADER_WRITE_BIT,
-		VK_ACCESS_SHADER_READ_BIT,
-		VK_IMAGE_LAYOUT_GENERAL,
-		VK_IMAGE_LAYOUT_GENERAL,
-		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-		VK_IMAGE_ASPECT_COLOR_BIT,
-		1, 0, 1, 0);
 
 	s_BloomPass->End(commandBuffer);
 }
@@ -1523,11 +1520,13 @@ void Renderer::DestroyFrameBuffers()
 	}
 	m_OffscreenFrameBuffers.clear();
 
-	for (VkFramebuffer& framebuffer : m_BloomFrameBuffers)
+	for (auto& framebuffers : m_BloomFrameBuffers)
 	{
-		if (framebuffer != VK_NULL_HANDLE) {
-			vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
-			framebuffer = VK_NULL_HANDLE;
+		for (VkFramebuffer& framebuffer : framebuffers) {
+			if (framebuffer != VK_NULL_HANDLE) {
+				vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
+				framebuffer = VK_NULL_HANDLE;
+			}
 		}
 	}
 	m_BloomFrameBuffers.clear();
@@ -1575,7 +1574,7 @@ void Renderer::CreateFrameBuffers()
 			workspaces[i].GBufferNormals->Load();
 		}
 
-		// G-Buffer color (rgba8)
+		// G-Buffer emission (rgba8)
 		{
 			workspaces[i].GBufferEmission = std::make_unique<Image2D>(
 				extent.x, extent.y,
@@ -1587,6 +1586,32 @@ void Renderer::CreateFrameBuffers()
 
 			// sampler for debug
 			workspaces[i].GBufferEmission->Load();
+		}
+
+		// Blur horizontal pass
+		{
+			workspaces[i].BloomHorizontalPass = std::make_unique<Image2D>(
+				extent.x, extent.y,
+				HDR_FORMAT,
+				VK_IMAGE_LAYOUT_GENERAL,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+				false
+			);
+
+			workspaces[i].BloomHorizontalPass->Load();
+		}
+
+		// Blur vertical pass
+		{
+			workspaces[i].BloomVerticalPass = std::make_unique<Image2D>(
+				extent.x, extent.y,
+				HDR_FORMAT,
+				VK_IMAGE_LAYOUT_GENERAL,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+				false
+			);
+
+			workspaces[i].BloomVerticalPass->Load();
 		}
 
 		// create all swapchain frame buffers
@@ -1633,10 +1658,10 @@ void Renderer::CreateFrameBuffers()
 			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_OffscreenFrameBuffers[i]));
 		}
 
-		// create all offscreen frame buffers
+		// create blur attachments 1
 		{
 			std::vector<VkImageView> bloomAttachments{
-				workspaces[i].GBufferEmission->getView(),
+				workspaces[i].BloomHorizontalPass->getView(),
 			};
 
 			VkFramebufferCreateInfo create_info
@@ -1650,7 +1675,27 @@ void Renderer::CreateFrameBuffers()
 				.layers = 1,
 			};
 
-			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_BloomFrameBuffers[i]));
+			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_BloomFrameBuffers[i][0]));
+		}
+
+		// create blur attachments 2
+		{
+			std::vector<VkImageView> bloomAttachments{
+				workspaces[i].BloomVerticalPass->getView(),
+			};
+
+			VkFramebufferCreateInfo create_info
+			{
+				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+				.renderPass = s_BloomPass->renderpass,
+				.attachmentCount = uint32_t(bloomAttachments.size()),
+				.pAttachments = bloomAttachments.data(),
+				.width = swapchain->getExtent().width,
+				.height = swapchain->getExtent().height,
+				.layers = 1,
+			};
+
+			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_BloomFrameBuffers[i][1]));
 		}
 	}
 }
