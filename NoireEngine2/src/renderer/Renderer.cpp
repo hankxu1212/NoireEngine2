@@ -32,8 +32,7 @@
 
 #define G_BUFFER_COLOR_FORMAT VK_FORMAT_R8G8B8A8_UNORM
 #define G_BUFFER_POSNORM_FORMAT VK_FORMAT_R32G32B32A32_SFLOAT
-#define G_BUFFER_EMISSION_FORMAT VK_FORMAT_R8G8B8A8_UNORM
-#define HDR_FORMAT VK_FORMAT_R16G16B16A16_SFLOAT
+#define G_BUFFER_EMISSION_FORMAT VK_FORMAT_R16G16B16A16_SFLOAT
 
 static inline void InsertPipelineMemoryBarrier(const CommandBuffer& buf)
 {
@@ -61,13 +60,13 @@ Renderer::Renderer()
 
 	s_OffscreenPass = std::make_unique<Renderpass>();
 	s_CompositionPass = std::make_unique<Renderpass>();
-	s_BloomPass = std::make_unique<Renderpass>();
 
 	// initialize a bunch of pipelines
 	s_UIPipeline = std::make_unique<ImGuiPipeline>();
 	s_LinesPipeline = std::make_unique<LinesPipeline>();
 	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>();
 	s_ShadowPipeline = std::make_unique<ShadowPipeline>();
+	s_BloomPipeline = std::make_unique<BloomPipeline>();
 }
 
 Renderer::~Renderer()
@@ -130,18 +129,6 @@ Renderer::~Renderer()
 		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_RaytracedAOComputePipelineLayout, nullptr);
 		m_RaytracedAOComputePipelineLayout = VK_NULL_HANDLE;
 	}
-
-	if (m_BloomPipelineLayout != VK_NULL_HANDLE) {
-		vkDestroyPipelineLayout(VulkanContext::GetDevice(), m_BloomPipelineLayout, nullptr);
-		m_BloomPipelineLayout = VK_NULL_HANDLE;
-	}
-
-	for (auto& bloomPipeline : m_BloomPipelines) {
-		if (bloomPipeline != VK_NULL_HANDLE) {
-			vkDestroyPipeline(VulkanContext::GetDevice(), bloomPipeline, nullptr);
-			bloomPipeline = VK_NULL_HANDLE;
-		}
-	}
 }
 
 void Renderer::CreateRenderPass()
@@ -158,17 +145,6 @@ void Renderer::CreateRenderPass()
 		{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear normal to black
 		{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear emission to black
 		{.depthStencil = { 1.0f, 0 } }               // Clear depth to 1.0, stencil to 0
-	});
-
-	// bloom pass
-	s_BloomPass->CreateRenderPass(
-		{ HDR_FORMAT },
-		VK_FORMAT_UNDEFINED, // todo: actually check
-		1, true, true, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL
-	);
-
-	s_BloomPass->SetClearValues({
-		{.color = { { 0.0f, 0.0f, 0.0f, 0.0f } } },  // Clear emission to black
 	});
 
 	// present to the swapchain
@@ -201,6 +177,11 @@ void Renderer::OnUIRender()
 		// Ray-Traced Ambient Occlusion settings
 		ImGui::SeparatorText("Ray Traced Ambient Occlusion"); // ---------------------------------
 		ImGui::Columns(2);
+
+		ImGui::Text("Ray Traced AO");
+		ImGui::NextColumn();
+		ImGui::Checkbox("##PPUSERTXAO", reinterpret_cast<bool*>(&m_PostPush.useRaytracedAO));
+		ImGui::NextColumn();
 
 		// Modify AO Power
 		ImGui::Text("Power");
@@ -266,18 +247,10 @@ void Renderer::OnUIRender()
 		ImGui::NextColumn();
 		ImGui::Checkbox("##PPUSEBLOOM", reinterpret_cast<bool*>(&m_PostPush.useBloom));
 		ImGui::NextColumn();
-		
-		if (m_PostPush.useBloom) 
-		{
-			ImGui::SliderFloat("Blur Scale", &m_BloomPush.blurScale, 0.0f, 10.0f, "%.2f");
-			ImGui::SliderFloat("Blur Strength", &m_BloomPush.blurStrength, 0.0f, 10.0f, "%.2f");
-		}
 
-		ImGui::Text("Ray Traced AO");
-		ImGui::NextColumn();
-		ImGui::Checkbox("##PPUSERTXAO", reinterpret_cast<bool*>(&m_PostPush.useRaytracedAO));
-		ImGui::NextColumn();
+		ImGui::DragFloat("Bloom Strength", &m_PostPush.bloomStrength, 0.01f, 0.0f, 100.0f, "%.2f");
 
+		s_BloomPipeline->OnUIRender();
 	}
 }
 
@@ -288,8 +261,6 @@ void Renderer::AddUIViewportImages()
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferColors.get(), "G Buffer Color");
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferNormals.get(), "G Buffer Position Normals");
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferEmission.get(), "G Buffer Emission");
-	s_UIPipeline->AppendDebugImage(workspaces[0].BloomHorizontalPass.get(), "Bloom Horizontal Pass");
-	s_UIPipeline->AppendDebugImage(workspaces[0].BloomVerticalPass.get(), "Bloom Vertical Pass");
 }
 
 void Renderer::CreateMaterialPipelineLayout()
@@ -429,57 +400,6 @@ void Renderer::CreateComputeAOPipeline()
 	vkCreateComputePipelines(VulkanContext::GetDevice(), {}, 1, &cpCreateInfo, nullptr, &m_RaytracedAOComputePipeline);
 }
 
-void Renderer::CreateBloomPipeline()
-{
-	std::vector<VkDescriptorSetLayout> layouts{
-		set0_WorldLayout
-	};
-
-	VkPushConstantRange push_constants = { VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(BloomPush) };
-	VkPipelineLayoutCreateInfo plCreateInfo{
-		VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,  // sType
-		nullptr,                                        // pNext
-		0,                                              // flags
-		uint32_t(layouts.size()),                       // setLayoutCount
-		layouts.data(),                                 // pSetLayouts
-		1,                                              // pushConstantRangeCount
-		&push_constants                                 // pPushConstantRanges
-	};
-
-	VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &plCreateInfo, nullptr, &m_BloomPipelineLayout));
-
-	std::vector< VkDynamicState > dynamic_states{
-		VK_DYNAMIC_STATE_VIEWPORT,
-		VK_DYNAMIC_STATE_SCISSOR,
-	};
-
-	std::array< VkPipelineColorBlendAttachmentState, 1 > attachment_states{
-		VkPipelineColorBlendAttachmentState{
-			.blendEnable = VK_FALSE,
-			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-		}
-	};
-
-	// empty vertex input
-	VkPipelineVertexInputStateCreateInfo vertexInput
-	{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-		.vertexBindingDescriptionCount = 0,
-		.pVertexBindingDescriptions = nullptr,
-		.vertexAttributeDescriptionCount = 0,
-		.pVertexAttributeDescriptions = nullptr,
-	};
-
-	VulkanGraphicsPipelineBuilder::Start()
-		.SetDynamicStates(dynamic_states)
-		.SetVertexInput(&vertexInput)
-		.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
-		.SetColorBlending((uint32_t)attachment_states.size(), attachment_states.data())
-		.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE)
-		.Build("../spv/shaders/passthrough.vert.spv", "../spv/shaders/postprocessing/gaussianblurH.frag.spv", &m_BloomPipelines[0], m_BloomPipelineLayout, s_BloomPass->renderpass)
-		.Build("../spv/shaders/passthrough.vert.spv", "../spv/shaders/postprocessing/gaussianblurV.frag.spv", &m_BloomPipelines[1], m_BloomPipelineLayout, s_BloomPass->renderpass);
-}
-
 void Renderer::CreateDescriptors()
 {
 	CreateWorldDescriptors(false);
@@ -524,18 +444,12 @@ void Renderer::CreateWorldDescriptors(bool update)
 		
 		VkDescriptorImageInfo rtxAOSamplerInfo = s_RaytracedAOImage->GetDescriptorInfo();
 
-		VkDescriptorImageInfo bloomPassHInfo = workspace.BloomHorizontalPass->GetDescriptorInfo();
-		VkDescriptorImageInfo bloomPassVInfo = workspace.BloomVerticalPass->GetDescriptorInfo();
-
-
 		VkDescriptorBufferInfo World_info = workspace.World.GetDescriptorInfo();
 		DescriptorBuilder builder = DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindBuffer(World::SceneUniform, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, uniformStages)
 			.BindImage(World::GBufferColor, &gBufferColorInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.BindImage(World::GBufferNormal, &gBufferNormalInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
-			.BindImage(World::GBufferEmissive, &gBufferEmissionInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.BindImage(World::BloomPassHorizontal, &bloomPassHInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.BindImage(World::BloomPassVertical, &bloomPassVInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+			.BindImage(World::GBufferEmissive, &gBufferEmissionInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		if (update)
 			builder.Write(workspace.set0_World);
@@ -800,6 +714,13 @@ void Renderer::Create()
 	// create shadow pipeline and initialize its shadow frame buffer and render pass
 	s_ShadowPipeline->CreateRenderPass();
 
+	// create bloom
+	s_BloomPipeline->InitializeWorkspaces();
+	for (int i = 0; i < workspaces.size(); ++i)
+		s_BloomPipeline->SetBloomImage(workspaces[i].GBufferEmission.get(), i);
+
+	s_BloomPipeline->CreateRenderPass();
+
 #ifdef _NE_USE_RTX
 	s_RaytracingPipeline = std::make_unique<RaytracingPipeline>();
 	s_RaytracingPipeline->CreateAccelerationStructures();
@@ -816,8 +737,6 @@ void Renderer::Create()
 
 	CreateComputeAOPipeline();
 	
-	CreateBloomPipeline();
-
 	// the following pipelines rely on Renderer's descriptor sets
 	s_ShadowPipeline->CreatePipeline();
 
@@ -826,6 +745,8 @@ void Renderer::Create()
 	s_SkyboxPipeline->CreatePipeline();
 
 	s_UIPipeline->CreatePipeline();
+
+	s_BloomPipeline->CreatePipeline();
 
 #ifdef _NE_USE_RTX
 	s_RaytracingPipeline->CreatePipeline();
@@ -874,11 +795,8 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		}
 		s_OffscreenPass->End(commandBuffer);
 
-		// render bloom: horizontal pass
-		RunBloomPass(commandBuffer, 0);
-
-		// render bloom: vertical pass
-		RunBloomPass(commandBuffer, 1);
+		// bloom
+		s_BloomPipeline->Render(scene, commandBuffer);
 
 		// ray traced AO
 		RunAOCompute(commandBuffer);
@@ -1471,35 +1389,6 @@ void Renderer::RunPost(const CommandBuffer& commandBuffer)
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
 
-void Renderer::RunBloomPass(const CommandBuffer& commandBuffer, uint32_t bloomPassIndex)
-{
-	s_BloomPass->Begin(commandBuffer, m_BloomFrameBuffers[CURR_FRAME][bloomPassIndex]);
-
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_BloomPipelines[bloomPassIndex]);
-
-	// bind descriptor sets
-	std::vector<VkDescriptorSet> descriptor_sets{
-		workspaces[CURR_FRAME].set0_World
-	};
-
-	vkCmdBindDescriptorSets(
-		commandBuffer, //command buffer
-		VK_PIPELINE_BIND_POINT_GRAPHICS, //pipeline bind point
-		m_BloomPipelineLayout, //pipeline layout
-		0, //first set
-		uint32_t(descriptor_sets.size()), descriptor_sets.data(), //descriptor sets count, ptr
-		0, nullptr //dynamic offsets count, ptr
-	);
-
-	// Sending the push constant information
-	vkCmdPushConstants(commandBuffer, m_BloomPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(BloomPush), &m_BloomPush);
-
-	// draw full screen quad
-	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-
-	s_BloomPass->End(commandBuffer);
-}
-
 void Renderer::DestroyFrameBuffers()
 {
 	for (VkFramebuffer& framebuffer : m_CompositionFrameBuffers)
@@ -1519,17 +1408,6 @@ void Renderer::DestroyFrameBuffers()
 		}
 	}
 	m_OffscreenFrameBuffers.clear();
-
-	for (auto& framebuffers : m_BloomFrameBuffers)
-	{
-		for (VkFramebuffer& framebuffer : framebuffers) {
-			if (framebuffer != VK_NULL_HANDLE) {
-				vkDestroyFramebuffer(VulkanContext::GetDevice(), framebuffer, nullptr);
-				framebuffer = VK_NULL_HANDLE;
-			}
-		}
-	}
-	m_BloomFrameBuffers.clear();
 }
 
 void Renderer::CreateFrameBuffers()
@@ -1541,7 +1419,6 @@ void Renderer::CreateFrameBuffers()
 
 	m_CompositionFrameBuffers.resize(imageCnt);
 	m_OffscreenFrameBuffers.resize(imageCnt);
-	m_BloomFrameBuffers.resize(imageCnt);
 
 	s_MainDepth = std::make_unique<ImageDepth>(extent);
 
@@ -1580,38 +1457,21 @@ void Renderer::CreateFrameBuffers()
 				extent.x, extent.y,
 				G_BUFFER_EMISSION_FORMAT,
 				VK_IMAGE_LAYOUT_GENERAL,
-				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-				false
-			);
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT 
+				| VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+				true // for bloom
+ 			);
 
-			// sampler for debug
-			workspaces[i].GBufferEmission->Load();
-		}
+			// create no image sampler. Instead, create it independently
+			workspaces[i].GBufferEmission->Load(nullptr, true, false);
 
-		// Blur horizontal pass
-		{
-			workspaces[i].BloomHorizontalPass = std::make_unique<Image2D>(
-				extent.x, extent.y,
-				HDR_FORMAT,
-				VK_IMAGE_LAYOUT_GENERAL,
-				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-				false
-			);
-
-			workspaces[i].BloomHorizontalPass->Load();
-		}
-
-		// Blur vertical pass
-		{
-			workspaces[i].BloomVerticalPass = std::make_unique<Image2D>(
-				extent.x, extent.y,
-				HDR_FORMAT,
-				VK_IMAGE_LAYOUT_GENERAL,
-				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-				false
-			);
-
-			workspaces[i].BloomVerticalPass->Load();
+			Image::CreateImageView(
+				workspaces[i].GBufferEmission->getImage(), 
+				workspaces[i].GBufferEmission->getViewRef(),
+				VK_IMAGE_VIEW_TYPE_2D, 
+				workspaces[i].GBufferEmission->getFormat(), 
+				VK_IMAGE_ASPECT_COLOR_BIT, 
+				1, 0, 1, 0);
 		}
 
 		// create all swapchain frame buffers
@@ -1656,46 +1516,6 @@ void Renderer::CreateFrameBuffers()
 			};
 
 			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_OffscreenFrameBuffers[i]));
-		}
-
-		// create blur attachments 1
-		{
-			std::vector<VkImageView> bloomAttachments{
-				workspaces[i].BloomHorizontalPass->getView(),
-			};
-
-			VkFramebufferCreateInfo create_info
-			{
-				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-				.renderPass = s_BloomPass->renderpass,
-				.attachmentCount = uint32_t(bloomAttachments.size()),
-				.pAttachments = bloomAttachments.data(),
-				.width = swapchain->getExtent().width,
-				.height = swapchain->getExtent().height,
-				.layers = 1,
-			};
-
-			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_BloomFrameBuffers[i][0]));
-		}
-
-		// create blur attachments 2
-		{
-			std::vector<VkImageView> bloomAttachments{
-				workspaces[i].BloomVerticalPass->getView(),
-			};
-
-			VkFramebufferCreateInfo create_info
-			{
-				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-				.renderPass = s_BloomPass->renderpass,
-				.attachmentCount = uint32_t(bloomAttachments.size()),
-				.pAttachments = bloomAttachments.data(),
-				.width = swapchain->getExtent().width,
-				.height = swapchain->getExtent().height,
-				.layers = 1,
-			};
-
-			VulkanContext::VK(vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_BloomFrameBuffers[i][1]));
 		}
 	}
 }

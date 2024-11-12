@@ -139,6 +139,39 @@ void Renderpass::Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb)
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 }
 
+void Renderpass::Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb, VkExtent2D extent)
+{
+	VkRenderPassBeginInfo begin_info{
+		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+		.renderPass = renderpass,
+		.framebuffer = fb,
+		.renderArea{
+			.offset = {.x = 0, .y = 0},
+			.extent = extent,
+		},
+		.clearValueCount = uint32_t(clearValues.size()),
+		.pClearValues = clearValues.data(),
+	};
+
+	vkCmdBeginRenderPass(commandBuffer, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
+	VkRect2D scissor{
+		.offset = {.x = 0, .y = 0},
+		.extent = extent,
+	};
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+	VkViewport viewport{
+		.x = 0.0f,
+		.y = 0.0f,
+		.width = float(extent.width),
+		.height = float(extent.height),
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f,
+	};
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+}
+
 void Renderpass::End(const CommandBuffer& commandBuffer)
 {
 	vkCmdEndRenderPass(commandBuffer);

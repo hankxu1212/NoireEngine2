@@ -89,6 +89,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\pipeline\BloomPipeline.cpp" />
     <ClCompile Include="src\backend\raytracing\BLASBuilder.cpp" />
     <ClCompile Include="src\backend\raytracing\RTCore.cpp" />
     <ClCompile Include="src\backend\pipeline\RaytracingPipeline.cpp" />
@@ -240,6 +241,7 @@
     <ClCompile Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\pipeline\BloomPipeline.hpp" />
     <ClInclude Include="src\backend\raytracing\BLASBuilder.h" />
     <ClInclude Include="src\backend\raytracing\RTCore.h" />
     <ClInclude Include="src\backend\pipeline\RaytracingPipeline.hpp" />
@@ -431,6 +433,8 @@
     <None Include="src\shaders\pbr.frag" />
     <None Include="src\shaders\pbr.vert" />
     <None Include="src\shaders\post.frag" />
+    <None Include="src\shaders\postprocessing\bloom_down_sample.frag" />
+    <None Include="src\shaders\postprocessing\bloom_up_sample.frag" />
     <None Include="src\shaders\postprocessing\gaussianblurH.frag" />
     <None Include="src\shaders\raytracing\ao.comp" />
     <None Include="src\shaders\raytracing\raytrace.rchit" />

@@ -19,6 +19,8 @@ struct Renderpass
 
 	void Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb);
 
+	void Begin(const CommandBuffer& commandBuffer, VkFramebuffer fb, VkExtent2D extent);
+
 	void End(const CommandBuffer& commandBuffer);
 
 	VkRenderPass renderpass = VK_NULL_HANDLE;

@@ -12,6 +12,7 @@
 #include "backend/pipeline/ShadowPipeline.hpp"
 #include "backend/pipeline/RaytracingPipeline.hpp"
 #include "backend/pipeline/ImGuiPipeline.hpp"
+#include "backend/pipeline/BloomPipeline.hpp"
 
 #include <type_traits>
 #include "glm/glm.hpp"
@@ -69,8 +70,6 @@ private:
 
 	void CreateComputeAOPipeline();
 
-	void CreateBloomPipeline();
-
 	// descriptor management
 	void CreateDescriptors();
 	bool createdDescriptors = false;
@@ -114,8 +113,6 @@ private:
 	// composition pass, to compose ambient occlusion and color from G buffer and emission
 	void RunPost(const CommandBuffer& commandBuffer);
 
-	void RunBloomPass(const CommandBuffer& commandBuffer, uint32_t bloomPassIndex);
-
 	// workspace and bindings: these are streamed to GPU per frame
 	struct Workspace
 	{
@@ -126,8 +123,6 @@ private:
 		std::unique_ptr<Image2D> GBufferNormals;
 		std::unique_ptr<Image2D> GBufferColors;
 		std::unique_ptr<Image2D> GBufferEmission;
-		std::unique_ptr<Image2D> BloomHorizontalPass;
-		std::unique_ptr<Image2D> BloomVerticalPass;
 
 		VkDescriptorSet set0_World = VK_NULL_HANDLE;
 
@@ -151,13 +146,15 @@ private:
 		VkDescriptorSet set1_StorageBuffers = VK_NULL_HANDLE; //references Transforms and lights
 	};
 
+	std::vector<Workspace> workspaces;
+
+#pragma region Bindings
+
 	START_BINDING(World)
 		SceneUniform,
 		GBufferColor, // g buffer color sampler
 		GBufferNormal,
 		GBufferEmissive,
-		BloomPassHorizontal,
-		BloomPassVertical
 	END_BINDING();
 
 	START_BINDING(StorageBuffers)
@@ -182,7 +179,7 @@ private:
 		AOImage // ao image
 	END_BINDING();
 
-	std::vector<Workspace> workspaces;
+#pragma endregion
 
 	VkDescriptorSetLayout set0_WorldLayout = VK_NULL_HANDLE;
 	
@@ -205,12 +202,10 @@ private:
 	// render pass management
 	std::unique_ptr<Renderpass> s_OffscreenPass;
 	std::unique_ptr<Renderpass> s_CompositionPass;
-	std::unique_ptr<Renderpass> s_BloomPass;
 
 	// frame buffers
 	std::vector<VkFramebuffer> m_CompositionFrameBuffers;
 	std::vector<VkFramebuffer> m_OffscreenFrameBuffers;
-	std::vector<std::array<VkFramebuffer, 2>> m_BloomFrameBuffers;
 
 	void CreateFrameBuffers();
 	void DestroyFrameBuffers();
@@ -220,11 +215,13 @@ private:
 	std::unique_ptr<Image2D> s_RaytracedAOImage;
 	std::unique_ptr<Image2D> s_RaytracedReflectionsImage;
 
+
 	// post pipeline
 	struct PostPush
 	{
 		int useToneMapping = 1;
 		int useBloom = 1;
+		float bloomStrength = 0.1f;
 		int useRaytracedAO = 1;
 	}m_PostPush;
 
@@ -247,16 +244,6 @@ private:
 	VkPipeline m_RaytracedAOComputePipeline = VK_NULL_HANDLE;
 	VkPipelineLayout m_RaytracedAOComputePipelineLayout = VK_NULL_HANDLE;
 
-	// HDR bloom pipelines
-	struct BloomPush
-	{
-		float blurScale = 1.0f;
-		float blurStrength = 1.5f;
-	}m_BloomPush;
-
-	std::array<VkPipeline, 2> m_BloomPipelines{};
-	VkPipelineLayout m_BloomPipelineLayout = VK_NULL_HANDLE;
-
 	// material pipelines
 	std::array<VkPipeline, N_MATERIAL_WORKFLOWS> m_MaterialPipelines{};
 	VkPipelineLayout m_MaterialPipelineLayout = VK_NULL_HANDLE;
@@ -267,6 +254,7 @@ private:
 	friend class ShadowPipeline;
 	friend class RaytracingPipeline;
 	friend class ImGuiPipeline;
+	friend class BloomPipeline;
 
 private:
 	std::unique_ptr<LinesPipeline>					s_LinesPipeline;
@@ -274,5 +262,6 @@ private:
 	std::unique_ptr<ShadowPipeline>					s_ShadowPipeline;
 	std::unique_ptr<RaytracingPipeline>				s_RaytracingPipeline;
 	std::unique_ptr<ImGuiPipeline>					s_UIPipeline;
+	std::unique_ptr<BloomPipeline>					s_BloomPipeline;
 };
 

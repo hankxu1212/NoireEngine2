@@ -43,6 +43,7 @@ public:
 	VkDeviceMemory			getMemory() const { return memory; }
 	VkSampler				getSampler() const { return sampler; }
 	VkImageView				getView() const { return view; }
+	VkImageView&			getViewRef() { return view; }
 
 	static uint32_t			getMipLevels(const VkExtent3D& extent);
 

@@ -36,7 +36,7 @@ const core_objs = [
 ];
 
 
-const material_shaders = [
+const renderer_shaders = [
 	maek.GLSLC('shaders/lambertian.vert'),
 	maek.GLSLC('shaders/lambertian.frag'),
 	maek.GLSLC('shaders/pbr.vert'),
@@ -45,6 +45,8 @@ const material_shaders = [
 	maek.GLSLC('shaders/post.frag'),
 	maek.GLSLC('shaders/postprocessing/gaussianblurH.frag'),
 	maek.GLSLC('shaders/postprocessing/gaussianblurV.frag'),
+	maek.GLSLC('shaders/postprocessing/bloom_down_sample.frag'),
+	maek.GLSLC('shaders/postprocessing/bloom_up_sample.frag'),
 ]
 
 const renderer_objs = [
@@ -69,7 +71,7 @@ const renderer_objs = [
 	maek.CPP('renderer/animation/Animator.cpp'),
 	maek.CPP('renderer/animation/Keyframe.cpp'),
 	maek.CPP('renderer/lighting/Light.cpp'),
-	maek.CPP('renderer/Renderer.cpp', undefined, { depends: [...material_shaders] } ),
+	maek.CPP('renderer/Renderer.cpp', undefined, { depends: [...renderer_shaders] } ),
 ]
 
 const component_objs = [
@@ -120,6 +122,7 @@ const vulkan_objs = [
 	maek.CPP('backend/descriptor/DescriptorLayoutCache.cpp'),
 	maek.CPP('backend/descriptor/DescriptorBuilder.cpp'),
 	maek.CPP('backend/pipeline/VulkanGraphicsPipelineBuilder.cpp'),
+	maek.CPP('backend/pipeline/BloomPipeline.cpp'),
 ]
 
 const rtx_shaders = [
