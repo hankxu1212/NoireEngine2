@@ -87,14 +87,33 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
     for (Layer* layer : Application::Get().GetLayerStack())
         layer->OnViewportRender();
 
-    // render rtx info:
-#ifdef _NE_USE_RTX
-    if (ImGui::Begin("Ray Tracing")) {
-        ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-        ImGui::Image(m_DebugImage, ImVec2{ viewportPanelSize.x, viewportPanelSize.y });
-        ImGui::End();
+    static int selectedOption = 0; // Index of selected option
+
+    // render a bunch of debug images
+    if (!m_DebugImages.empty()) 
+    {
+        if (ImGui::Begin("Debug Viewport")) {
+            // Dropdown for choosing a debug image by name
+            if (ImGui::BeginCombo("Select Image", m_DebugImages[selectedOption].second.c_str())) {
+                for (int i = 0; i < m_DebugImages.size(); i++) {
+                    bool isSelected = (selectedOption == i);
+                    if (ImGui::Selectable(m_DebugImages[i].second.c_str(), isSelected)) {
+                        selectedOption = i;
+                    }
+                    if (isSelected) {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            // Display the selected debug image
+            ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+            ImGui::Image(m_DebugImages[selectedOption].first, viewportPanelSize);
+
+            ImGui::End();
+        }
     }
-#endif
 
     ImGui::Render();
 
@@ -114,13 +133,11 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
     s_Renderpass->End(commandBuffer);
 }
 
-void ImGuiPipeline::SetupDebugViewport(Image2D* image)
+void ImGuiPipeline::AppendDebugImage(Image* image, const std::string& name)
 {
-    m_DebugImage = ImGui_ImplVulkan_AddTexture(
-        image->getSampler(),
-        image->getView(),
-        image->getLayout()
-    );
+    m_DebugImages.push_back(std::make_pair(
+        ImGui_ImplVulkan_AddTexture(image->getSampler(), image->getView(), image->getLayout()), 
+        name));
 }
 
 void ImGuiPipeline::CreateRenderPass()
@@ -191,6 +208,8 @@ void ImGuiPipeline::Rebuild()
             "[vulkan] Creating frame buffer failed"
         );
     }
+
+    m_DebugImages.clear();
 }
 
 void ImGuiPipeline::Update(const Scene* scene)

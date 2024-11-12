@@ -206,19 +206,25 @@ private:
 	std::unique_ptr<Image2D> s_RaytracedReflectionsImage;
 
 	// post pipeline
+	struct PostPush
+	{
+		int useToneMapping = 1;
+	}m_PostPush;
+
 	VkPipeline m_PostPipeline = VK_NULL_HANDLE;
 	VkPipelineLayout m_PostPipelineLayout = VK_NULL_HANDLE;
 
 	// ray tracing AO pipeline
 	struct AOPush
 	{
-		float radius{ 2.0f };       // Length of the ray
-		int   samples{ 4 };         // Nb samples at each iteration
-		float power{ 3.0f };        // Darkness is stronger for more hits
-		int   distanceBased{ 1 };  // Attenuate based on distance
-		int   frame{ 0 };                // Current frame
-		int   maxSamples{ 100'000 };    // Max samples before it stops
+		float radius = 2.0f;       // Length of the ray
+		int samples = 4;         // Nb samples at each iteration
+		float power = 3;        // Darkness is stronger for more hits
+		int distanceBased = 1;  // Attenuate based on distance
+		int frame = 0;                // Current frame
+		int maxSamples = 100'000;    // Max samples before it stops
 	}m_AOControl;
+
 	bool m_AOIsDirty = false;
 
 	VkPipeline m_RaytracedAOComputePipeline = VK_NULL_HANDLE;

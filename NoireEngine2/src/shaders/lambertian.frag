@@ -60,7 +60,6 @@ void main()
 
 	vec3 color = texColor * (directLighting + ambientLighting + reflectionColor * 0.5); // just an arbitrary multiplier
 	
-	color = ACES(color);
 	outColor = vec4(color, 1);
 	outNormal.rgba = vec4(inPosition, uintBitsToFloat(CompressUnitVec(n)));
 }

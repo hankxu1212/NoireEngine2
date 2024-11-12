@@ -132,8 +132,6 @@ void main()
 
 	vec3 color = directLighting + ambientLighting;
 
-    // color = color * (1.0f / Uncharted2Tonemap(vec3(11.2f)));
-    color = ACES(color);
 	outColor = vec4(color, 1);
     outNormal.rgba = vec4(inPosition, uintBitsToFloat(CompressUnitVec(n)));
 }

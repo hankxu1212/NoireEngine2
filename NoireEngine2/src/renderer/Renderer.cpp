@@ -155,6 +155,8 @@ void Renderer::CreateRenderPass()
 }
 
 bool showMenu = true;
+bool showPostProcessing = true;
+
 void Renderer::OnUIRender()
 {
 	if (ImGui::CollapsingHeader("Renderer Settings", &showMenu))
@@ -208,10 +210,10 @@ void Renderer::OnUIRender()
 			m_AOIsDirty = true;
 		}
 		ImGui::Columns(1);
+	}
 
-		// rendering stats
-		ImGui::SeparatorText("Rendering"); // -----------------------------------------------------
-
+	if (ImGui::CollapsingHeader("Renderer Statistics", &showMenu))
+	{
 		// num objects drawn
 		ImGui::Text("Objects Drawn: %I64u", ObjectsDrawn);
 		ImGui::Text("Vertices Drawn: %I64u", VerticesDrawn);
@@ -220,6 +222,14 @@ void Renderer::OnUIRender()
 
 		ImGui::BulletText("Application Update Time: %.3fms", Application::ApplicationUpdateTime);
 		ImGui::BulletText("Application Render Time: %.3fms", Application::ApplicationRenderTime);
+	}
+
+	if (ImGui::CollapsingHeader("Post Processing", &showPostProcessing))
+	{
+		ImGui::Text("Tone Map");
+		ImGui::NextColumn();
+		ImGui::Checkbox("##PPUSETONEMAP", reinterpret_cast<bool*>(&m_PostPush.useToneMapping));
+		ImGui::NextColumn();
 	}
 }
 
@@ -281,15 +291,18 @@ void Renderer::CreatePostPipelineLayout()
 		set5_RayTracingLayout
 	};
 
-	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = uint32_t(layouts.size()),
-		.pSetLayouts = layouts.data(),
-		.pushConstantRangeCount = 0,
-		.pPushConstantRanges = nullptr,
+	VkPushConstantRange push_constants = { VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PostPush) };
+	VkPipelineLayoutCreateInfo plCreateInfo{
+		VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,  // sType
+		nullptr,                                        // pNext
+		0,                                              // flags
+		uint32_t(layouts.size()),                       // setLayoutCount
+		layouts.data(),                                 // pSetLayouts
+		1,                                              // pushConstantRangeCount
+		&push_constants                                 // pPushConstantRanges
 	};
 
-	VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PostPipelineLayout));
+	VulkanContext::VK(vkCreatePipelineLayout(VulkanContext::GetDevice(), &plCreateInfo, nullptr, &m_PostPipelineLayout));
 }
 
 void Renderer::CreatePostPipeline()
@@ -331,20 +344,16 @@ void Renderer::CreateComputeAOPipeline()
 		set5_RayTracingLayout,
 	};
 
-	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		.setLayoutCount = uint32_t(layouts.size()),
-		.pSetLayouts = layouts.data(),
-		.pushConstantRangeCount = 0,
-		.pPushConstantRanges = nullptr,
-	};
-
 	VkPushConstantRange push_constants = { VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(AOPush) };
-	VkPipelineLayoutCreateInfo plCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-	plCreateInfo.setLayoutCount = uint32_t(layouts.size());
-	plCreateInfo.pSetLayouts = layouts.data();
-	plCreateInfo.pushConstantRangeCount = 1;
-	plCreateInfo.pPushConstantRanges = &push_constants;
+	VkPipelineLayoutCreateInfo plCreateInfo{
+		VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,  // sType
+		nullptr,                                        // pNext
+		0,                                              // flags
+		uint32_t(layouts.size()),                       // setLayoutCount
+		layouts.data(),                                 // pSetLayouts
+		1,                                              // pushConstantRangeCount
+		&push_constants                                 // pPushConstantRanges
+	};
 
 	vkCreatePipelineLayout(VulkanContext::GetDevice(), &plCreateInfo, nullptr, &m_RaytracedAOComputePipelineLayout);
 
@@ -656,7 +665,10 @@ void Renderer::Rebuild()
 
 	s_UIPipeline->Rebuild();
 	if (s_RaytracedAOImage.get() != nullptr && createdDescriptors)
-		s_UIPipeline->SetupDebugViewport(s_RaytracedAOImage.get());
+	{
+		s_UIPipeline->AppendDebugImage(s_RaytracedAOImage.get(), "Ray Traced AO");
+		s_UIPipeline->AppendDebugImage(s_RaytracedReflectionsImage.get(), "Ray Traced Reflection");
+	}
 
 	m_AOIsDirty = true;
 }
@@ -693,7 +705,8 @@ void Renderer::Create()
 
 #ifdef _NE_USE_RTX
 	s_RaytracingPipeline->CreatePipeline();
-	s_UIPipeline->SetupDebugViewport(s_RaytracedAOImage.get());
+	s_UIPipeline->AppendDebugImage(s_RaytracedAOImage.get(), "Ray Traced AO");
+	s_UIPipeline->AppendDebugImage(s_RaytracedReflectionsImage.get(), "Ray Traced Reflection");
 #endif
 }
 
@@ -1318,6 +1331,9 @@ void Renderer::RunPost(const CommandBuffer& commandBuffer)
 		0, nullptr //dynamic offsets count, ptr
 	);
 
+	// Sending the push constant information
+	vkCmdPushConstants(commandBuffer, m_PostPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PostPush), &m_PostPush);
+
 	// draw full screen quad
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
@@ -1367,6 +1383,7 @@ void Renderer::CreateFrameBuffers()
 				false
 			);
 
+			// no sampler
 			workspaces[i].GBufferColors->Load(nullptr, false);
 		}
 
@@ -1380,6 +1397,7 @@ void Renderer::CreateFrameBuffers()
 				false
 			);
 
+			// no sampler
 			workspaces[i].GBufferNormals->Load(nullptr, false);
 		}
 

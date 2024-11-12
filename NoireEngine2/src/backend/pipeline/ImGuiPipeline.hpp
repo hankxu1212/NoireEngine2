@@ -27,7 +27,7 @@ public:
 
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
-	void SetupDebugViewport(Image2D* image);
+	void AppendDebugImage(Image* image, const std::string& name);
 
 private:
 	void DestroyFrameBuffers();
@@ -43,6 +43,6 @@ private:
 	std::unique_ptr<Renderpass>				s_Renderpass;
 	std::vector<VkFramebuffer>				m_FrameBuffers;
 
-	VkDescriptorSet							m_DebugImage;
+	std::vector<std::pair<VkDescriptorSet, std::string>> m_DebugImages;
 };
 
