@@ -318,7 +318,9 @@ void Editor::ShowStats()
             if (ImGui::MenuItem("Bottom-left", NULL, location == 2)) location = 2;
             if (ImGui::MenuItem("Bottom-right", NULL, location == 3)) location = 3;
             ImGui::Separator(); // -----------------------------------------------------
-            if (&m_EditorInfo.show_settings && ImGui::MenuItem("Close")) m_EditorInfo.show_settings = false;
+            
+            if (ImGui::MenuItem("Close")) 
+                m_EditorInfo.show_settings = false;
             ImGui::EndPopup();
         }
     }
