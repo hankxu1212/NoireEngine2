@@ -262,7 +262,7 @@ ScratchSizeInfo calculateScratchAlignedSizes(const std::vector<AccelerationStruc
 
     for (auto& buildInfo : buildData)
     {
-        VkDeviceSize alignedSize = alignedVkSize(buildInfo.sizeInfo.buildScratchSize, minAlignment);
+        VkDeviceSize alignedSize = AlignedVkSize(buildInfo.sizeInfo.buildScratchSize, minAlignment);
         // assert(alignedSize == buildInfo.sizeInfo.buildScratchSize);  // Make sure it was already aligned
         maxScratch = std::max(maxScratch, alignedSize);
         totalScratch += alignedSize;
@@ -310,7 +310,7 @@ void BlasBuilder::getScratchAddresses(VkDeviceSize                              
         for (auto& buildInfo : buildData)
         {
             scratchAddresses.push_back(scratchBufferAddress + address);
-            VkDeviceSize alignedSize = alignedVkSize(buildInfo.sizeInfo.buildScratchSize, minAlignment);
+            VkDeviceSize alignedSize = AlignedVkSize(buildInfo.sizeInfo.buildScratchSize, minAlignment);
             address += alignedSize;
         }
     }

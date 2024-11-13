@@ -201,18 +201,16 @@ void Mesh::CreateVertexBuffer(std::vector<Vertex>& vertices)
 		0;
 #endif
 
-	VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };
-	flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
-
-	m_VertexBuffer = Buffer(
+	m_VertexBuffer.buffer = Buffer(
 		vertices.size() * 48,
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | accelerationStructureFlags,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		Buffer::Unmapped,
-		&flags_info
+		Buffer::Unmapped
 	);
 
-	Buffer::TransferToBufferIdle(vertices.data(), vertices.size() * 48, m_VertexBuffer.getBuffer());
+	Buffer::TransferToBufferIdle(vertices.data(), vertices.size() * 48, m_VertexBuffer.buffer.getBuffer());
+
+	m_VertexBuffer.deviceAddress = m_VertexBuffer.buffer.GetBufferDeviceAddress();
 }
 
 void Mesh::CreateIndexBuffer(std::vector<uint32_t>& indices)
@@ -226,18 +224,16 @@ void Mesh::CreateIndexBuffer(std::vector<uint32_t>& indices)
 		0;
 #endif
 
-	VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };
-	flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
-
-	m_IndexBuffer = Buffer(
+	m_IndexBuffer.buffer = Buffer(
 		indices.size() * 4,
 		VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | accelerationStructureFlags,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		Buffer::Unmapped,
-		&flags_info
+		Buffer::Unmapped
 	);
 
-	Buffer::TransferToBufferIdle(indices.data(), indices.size() * 4, m_IndexBuffer.getBuffer());
+	Buffer::TransferToBufferIdle(indices.data(), indices.size() * 4, m_IndexBuffer.buffer.getBuffer());
+
+	m_IndexBuffer.deviceAddress = m_IndexBuffer.buffer.GetBufferDeviceAddress();
 }
 
 void Mesh::Update(const glm::mat4& model)
@@ -245,20 +241,13 @@ void Mesh::Update(const glm::mat4& model)
 	m_AABB.Update(model);
 }
 
-void Mesh::UpdateDeviceAddress()
-{
-	// get device address
-	m_VertexBufferDeviceAddress = RaytracingPipeline::GetBufferDeviceAddress(m_VertexBuffer.getBuffer());
-	m_IndexBufferDeviceAddress = RaytracingPipeline::GetBufferDeviceAddress(m_IndexBuffer.getBuffer());
-}
-
 void Mesh::Bind(const CommandBuffer& commandBuffer)
 {
-	std::array< VkBuffer, 1 > vertex_buffers{ m_VertexBuffer.getBuffer() };
+	std::array< VkBuffer, 1 > vertex_buffers{ m_VertexBuffer.buffer.getBuffer() };
 	std::array< VkDeviceSize, 1 > offsets{ 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0,1, vertex_buffers.data(), offsets.data());
 
-	vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.getBuffer(), 0, VK_INDEX_TYPE_UINT32);
+	vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.buffer.getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 }
 
 const Node& operator>>(const Node& node, Mesh& mesh) {

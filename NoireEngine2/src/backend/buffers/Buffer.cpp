@@ -3,9 +3,18 @@
 #include "Buffer.hpp"
 #include "backend/VulkanContext.hpp"
 
-Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map, void* memoryAllocationInfoPNext)
+Buffer::Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map) :
+	m_Size(size)
 {
-	CreateBuffer(size, usage, properties, map, memoryAllocationInfoPNext);
+	if (usage | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+	{
+		VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };
+		flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
+
+		CreateBuffer(usage, properties, map, &flags_info);
+	}
+	else
+		CreateBuffer(usage, properties, map);
 }
 
 void Buffer::Destroy()
@@ -24,24 +33,20 @@ void Buffer::Destroy()
 	m_Size = 0;
 }
 
-void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map, void* memoryAllocationInfoPNext)
+void Buffer::CreateBuffer(VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map, void* memoryAllocationInfoPNext)
 {
-	m_Size = size;
-	auto& logicalDevice = *(VulkanContext::Get()->getLogicalDevice());
-
 	// Create the buffer handle.
 	VkBufferCreateInfo bufferCreateInfo{
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.size = size,
+		.size = m_Size,
 		.usage = usage,
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
 	};
-	VulkanContext::VK(vkCreateBuffer(logicalDevice, &bufferCreateInfo, nullptr, &buffer),
-		"[vulkan] Error: failed to create buffer");
+	VulkanContext::VK(vkCreateBuffer(VulkanContext::GetDevice(), &bufferCreateInfo, nullptr, &buffer));
 
 	// Create the memory backing up the buffer handle.
 	VkMemoryRequirements memoryRequirements;
-	vkGetBufferMemoryRequirements(logicalDevice, buffer, &memoryRequirements);
+	vkGetBufferMemoryRequirements(VulkanContext::GetDevice(), buffer, &memoryRequirements);
 
 	VkMemoryAllocateInfo memoryAllocateInfo{
 		.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
@@ -49,21 +54,22 @@ void Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryP
 		.allocationSize = memoryRequirements.size,
 		.memoryTypeIndex = VulkanContext::FindMemoryType(memoryRequirements.memoryTypeBits, properties),
 	};
-	VulkanContext::VK(vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &bufferMemory),
-		"[vulkan] Error: cannot allocate buffer memory");
+	VulkanContext::VK(vkAllocateMemory(VulkanContext::GetDevice(), &memoryAllocateInfo, nullptr, &bufferMemory));
 
 	if (map == Mapped)
 		MapMemory(&mapped);
 
 	// Attach the memory to the buffer object.
-	VulkanContext::VK(vkBindBufferMemory(logicalDevice, buffer, bufferMemory, 0), "[vulkan] Error: cannot bind buffer memory");
+	VulkanContext::VK(vkBindBufferMemory(VulkanContext::GetDevice(), buffer, bufferMemory, 0));
 }
 
-void Buffer::MapMemory(void **data) const {
-	VulkanContext::VK(vkMapMemory(VulkanContext::GetDevice(), bufferMemory, 0, m_Size, 0, data), "[vulkan] Error: failed to map buffer memory");
+void Buffer::MapMemory(void **data) const 
+{
+	VulkanContext::VK(vkMapMemory(VulkanContext::GetDevice(), bufferMemory, 0, m_Size, 0, data));
 }
 
-void Buffer::UnmapMemory() {
+void Buffer::UnmapMemory() 
+{
 	vkUnmapMemory(VulkanContext::GetDevice(), bufferMemory);
 	mapped = nullptr;
 }
@@ -103,6 +109,12 @@ void Buffer::TransferToBufferIdle(void* data, size_t size, VkBuffer dstBuffer)
 	transferSource.Destroy();
 }
 
+VkDeviceAddress Buffer::GetBufferDeviceAddress() const
+{
+	VkBufferDeviceAddressInfo bufferInfo{ VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, nullptr, buffer };
+	return vkGetBufferDeviceAddress(VulkanContext::GetDevice(), &bufferInfo);
+}
+
 VkDescriptorBufferInfo Buffer::GetDescriptorInfo()
 {
 	return VkDescriptorBufferInfo {
@@ -112,17 +124,27 @@ VkDescriptorBufferInfo Buffer::GetDescriptorInfo()
 	};
 }
 
-VkBufferMemoryBarrier Buffer::CreateBufferMemoryBarrier(VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, uint32_t offset)
+void Buffer::InsertBufferMemoryBarrier(const CommandBuffer& commandBuffer, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage)
 {
-	return {
+	VkBufferMemoryBarrier memoryBarrier = {
 		.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
 		.srcAccessMask = srcAccessMask,
 		.dstAccessMask = dstAccessMask,
 		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 		.buffer = buffer,
-		.offset = offset,
+		.offset = 0,
 		.size = m_Size
 	};
+
+	vkCmdPipelineBarrier(
+		commandBuffer,
+		srcStage,
+		dstStage,
+		0,
+		0, nullptr,
+		1, &memoryBarrier,
+		0, nullptr
+	);
 }
 

@@ -25,6 +25,8 @@ public:
 
 	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
 
+	void OnUIRender();
+
 	inline VkAccelerationStructureKHR GetTLAS() const { return m_RTBuilder.getAccelerationStructure(); }
 
 public: // ray tracing helpers
@@ -56,26 +58,18 @@ public: // ray tracing helpers
 
 	static void DeleteAccelerationStructure(AccelerationStructure& accelerationStructure);
 
-	static uint64_t GetBufferDeviceAddress(VkBuffer buffer);
-
-	VkStridedDeviceAddressRegionKHR GetSbtEntryStridedDeviceAddressRegion(VkBuffer buffer, uint32_t handleCount);
-
 private:
-	friend class ImGuiPipeline;
-
-	VkPipeline			m_Pipeline = VK_NULL_HANDLE;
-	VkPipelineLayout	m_PipelineLayout = VK_NULL_HANDLE;
+	VkPipeline m_Pipeline = VK_NULL_HANDLE;
+	VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 
 	std::vector<VkRayTracingShaderGroupCreateInfoKHR> m_RTShaderGroups;
 
 	struct PushConstantRay
 	{
-		glm::vec4 clearColor;
-		uint32_t rayDepth;
-	};
-	PushConstantRay m_pcRay{};
+		int rayDepth = 5;
+	}m_ReflectionPush;
 
-	RaytracingBuilderKHR					m_RTBuilder;
+	RaytracingBuilderKHR m_RTBuilder;
 
 	// SBT
 	Buffer m_rtSBTBuffer;

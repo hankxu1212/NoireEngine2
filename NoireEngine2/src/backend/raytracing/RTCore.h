@@ -6,7 +6,7 @@
 #include "glm/glm.hpp"
 
 // Convert a Mat4x4 to the matrix required by acceleration structures
-inline VkTransformMatrixKHR toTransformMatrixKHR(glm::mat4 matrix)
+inline VkTransformMatrixKHR ToTransformMatrixKHR(glm::mat4 matrix)
 {
 	// VkTransformMatrixKHR uses a row-major memory layout, while glm::mat4
 	// uses a column-major memory layout. We transpose the matrix so we can
@@ -27,17 +27,17 @@ inline void AccelerationStructureBarrier(VkCommandBuffer cmd, VkAccessFlags src,
 		VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, 0, 1, &barrier, 0, nullptr, 0, nullptr);
 }
 
-inline uint32_t alignedSize(uint32_t value, uint32_t alignment)
+inline uint32_t AlignedSize(uint32_t value, uint32_t alignment)
 {
 	return (value + alignment - 1) & ~(alignment - 1);
 }
 
-inline size_t alignedSize(size_t value, size_t alignment)
+inline size_t AlignedSize(size_t value, size_t alignment)
 {
 	return (value + alignment - 1) & ~(alignment - 1);
 }
 
-inline VkDeviceSize alignedVkSize(VkDeviceSize value, VkDeviceSize alignment)
+inline VkDeviceSize AlignedVkSize(VkDeviceSize value, VkDeviceSize alignment)
 {
 	return (value + alignment - 1) & ~(alignment - 1);
 }
@@ -95,13 +95,4 @@ struct AccelerationStructureBuildData
 	inline bool hasCompactFlag() const { return buildInfo.flags & VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR; }
 };
 
-// Holds information for a ray tracing scratch buffer that is used as a temporary storage
-struct ScratchBuffer
-{
-	Buffer buffer;
-	uint64_t deviceAddress = 0;
-
-	void Destroy() {
-		buffer.Destroy();
-	}
-};
+using ScratchBuffer = AddressedBuffer;

@@ -105,7 +105,7 @@ private:
 	std::vector<std::vector<IndirectBatch>> m_IndirectBatches;
 
 	// dispatch ray queries from compute shader
-	void RunAOCompute(const CommandBuffer& commandBuffer);
+	void RunAOCompute(const Scene* scene, const CommandBuffer& commandBuffer);
 
 	// run ray tracing pipeline for reflection
 	void RunRTXReflection(const Scene* scene, const CommandBuffer& commandBuffer);

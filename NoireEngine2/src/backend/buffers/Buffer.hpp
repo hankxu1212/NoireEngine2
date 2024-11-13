@@ -18,16 +18,9 @@ public:
 	// destroys the buffer, and waits on a queue before doing so
 	void Destroy();
 
-	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map=Unmapped, void* memoryAllocationInfoPNext = nullptr);
+	Buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map=Unmapped);
 
-	/**
-	  * Creates a new buffer with optional data.
-	  * @param size Size of the buffer in bytes.
-	  * @param usage Usage flag bitmask for the buffer (i.e. index, vertex, uniform buffer).
-	  * @param properties Memory properties for this buffer (i.e. device local, host visible, coherent).
-	  * @param data Pointer to the data that should be copied to the buffer after creation (optional, if not set, no data is copied over).
-	*/
-	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map = Unmapped, void* memoryAllocationInfoPNext=nullptr);
+	void CreateBuffer(VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, MapFlag map = Unmapped, void* memoryAllocationInfoPNext=nullptr);
 
 	void MapMemory(void **data) const;
 
@@ -43,9 +36,11 @@ public:
 	// This is quite slow cuz it waits idle on the graphics queue. Should NOT be called in a loop
 	static void TransferToBufferIdle(void* data, size_t size, VkBuffer dstBuffer);
 
+	VkDeviceAddress GetBufferDeviceAddress() const;
+
 	VkDescriptorBufferInfo GetDescriptorInfo();
 
-	VkBufferMemoryBarrier CreateBufferMemoryBarrier(VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, uint32_t offset=0);
+	void InsertBufferMemoryBarrier(const CommandBuffer& commandBuffer, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage);
 
 public:
 	VkDeviceSize				getSize() const { return m_Size; }
@@ -58,4 +53,14 @@ protected:
 	VkDeviceSize			m_Size = 0;
 	VkDeviceMemory			bufferMemory = VK_NULL_HANDLE;
 	void*					mapped = nullptr;
+};
+
+struct AddressedBuffer
+{
+	Buffer buffer;
+	size_t deviceAddress = 0;
+
+	void Destroy() {
+		buffer.Destroy();
+	}
 };

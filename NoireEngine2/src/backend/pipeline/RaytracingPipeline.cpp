@@ -31,7 +31,6 @@ RaytracingPipeline::RaytracingPipeline()
 	vkGetPhysicalDeviceFeatures2(*VulkanContext::Get()->getPhysicalDevice(), &deviceFeatures2);
 
 	// Get the function pointers required for ray tracing
-	vkGetBufferDeviceAddressKHR = reinterpret_cast<PFN_vkGetBufferDeviceAddressKHR>(vkGetDeviceProcAddr(device, "vkGetBufferDeviceAddressKHR"));
 	vkCmdBuildAccelerationStructuresKHR = reinterpret_cast<PFN_vkCmdBuildAccelerationStructuresKHR>(vkGetDeviceProcAddr(device, "vkCmdBuildAccelerationStructuresKHR"));
 	vkBuildAccelerationStructuresKHR = reinterpret_cast<PFN_vkBuildAccelerationStructuresKHR>(vkGetDeviceProcAddr(device, "vkBuildAccelerationStructuresKHR"));
 	vkCreateAccelerationStructureKHR = reinterpret_cast<PFN_vkCreateAccelerationStructureKHR>(vkGetDeviceProcAddr(device, "vkCreateAccelerationStructureKHR"));
@@ -44,7 +43,6 @@ RaytracingPipeline::RaytracingPipeline()
 	vkCmdWriteAccelerationStructuresPropertiesKHR = reinterpret_cast<PFN_vkCmdWriteAccelerationStructuresPropertiesKHR>(vkGetDeviceProcAddr(device, "vkCmdWriteAccelerationStructuresPropertiesKHR"));
 	vkCmdCopyAccelerationStructureKHR = reinterpret_cast<PFN_vkCmdCopyAccelerationStructureKHR>(vkGetDeviceProcAddr(device, "vkCmdCopyAccelerationStructureKHR"));
 
-	assert(vkGetBufferDeviceAddressKHR != nullptr);
 	assert(vkCreateAccelerationStructureKHR != nullptr);
 	assert(vkDestroyAccelerationStructureKHR != nullptr);
 	assert(vkGetAccelerationStructureBuildSizesKHR != nullptr);
@@ -109,13 +107,9 @@ void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& command
 		0, nullptr //dynamic offsets count, ptr
 	);
 
-	// Initializing push constant values
-	m_pcRay.clearColor = glm::vec4(0,0,0,1);
-	m_pcRay.rayDepth = 5;
-
 	vkCmdPushConstants(commandBuffer, m_PipelineLayout,
 		VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_MISS_BIT_KHR,
-		0, sizeof(PushConstantRay), &m_pcRay);
+		0, sizeof(PushConstantRay), &m_ReflectionPush);
 	
 	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
 	VkExtent2D extent = swapchain->getExtent();
@@ -125,43 +119,45 @@ void RaytracingPipeline::Render(const Scene* scene, const CommandBuffer& command
 
 void RaytracingPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
 {
+	if (scene->isSceneDirty)
+		CreateTopLevelAccelerationStructure(true);
+}
+
+void RaytracingPipeline::OnUIRender()
+{
+	ImGui::SeparatorText("Ray Traced Reflections"); // ---------------------------------
+	ImGui::Columns(2);
+
+	// Modify Maximum Samples
+	ImGui::Text("Ray Depth");
+	ImGui::NextColumn();
+	ImGui::DragInt("##RTX_REFLECTIONS_MAX_DEPTH", &m_ReflectionPush.rayDepth, 1, 1, 10);
+	ImGui::Columns(1);
 }
 
 ScratchBuffer RaytracingPipeline::CreateScratchBuffer(VkDeviceSize size)
 {
 	ScratchBuffer scratchBuffer;
 
-	VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };
-	flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
-
 	scratchBuffer.buffer = Buffer(
 		size, 
 		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-		Buffer::Unmapped, 
-		&flags_info
+		Buffer::Unmapped
 	);
 
-	VkBufferDeviceAddressInfoKHR bufferDeviceAddresInfo{};
-	bufferDeviceAddresInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-	bufferDeviceAddresInfo.buffer = scratchBuffer.buffer.getBuffer();
-	scratchBuffer.deviceAddress = vkGetBufferDeviceAddressKHR(VulkanContext::GetDevice(), &bufferDeviceAddresInfo);
+	scratchBuffer.deviceAddress = scratchBuffer.buffer.GetBufferDeviceAddress();
 
 	return scratchBuffer;
 }
 
 void RaytracingPipeline::CreateAccelerationStructure(AccelerationStructure& accelerationStructure, VkAccelerationStructureTypeKHR type, VkAccelerationStructureBuildSizesInfoKHR buildSizeInfo)
 {
-	VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };
-	flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
-
 	// Allocating the buffer to hold the acceleration structure
 	accelerationStructure.buffer = Buffer(
 		buildSizeInfo.accelerationStructureSize,
 		VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		Buffer::Unmapped,
-		&flags_info
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 	);
 
 	// Acceleration structure
@@ -183,16 +179,12 @@ AccelerationStructure RaytracingPipeline::CreateAccelerationStructure(const VkAc
 {
 	AccelerationStructure accelerationStructure;
 
-	VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };
-	flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
-
 	// Allocating the buffer to hold the acceleration structure
 	accelerationStructure.buffer = Buffer(
 		createInfo.size,
 		VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		Buffer::Unmapped,
-		&flags_info
+		Buffer::Unmapped
 	);
 
 	// Setting the buffer
@@ -215,34 +207,10 @@ void RaytracingPipeline::DeleteAccelerationStructure(AccelerationStructure& acce
 	vkDestroyAccelerationStructureKHR(VulkanContext::GetDevice(), accelerationStructure.handle, nullptr);
 }
 
-uint64_t RaytracingPipeline::GetBufferDeviceAddress(VkBuffer buffer)
-{
-	VkBufferDeviceAddressInfoKHR bufferDeviceAI{};
-	bufferDeviceAI.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-	bufferDeviceAI.buffer = buffer;
-	return vkGetBufferDeviceAddressKHR(VulkanContext::GetDevice(), &bufferDeviceAI);
-}
-
-VkStridedDeviceAddressRegionKHR RaytracingPipeline::GetSbtEntryStridedDeviceAddressRegion(VkBuffer buffer, uint32_t handleCount)
-{
-	const uint32_t handleSizeAligned = alignedSize(rayTracingPipelineProperties.shaderGroupHandleSize, rayTracingPipelineProperties.shaderGroupHandleAlignment);
-	VkStridedDeviceAddressRegionKHR stridedDeviceAddressRegionKHR{};
-	stridedDeviceAddressRegionKHR.deviceAddress = GetBufferDeviceAddress(buffer);
-	stridedDeviceAddressRegionKHR.stride = handleSizeAligned;
-	stridedDeviceAddressRegionKHR.size = handleCount * handleSizeAligned;
-
-	return stridedDeviceAddressRegionKHR;
-}
-
 static RaytracingBuilderKHR::BlasInput MeshToGeometry(Mesh* mesh)
 {
-	VkDeviceOrHostAddressConstKHR vertexBufferDeviceAddress{};
-	VkDeviceOrHostAddressConstKHR indexBufferDeviceAddress{};
-
-	mesh->UpdateDeviceAddress();
-
-	vertexBufferDeviceAddress.deviceAddress = mesh->getVertexBufferAddress();
-	indexBufferDeviceAddress.deviceAddress = mesh->getIndexBufferAddress();
+	VkDeviceOrHostAddressConstKHR vertexBufferDeviceAddress{ mesh->getVertexBufferAddress() };
+	VkDeviceOrHostAddressConstKHR indexBufferDeviceAddress{ mesh->getIndexBufferAddress() };
 
 	uint32_t numTriangles = mesh->getIndexCount() / 3;
 
@@ -296,7 +264,7 @@ void RaytracingPipeline::CreateTopLevelAccelerationStructure(bool update)
 	m_TlasBuildStructs.clear();
 	const auto& allInstances = SceneManager::Get()->getScene()->getObjectInstances();
 
-	uint32_t customIndex = 0;
+	uint32_t instanceIndex = 0;
 
 	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
 	{
@@ -304,15 +272,15 @@ void RaytracingPipeline::CreateTopLevelAccelerationStructure(bool update)
 		for (uint32_t i = 0; i < workflowInstances.size(); i++)
 		{
 			VkAccelerationStructureInstanceKHR rayInst{};
-			rayInst.transform = toTransformMatrixKHR(workflowInstances[i].m_TransformUniform.modelMatrix); // Position of the instance
-			rayInst.instanceCustomIndex = customIndex; // gl_InstanceCustomIndexEXT
+			rayInst.transform = ToTransformMatrixKHR(workflowInstances[i].m_TransformUniform.modelMatrix); // Position of the instance
+			rayInst.instanceCustomIndex = instanceIndex; // gl_InstanceCustomIndexEXT
 			rayInst.accelerationStructureReference = m_RTBuilder.getBlasDeviceAddress(workflowInstances[i].mesh->getID());
 			rayInst.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 			rayInst.mask = 0xFF; //  Only be hit if rayMask & instance.mask != 0
 			rayInst.instanceShaderBindingTableRecordOffset = 0; // We will use the same hit group for all objects
 
 			m_TlasBuildStructs.emplace_back(rayInst);
-			customIndex++;
+			instanceIndex++;
 		}
 	}
 	m_RTBuilder.BuildTlas(m_TlasBuildStructs, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR, update);
@@ -410,16 +378,16 @@ void RaytracingPipeline::CreateShaderBindingTables()
 	uint32_t handleCount = /*raygen: always 1*/1 + missCount + hitCount;
 	uint32_t handleSize = rayTracingPipelineProperties.shaderGroupHandleSize;
 
-	const uint32_t handleSizeAligned = alignedSize(rayTracingPipelineProperties.shaderGroupHandleSize, rayTracingPipelineProperties.shaderGroupHandleAlignment);
+	const uint32_t handleSizeAligned = AlignedSize(rayTracingPipelineProperties.shaderGroupHandleSize, rayTracingPipelineProperties.shaderGroupHandleAlignment);
 
-	m_rgenRegion.stride = alignedSize(handleSizeAligned, rayTracingPipelineProperties.shaderGroupBaseAlignment);
+	m_rgenRegion.stride = AlignedSize(handleSizeAligned, rayTracingPipelineProperties.shaderGroupBaseAlignment);
 	m_rgenRegion.size = m_rgenRegion.stride;  // The size member of pRayGenShaderBindingTable must be equal to its stride member
 
 	m_missRegion.stride = handleSizeAligned;
-	m_missRegion.size = alignedSize(missCount * handleSizeAligned, rayTracingPipelineProperties.shaderGroupBaseAlignment);
+	m_missRegion.size = AlignedSize(missCount * handleSizeAligned, rayTracingPipelineProperties.shaderGroupBaseAlignment);
 
 	m_hitRegion.stride = handleSizeAligned;
-	m_hitRegion.size = alignedSize(hitCount * handleSizeAligned, rayTracingPipelineProperties.shaderGroupBaseAlignment);
+	m_hitRegion.size = AlignedSize(hitCount * handleSizeAligned, rayTracingPipelineProperties.shaderGroupBaseAlignment);
 
 	// Get the shader group handles
 	uint32_t dataSize = handleCount * handleSize;
@@ -427,22 +395,17 @@ void RaytracingPipeline::CreateShaderBindingTables()
 	VulkanContext::VK(vkGetRayTracingShaderGroupHandlesKHR(VulkanContext::GetDevice(), m_Pipeline, 0, handleCount, dataSize, handles.data()));
 
 	// Allocate a buffer for storing the SBT.
-	VkMemoryAllocateFlagsInfoKHR flags_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR };
-	flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
-
 	VkDeviceSize sbtSize = m_rgenRegion.size + m_missRegion.size + m_hitRegion.size + m_callRegion.size;
 	m_rtSBTBuffer = Buffer(
 		sbtSize,
 		VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
 		| VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		Buffer::Mapped,
-		&flags_info
+		Buffer::Mapped
 	);
 
 	// Find the SBT addresses of each group
-	VkBufferDeviceAddressInfo info{ VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, nullptr, m_rtSBTBuffer.getBuffer() };
-	VkDeviceAddress sbtAddress = vkGetBufferDeviceAddress(VulkanContext::GetDevice(), &info);
+	VkDeviceAddress sbtAddress = m_rtSBTBuffer.GetBufferDeviceAddress();
 	m_rgenRegion.deviceAddress = sbtAddress;
 	m_missRegion.deviceAddress = sbtAddress + m_rgenRegion.size;
 	m_hitRegion.deviceAddress = sbtAddress + m_rgenRegion.size + m_missRegion.size;

@@ -14,7 +14,7 @@ public:
 		const std::filesystem::path& filename, 
 		VkFormat format = VK_FORMAT_R8G8B8A8_SRGB,
 		VkFilter filter = VK_FILTER_LINEAR,
-		VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT, 
+		VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
 		bool anisotropic = true, bool mipmap = true, bool load=true
 	);
 

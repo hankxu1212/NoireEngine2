@@ -49,6 +49,10 @@ private:
     std::vector<AccelerationStructure> m_blas;  // Bottom-level acceleration structure
     AccelerationStructure              m_tlas;  // Top-level acceleration structure
 
-    // Setup
     bool hasFlag(VkFlags item, VkFlags flag) { return (item & flag) == flag; }
+
+    // Create a buffer holding the actual instance data (matrices++) for use by the AS builder
+    AddressedBuffer m_InstanceBuffer;
+    Buffer m_InstanceStagingBuffer;
+    ScratchBuffer m_TlasScratchBuffer;
 };

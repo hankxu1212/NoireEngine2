@@ -166,14 +166,14 @@ bool showPostProcessing = true;
 
 void Renderer::OnUIRender()
 {
-	if (ImGui::CollapsingHeader("Renderer Settings", &showMenu))
+	ImGui::Checkbox("Use Gizmos", &UseGizmos);
+	ImGui::Separator(); // -----------------------------------------------------
+
+	ImGui::Checkbox("Draw Skybox", &DrawSkybox);
+	ImGui::Separator(); // -----------------------------------------------------
+
+	if (ImGui::CollapsingHeader("Ray Tracing Settings", &showMenu))
 	{
-		ImGui::Checkbox("Use Gizmos", &UseGizmos);
-		ImGui::Separator(); // -----------------------------------------------------
-
-		ImGui::Checkbox("Draw Skybox", &DrawSkybox);
-		ImGui::Separator(); // -----------------------------------------------------
-
 		// Ray-Traced Ambient Occlusion settings
 		ImGui::SeparatorText("Ray Traced Ambient Occlusion"); // ---------------------------------
 		ImGui::Columns(2);
@@ -222,6 +222,8 @@ void Renderer::OnUIRender()
 			m_AOIsDirty = true;
 		}
 		ImGui::Columns(1);
+
+		s_RaytracingPipeline->OnUIRender();
 	}
 
 	if (ImGui::CollapsingHeader("Renderer Statistics", &showMenu))
@@ -769,6 +771,11 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		
 		if (DrawSkybox)
 			s_SkyboxPipeline->Prepare(scene, commandBuffer);
+
+#ifdef _NE_USE_RTX
+		// updates acceleration structures as needed
+		s_RaytracingPipeline->Prepare(scene, commandBuffer);
+#endif
 	}
 	
 	//memory barrier to make sure copies complete before rendering happens:
@@ -799,7 +806,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		s_BloomPipeline->Render(scene, commandBuffer);
 
 		// ray traced AO
-		RunAOCompute(commandBuffer);
+		RunAOCompute(scene, commandBuffer);
 
 		// compose together everything and get ready to present
 		s_CompositionPass->Begin(commandBuffer, m_CompositionFrameBuffers[CURR_FRAME]);
@@ -1275,9 +1282,9 @@ void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 	}
 }
 
-void Renderer::RunAOCompute(const CommandBuffer& commandBuffer)
+void Renderer::RunAOCompute(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	m_AOIsDirty |= VIEW_CAM->wasDirtyThisFrame;
+	m_AOIsDirty |= scene->isSceneDirty;
 
 	if (m_AOIsDirty) 
 	{
@@ -1459,7 +1466,7 @@ void Renderer::CreateFrameBuffers()
 				VK_IMAGE_LAYOUT_GENERAL,
 				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT 
 				| VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-				true // for bloom
+				true
  			);
 
 			// create no image sampler. Instead, create it independently

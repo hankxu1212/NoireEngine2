@@ -10,6 +10,5 @@ struct hitPayload
 
 layout(push_constant) uniform constants 
 { 
-    vec4 clearColor;
     uint rayDepth;
 } rayConstants;

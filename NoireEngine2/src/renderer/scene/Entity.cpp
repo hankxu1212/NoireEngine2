@@ -26,9 +26,6 @@ void Entity::Update()
 	{
 		s_Transform->Update();
 		m_Scene->isSceneDirty |= s_Transform->wasDirtyThisFrame;
-
-		if (s_Transform->wasDirtyThisFrame)
-			NE_INFO(name());
 	}
 
 	// update components
