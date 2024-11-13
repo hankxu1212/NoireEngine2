@@ -414,7 +414,7 @@ void Editor::ShowGizmos()
         ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, content.x, content.y);
 
         // Entity transform
-        glm::mat4 transformMat = selectedEntity->transform()->LocalDirty();
+        glm::mat4 transformMat = selectedEntity->transform()->GetLocal();
 
         // Snapping
         bool snap = NativeInput::GetKeyPressed(Key::LeftControl);

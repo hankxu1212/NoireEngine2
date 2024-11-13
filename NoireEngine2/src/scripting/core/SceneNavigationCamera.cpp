@@ -52,7 +52,6 @@ namespace Core {
 				glm::vec3 offset = anchoredMoveSensitivity * (mouseDelta.x * transform->Left() + mouseDelta.y * transform->Up());
 				anchorPoint += offset;
 				transform->Translate(offset);
-				nativeCamera->isDirty = true;
 				return;
 			}
 
@@ -62,7 +61,6 @@ namespace Core {
 				transform->RotateAround(anchorPoint + anchorOffset, mouseDelta.y * anchoredRotationSensitivity, transform->Left());
 				transform->RotateAround(anchorPoint + anchorOffset, mouseDelta.x * anchoredRotationSensitivity, Vec3::Back);
 				anchorDir = normalize(anchorPoint - transform->position());
-				nativeCamera->isDirty = true;
 				return;
 			}
 		}
@@ -84,7 +82,6 @@ namespace Core {
 					radius = minimumRadius;
 
 				transform->SetPosition(anchorPoint - radius * anchorDir + offset);
-				nativeCamera->isDirty = true;
 				return;
 			}
 		}
@@ -127,7 +124,6 @@ namespace Core {
 				radius = minimumRadius;
 			transform->SetPosition(anchorPoint - radius * anchorDir);
 		}
-		nativeCamera->isDirty = true;
 		return false;
 	}
 }

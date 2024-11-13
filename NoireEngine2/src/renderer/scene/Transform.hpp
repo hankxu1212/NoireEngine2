@@ -8,6 +8,8 @@ public:
     Transform() = default;
     Transform(const Transform& other);
 
+    void Update();
+
     Transform(glm::vec3 t);
     Transform(glm::vec3 t, glm::vec3 euler);
     Transform(glm::vec3 t, glm::vec3 euler, glm::vec3 s);
@@ -38,7 +40,7 @@ public:
 public:
     // the local transformation matrix
     glm::mat4 Local() const;
-    glm::mat4 LocalDirty();
+    const glm::mat4& GetLocal() const;
 
     // the transformation matrix in worldspace, and local to world operations
     glm::mat4 World() const;
@@ -93,6 +95,7 @@ public:
     }
 
     bool isDirty = true;
+    bool wasDirtyThisFrame = false;
 
 private:
     // attach a new transform as parent

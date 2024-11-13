@@ -7,30 +7,51 @@
 
 Transform::Transform(const Transform& other) : 
     m_Position(other.m_Position), m_Rotation(other.m_Rotation), m_Scale(other.m_Scale), m_Parent(other.m_Parent) {
+    localMat = Local();
 }
 
 Transform::Transform(glm::vec3 t) : 
     m_Position(t) {
+    localMat = Local();
 }
 
 Transform::Transform(glm::vec3 t, glm::vec3 euler) :
     m_Position(t), m_Rotation(euler)
 {
+    localMat = Local();
 }
 
 Transform::Transform(glm::vec3 t, glm::vec3 euler, glm::vec3 s) : 
     m_Position(t), m_Rotation(euler), m_Scale(s) {
+    localMat = Local();
 }
 
 Transform::Transform(glm::vec3 t, glm::quat q, glm::vec3 s) : 
     m_Position(t), m_Rotation(q), m_Scale(s) {
+    localMat = Local();
 }
 
 Transform::Transform(glm::vec3 t, glm::quat q) :
     m_Position(t), m_Rotation(q) {
+    localMat = Local();
 }
 
 #pragma endregion
+
+void Transform::Update()
+{
+    wasDirtyThisFrame = false;
+
+    if (m_Parent)
+        isDirty |= m_Parent->wasDirtyThisFrame;
+
+    if (isDirty)
+    {
+        localMat = Local();
+        wasDirtyThisFrame = true;
+        isDirty = false;
+    }
+}
 
 #pragma region Setters
 
@@ -78,12 +99,8 @@ glm::mat4 Transform::Local() const {
     return glm::translate(Mat4::Identity, m_Position) * glm::mat4_cast(m_Rotation) * glm::scale(Mat4::Identity, m_Scale);
 }
 
-glm::mat4 Transform::LocalDirty()
+const glm::mat4& Transform::GetLocal() const
 {
-    if (isDirty) {
-        localMat = Local();
-        isDirty = false;
-    }
     return localMat;
 }
 
@@ -92,7 +109,7 @@ glm::mat4 Transform::World() const {
 }
 
 glm::mat4 Transform::WorldDirty() {
-    return m_Parent ? m_Parent->WorldDirty() * LocalDirty() : LocalDirty();
+    return m_Parent ? m_Parent->WorldDirty() * GetLocal() : GetLocal();
 }
 
 glm::vec3 Transform::position() const
@@ -178,6 +195,7 @@ glm::quat Transform::Rotation(const float& angle, const glm::vec3& axis, bool us
 void Transform::Rotate(const float& angle, const glm::vec3& axis, bool useRadians)
 {
     m_Rotation = Rotation(angle, axis, useRadians) * m_Rotation;
+    isDirty = true;
 }
 
 void Transform::RotateAround(const glm::vec3& point, const float& angle, const glm::vec3& axis)
@@ -189,20 +207,19 @@ void Transform::RotateAround(const glm::vec3& point, const float& angle, const g
 {
     m_Position = rot * (m_Position - point) + point;
     m_Rotation = rot * m_Rotation;
+    isDirty = true;
 }
 
 void Transform::Translate(const glm::vec3& translation, bool useWorldspace)
 {
     m_Position += useWorldspace ? rotation() * translation : translation;
-}
-
-glm::vec3 lerp(glm::vec3& x, const glm::vec3& y, float t) {
-    return x * (1.f - t) + y * t;
+    isDirty = true;
 }
 
 void Transform::LerpTo(const glm::vec3& targetPosition, float t)
 {
-    m_Position = lerp(m_Position, targetPosition, t);
+    m_Position = glm::mix(m_Position, targetPosition, t);
+    isDirty = true;
 }
 
 void Transform::AttachParent(Transform& m_ParentTransform)

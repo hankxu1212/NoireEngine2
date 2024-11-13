@@ -6,7 +6,7 @@
 class TransformMatrixStack
 {
 public:
-	void Multiply(glm::mat4&& mat);
+	void Multiply(const glm::mat4& mat);
 	void Push();
 	void Pop();
 	const glm::mat4& Peek() const;

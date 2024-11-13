@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-void TransformMatrixStack::Multiply(glm::mat4&& mat)
+void TransformMatrixStack::Multiply(const glm::mat4& mat)
 {
 	currentMatrix *= mat; // does right matrix multiplication
 }

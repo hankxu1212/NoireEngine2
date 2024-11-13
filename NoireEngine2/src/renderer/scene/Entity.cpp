@@ -22,8 +22,14 @@ void Entity::SetParent(Entity* newParent)
 
 void Entity::Update()
 {
-	if (s_Transform && s_Transform->parent() != nullptr && s_Transform->parent()->isDirty)
-		s_Transform->isDirty = true;
+	if (s_Transform) 
+	{
+		s_Transform->Update();
+		m_Scene->isSceneDirty |= s_Transform->wasDirtyThisFrame;
+
+		if (s_Transform->wasDirtyThisFrame)
+			NE_INFO(name());
+	}
 
 	// update components
 	for (auto& component : m_Components)
@@ -42,7 +48,7 @@ void Entity::RenderPass(TransformMatrixStack& matrixStack)
 {
 	matrixStack.Push();
 	{
-		matrixStack.Multiply(std::move(s_Transform->LocalDirty()));
+		matrixStack.Multiply(s_Transform->GetLocal());
 
 		// render self
 		const glm::mat4& model = matrixStack.Peek();
@@ -64,7 +70,7 @@ void Entity::PrepareAcceleration(TransformMatrixStack& matrixStack)
 {
 	matrixStack.Push();
 	{
-		matrixStack.Multiply(std::move(s_Transform->LocalDirty()));
+		matrixStack.Multiply(std::move(s_Transform->GetLocal()));
 
 		// render self
 		const glm::mat4& model = matrixStack.Peek();

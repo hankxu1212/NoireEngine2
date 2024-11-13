@@ -30,6 +30,8 @@ Camera::Camera(Type type_, bool orthographic_, float np, float fp, float fov, fl
 
 void Camera::Update(const Transform& t, bool updateFrustum)
 {
+	isDirty |= t.wasDirtyThisFrame;
+
 	if (!isDirty) {
 		wasDirtyThisFrame = false;
 		return;

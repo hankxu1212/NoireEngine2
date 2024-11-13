@@ -45,6 +45,8 @@ void Scene::Update()
 {
 	sceneCamDirty = true;
 
+	isSceneDirty = false;
+
 	// update entities and components
 	Entity::root().Update();
 

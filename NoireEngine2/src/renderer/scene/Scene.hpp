@@ -113,6 +113,8 @@ public:
 
 	void AddSkybox(const std::string& path, SkyboxType type = SkyboxType::HDR, bool isDefault=false);
 
+	bool isSceneDirty = false;
+
 public: // event functions. Do not create function definitions!
 	template<typename T>
 	void OnComponentAdded(Entity&, T&);
