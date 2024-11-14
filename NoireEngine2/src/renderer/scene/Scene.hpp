@@ -79,9 +79,9 @@ public:
 
 	CameraComponent* GetCullingCam() const;
 
-	inline CameraComponent* sceneCam() const;
+	CameraComponent* GetSceneCam() const;
 	
-	inline CameraComponent* debugCam() const;
+	CameraComponent* GetDebugCam() const;
 
 	struct alignas(16) SceneUniform 
 	{

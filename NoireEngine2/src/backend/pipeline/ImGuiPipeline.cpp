@@ -135,8 +135,13 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
 
 void ImGuiPipeline::AppendDebugImage(Image* image, const std::string& name)
 {
+    AppendDebugImage(image->getSampler(), image->getView(), image->getLayout(), name);
+}
+
+void ImGuiPipeline::AppendDebugImage(VkSampler sampler, VkImageView view, VkImageLayout layout, const std::string& name)
+{
     m_DebugImages.push_back(std::make_pair(
-        ImGui_ImplVulkan_AddTexture(image->getSampler(), image->getView(), image->getLayout()), 
+        ImGui_ImplVulkan_AddTexture(sampler, view, layout),
         name));
 }
 

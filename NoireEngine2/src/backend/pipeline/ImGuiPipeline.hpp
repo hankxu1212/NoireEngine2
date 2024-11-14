@@ -29,6 +29,8 @@ public:
 
 	void AppendDebugImage(Image* image, const std::string& name);
 
+	void AppendDebugImage(VkSampler sampler, VkImageView view, VkImageLayout layout, const std::string& name);
+
 private:
 	void DestroyFrameBuffers();
 

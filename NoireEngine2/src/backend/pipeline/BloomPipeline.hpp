@@ -11,28 +11,27 @@
 #include "backend/renderpass/Renderpass.hpp"
 #include "backend/images/Image2D.hpp"
 
-#define BLOOM_MIP_LEVELS 4
+#define BLOOM_MIP_LEVELS 5
 #define BLOOM_N_DOWNSAMPLED_IMGS BLOOM_MIP_LEVELS - 1
 
 class BloomPipeline : public VulkanPipeline
 {
 public:
+    BloomPipeline();
+
 	~BloomPipeline();
 
-	void CreateRenderPass() override;
-
-	void Rebuild() override;
+	void Rebuild(const std::vector<Image2D*>& workspaces);
 
 	void CreatePipeline() override;
 
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
 
-    void InitializeWorkspaces();
-    void SetBloomImage(Image2D* img, uint32_t workspaceID) { workspaces[workspaceID].bloomImage = img; }
-
     void OnUIRender();
 
 private:
+    friend class Renderer;
+
     struct Attachment
     {
         VkImageView imageView;
@@ -80,6 +79,8 @@ private:
     void CreateBloomPipelineLayout();
 
     void CreateDescriptors(Workspace& workspace);
+    void UpdateDescriptors(Workspace& workspace);
+    bool descriptorsCreated = false;
 
     struct BloomPush
     {

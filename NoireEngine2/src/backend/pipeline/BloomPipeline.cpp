@@ -4,6 +4,18 @@
 
 #define HDR_FORMAT VK_FORMAT_R16G16B16A16_SFLOAT
 
+BloomPipeline::BloomPipeline()
+{
+    s_RenderPassDown = std::make_unique<Renderpass>();
+    s_RenderPassUp = std::make_unique<Renderpass>();
+    s_RenderPassDown->SetClearValues({
+        {.color = { { 0.0f, 0.0f, 0.0f, 1.0f } } },  // Clear color to black
+    });
+    s_RenderPassUp->SetClearValues({
+        {.color = { { 0.0f, 0.0f, 0.0f, 1.0f } } },  // Clear color to black
+    });
+}
+
 BloomPipeline::~BloomPipeline()
 {
     // Clean up bloom pipelines
@@ -28,40 +40,37 @@ BloomPipeline::~BloomPipeline()
     m_DescriptorAllocator.Cleanup();
 }
 
-void BloomPipeline::CreateRenderPass()
+void BloomPipeline::Rebuild(const std::vector<Image2D*>& emissionImages)
 {
-    s_RenderPassDown = std::make_unique<Renderpass>();
-    s_RenderPassUp = std::make_unique<Renderpass>();
-    s_RenderPassDown->SetClearValues({
-        {.color = { { 0.0f, 0.0f, 0.0f, 1.0f } } },  // Clear color to black
-    });
-    s_RenderPassUp->SetClearValues({
-        {.color = { { 0.0f, 0.0f, 0.0f, 1.0f } } },  // Clear color to black
-    });
+    DestroyWorkspaces();
 
-    for (Workspace& workspace : workspaces)
+    workspaces.resize(VulkanContext::Get()->getFramesInFlight());
+
+    for (int i = 0; i < workspaces.size(); ++i)
     {
+        Workspace& workspace = workspaces[i];
+
+        workspace.bloomImage = emissionImages[i];
+
         CreateImageViews(workspace);
+
         CreateAttachments(workspace);
-        CreateDescriptors(workspace);
+
+        if (descriptorsCreated)
+            UpdateDescriptors(workspace);
+        else
+            CreateDescriptors(workspace);
     }
 
-    CreateRenderPasses();
+    if (!descriptorsCreated)
+        CreateRenderPasses();
 
     for (Workspace& workspace : workspaces)
     {
         CreateFrameBuffers(workspace);
     }
-}
 
-void BloomPipeline::Rebuild()
-{
-    DestroyWorkspaces();
-}
-
-void BloomPipeline::InitializeWorkspaces()
-{
-    workspaces.resize(VulkanContext::Get()->getFramesInFlight());
+    descriptorsCreated = true;
 }
 
 void BloomPipeline::OnUIRender()
@@ -79,8 +88,8 @@ void BloomPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
 {
     Workspace& workspace = workspaces[CURR_FRAME];
 
-    const SwapChain* swapchain = VulkanContext::Get()->getSwapChain();
-    VkExtent2D swapchainExtent = swapchain->getExtent();
+    auto imageSize = workspace.bloomImage->getSize();
+    VkExtent2D imageExtent{ imageSize.x, imageSize.y };
 
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
         m_BloomPipelineLayout,            // VkPipelineLayout layout
@@ -100,7 +109,7 @@ void BloomPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
     int mipLevel = 0;
     for (int index = 0; index < BLOOM_N_DOWNSAMPLED_IMGS; ++index)
     {
-        VkExtent2D extent{ swapchainExtent.width >> (mipLevel + 1), swapchainExtent.height >> (mipLevel + 1) };
+        VkExtent2D extent{ imageExtent.width >> (mipLevel + 1), imageExtent.height >> (mipLevel + 1) };
         s_RenderPassDown->Begin(commandBuffer, workspace.downFB[index], extent);
         
         m_BloomPush.texelSize = glm::vec2(1 / extent.width, 1 / extent.height);
@@ -126,7 +135,7 @@ void BloomPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
 
     for (int index = 0; index < BLOOM_N_DOWNSAMPLED_IMGS; ++index)
     {
-        VkExtent2D extent{ swapchainExtent.width >> (mipLevel - 1), swapchainExtent.height >> (mipLevel - 1) };
+        VkExtent2D extent{ imageExtent.width >> (mipLevel - 1), imageExtent.height >> (mipLevel - 1) };
         s_RenderPassUp->Begin(commandBuffer, workspace.upFB[index], extent);
 
         // texel size not used in upper pass
@@ -288,6 +297,9 @@ void BloomPipeline::DestroyWorkspaces()
                 framebuffer = VK_NULL_HANDLE;
             }
         }
+
+        workspace.downAttachments.clear();
+        workspace.upAttachments.clear();
     }
 }
 
@@ -463,4 +475,24 @@ void BloomPipeline::CreateDescriptors(Workspace& workspace)
             0 /*VkDescriptorSetLayoutCreateFlags*/
 #endif
             , &variableDescriptorInfoAI);
+}
+
+void BloomPipeline::UpdateDescriptors(Workspace& workspace)
+{
+    // grab all texture information
+    std::vector<VkDescriptorImageInfo> hdrMapDescriptors;
+    hdrMapDescriptors.reserve(BLOOM_MIP_LEVELS);
+    for (int mipLevel = 0; mipLevel < BLOOM_MIP_LEVELS; ++mipLevel)
+    {
+        VkDescriptorImageInfo descriptorImageInfo{};
+        descriptorImageInfo.sampler = workspace.bloomImage->getSampler();
+        descriptorImageInfo.imageView = workspace.m_BloomImageViews[mipLevel];
+        descriptorImageInfo.imageLayout = workspace.bloomImage->getLayout();
+
+        hdrMapDescriptors.emplace_back(descriptorImageInfo);
+    }
+
+    DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
+        .BindImage(0, hdrMapDescriptors.data(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, BLOOM_MIP_LEVELS)
+        .Write(workspace.set0_MipViews);
 }

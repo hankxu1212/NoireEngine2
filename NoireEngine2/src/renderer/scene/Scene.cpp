@@ -477,10 +477,10 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type, bool isDefault)
 	m_SkyboxLambertian = ImageCube::Create(FormatPath(lambertianPath), isHDR);
 	
 	// env brdf lookup table
-	m_SpecularBRDF = Image2D::Create(Files::Path("../textures/material_textures/SpecularBRDF_LUT.png"), VK_FORMAT_R8G8B8A8_UNORM, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, false, true);
+	m_SpecularBRDF = Image2D::Create(Files::Path("../textures/material_textures/SpecularBRDF_LUT.png"), VK_FORMAT_R8G8B8A8_UNORM, VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, false, true);
 	
 	// specular ggx
-	m_PrefilteredEnvMap = std::make_shared<ImageCube>(FormatPath(path), VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, true, true, isHDR);
+	m_PrefilteredEnvMap = std::make_shared<ImageCube>(FormatPath(path), VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, true, true, isHDR);
 	m_PrefilteredEnvMap->Load();
 
 	// load prefiltered environment maps into the mip levels of the big environment map
@@ -504,21 +504,21 @@ void Scene::PushGizmosInstance(GizmosInstance* instance)
 CameraComponent* Scene::GetRenderCam() const
 {
 	if (SceneManager::Get()->getCameraMode() == CameraMode::Scene)
-		return sceneCam();
+		return GetSceneCam();
 	else
-		return debugCam();
+		return GetDebugCam();
 }
 
 // culling will be on scene cam, unless it is in user mode
 CameraComponent* Scene::GetCullingCam() const
 {
 	if (SceneManager::Get()->getCameraMode() == CameraMode::User)
-		return debugCam();
+		return GetDebugCam();
 	else
-		return sceneCam();
+		return GetSceneCam();
 }
 
-CameraComponent* Scene::sceneCam() const
+CameraComponent* Scene::GetSceneCam() const
 {
 	static CameraComponent* SceneCamera = nullptr;
 
@@ -544,7 +544,7 @@ CameraComponent* Scene::sceneCam() const
 	return SceneCamera;
 }
 
-inline CameraComponent* Scene::debugCam() const
+inline CameraComponent* Scene::GetDebugCam() const
 {
 	return m_DebugCamera;
 }

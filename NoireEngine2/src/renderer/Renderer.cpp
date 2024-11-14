@@ -263,6 +263,15 @@ void Renderer::AddUIViewportImages()
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferColors.get(), "G Buffer Color");
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferNormals.get(), "G Buffer Position Normals");
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferEmission.get(), "G Buffer Emission");
+
+	for (int i = 0; i < s_BloomPipeline->workspaces[0].m_BloomImageViews.size(); ++i) {
+		s_UIPipeline->AppendDebugImage(
+			s_BloomPipeline->workspaces[0].bloomImage->getSampler(),
+			s_BloomPipeline->workspaces[0].m_BloomImageViews[i],
+			s_BloomPipeline->workspaces[0].bloomImage->getLayout(),
+			std::format("Bloom View: {}", i)
+		);
+	}
 }
 
 void Renderer::CreateMaterialPipelineLayout()
@@ -703,25 +712,24 @@ void Renderer::Rebuild()
 	}
 
 	s_UIPipeline->Rebuild();
+
 	if (s_RaytracedAOImage.get() != nullptr && createdDescriptors)
 	{
 		AddUIViewportImages();
 	}
-
 	m_AOIsDirty = true;
+
+	// rebuild
+	std::vector<Image2D*> hdrImages;
+	for (auto& workspace : workspaces)
+		hdrImages.push_back(workspace.GBufferEmission.get());
+	s_BloomPipeline->Rebuild(hdrImages);
 }
 
 void Renderer::Create()
 {
 	// create shadow pipeline and initialize its shadow frame buffer and render pass
 	s_ShadowPipeline->CreateRenderPass();
-
-	// create bloom
-	s_BloomPipeline->InitializeWorkspaces();
-	for (int i = 0; i < workspaces.size(); ++i)
-		s_BloomPipeline->SetBloomImage(workspaces[i].GBufferEmission.get(), i);
-
-	s_BloomPipeline->CreateRenderPass();
 
 #ifdef _NE_USE_RTX
 	s_RaytracingPipeline = std::make_unique<RaytracingPipeline>();
