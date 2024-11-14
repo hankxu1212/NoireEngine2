@@ -11,7 +11,7 @@
 #include "backend/pipeline/LinesPipeline.hpp"
 #include "backend/pipeline/ShadowPipeline.hpp"
 #include "backend/pipeline/RaytracingPipeline.hpp"
-#include "backend/pipeline/ImGuiPipeline.hpp"
+#include "backend/pipeline/UIPipeline.hpp"
 #include "backend/pipeline/BloomPipeline.hpp"
 
 #include <type_traits>
@@ -60,6 +60,7 @@ public:
 	const std::vector<std::vector<IndirectBatch>>& getIndirectBatches() const { return m_IndirectBatches; }
 
 	void OnUIRender();
+	VkRenderPass GetUIRenderPass() { return s_UIPipeline->GetRenderPass(); }
 
 private:
 	void AddUIViewportImages();
@@ -260,7 +261,7 @@ private:
 	friend class SkyboxPipeline;
 	friend class ShadowPipeline;
 	friend class RaytracingPipeline;
-	friend class ImGuiPipeline;
+	friend class UIPipeline;
 	friend class BloomPipeline;
 
 private:
@@ -268,7 +269,7 @@ private:
 	std::unique_ptr<SkyboxPipeline>					s_SkyboxPipeline;
 	std::unique_ptr<ShadowPipeline>					s_ShadowPipeline;
 	std::unique_ptr<RaytracingPipeline>				s_RaytracingPipeline;
-	std::unique_ptr<ImGuiPipeline>					s_UIPipeline;
+	std::unique_ptr<UIPipeline>					s_UIPipeline;
 	std::unique_ptr<BloomPipeline>					s_BloomPipeline;
 };
 

@@ -1,4 +1,4 @@
-#include "ImGuiPipeline.hpp"
+#include "UIPipeline.hpp"
 #include "backend/VulkanContext.hpp"
 #include "imguizmo/ImGuizmo.h"
 #include "glm/gtx/string_cast.hpp"
@@ -35,7 +35,7 @@ static void CreateImGuiDescriptorPool(VkDevice logicalDevice, VkDescriptorPool& 
     VulkanContext::VK(vkCreateDescriptorPool(logicalDevice, &pool_info, nullptr, &descriptorPool));
 }
 
-ImGuiPipeline::ImGuiPipeline()
+UIPipeline::UIPipeline()
 {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -59,7 +59,7 @@ ImGuiPipeline::ImGuiPipeline()
     s_Renderpass = std::make_unique<Renderpass>();
 }
 
-ImGuiPipeline::~ImGuiPipeline()
+UIPipeline::~UIPipeline()
 {
     VulkanContext::Get()->WaitIdle();
 
@@ -74,13 +74,115 @@ ImGuiPipeline::~ImGuiPipeline()
     }
 }
 
-void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
+void UIPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
+{
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+}
+
+void UIPipeline::BeginRenderPass(const CommandBuffer& commandBuffer)
+{
+    s_Renderpass->Begin(commandBuffer, m_FrameBuffers[CURR_FRAME]);
+}
+
+void UIPipeline::EndRenderPass(const CommandBuffer& commandBuffer)
+{
+    s_Renderpass->End(commandBuffer);
+}
+
+void UIPipeline::AppendDebugImage(Image* image, const std::string& name)
+{
+    AppendDebugImage(image->getSampler(), image->getView(), image->getLayout(), name);
+}
+
+void UIPipeline::AppendDebugImage(VkSampler sampler, VkImageView view, VkImageLayout layout, const std::string& name)
+{
+    m_DebugImages.push_back(std::make_pair(
+        ImGui_ImplVulkan_AddTexture(sampler, view, layout),
+        name));
+}
+
+void UIPipeline::CreateRenderPass()
+{
+    s_Renderpass->CreateRenderPass(
+        { VulkanContext::Get()->getSurface(0)->getFormat().format },
+        VK_FORMAT_UNDEFINED, /* no depth*/
+        1, false, false);
+
+    s_Renderpass->SetClearValues({
+        {.color = { { 0.0f, 0.0f, 0.0f, 1.0f } } },  // Clear color to black
+    });
+}
+
+void UIPipeline::CreatePipeline()
+{
+    VulkanContext* context = VulkanContext::Get();
+    auto logicalDevice = VulkanContext::GetDevice();
+
+    CreateImGuiDescriptorPool(logicalDevice, m_DescriptorPool);
+
+    ImGui_ImplVulkan_InitInfo init_info = {
+        .Instance = *(context->getInstance()),
+        .PhysicalDevice = context->getPhysicalDevice()->getPhysicalDevice(),
+        .Device = logicalDevice,
+        .QueueFamily = context->getLogicalDevice()->getGraphicsFamily(),
+        .Queue = context->getLogicalDevice()->getGraphicsQueue(),
+        .DescriptorPool = m_DescriptorPool,
+        .RenderPass = s_Renderpass->renderpass,
+        .MinImageCount = 2,
+        .ImageCount = 3,
+        .MSAASamples = VK_SAMPLE_COUNT_1_BIT,
+        .PipelineCache = context->getPipelineCache(),
+        .Subpass = 0,
+        .Allocator = nullptr,
+        .CheckVkResultFn = VulkanContext::VK,
+    };
+
+    ImGui_ImplVulkan_Init(&init_info);
+}
+
+void UIPipeline::Rebuild()
+{
+    DestroyFrameBuffers();
+
+    const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
+
+    //Make framebuffers for each swapchain image:
+    m_FrameBuffers.assign(swapchain->getImageViews().size(), VK_NULL_HANDLE);
+    for (size_t i = 0; i < swapchain->getImageViews().size(); ++i)
+    {
+        std::vector<VkImageView> attachments;
+        attachments.emplace_back(swapchain->getImageViews()[i]);
+
+        VkFramebufferCreateInfo create_info
+        {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .renderPass = s_Renderpass->renderpass,
+            .attachmentCount = uint32_t(attachments.size()),
+            .pAttachments = attachments.data(),
+            .width = swapchain->getExtent().width,
+            .height = swapchain->getExtent().height,
+            .layers = 1,
+        };
+
+        VulkanContext::VK(
+            vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_FrameBuffers[i]),
+            "[vulkan] Creating frame buffer failed"
+        );
+    }
+
+    DestroyDebugImageDescriptors();
+}
+
+void UIPipeline::Update(const Scene* scene)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
-    
+}
+
+void UIPipeline::FinalizeUI()
+{
     for (Layer* layer : Application::Get().GetLayerStack())
         layer->OnImGuiRender();
 
@@ -90,7 +192,7 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
     static int selectedOption = 0; // Index of selected option
 
     // render a bunch of debug images
-    if (!m_DebugImages.empty()) 
+    if (!m_DebugImages.empty())
     {
         if (ImGui::Begin("Debug Viewport")) {
             // Dropdown for choosing a debug image by name
@@ -125,103 +227,9 @@ void ImGuiPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffe
         ImGui::RenderPlatformWindowsDefault();
         glfwMakeContextCurrent(backup_current_context);
     }
-
-    s_Renderpass->Begin(commandBuffer, m_FrameBuffers[CURR_FRAME]);
-    
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
-
-    s_Renderpass->End(commandBuffer);
 }
 
-void ImGuiPipeline::AppendDebugImage(Image* image, const std::string& name)
-{
-    AppendDebugImage(image->getSampler(), image->getView(), image->getLayout(), name);
-}
-
-void ImGuiPipeline::AppendDebugImage(VkSampler sampler, VkImageView view, VkImageLayout layout, const std::string& name)
-{
-    m_DebugImages.push_back(std::make_pair(
-        ImGui_ImplVulkan_AddTexture(sampler, view, layout),
-        name));
-}
-
-void ImGuiPipeline::CreateRenderPass()
-{
-    s_Renderpass->CreateRenderPass(
-        { VulkanContext::Get()->getSurface(0)->getFormat().format },
-        VK_FORMAT_UNDEFINED, /* no depth*/
-        1, false, false);
-
-    s_Renderpass->SetClearValues({
-        {.color = { { 0.0f, 0.0f, 0.0f, 1.0f } } },  // Clear color to black
-    });
-}
-
-void ImGuiPipeline::CreatePipeline()
-{
-    VulkanContext* context = VulkanContext::Get();
-    auto logicalDevice = VulkanContext::GetDevice();
-
-    CreateImGuiDescriptorPool(logicalDevice, m_DescriptorPool);
-
-    ImGui_ImplVulkan_InitInfo init_info = {
-        .Instance = *(context->getInstance()),
-        .PhysicalDevice = context->getPhysicalDevice()->getPhysicalDevice(),
-        .Device = logicalDevice,
-        .QueueFamily = context->getLogicalDevice()->getGraphicsFamily(),
-        .Queue = context->getLogicalDevice()->getGraphicsQueue(),
-        .DescriptorPool = m_DescriptorPool,
-        .RenderPass = s_Renderpass->renderpass,
-        .MinImageCount = 2,
-        .ImageCount = 3,
-        .MSAASamples = VK_SAMPLE_COUNT_1_BIT,
-        .PipelineCache = context->getPipelineCache(),
-        .Subpass = 0,
-        .Allocator = nullptr,
-        .CheckVkResultFn = VulkanContext::VK,
-    };
-
-    ImGui_ImplVulkan_Init(&init_info);
-}
-
-void ImGuiPipeline::Rebuild()
-{
-    DestroyFrameBuffers();
-
-    const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
-
-    //Make framebuffers for each swapchain image:
-    m_FrameBuffers.assign(swapchain->getImageViews().size(), VK_NULL_HANDLE);
-    for (size_t i = 0; i < swapchain->getImageViews().size(); ++i)
-    {
-        std::vector<VkImageView> attachments;
-        attachments.emplace_back(swapchain->getImageViews()[i]);
-
-        VkFramebufferCreateInfo create_info
-        {
-            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-            .renderPass = s_Renderpass->renderpass,
-            .attachmentCount = uint32_t(attachments.size()),
-            .pAttachments = attachments.data(),
-            .width = swapchain->getExtent().width,
-            .height = swapchain->getExtent().height,
-            .layers = 1,
-        };
-
-        VulkanContext::VK(
-            vkCreateFramebuffer(VulkanContext::GetDevice(), &create_info, nullptr, &m_FrameBuffers[i]),
-            "[vulkan] Creating frame buffer failed"
-        );
-    }
-
-    m_DebugImages.clear();
-}
-
-void ImGuiPipeline::Update(const Scene* scene)
-{
-}
-
-void ImGuiPipeline::DestroyFrameBuffers()
+void UIPipeline::DestroyFrameBuffers()
 {
     for (VkFramebuffer& framebuffer : m_FrameBuffers)
     {
@@ -233,7 +241,7 @@ void ImGuiPipeline::DestroyFrameBuffers()
     m_FrameBuffers.clear();
 }
 
-void ImGuiPipeline::SetTheme()
+void UIPipeline::SetTheme()
 {
     ImVec4* colors = ImGui::GetStyle().Colors;
     colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
@@ -320,4 +328,14 @@ void ImGuiPipeline::SetTheme()
     const char* fileName = Files::Path("../fonts/SourceSans3-Regular.ttf").c_str();
     ImFont* font = ImGui::GetIO().Fonts->AddFontFromFileTTF(fileName, 24.0);
     IM_ASSERT(font != nullptr);
+}
+
+void UIPipeline::DestroyDebugImageDescriptors()
+{
+    for (auto& debugImage : m_DebugImages)
+    {
+        ImGui_ImplVulkan_RemoveTexture(debugImage.first);
+    }
+
+    m_DebugImages.clear();
 }

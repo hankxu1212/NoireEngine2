@@ -33,6 +33,7 @@
 #define G_BUFFER_COLOR_FORMAT VK_FORMAT_R8G8B8A8_UNORM
 #define G_BUFFER_POSNORM_FORMAT VK_FORMAT_R32G32B32A32_SFLOAT
 #define G_BUFFER_EMISSION_FORMAT VK_FORMAT_R16G16B16A16_SFLOAT
+#define RTX_REFLECTION_FORMAT VK_FORMAT_R8G8B8A8_UNORM
 #define DEPTH_ARRAY_SCALE 1024
 
 static inline void InsertPipelineMemoryBarrier(const CommandBuffer& buf)
@@ -63,7 +64,7 @@ Renderer::Renderer()
 	s_CompositionPass = std::make_unique<Renderpass>();
 
 	// initialize a bunch of pipelines
-	s_UIPipeline = std::make_unique<ImGuiPipeline>();
+	s_UIPipeline = std::make_unique<UIPipeline>();
 	s_LinesPipeline = std::make_unique<LinesPipeline>();
 	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>();
 	s_ShadowPipeline = std::make_unique<ShadowPipeline>();
@@ -426,8 +427,6 @@ void Renderer::CreateDescriptors()
 #ifdef _NE_USE_RTX
 	CreateRaytracingDescriptors(false);
 #endif
-
-	createdDescriptors = true;
 }
 
 void Renderer::CreateWorldDescriptors(bool update)
@@ -677,7 +676,7 @@ void Renderer::CreateRayTracingImages()
 	{
 		s_RaytracedReflectionsImage = std::make_unique<Image2D>(
 			extent.x, extent.y,
-			VK_FORMAT_R32G32B32A32_SFLOAT,
+			RTX_REFLECTION_FORMAT,
 			VK_IMAGE_LAYOUT_GENERAL,
 			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
 			false
@@ -728,17 +727,16 @@ void Renderer::Rebuild()
 
 	s_UIPipeline->Rebuild();
 
-	if (s_RaytracedAOImage.get() != nullptr && createdDescriptors)
-	{
-		AddUIViewportImages();
-	}
-	m_AOIsDirty = true;
-
 	// rebuild
 	std::vector<Image2D*> hdrImages;
 	for (auto& workspace : workspaces)
 		hdrImages.push_back(workspace.GBufferEmission.get());
 	s_BloomPipeline->Rebuild(hdrImages);
+
+	if (createdDescriptors)
+		AddUIViewportImages();
+
+	m_AOIsDirty = true;
 }
 
 void Renderer::Create()
@@ -777,6 +775,8 @@ void Renderer::Create()
 	s_RaytracingPipeline->CreatePipeline();
 	AddUIViewportImages();
 #endif
+
+	createdDescriptors = true;
 }
 
 void Renderer::Render(const CommandBuffer& commandBuffer)
@@ -835,15 +835,19 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		s_CompositionPass->Begin(commandBuffer, m_CompositionFrameBuffers[CURR_FRAME]);
 		{
 			RunPost(commandBuffer);
-
-			// draw lines: TODO: move to ui render pass
-			if (UseGizmos)
-				s_LinesPipeline->Render(scene, commandBuffer);
 		}
 		s_CompositionPass->End(commandBuffer);
 
-		// render UI on top
-		s_UIPipeline->Render(scene, commandBuffer);
+		// UI pass
+		s_UIPipeline->FinalizeUI();
+		s_UIPipeline->BeginRenderPass(commandBuffer); 
+		{
+			s_UIPipeline->Render(scene, commandBuffer);
+
+			if (UseGizmos)
+				s_LinesPipeline->Render(scene, commandBuffer);
+		}
+		s_UIPipeline->EndRenderPass(commandBuffer);
 	}
 }
 

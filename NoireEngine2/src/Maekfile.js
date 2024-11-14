@@ -123,6 +123,7 @@ const vulkan_objs = [
 	maek.CPP('backend/descriptor/DescriptorBuilder.cpp'),
 	maek.CPP('backend/pipeline/VulkanGraphicsPipelineBuilder.cpp'),
 	maek.CPP('backend/pipeline/BloomPipeline.cpp'),
+	maek.CPP('backend/pipeline/UIPipeline.cpp'),
 ]
 
 const rtx_shaders = [
@@ -165,7 +166,6 @@ const imgui_objs = [
 	maek.CPP('../vendor/imgui/imgui_widgets.cpp'),
 	maek.CPP('../vendor/imgui/backends/imgui_impl_vulkan.cpp'),
 	maek.CPP('../vendor/imgui/backends/imgui_impl_glfw.cpp'),
-	maek.CPP('backend/pipeline/ImGuiPipeline.cpp'),
 	maek.CPP('../vendor/imguizmo/imguizmo/ImGuizmo.cpp'),
 ]
 

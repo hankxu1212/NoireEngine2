@@ -10,11 +10,11 @@
 class RaytracingPipeline;
 class Image2D;
 
-class ImGuiPipeline : public VulkanPipeline
+class UIPipeline : public VulkanPipeline
 {
 public:
-	ImGuiPipeline();
-	virtual ~ImGuiPipeline();
+	UIPipeline();
+	virtual ~UIPipeline();
 
 public:
 	void CreateRenderPass() override;
@@ -25,16 +25,26 @@ public:
 
 	void Update(const Scene* scene) override;
 
+	void FinalizeUI();
+
 	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
+
+	void BeginRenderPass(const CommandBuffer& commandBuffer);
+
+	void EndRenderPass(const CommandBuffer& commandBuffer);
 
 	void AppendDebugImage(Image* image, const std::string& name);
 
 	void AppendDebugImage(VkSampler sampler, VkImageView view, VkImageLayout layout, const std::string& name);
 
+	VkRenderPass GetRenderPass() { return s_Renderpass->renderpass; }
+
 private:
 	void DestroyFrameBuffers();
 
 	void SetTheme();
+
+	void DestroyDebugImageDescriptors();
 
 private:
 	// the current ImGuiContext

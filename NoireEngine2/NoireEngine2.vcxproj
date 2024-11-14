@@ -116,7 +116,7 @@
     <ClCompile Include="src\editor\ImGuiExtension.cpp" />
     <ClCompile Include="src\renderer\lighting\Light.cpp" />
     <ClCompile Include="src\renderer\scene\SceneManager.cpp" />
-    <ClCompile Include="src\backend\pipeline\ImGuiPipeline.cpp" />
+    <ClCompile Include="src\backend\pipeline\UIPipeline.cpp" />
     <ClCompile Include="src\editor\Editor.cpp" />
     <ClCompile Include="src\editor\panels\SceneHierarchyPanel.cpp" />
     <ClCompile Include="src\editor\widgets\EntityEditorWidget.cpp" />
@@ -269,7 +269,7 @@
     <ClInclude Include="src\renderer\animation\Animator.hpp" />
     <ClInclude Include="src\renderer\lighting\Light.hpp" />
     <ClInclude Include="src\renderer\scene\SceneManager.hpp" />
-    <ClInclude Include="src\backend\pipeline\ImGuiPipeline.hpp" />
+    <ClInclude Include="src\backend\pipeline\UIPipeline.hpp" />
     <ClInclude Include="src\editor\ImGuiExtension.hpp" />
     <ClInclude Include="src\editor\Editor.hpp" />
     <ClInclude Include="src\editor\panels\SceneHierarchyPanel.h" />
