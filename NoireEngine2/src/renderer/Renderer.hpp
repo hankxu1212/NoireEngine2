@@ -18,6 +18,7 @@
 #include "glm/glm.hpp"
 
 #include "utils/ThreadPool.hpp"
+#include "utils/UUID.hpp"
 
 #define _NE_USE_RTX
 
@@ -44,6 +45,8 @@ public:
 	void Update();
 
 	void Render(const CommandBuffer& commandBuffer);
+	
+	UUID QueryMouseHoveredEntity() const;
 
 	// for draw indirect
 	struct IndirectBatch
@@ -71,6 +74,8 @@ private:
 	void CreateComputeAOPipeline();
 
 	// descriptor management
+	Buffer m_MousePicking;
+
 	void CreateDescriptors();
 	bool createdDescriptors = false;
 
@@ -96,6 +101,7 @@ private:
 		uint64_t indexAddress;          // Address of the index buffer
 		uint32_t materialOffset; // where to look in the material buffer
 		uint32_t materialWorkflow; // interpret the buffer data as which material type?
+		uint64_t entityID;
 	};
 
 	// drawing
@@ -163,7 +169,8 @@ private:
 		PointLights,
 		SpotLights,
 		Materials,
-		Objects
+		Objects,
+		MousePicking
 	END_BINDING();
 
 	START_BINDING(IBL)

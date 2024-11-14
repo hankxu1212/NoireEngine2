@@ -24,7 +24,7 @@ void Editor::OnDetach()
 void Editor::OnEvent(Event& e)
 {
     e.Dispatch<KeyPressedEvent>(NE_BIND_EVENT_FN(Editor::OnKeyPressed));
-
+    e.Dispatch<MouseButtonReleasedEvent>(NE_BIND_EVENT_FN(Editor::OnMouseReleasedEvent));
 }
 void Editor::OnImGuiRender()
 {
@@ -394,6 +394,20 @@ bool Editor::OnKeyPressed(KeyPressedEvent& e)
     }*/
     }
 
+    return false;
+}
+
+bool Editor::OnMouseReleasedEvent(MouseButtonReleasedEvent& e)
+{
+    if (e.m_Button == Mouse::ButtonLeft) 
+    {
+        UUID selectedID = Renderer::Instance->QueryMouseHoveredEntity();
+        if (selectedID != 0)
+        {
+            Entity* ent = SceneManager::Get()->getScene()->FindEntity(selectedID);
+            s_HierarchyPanel->SetSelectedEntity(ent);
+        }
+    }
     return false;
 }
 

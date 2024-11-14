@@ -3,6 +3,7 @@
 #extension GL_EXT_nonuniform_qualifier : require
 #extension GL_EXT_scalar_block_layout : enable
 #extension GL_EXT_buffer_reference2 : require
+#extension GL_ARB_gpu_shader_int64 : enable
 
 layout(location=0) in vec3 inPosition;
 layout(location=1) in vec3 inNormal;
@@ -69,4 +70,11 @@ void main()
     float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
     if(brightness > 1.0)
 	    outEmission = outColor;
+
+	// handle mouse picking
+    // get the depth and scale it up by
+    // the total number of buckets in depth array
+    uint zIndex = uint(gl_FragCoord.z * DEPTH_ARRAY_SCALE);
+    if( length( scene.mousePosition - gl_FragCoord.xy) < 1)
+        mousePicking.data[zIndex] = OBJECTS[instanceID].entityID;
 }

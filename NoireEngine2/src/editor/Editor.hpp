@@ -63,6 +63,7 @@ private:
 
 private:
 	bool OnKeyPressed(KeyPressedEvent& e);
+	bool OnMouseReleasedEvent(MouseButtonReleasedEvent& e);
 
 private:
 	std::unique_ptr<SceneHierarchyPanel> s_HierarchyPanel;

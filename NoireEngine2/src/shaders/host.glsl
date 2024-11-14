@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////
 // Set 0: world and G buffer
 ///////////////////////////////////////////////
-layout(set=0,binding=0,std140) uniform World {
+layout(set=0,binding=0,std430) uniform World {
 	mat4 view;
 	mat4 viewProj;
 	mat4 viewInverse;
@@ -10,6 +10,7 @@ layout(set=0,binding=0,std140) uniform World {
 	uvec4 numLights;
 	int pcfSamples;
 	int occluderSamples;
+	vec2 mousePosition;
 }scene;
 
 //layout (set = 0, binding = 1) uniform image2D G_Color;
@@ -104,6 +105,12 @@ layout(set=1, binding=4, scalar) readonly buffer MaterialBufferFloat {
 	float MATERIAL_BUFFER_F[];
 };
 
+#define DEPTH_ARRAY_SCALE 1024
+layout(set=1, binding = 6) buffer writeonly MousePickingBuffer
+{
+    uint64_t data[DEPTH_ARRAY_SCALE];
+} mousePicking;
+
 ///////////////////////////////////////////////
 // Set 1.5: Object buffers: passing in object information
 // including vertex and index buffer addresses
@@ -132,6 +139,7 @@ struct ObjectDesc
     Indices indexAddress;          // Address of the index buffer
 	uint offset;
 	uint materialType;
+	uint64_t entityID;
 };
 
 layout(set=1, binding=5, scalar) readonly buffer Objects {

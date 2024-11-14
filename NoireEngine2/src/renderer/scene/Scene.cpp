@@ -495,6 +495,18 @@ void Scene::AddSkybox(const std::string& path, SkyboxType type, bool isDefault)
 	}
 }
 
+void Scene::AddEntity(Entity* e)
+{
+	m_EntitiesByUUID[e->id()] = e;
+}
+
+Entity* Scene::FindEntity(UUID id)
+{
+	if (auto it = m_EntitiesByUUID.find(id); it != m_EntitiesByUUID.end())
+		return it->second;
+	return nullptr;
+}
+
 void Scene::PushGizmosInstance(GizmosInstance* instance)
 {
 	m_GizmosInstances.emplace_back(instance);
@@ -598,6 +610,8 @@ void Scene::UpdateSceneInfo()
 		glm::vec3 pos = GetRenderCam()->GetTransform()->position();
 		m_SceneInfo.cameraPosition = {pos.x, pos.y, pos.z, 0};
 	}
+
+	m_SceneInfo.mousePosition = NativeInput::GetMousePosition();
 }
 
 void Scene::UpdateShadowCasters()

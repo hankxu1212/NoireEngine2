@@ -20,6 +20,7 @@ struct ObjectInstance
 
 	Mesh* mesh;
 	Material* material;
+	uint64_t entityID;
 
 	ObjectInstance(
 		const glm::mat4& view,
@@ -27,11 +28,13 @@ struct ObjectInstance
 		const glm::mat4& normal,
 		uint32_t vertexIndex,
 		Mesh* meshPtr,
-		Material* materialPtr
+		Material* materialPtr,
+		uint64_t eid
 	) : 
 		m_TransformUniform{ view, model, normal },
 		firstVertex(vertexIndex),
 		mesh(meshPtr),
-		material(materialPtr)
+		material(materialPtr),
+		entityID(eid)
 	{}
 };

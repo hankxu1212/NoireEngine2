@@ -1,6 +1,7 @@
 #include "RendererComponent.hpp"
 
 #include "renderer/scene/Scene.hpp"
+#include "renderer/scene/Entity.hpp"
 #include "renderer/components/CameraComponent.hpp"
 #include "renderer/object/Mesh.hpp"
 #include "renderer/materials/Material.hpp"
@@ -47,7 +48,8 @@ void RendererComponent::Render(const glm::mat4& model)
 			glm::inverse(model), // normal
 			0, //  first vertex
 			mesh, // mesh pointer
-			material // material pointer
+			material, // material pointer
+			entity->id() // entity ID
 		);
 
 	if (Renderer::UseGizmos && useGizmos) {
@@ -96,7 +98,8 @@ void RendererComponent::PrepareAcceleration(const glm::mat4& model)
 			glm::inverse(model), // normal
 			0, //  first vertex
 			mesh, // mesh pointer
-			material // material pointer
+			material, // material pointer
+			entity->id() // entity ID
 		);
 }
 

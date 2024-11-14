@@ -196,6 +196,11 @@ void LogicalDevice::CreateLogicalDevice()
 	else
 		NE_WARN("Selected GPU does not support multi draw indirect!");
 
+	if (physicalDeviceFeatures.shaderInt64)
+		enabledFeatures.shaderInt64 = VK_TRUE;
+	else
+		NE_WARN("Selected GPU does not support shader int 64!");
+
 	VkDeviceCreateInfo deviceCreateInfo = {};
 
 	// enable dynamic vertex input state

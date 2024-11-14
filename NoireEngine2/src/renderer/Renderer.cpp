@@ -33,6 +33,7 @@
 #define G_BUFFER_COLOR_FORMAT VK_FORMAT_R8G8B8A8_UNORM
 #define G_BUFFER_POSNORM_FORMAT VK_FORMAT_R32G32B32A32_SFLOAT
 #define G_BUFFER_EMISSION_FORMAT VK_FORMAT_R16G16B16A16_SFLOAT
+#define DEPTH_ARRAY_SCALE 1024
 
 static inline void InsertPipelineMemoryBarrier(const CommandBuffer& buf)
 {
@@ -91,7 +92,10 @@ Renderer::~Renderer()
 		workspace.ObjectDescriptions.Destroy();
 		workspace.ObjectDescriptionsSrc.Destroy();
 	}
+
 	workspaces.clear();
+
+	m_MousePicking.Destroy();
 
 	m_DescriptorAllocator.Cleanup(); // destroy pool and sets
 	
@@ -449,13 +453,14 @@ void Renderer::CreateWorldDescriptors(bool update)
 		auto uniformStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT |
 			VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 
+		VkDescriptorBufferInfo World_info = workspace.World.GetDescriptorInfo();
+
 		VkDescriptorImageInfo gBufferColorInfo = workspace.GBufferColors->GetDescriptorInfo();
 		VkDescriptorImageInfo gBufferNormalInfo = workspace.GBufferNormals->GetDescriptorInfo();
 		VkDescriptorImageInfo gBufferEmissionInfo = workspace.GBufferEmission->GetDescriptorInfo();
 		
 		VkDescriptorImageInfo rtxAOSamplerInfo = s_RaytracedAOImage->GetDescriptorInfo();
 
-		VkDescriptorBufferInfo World_info = workspace.World.GetDescriptorInfo();
 		DescriptorBuilder builder = DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindBuffer(World::SceneUniform, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, uniformStages)
 			.BindImage(World::GBufferColor, &gBufferColorInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT)
@@ -471,6 +476,15 @@ void Renderer::CreateWorldDescriptors(bool update)
 
 void Renderer::CreateStorageBufferDescriptors()
 {
+	m_MousePicking = Buffer(
+		sizeof(uint64_t) * DEPTH_ARRAY_SCALE,
+		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		Buffer::Mapped
+	);
+
+	VkDescriptorBufferInfo MousePickingInfo = m_MousePicking.GetDescriptorInfo();
+
 	// build storage buffers
 	for (Workspace& workspace : workspaces)
 	{
@@ -481,6 +495,7 @@ void Renderer::CreateStorageBufferDescriptors()
 			.AddBinding(StorageBuffers::PointLights, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // spot lights
 			.AddBinding(StorageBuffers::Materials, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) // material instances
 			.AddBinding(StorageBuffers::Objects, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) // object descriptions
+			.BindBuffer(StorageBuffers::MousePicking, &MousePickingInfo, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // mouse picking
 			.Build(workspace.set1_StorageBuffers, set1_StorageBuffersLayout);
 	}
 }
@@ -832,9 +847,28 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 	}
 }
 
+UUID Renderer::QueryMouseHoveredEntity() const
+{
+	auto u = static_cast<size_t*>(m_MousePicking.data());
+
+	for (int i = 0; i < DEPTH_ARRAY_SCALE; i++)
+	{
+		if (u[i] != 0)
+		{
+			return UUID(u[i]);
+			break;
+		}
+	}
+
+	return UUID(0);
+}
+
 void Renderer::Update()
 {
 	s_UIPipeline->Update(SceneManager::Get()->getScene());
+
+	// we have to zero out the memory each frame
+	std::memset(m_MousePicking.data(), 0, DEPTH_ARRAY_SCALE * sizeof(size_t));
 }
 
 void Renderer::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
@@ -1077,7 +1111,8 @@ void Renderer::PrepareObjectDescriptions(const Scene* scene, const CommandBuffer
 					.vertexAddress = inst.mesh->getVertexBufferAddress(),
 					.indexAddress = inst.mesh->getIndexBufferAddress(),
 					.materialOffset = (uint32_t)inst.material->materialInstanceBufferOffset,
-					.materialWorkflow = (uint32_t)inst.material->getWorkflow()
+					.materialWorkflow = (uint32_t)inst.material->getWorkflow(),
+					.entityID = inst.entityID
 				};
 				*out = description;
 				++out;

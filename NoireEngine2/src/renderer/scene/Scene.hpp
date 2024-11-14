@@ -1,6 +1,8 @@
 #pragma once
 
 #include "utils/Singleton.hpp"
+#include "utils/UUID.hpp"
+
 #include "TransformMatrixStack.hpp"
 #include "renderer/object/ObjectInstance.hpp"
 #include "renderer/gizmos/GizmosInstance.hpp"
@@ -63,10 +65,22 @@ public:
 	// Entity management
 
 	template<typename... TArgs>
-	Entity* Instantiate(TArgs&... args) { return Entity::root().AddChild(this, args...); }
+	Entity* Instantiate(TArgs&... args) { 
+		Entity* ent = Entity::root().AddChild(this, args...);
+		AddEntity(ent);
+		return ent;
+	}
 
 	template<typename... TArgs>
-	Entity* Instantiate(TArgs&&... args) { return Entity::root().AddChild(this, args...); }
+	Entity* Instantiate(TArgs&&... args) { 
+		Entity* ent = Entity::root().AddChild(this, args...);
+		AddEntity(ent);
+		return ent;
+	}
+
+	void AddEntity(Entity*);
+
+	Entity* FindEntity(UUID);
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Rendering and scene uniforms
@@ -93,6 +107,7 @@ public:
 		glm::uvec4 numLights;
 		uint32_t shadowPCFSamples;
 		uint32_t shadowOccluderSamples;
+		glm::vec2 mousePosition;
 	};
 	static_assert(sizeof(SceneUniform) == 64 * 4 + 16 * 3);
 
@@ -160,4 +175,6 @@ private:
 	std::shared_ptr<ImageCube> m_SkyboxLambertian; // cosine weighted convolution on the skybox image
 	std::shared_ptr<ImageCube> m_PrefilteredEnvMap;
 	std::shared_ptr<Image2D> m_SpecularBRDF;
+
+	std::unordered_map<UUID, Entity*> m_EntitiesByUUID;
 };
