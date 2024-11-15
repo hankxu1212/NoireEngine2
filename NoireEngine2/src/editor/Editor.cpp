@@ -405,7 +405,16 @@ bool Editor::OnMouseReleasedEvent(MouseButtonReleasedEvent& e)
         if (selectedID != 0)
         {
             Entity* ent = SceneManager::Get()->getScene()->FindEntity(selectedID);
+            assert(ent);
+
             s_HierarchyPanel->SetSelectedEntity(ent);
+
+            m_SelectedRendererComponent = ent->GetComponent<RendererComponent>();
+            assert(m_SelectedRendererComponent);
+        }
+        else {
+            s_HierarchyPanel->SetSelectedEntity(nullptr);
+            m_SelectedRendererComponent = nullptr;
         }
     }
     return false;

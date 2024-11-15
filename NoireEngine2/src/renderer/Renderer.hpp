@@ -8,7 +8,7 @@
 #include "backend/renderpass/Renderpass.hpp"
 
 #include "backend/pipeline/SkyboxPipeline.hpp"
-#include "backend/pipeline/LinesPipeline.hpp"
+#include "backend/pipeline/GizmosPipeline.hpp"
 #include "backend/pipeline/ShadowPipeline.hpp"
 #include "backend/pipeline/RaytracingPipeline.hpp"
 #include "backend/pipeline/UIPipeline.hpp"
@@ -257,7 +257,7 @@ private:
 	VkPipelineLayout m_MaterialPipelineLayout = VK_NULL_HANDLE;
 
 private:
-	friend class LinesPipeline;
+	friend class GizmosPipeline;
 	friend class SkyboxPipeline;
 	friend class ShadowPipeline;
 	friend class RaytracingPipeline;
@@ -265,11 +265,11 @@ private:
 	friend class BloomPipeline;
 
 private:
-	std::unique_ptr<LinesPipeline>					s_LinesPipeline;
+	std::unique_ptr<GizmosPipeline>					s_GizmosPipeline;
 	std::unique_ptr<SkyboxPipeline>					s_SkyboxPipeline;
 	std::unique_ptr<ShadowPipeline>					s_ShadowPipeline;
 	std::unique_ptr<RaytracingPipeline>				s_RaytracingPipeline;
-	std::unique_ptr<UIPipeline>					s_UIPipeline;
+	std::unique_ptr<UIPipeline>						s_UIPipeline;
 	std::unique_ptr<BloomPipeline>					s_BloomPipeline;
 };
 

@@ -10,6 +10,8 @@
 
 #include "imgui/imgui.h"
 #include "editor/ImGuiExtension.hpp"
+#include "editor/Editor.hpp"
+
 #include <iostream>
 
 RendererComponent::RendererComponent(Mesh* mesh_) :
@@ -41,20 +43,27 @@ void RendererComponent::Render(const glm::mat4& model)
 	}
 
 	const Camera* renderCam = GetScene()->GetRenderCam()->camera();
-	GetScene()->GetObjectInstances((uint32_t)material->getWorkflow())
-		.emplace_back(
-			renderCam->getWorldToClipMatrix() * model,
-			model, // model
-			glm::inverse(model), // normal
-			0, //  first vertex
-			mesh, // mesh pointer
-			material, // material pointer
-			entity->id() // entity ID
-		);
+
+	ObjectInstance objectInstance(
+		renderCam->getWorldToClipMatrix() * model,
+		model, // model
+		glm::inverse(model), // normal
+		0, //  first vertex
+		mesh, // mesh pointer
+		material, // material pointer
+		entity->id() // entity ID)
+	);
+
+	GetScene()->GetObjectInstances((uint32_t)material->getWorkflow()).emplace_back(objectInstance);
 
 	if (Renderer::UseGizmos && useGizmos) {
 		gizmos.DrawWireCube1(mesh->getAABB().min, mesh->getAABB().max, Color4_4::Green);
 		GetScene()->PushGizmosInstance(&gizmos);
+	}
+
+	if (Editor::Get()->GetSelectedRendererComponent() == this)
+	{
+		GetScene()->GetSelectedObjectInstances().emplace_back(objectInstance);
 	}
 }
 

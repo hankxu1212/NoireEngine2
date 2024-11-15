@@ -32,6 +32,8 @@ public:
 
 	static Editor* Get() { return g_Editor; }
 
+	inline RendererComponent* GetSelectedRendererComponent() const { return m_SelectedRendererComponent; };
+
 public:
 	void OnAttach() override;
 	void OnUpdate() override;
@@ -73,5 +75,7 @@ private:
 	bool			open = true;
 	bool			hideInspector = false;
 	int				m_GizmoType = -1;
+
+	RendererComponent* m_SelectedRendererComponent = nullptr;
 };
 

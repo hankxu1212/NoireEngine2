@@ -47,6 +47,10 @@ const renderer_shaders = [
 	maek.GLSLC('shaders/postprocessing/gaussianblurV.frag'),
 	maek.GLSLC('shaders/postprocessing/bloom_down_sample.frag'),
 	maek.GLSLC('shaders/postprocessing/bloom_up_sample.frag'),
+	maek.GLSLC('shaders/lines.vert'),
+	maek.GLSLC('shaders/lines.frag'),
+	maek.GLSLC('shaders/wireframe.vert'),
+	maek.GLSLC('shaders/wireframe.frag'),
 ]
 
 const renderer_objs = [
@@ -124,6 +128,7 @@ const vulkan_objs = [
 	maek.CPP('backend/pipeline/VulkanGraphicsPipelineBuilder.cpp'),
 	maek.CPP('backend/pipeline/BloomPipeline.cpp'),
 	maek.CPP('backend/pipeline/UIPipeline.cpp'),
+	maek.CPP('backend/pipeline/GizmosPipeline.cpp'),
 ]
 
 const rtx_shaders = [
@@ -148,7 +153,6 @@ function use_vert_frag(name, pipeline) {
 	vulkan_objs.push(maek.CPP(pipeline, undefined, { depends: [...shaders] }));
 }
 
-use_vert_frag('shaders/lines', 'backend/pipeline/LinesPipeline.cpp');
 use_vert_frag('shaders/skybox', 'backend/pipeline/SkyboxPipeline.cpp');
 
 // shadow

@@ -87,6 +87,8 @@ public:
 
 	std::vector<ObjectInstance>& GetObjectInstances(uint32_t index) { return m_ObjectInstances[index]; }
 
+	std::vector<ObjectInstance>& GetSelectedObjectInstances() { return m_SelectedObjectInstances; }
+
 	void PushGizmosInstance(GizmosInstance* instance);
 
 	CameraComponent* GetRenderCam() const;
@@ -114,7 +116,7 @@ public:
 	inline const void* getSceneUniformPtr() const { return &m_SceneInfo; }
 
 	inline const std::vector<std::vector<ObjectInstance>>& getObjectInstances() const { return m_ObjectInstances; }
-
+	inline const std::vector<ObjectInstance>& getSelectedObjectInstances() const { return m_SelectedObjectInstances; }
 	inline const std::vector<GizmosInstance*>& getGizmosInstances() const { return m_GizmosInstances; }
 
 	inline const std::vector<Light*>& getLightInstances() const { return m_SceneLights; }
@@ -163,6 +165,7 @@ private:
 	SceneUniform m_SceneInfo;
 
 	std::vector<std::vector<ObjectInstance>> m_ObjectInstances;
+	std::vector<ObjectInstance> m_SelectedObjectInstances;
 	std::vector<GizmosInstance*> m_GizmosInstances;
 
 	// a list of lights

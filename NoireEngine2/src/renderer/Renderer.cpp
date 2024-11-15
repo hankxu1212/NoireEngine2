@@ -65,7 +65,7 @@ Renderer::Renderer()
 
 	// initialize a bunch of pipelines
 	s_UIPipeline = std::make_unique<UIPipeline>();
-	s_LinesPipeline = std::make_unique<LinesPipeline>();
+	s_GizmosPipeline = std::make_unique<GizmosPipeline>();
 	s_SkyboxPipeline = std::make_unique<SkyboxPipeline>();
 	s_ShadowPipeline = std::make_unique<ShadowPipeline>();
 	s_BloomPipeline = std::make_unique<BloomPipeline>();
@@ -763,7 +763,7 @@ void Renderer::Create()
 	// the following pipelines rely on Renderer's descriptor sets
 	s_ShadowPipeline->CreatePipeline();
 
-	s_LinesPipeline->CreatePipeline();
+	s_GizmosPipeline->CreatePipeline();
 
 	s_SkyboxPipeline->CreatePipeline();
 
@@ -790,7 +790,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		s_ShadowPipeline->Prepare(scene, commandBuffer);
 
 		if (UseGizmos)
-			s_LinesPipeline->Prepare(scene, commandBuffer);
+			s_GizmosPipeline->Prepare(scene, commandBuffer);
 		
 		if (DrawSkybox)
 			s_SkyboxPipeline->Prepare(scene, commandBuffer);
@@ -838,14 +838,17 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		}
 		s_CompositionPass->End(commandBuffer);
 
+		// gizmos pass
+		s_UIPipeline->BeginRenderPass(commandBuffer);
+		if (UseGizmos)
+			s_GizmosPipeline->Render(scene, commandBuffer);
+		s_UIPipeline->EndRenderPass(commandBuffer);
+
 		// UI pass
 		s_UIPipeline->FinalizeUI();
 		s_UIPipeline->BeginRenderPass(commandBuffer); 
 		{
 			s_UIPipeline->Render(scene, commandBuffer);
-
-			if (UseGizmos)
-				s_LinesPipeline->Render(scene, commandBuffer);
 		}
 		s_UIPipeline->EndRenderPass(commandBuffer);
 	}

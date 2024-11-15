@@ -63,7 +63,7 @@ void Scene::Render()
 
 	for (auto& instances : m_ObjectInstances)
 		instances.clear();
-
+	m_SelectedObjectInstances.clear();
 	m_GizmosInstances.clear();
 	m_MatrixStack.Clear();
 

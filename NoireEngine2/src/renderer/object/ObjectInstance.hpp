@@ -10,7 +10,7 @@ struct ObjectInstance
 {
 	struct TransformUniform 
 	{
-		glm::mat4 viewMatrix;
+		glm::mat4 modelToClip;
 		glm::mat4 modelMatrix;
 		glm::mat4 modelMatrix_Normal;
 	}m_TransformUniform;
@@ -23,7 +23,7 @@ struct ObjectInstance
 	uint64_t entityID;
 
 	ObjectInstance(
-		const glm::mat4& view,
+		const glm::mat4& modelToClip,
 		const glm::mat4& model,
 		const glm::mat4& normal,
 		uint32_t vertexIndex,
@@ -31,10 +31,33 @@ struct ObjectInstance
 		Material* materialPtr,
 		uint64_t eid
 	) : 
-		m_TransformUniform{ view, model, normal },
+		m_TransformUniform{ modelToClip, model, normal },
 		firstVertex(vertexIndex),
 		mesh(meshPtr),
 		material(materialPtr),
 		entityID(eid)
 	{}
+
+	// Copy Constructor
+	ObjectInstance(const ObjectInstance& other)
+		: m_TransformUniform(other.m_TransformUniform),
+		firstVertex(other.firstVertex),
+		mesh(other.mesh),
+		material(other.material),
+		entityID(other.entityID)
+	{
+	}
+
+	// Move Constructor
+	ObjectInstance(ObjectInstance&& other) noexcept
+		: m_TransformUniform(std::move(other.m_TransformUniform)),
+		firstVertex(other.firstVertex),
+		mesh(other.mesh),
+		material(other.material),
+		entityID(other.entityID)
+	{
+		// Set the moved-from object's pointers to nullptr
+		other.mesh = nullptr;
+		other.material = nullptr;
+	}
 };

@@ -103,7 +103,7 @@
     <ClCompile Include="src\backend\pipeline\SkyboxPipeline.cpp" />
     <ClCompile Include="src\backend\images\ImageCube.cpp" />
     <ClCompile Include="src\backend\renderpass\Renderpass.cpp" />
-    <ClCompile Include="src\backend\pipeline\LinesPipeline.cpp" />
+    <ClCompile Include="src\backend\pipeline\GizmosPipeline.cpp" />
     <ClCompile Include="src\math\color\Color.cpp" />
     <ClCompile Include="src\renderer\materials\LambertianMaterial.cpp" />
     <ClCompile Include="src\renderer\materials\PBRMaterial.cpp" />
@@ -257,7 +257,7 @@
     <ClInclude Include="src\backend\pipeline\SkyboxPipeline.hpp" />
     <ClInclude Include="src\backend\images\ImageCube.hpp" />
     <ClInclude Include="src\backend\renderpass\Renderpass.hpp" />
-    <ClInclude Include="src\backend\pipeline\LinesPipeline.hpp" />
+    <ClInclude Include="src\backend\pipeline\GizmosPipeline.hpp" />
     <ClInclude Include="src\renderer\gizmos\GizmosInstance.hpp" />
     <ClInclude Include="src\renderer\materials\LambertianMaterial.hpp" />
     <ClInclude Include="src\renderer\materials\PBRMaterial.hpp" />
@@ -429,6 +429,7 @@
     <None Include="src\shaders\glsl\utils.glsl" />
     <None Include="src\shaders\lambertian.frag" />
     <None Include="src\shaders\lambertian.vert" />
+    <None Include="src\shaders\wireframe.vert" />
     <None Include="src\shaders\passthrough.vert" />
     <None Include="src\shaders\pbr.frag" />
     <None Include="src\shaders\pbr.vert" />
@@ -447,6 +448,7 @@
     <None Include="src\shaders\skybox.vert" />
     <None Include="src\shaders\lines.frag" />
     <None Include="src\shaders\lines.vert" />
+    <None Include="src\shaders\wireframe.frag" />
     <None Include="tutorial\maek-cache.json" />
     <None Include="vendor\imgui\examples\example_glfw_wgpu\web\index.html" />
     <None Include="vendor\imgui\examples\libs\emscripten\shell_minimal.html" />
