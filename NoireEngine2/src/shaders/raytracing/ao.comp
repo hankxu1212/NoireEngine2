@@ -73,7 +73,7 @@ void main()
         origin = OffsetRay(origin, normal);
 
         // Finding the basis (tangent and bitangent) from the normal
-        vec3 n, tangent, bitangent;
+        vec3 tangent, bitangent;
         ComputeDefaultBasis(normal, tangent, bitangent);
 
         // Sampling hemiphere n-time

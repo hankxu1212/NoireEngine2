@@ -6,6 +6,12 @@ struct Renderpass
 {
 	~Renderpass();
 
+	struct MSAAInfo
+	{
+		VkSampleCountFlagBits samples;
+		VkFormat format;
+	};
+
 	void CreateRenderPass(
 		const std::vector<VkFormat>& colorAttachmentFormats,
 		VkFormat                     depthAttachmentFormat,
@@ -13,7 +19,8 @@ struct Renderpass
 		bool                         clearColor = true,
 		bool                         clearDepth = true,
 		VkImageLayout                initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-		VkImageLayout                finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		VkImageLayout                finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+		MSAAInfo*					 pMsaaInfo=nullptr);
 	
 	void SetClearValues(const std::vector<VkClearValue>& values);
 

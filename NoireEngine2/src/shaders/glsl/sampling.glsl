@@ -90,6 +90,19 @@ vec3 SampleGGX(float u1, float u2, float roughness)
 	return vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
 }
 
+// GGX NDF via importance sampling
+vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
+{
+    vec3 H = SampleGGX(Xi.x, Xi.y, roughness);
+	
+    // from tangent-space vector to world-space sample vector
+	vec3 tangent, bitangent;
+    ComputeDefaultBasis(N, tangent, bitangent);
+	
+    vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
+    return normalize(sampleVec);
+} 
+
 const vec2 Poisson64[64] = {
 	vec2(0.0617981, 0.07294159),
 	vec2(0.6470215, 0.7474022),

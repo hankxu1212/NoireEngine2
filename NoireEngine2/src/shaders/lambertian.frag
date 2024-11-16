@@ -60,7 +60,7 @@ void main()
 	// direct lighting and shadows
 	vec3 directLighting = DirectLighting();
 
-	vec3 color = texColor * (directLighting + ambientLighting + reflectionColor * 0.5); // just an arbitrary multiplier
+	vec3 color = texColor * (directLighting + ambientLighting + reflectionColor); // just an arbitrary multiplier
 	
 	outColor = vec4(color, 1);
 	outNormal = vec4(inPosition, uintBitsToFloat(CompressUnitVec(n)));

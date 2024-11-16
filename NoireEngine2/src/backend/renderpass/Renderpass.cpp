@@ -16,18 +16,21 @@ void Renderpass::CreateRenderPass(
 	bool clearColor, 
 	bool clearDepth, 
 	VkImageLayout initialLayout, 
-	VkImageLayout finalLayout)
+	VkImageLayout finalLayout,
+	MSAAInfo* pMsaaInfo)
 {
 	std::vector<VkAttachmentDescription> allAttachments;
 	std::vector<VkAttachmentReference>   colorAttachmentRefs;
 
 	bool hasDepth = (depthAttachmentFormat != VK_FORMAT_UNDEFINED);
+	
+	VkSampleCountFlagBits samples = pMsaaInfo ? pMsaaInfo->samples : VK_SAMPLE_COUNT_1_BIT;
 
 	for (const auto& format : colorAttachmentFormats)
 	{
-		VkAttachmentDescription colorAttachment = {};
+		VkAttachmentDescription colorAttachment{};
 		colorAttachment.format = format;
-		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachment.samples = samples;
 		colorAttachment.loadOp = clearColor ? VK_ATTACHMENT_LOAD_OP_CLEAR :
 			((initialLayout == VK_IMAGE_LAYOUT_UNDEFINED) ? VK_ATTACHMENT_LOAD_OP_DONT_CARE :
 				VK_ATTACHMENT_LOAD_OP_LOAD);
@@ -45,12 +48,12 @@ void Renderpass::CreateRenderPass(
 		colorAttachmentRefs.push_back(colorAttachmentRef);
 	}
 
-	VkAttachmentReference depthAttachmentRef = {};
+	VkAttachmentReference depthAttachmentRef{};
 	if (hasDepth)
 	{
 		VkAttachmentDescription depthAttachment = {};
 		depthAttachment.format = depthAttachmentFormat;
-		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachment.samples = samples;
 		depthAttachment.loadOp = clearDepth ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 
 		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -65,6 +68,25 @@ void Renderpass::CreateRenderPass(
 		allAttachments.push_back(depthAttachment);
 	}
 
+	VkAttachmentReference msaaAttachmentRef{};
+	if (pMsaaInfo)
+	{
+		VkAttachmentDescription colorAttachmentResolve{};
+		colorAttachmentResolve.format = pMsaaInfo->format;
+		colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		msaaAttachmentRef.attachment = static_cast<uint32_t>(allAttachments.size());
+		msaaAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		allAttachments.push_back(colorAttachmentResolve);
+	}
+
 	std::vector<VkSubpassDescription> subpasses;
 	std::vector<VkSubpassDependency>  subpassDependencies;
 
@@ -75,6 +97,7 @@ void Renderpass::CreateRenderPass(
 		subpass.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
 		subpass.pColorAttachments = colorAttachmentRefs.data();
 		subpass.pDepthStencilAttachment = hasDepth ? &depthAttachmentRef : VK_NULL_HANDLE;
+		subpass.pResolveAttachments = pMsaaInfo ? &msaaAttachmentRef : VK_NULL_HANDLE;
 
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = i == 0 ? (VK_SUBPASS_EXTERNAL) : (i - 1);

@@ -40,7 +40,7 @@ void main()
 
   prd.depth       = 0;
   prd.hitValue    = vec3(0);
-  prd.attenuation = vec3(1.f, 1.f, 1.f);
+  prd.attenuation = vec3(1);
   prd.done        = 1;
   prd.rayOrigin   = origin.xyz;
   prd.rayDir      = direction.xyz;
@@ -54,9 +54,9 @@ void main()
                 0,              // sbtRecordOffset
                 0,              // sbtRecordStride
                 0,              // missIndex
-                origin.xyz,     // ray origin
+                prd.rayOrigin,     // ray origin
                 tMin,           // ray min range
-                direction.xyz,  // ray direction
+                prd.rayDir,  // ray direction
                 tMax,           // ray max range
                 0               // payload (location = 0)
     );
@@ -65,10 +65,6 @@ void main()
     prd.depth++;
     if(prd.done == 1 || prd.depth >= rayConstants.rayDepth)
       break;
-
-    origin.xyz    = prd.rayOrigin;
-    direction.xyz = prd.rayDir;
-    prd.done      = 1;  // Will stop if a reflective material isn't hit
   }
 
   imageStore(raytracedReflections, ivec2(gl_LaunchIDEXT.xy), vec4(hitValue, 1.0));

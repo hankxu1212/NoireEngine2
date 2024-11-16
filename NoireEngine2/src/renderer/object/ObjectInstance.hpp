@@ -22,6 +22,8 @@ struct ObjectInstance
 	Material* material;
 	uint64_t entityID;
 
+	ObjectInstance() = default;
+
 	ObjectInstance(
 		const glm::mat4& modelToClip,
 		const glm::mat4& model,

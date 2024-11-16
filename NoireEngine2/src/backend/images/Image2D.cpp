@@ -45,8 +45,8 @@ Image2D::Image2D(const std::filesystem::path& filename, VkFormat format, VkFilte
 	}
 }
 
-Image2D::Image2D(uint32_t w, uint32_t h, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage, bool mipmap) :
-	Image(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_SAMPLE_COUNT_1_BIT, layout,
+Image2D::Image2D(uint32_t w, uint32_t h, VkFormat format, VkImageLayout layout, VkImageUsageFlags usage, bool mipmap, VkSampleCountFlagBits samples) :
+	Image(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, samples, layout,
 		usage, format, 1, 1, { w, h, 1 }),
 	mipmap(mipmap)
 {
