@@ -50,8 +50,19 @@ void main()
 
     const vec2 UV = v0.texCoord * barycentrics.x + v1.texCoord * barycentrics.y + v2.texCoord * barycentrics.z;
 
+    // return early if is first bounce:
+    if (prd.depth == 0)
+    {
+        prd.done      = 0;
+        prd.rayOrigin = worldPos;
+        prd.rayDir    = reflect(gl_WorldRayDirectionEXT, n);
+        prd.hitValue = vec3(0);
+        return;
+    }
+
     // TODO: specialization constants and multiple entries in sbt
     uint matWorkflow = objResource.materialType;
+
     vec3 color;
     if (matWorkflow == 0) // lambertian
     {

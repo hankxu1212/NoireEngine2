@@ -65,6 +65,10 @@ public:
 	template<typename T, typename F>
 	bool Dispatch(const F& func)
 	{
+		// already handled, return false
+		if (Handled)
+			return false;
+
 		if (GetEventType() == T::GetStaticType())
 		{
 			Handled |= func(static_cast<T&>(*this));

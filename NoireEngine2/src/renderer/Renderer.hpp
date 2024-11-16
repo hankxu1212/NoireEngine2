@@ -32,7 +32,7 @@ public:
 
 	// UI statistics
 	inline static size_t ObjectsDrawn, VerticesDrawn, NumDrawCalls;
-	inline static bool UseGizmos = false;
+	inline static bool UseGizmos = true;
 	inline static bool DrawSkybox = true;
 
 public:

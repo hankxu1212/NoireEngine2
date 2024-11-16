@@ -23,9 +23,25 @@ void Editor::OnDetach()
 
 void Editor::OnEvent(Event& e)
 {
+    // do not trigger any scene events, if 
+    // 1. we are hovering over an imgui window;
+    // 2. we are clicking or interacting with an imgui window
+    // 3. we are using a scene gizmos
+    bool blockEvents = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) 
+        || ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused() 
+        || ImGuizmo::IsOver() || ImGuizmo::IsUsingAny();
+
+    if (blockEvents)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        e.Handled |= e.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+        e.Handled |= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+    }
+    
     e.Dispatch<KeyPressedEvent>(NE_BIND_EVENT_FN(Editor::OnKeyPressed));
-    e.Dispatch<MouseButtonReleasedEvent>(NE_BIND_EVENT_FN(Editor::OnMouseReleasedEvent));
+    e.Dispatch<MouseButtonPressedEvent>(NE_BIND_EVENT_FN(Editor::OnMouseReleasedEvent));
 }
+
 void Editor::OnImGuiRender()
 {
     Display();
@@ -397,7 +413,7 @@ bool Editor::OnKeyPressed(KeyPressedEvent& e)
     return false;
 }
 
-bool Editor::OnMouseReleasedEvent(MouseButtonReleasedEvent& e)
+bool Editor::OnMouseReleasedEvent(MouseButtonPressedEvent& e)
 {
     if (e.m_Button == Mouse::ButtonLeft) 
     {
@@ -451,12 +467,13 @@ void Editor::ShowGizmos()
         float snapValues[3] = { snapValue, snapValue, snapValue };
 
         cameraProjection[1][1] *= -1; // invert to opengl y-up
-        ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
+        bool manipulated = ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
             (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::WORLD, glm::value_ptr(transformMat),
             nullptr, snap ? snapValues : nullptr);
+
         cameraProjection[1][1] *= -1; // invert back
 
-        if (ImGuizmo::IsUsing())
+        if (manipulated && ImGuizmo::IsUsing())
         {
             selectedEntity->transform()->Decompose(transformMat);
         }

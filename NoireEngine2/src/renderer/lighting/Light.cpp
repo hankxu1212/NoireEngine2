@@ -49,7 +49,7 @@ void Light::Update()
 	glm::vec3 pos = transform->position();
 	glm::vec3 dir = transform->Back(); // always point in -z m_Direction
 
-	isDirty |= transform->isDirty;
+	isDirty |= transform->wasDirtyThisFrame;
 	isDirty |= VIEW_CAM->wasDirtyThisFrame;
 
 	if (!isDirty)
