@@ -37,6 +37,15 @@ void TransparencyPipeline::CreatePipeline()
 
 void TransparencyPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
+	m_TransparencyIsDirty |= scene->isSceneDirty;
+
+	if (m_TransparencyIsDirty)
+	{
+		m_TransparencyPush.frame = -1;
+		m_TransparencyIsDirty = false;
+	}
+	m_TransparencyPush.frame++;
+
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_Pipeline);
 
 	Renderer::Workspace& workspace = Renderer::Instance->workspaces[CURR_FRAME];
@@ -59,8 +68,8 @@ void TransparencyPipeline::Render(const Scene* scene, const CommandBuffer& comma
 	);
 
 	vkCmdPushConstants(commandBuffer, m_PipelineLayout,
-		VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_MISS_BIT_KHR,
-		0, sizeof(PushConstantRay), &m_ReflectionPush);
+		VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR,
+		0, sizeof(PushConstantRay), &m_TransparencyPush);
 
 	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
 	VkExtent2D extent = swapchain->getExtent();
@@ -84,7 +93,7 @@ void TransparencyPipeline::CreateRayTracingPipeline()
 	{
 		eRaygen,
 		eMiss,
-		eClosestHit, // <---- 3 specializations of this one
+		eAnyHit, // <---- 3 specializations of this one
 		eShaderGroupCount = 5
 	};
 
@@ -97,8 +106,8 @@ void TransparencyPipeline::CreateRayTracingPipeline()
 	}
 
 	// load all shaders
-	VulkanShader raygenModule("../spv/shaders/raytracing/reflections.rgen.spv", VulkanShader::ShaderStage::RTX_Raygen);
-	VulkanShader missModule("../spv/shaders/raytracing/reflections.rmiss.spv", VulkanShader::ShaderStage::RTX_Miss);
+	VulkanShader raygenModule("../spv/shaders/raytracing/transparency.rgen.spv", VulkanShader::ShaderStage::RTX_Raygen);
+	VulkanShader missModule("../spv/shaders/raytracing/transparency.rmiss.spv", VulkanShader::ShaderStage::RTX_Miss);
 
 	std::array<VkPipelineShaderStageCreateInfo, eShaderGroupCount> stages{};
 	VkPipelineShaderStageCreateInfo stage{ VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -106,13 +115,13 @@ void TransparencyPipeline::CreateRayTracingPipeline()
 	stages[eRaygen] = raygenModule.shaderStage();
 	stages[eMiss] = missModule.shaderStage();
 
-	// Hit Group - Closest Hit
+	// Hit Group - Any Hit (no closest hit)
 	// Create many variation of the closest hit
-	VulkanShader closesthitModule("../spv/shaders/raytracing/reflections.rchit.spv", VulkanShader::ShaderStage::RTX_CHit);
+	VulkanShader anyHitModule("../spv/shaders/raytracing/transparency.rahit.spv", VulkanShader::ShaderStage::RTX_AHit);
 	for (uint32_t s = 0; s < (uint32_t)specializations.size(); s++)
 	{
-		stages[eClosestHit + s] = closesthitModule.shaderStage();
-		stages[eClosestHit + s].pSpecializationInfo = specializations[s].GetSpecialization();
+		stages[eAnyHit + s] = anyHitModule.shaderStage();
+		stages[eAnyHit + s].pSpecializationInfo = specializations[s].GetSpecialization();
 	}
 
 	// Shader groups
@@ -132,18 +141,18 @@ void TransparencyPipeline::CreateRayTracingPipeline()
 	group.generalShader = eMiss;
 	m_RTShaderGroups.push_back(group);
 
-	// Hit Group - Closest Hit + AnyHit
+	// Hit Group - AnyHit
 	// Creating many Hit groups, one for each specialization
 	for (uint32_t s = 0; s < (uint32_t)specializations.size(); s++)
 	{
 		group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
 		group.generalShader = VK_SHADER_UNUSED_KHR;
-		group.closestHitShader = eClosestHit + s;  // Using variation of the closest hit
+		group.anyHitShader = eAnyHit + s;  // Using variation of the closest hit
 		m_RTShaderGroups.push_back(group);
 	}
 
 	// Push constant: we want to be able to update constants used by the shaders
-	VkPushConstantRange pushConstant{ VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_MISS_BIT_KHR,
+	VkPushConstantRange pushConstant{ VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR,
 									 0, sizeof(PushConstantRay) };
 
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -185,7 +194,7 @@ void TransparencyPipeline::CreateShaderBindingTables()
 	auto& rayTracingPipelineProperties = RaytracingContext::Get()->rayTracingPipelineProperties;
 
 	uint32_t missCount = 1;
-	uint32_t hitCount = 2;
+	uint32_t hitCount = 3;
 	uint32_t handleCount = /*raygen: always 1*/1 + missCount + hitCount;
 	uint32_t handleSize = rayTracingPipelineProperties.shaderGroupHandleSize;
 

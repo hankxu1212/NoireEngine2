@@ -9,6 +9,6 @@ layout (set = 3, binding = 0) uniform samplerCube skybox;
 
 void main()
 {
-    prd.hitValue = texture(skybox, prd.rayDir).rgb;
+    prd.hitValue = texture(skybox, gl_WorldRayDirectionEXT).rgb;
     prd.done = 1;
 }

@@ -192,6 +192,7 @@ private:
 		TLAS,  // Top-level acceleration structure
 		ReflectionImage,   // reflection
 		AOImage, // ao image
+		TransparencyImage
 	END_BINDING();
 
 #pragma endregion
@@ -229,6 +230,7 @@ private:
 	std::unique_ptr<ImageDepth> s_MainDepth;
 	std::unique_ptr<Image2D> s_RaytracedAOImage;
 	std::unique_ptr<Image2D> s_RaytracedReflectionsImage;
+	std::unique_ptr<Image2D> s_RaytracedTransparencyImage;
 
 	// post pipeline
 	struct PostPush

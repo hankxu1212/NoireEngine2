@@ -136,7 +136,7 @@ const rtx_shaders = [
 	maek.GLSLC('shaders/raytracing/reflections.rchit'),
 	maek.GLSLC('shaders/raytracing/reflections.rgen'),
 	maek.GLSLC('shaders/raytracing/reflections.rmiss'),
-	maek.GLSLC('shaders/raytracing/transparency.rchit'),
+	maek.GLSLC('shaders/raytracing/transparency.rahit'),
 	maek.GLSLC('shaders/raytracing/transparency.rgen'),
 	maek.GLSLC('shaders/raytracing/transparency.rmiss'),
 	maek.GLSLC('shaders/raytracing/ao.comp'),

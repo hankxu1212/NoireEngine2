@@ -6,7 +6,7 @@
 class VulkanShader
 {
 public:
-	enum ShaderStage { Frag, Vertex, Compute, RTX_Raygen, RTX_Miss, RTX_CHit };
+	enum ShaderStage { Frag, Vertex, Compute, RTX_Raygen, RTX_Miss, RTX_CHit, RTX_AHit };
 
 public:
 	VulkanShader(const std::string& path, ShaderStage stage);

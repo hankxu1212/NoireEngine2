@@ -39,6 +39,9 @@ VulkanShader::VulkanShader(const std::string& path, ShaderStage stage)
 	case VulkanShader::RTX_CHit:
 		m_ShaderStage.stage = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 		break;
+	case VulkanShader::RTX_AHit:
+		m_ShaderStage.stage = VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+		break;
 	default:
 		NE_ERROR("Did not find shader of this stage.");
 	}

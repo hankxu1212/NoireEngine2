@@ -1042,6 +1042,7 @@
     <None Include="src\shaders\raytracing\transparency.glsl" />
     <None Include="src\shaders\raytracing\transparency_opaque.rchit" />
     <None Include="src\shaders\raytracing\transparency_transparent.rchit" />
+    <None Include="src\shaders\raytracing\transparency.rahit" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

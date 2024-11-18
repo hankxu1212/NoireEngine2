@@ -27,7 +27,6 @@ layout(constant_id = 0) const int MATERIAL_TYPE = 0;
 
 void main()
 {
-
     // Object data
     ObjectDesc objResource = OBJECTS[gl_InstanceCustomIndexEXT];
     Indices indices = Indices(objResource.indexAddress);
@@ -51,8 +50,6 @@ void main()
     const vec3 nrm      = v0.nrm * barycentrics.x + v1.nrm * barycentrics.y + v2.nrm * barycentrics.z;
     const vec3 n = normalize(vec3(nrm * gl_WorldToObjectEXT));  // Transforming the normal to world space
 
-    const vec2 UV = v0.texCoord * barycentrics.x + v1.texCoord * barycentrics.y + v2.texCoord * barycentrics.z;
-
     // glass
     if (MATERIAL_TYPE == 2)
     {
@@ -74,6 +71,8 @@ void main()
         prd.rayDir    = reflect(gl_WorldRayDirectionEXT, n);
         return;
     }
+
+    const vec2 UV = v0.texCoord * barycentrics.x + v1.texCoord * barycentrics.y + v2.texCoord * barycentrics.z;
 
     vec3 color = vec3(0);
     if (MATERIAL_TYPE == 0) // lambertian

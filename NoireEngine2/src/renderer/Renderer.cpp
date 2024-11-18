@@ -265,6 +265,7 @@ void Renderer::AddUIViewportImages()
 {
 	s_UIPipeline->AppendDebugImage(s_RaytracedAOImage.get(), "Ray Traced AO");
 	s_UIPipeline->AppendDebugImage(s_RaytracedReflectionsImage.get(), "Ray Traced Reflection");
+	s_UIPipeline->AppendDebugImage(s_RaytracedTransparencyImage.get(), "Ray Traced Transparency");
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferColors.get(), "G Buffer Color");
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferNormals.get(), "G Buffer Position Normals");
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferEmission.get(), "G Buffer Emission");
@@ -492,8 +493,8 @@ void Renderer::CreateStorageBufferDescriptors()
 			.AddBinding(StorageBuffers::DirLights, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // dir lights
 			.AddBinding(StorageBuffers::SpotLights, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // point lights
 			.AddBinding(StorageBuffers::PointLights, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // spot lights
-			.AddBinding(StorageBuffers::Materials, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) // material instances
-			.AddBinding(StorageBuffers::Objects, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR) // object descriptions
+			.AddBinding(StorageBuffers::Materials, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR) // material instances
+			.AddBinding(StorageBuffers::Objects, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR) // object descriptions
 			.BindBuffer(StorageBuffers::MousePicking, &MousePickingInfo, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // mouse picking
 			.Build(workspace.set1_StorageBuffers, set1_StorageBuffersLayout);
 	}
@@ -684,6 +685,19 @@ void Renderer::CreateRayTracingImages()
 
 		s_RaytracedReflectionsImage->Load();
 	}
+
+	// ray traced reflection (rgba8)
+	{
+		s_RaytracedTransparencyImage = std::make_unique<Image2D>(
+			extent.x, extent.y,
+			RTX_TRANSPARENCY_FORMAT,
+			VK_IMAGE_LAYOUT_GENERAL,
+			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+			false
+		);
+
+		s_RaytracedTransparencyImage->Load();
+	}
 }
 
 void Renderer::CreateRaytracingDescriptors(bool update)
@@ -697,11 +711,13 @@ void Renderer::CreateRaytracingDescriptors(bool update)
 
 	VkDescriptorImageInfo reflectImageInfo = s_RaytracedReflectionsImage->GetDescriptorInfo();
 	VkDescriptorImageInfo aoImageInfo = s_RaytracedAOImage->GetDescriptorInfo();
+	VkDescriptorImageInfo transparencyImageInfo = s_RaytracedTransparencyImage->GetDescriptorInfo();
 
 	DescriptorBuilder builder = DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 		.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_COMPUTE_BIT)
 		.BindImage(RTXBindings::ReflectionImage, &reflectImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_FRAGMENT_BIT)
-		.BindImage(RTXBindings::AOImage, &aoImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT);
+		.BindImage(RTXBindings::AOImage, &aoImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
+		.BindImage(RTXBindings::TransparencyImage, &transparencyImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_RAYGEN_BIT_KHR);
 
 	if (update)
 		builder.Write(set5_RayTracing);
@@ -778,7 +794,7 @@ void Renderer::Create()
 #ifdef _NE_USE_RTX
 	s_ReflectionPipeline->CreatePipeline();
 
-	//s_TransparencyPipeline->CreatePipeline();
+	s_TransparencyPipeline->CreatePipeline();
 
 	AddUIViewportImages();
 #endif
@@ -817,7 +833,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 #ifdef _NE_USE_RTX
 		RunRTXReflection(scene, commandBuffer);
 
-		//RunRTXTransparency(scene, commandBuffer);
+		RunRTXTransparency(scene, commandBuffer);
 #endif
 
 		// render shadow passes

@@ -31,7 +31,10 @@ private:
 	struct PushConstantRay
 	{
 		int rayDepth = 3;
-	}m_ReflectionPush;
+		int frame = -1;
+	}m_TransparencyPush;
+
+	bool m_TransparencyIsDirty = false;
 
 	// SBT
 	Buffer m_rtSBTBuffer;
