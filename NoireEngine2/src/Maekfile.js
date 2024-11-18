@@ -132,7 +132,7 @@ const vulkan_objs = [
 ]
 
 const rtx_shaders = [
-	maek.GLSLC('shaders/raytracing/raytrace.rchit'),
+	maek.GLSLC('shaders/raytracing/reflections.rchit'),
 	maek.GLSLC('shaders/raytracing/reflections.rgen'),
 	maek.GLSLC('shaders/raytracing/reflections.rmiss'),
 	maek.GLSLC('shaders/raytracing/ao.comp'),

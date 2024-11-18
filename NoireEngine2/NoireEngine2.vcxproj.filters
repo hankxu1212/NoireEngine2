@@ -971,6 +971,9 @@
     <ClInclude Include="src\backend\pipeline\ReflectionPipeline.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\backend\shader\ShaderSpecialization.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />
@@ -1009,7 +1012,7 @@
     <None Include="src\shaders\shadow\shadowmapping.vert" />
     <None Include="src\shaders\glsl\shadows.glsl" />
     <None Include="src\shaders\raytracing\rtxcore.glsl" />
-    <None Include="src\shaders\raytracing\raytrace.rchit" />
+    <None Include="src\shaders\raytracing\reflections.rchit" />
     <None Include="src\shaders\raytracing\reflections.rgen" />
     <None Include="src\shaders\raytracing\reflections.rmiss" />
     <None Include="src\shaders\glsl\materials.glsl" />

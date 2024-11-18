@@ -2,11 +2,14 @@
 
 #include "backend/RaytracingContext.hpp"
 #include "backend/shader/VulkanShader.h"
-#include "renderer/scene/SceneManager.hpp"
+#include "backend/shader/ShaderSpecialization.hpp"
 #include "backend/pipeline/VulkanGraphicsPipelineBuilder.hpp"
-#include "utils/Logger.hpp"
+
+#include "renderer/scene/SceneManager.hpp"
 #include "renderer/object/Mesh.hpp"
 #include "renderer/materials/Material.hpp"
+
+#include "utils/Logger.hpp"
 #include "core/Bitmap.hpp"
 
 #pragma warning (disable:4702)
@@ -89,21 +92,35 @@ void ReflectionPipeline::CreateRayTracingPipeline()
 	{
 		eRaygen,
 		eMiss,
-		eClosestHit,
-		eShaderGroupCount
+		eClosestHit, // <---- 2 specializations of this one
+		eShaderGroupCount = 4
 	};
+
+	// Specialization - set 8 permutations of the 3 constant
+	std::vector<Specialization> specializations(2);
+	for (int i = 0; i < 2; i++)
+	{
+		specializations[i].Add(0, i);
+	}
 
 	// load all shaders
 	VulkanShader raygenModule("../spv/shaders/raytracing/reflections.rgen.spv", VulkanShader::ShaderStage::RTX_Raygen);
 	VulkanShader missModule("../spv/shaders/raytracing/reflections.rmiss.spv", VulkanShader::ShaderStage::RTX_Miss);
-	VulkanShader closesthitModule("../spv/shaders/raytracing/raytrace.rchit.spv", VulkanShader::ShaderStage::RTX_CHit);
 
 	std::array<VkPipelineShaderStageCreateInfo, eShaderGroupCount> stages{};
 	VkPipelineShaderStageCreateInfo stage{ VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
 
 	stages[eRaygen] = raygenModule.shaderStage();
 	stages[eMiss] = missModule.shaderStage();
-	stages[eClosestHit] = closesthitModule.shaderStage();
+
+	// Hit Group - Closest Hit
+	// Create many variation of the closest hit
+	VulkanShader closesthitModule("../spv/shaders/raytracing/reflections.rchit.spv", VulkanShader::ShaderStage::RTX_CHit);
+	for (uint32_t s = 0; s < (uint32_t)specializations.size(); s++)
+	{
+		stages[eClosestHit + s] = closesthitModule.shaderStage();
+		stages[eClosestHit + s].pSpecializationInfo = specializations[s].GetSpecialization();
+	}
 
 	// Shader groups
 	VkRayTracingShaderGroupCreateInfoKHR group{ VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR };
@@ -122,11 +139,15 @@ void ReflectionPipeline::CreateRayTracingPipeline()
 	group.generalShader = eMiss;
 	m_RTShaderGroups.push_back(group);
 
-	// closest hit shader
-	group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
-	group.generalShader = VK_SHADER_UNUSED_KHR;
-	group.closestHitShader = eClosestHit;
-	m_RTShaderGroups.push_back(group);
+	// Hit Group - Closest Hit + AnyHit
+	// Creating many Hit groups, one for each specialization
+	for (uint32_t s = 0; s < (uint32_t)specializations.size(); s++)
+	{
+		group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
+		group.generalShader = VK_SHADER_UNUSED_KHR;
+		group.closestHitShader = eClosestHit + s;  // Using variation of the closest hit
+		m_RTShaderGroups.push_back(group);
+	}
 
 	// Push constant: we want to be able to update constants used by the shaders
 	VkPushConstantRange pushConstant{ VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_MISS_BIT_KHR,
@@ -155,8 +176,6 @@ void ReflectionPipeline::CreateRayTracingPipeline()
 	rayPipelineInfo.stageCount = static_cast<uint32_t>(stages.size());  // Stages are shaders
 	rayPipelineInfo.pStages = stages.data();
 
-	// In this case, m_RTShaderGroups.size() == 3: we have one raygen group,
-	// one miss shader group, and one hit group.
 	rayPipelineInfo.groupCount = static_cast<uint32_t>(m_RTShaderGroups.size());
 	rayPipelineInfo.pGroups = m_RTShaderGroups.data();
 
@@ -173,7 +192,7 @@ void ReflectionPipeline::CreateShaderBindingTables()
 	auto& rayTracingPipelineProperties = RaytracingContext::Get()->rayTracingPipelineProperties;
 
 	uint32_t missCount = 1;
-	uint32_t hitCount = 1;
+	uint32_t hitCount = 2;
 	uint32_t handleCount = /*raygen: always 1*/1 + missCount + hitCount;
 	uint32_t handleSize = rayTracingPipelineProperties.shaderGroupHandleSize;
 

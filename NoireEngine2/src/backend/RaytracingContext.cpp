@@ -212,7 +212,7 @@ void RaytracingContext::CreateTopLevelAccelerationStructure(bool update)
 			rayInst.accelerationStructureReference = m_RTBuilder.getBlasDeviceAddress(workflowInstances[i].mesh->getID());
 			rayInst.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 			rayInst.mask = 0xFF; //  Only be hit if rayMask & instance.mask != 0
-			rayInst.instanceShaderBindingTableRecordOffset = 0; // We will use the same hit group for all objects
+			rayInst.instanceShaderBindingTableRecordOffset = (uint32_t)workflowInstances[i].material->getWorkflow();
 
 			m_TlasBuildStructs.emplace_back(rayInst);
 			instanceIndex++;

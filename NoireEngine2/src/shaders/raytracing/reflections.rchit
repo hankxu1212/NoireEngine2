@@ -23,6 +23,8 @@ layout(set = 5, binding = 0) uniform accelerationStructureEXT topLevelAS;
 const vec3 Fdielectric = vec3(0.04);
 #include "../glsl/pbr.glsl"
 
+layout(constant_id = 0) const int MATERIAL_TYPE = 0;
+
 void main()
 {
     // Object data
@@ -64,7 +66,7 @@ void main()
     uint matWorkflow = objResource.materialType;
 
     vec3 color;
-    if (matWorkflow == 0) // lambertian
+    if (MATERIAL_TYPE == 0) // lambertian
     {
         LambertianMaterial material = LAMBERTIAN_MATERIAL_ReadFrombuffer(objResource.offset);
 
@@ -78,7 +80,7 @@ void main()
 
 	    color = texColor * ambientLighting;
     }
-    else if (matWorkflow == 1) // pbr
+    else if (MATERIAL_TYPE == 1) // pbr
     {
     	PBRMaterial material = PBR_MATERIAL_ReadFrombuffer(objResource.offset);
         vec3 V = normalize(vec3(scene.cameraPos) - worldPos);

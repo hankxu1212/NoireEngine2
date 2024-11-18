@@ -249,6 +249,7 @@
     <ClInclude Include="src\backend\RaytracingContext.hpp" />
     <ClInclude Include="src\backend\pipeline\ShadowPipeline.hpp" />
     <ClInclude Include="src\backend\raytracing\RaytracingBuilderKHR.hpp" />
+    <ClInclude Include="src\backend\shader\ShaderSpecialization.hpp" />
     <ClInclude Include="src\renderer\materials\Materials.hpp" />
     <ClInclude Include="src\renderer\utils\EnvironmentBRDFBaker.hpp" />
     <ClInclude Include="src\renderer\utils\GGXSpecularEnvironmentBaker.hpp" />
@@ -440,7 +441,7 @@
     <None Include="src\shaders\postprocessing\bloom_up_sample.frag" />
     <None Include="src\shaders\postprocessing\gaussianblurH.frag" />
     <None Include="src\shaders\raytracing\ao.comp" />
-    <None Include="src\shaders\raytracing\raytrace.rchit" />
+    <None Include="src\shaders\raytracing\reflections.rchit" />
     <None Include="src\shaders\raytracing\reflections.rgen" />
     <None Include="src\shaders\raytracing\reflections.rmiss" />
     <None Include="src\shaders\raytracing\rtxcore.glsl" />
