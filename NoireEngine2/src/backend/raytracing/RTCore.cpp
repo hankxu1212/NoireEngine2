@@ -1,6 +1,6 @@
 #include "RTCore.h"
 
-#include "backend/pipeline/RaytracingPipeline.hpp"
+#include "backend/RaytracingContext.hpp"
 
 void AccelerationStructureBuildData::AddGeometry(const VkAccelerationStructureGeometryKHR& asGeom,
     const VkAccelerationStructureBuildRangeInfoKHR& offset)
@@ -39,7 +39,7 @@ VkAccelerationStructureBuildSizesInfoKHR AccelerationStructureBuildData::Finaliz
         maxPrimCount[i] = asBuildRangeInfo[i].primitiveCount;
     }
 
-    RaytracingPipeline::vkGetAccelerationStructureBuildSizesKHR(device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildInfo,
+    RaytracingContext::vkGetAccelerationStructureBuildSizesKHR(device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildInfo,
         maxPrimCount.data(), &sizeInfo);
 
     return sizeInfo;
@@ -100,7 +100,7 @@ void AccelerationStructureBuildData::CmdBuildAccelerationStructure(VkCommandBuff
     buildInfo.scratchData.deviceAddress = scratchAddress;
     buildInfo.pGeometries = asGeometry.data();  // In case the structure was copied, we need to update the pointer
 
-    RaytracingPipeline::vkCmdBuildAccelerationStructuresKHR(cmd, 1, &buildInfo, &rangeInfo);
+    RaytracingContext::vkCmdBuildAccelerationStructuresKHR(cmd, 1, &buildInfo, &rangeInfo);
 
     // Since the scratch buffer is reused across builds, we need a barrier to ensure one build
     // is finished before starting the next one.
@@ -123,7 +123,7 @@ void AccelerationStructureBuildData::CmdUpdateAccelerationStructure(VkCommandBuf
     buildInfo.scratchData.deviceAddress = scratchAddress;
     buildInfo.pGeometries = asGeometry.data();
 
-    RaytracingPipeline::vkCmdBuildAccelerationStructuresKHR(cmd, 1, &buildInfo, &rangeInfo);
+    RaytracingContext::vkCmdBuildAccelerationStructuresKHR(cmd, 1, &buildInfo, &rangeInfo);
 
     // Since the scratch buffer is reused across builds, we need a barrier to ensure one build
     // is finished before starting the next one.

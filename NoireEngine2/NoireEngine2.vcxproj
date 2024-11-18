@@ -89,10 +89,11 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\pipeline\ReflectionPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\BloomPipeline.cpp" />
     <ClCompile Include="src\backend\raytracing\BLASBuilder.cpp" />
     <ClCompile Include="src\backend\raytracing\RTCore.cpp" />
-    <ClCompile Include="src\backend\pipeline\RaytracingPipeline.cpp" />
+    <ClCompile Include="src\backend\RaytracingContext.cpp" />
     <ClCompile Include="src\backend\pipeline\ShadowPipeline.cpp" />
     <ClCompile Include="src\backend\raytracing\RaytracingBuilderKHR.cpp" />
     <ClCompile Include="src\renderer\utils\EnvironmentBRDFBaker.cpp" />
@@ -241,10 +242,11 @@
     <ClCompile Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\pipeline\ReflectionPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\BloomPipeline.hpp" />
     <ClInclude Include="src\backend\raytracing\BLASBuilder.h" />
     <ClInclude Include="src\backend\raytracing\RTCore.h" />
-    <ClInclude Include="src\backend\pipeline\RaytracingPipeline.hpp" />
+    <ClInclude Include="src\backend\RaytracingContext.hpp" />
     <ClInclude Include="src\backend\pipeline\ShadowPipeline.hpp" />
     <ClInclude Include="src\backend\raytracing\RaytracingBuilderKHR.hpp" />
     <ClInclude Include="src\renderer\materials\Materials.hpp" />
@@ -439,8 +441,8 @@
     <None Include="src\shaders\postprocessing\gaussianblurH.frag" />
     <None Include="src\shaders\raytracing\ao.comp" />
     <None Include="src\shaders\raytracing\raytrace.rchit" />
-    <None Include="src\shaders\raytracing\raytrace.rgen" />
-    <None Include="src\shaders\raytracing\raytrace.rmiss" />
+    <None Include="src\shaders\raytracing\reflections.rgen" />
+    <None Include="src\shaders\raytracing\reflections.rmiss" />
     <None Include="src\shaders\raytracing\rtxcore.glsl" />
     <None Include="src\shaders\shadow\shadowmapping.frag" />
     <None Include="src\shaders\shadow\shadowmapping.vert" />

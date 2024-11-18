@@ -10,7 +10,7 @@
 #include "backend/pipeline/SkyboxPipeline.hpp"
 #include "backend/pipeline/GizmosPipeline.hpp"
 #include "backend/pipeline/ShadowPipeline.hpp"
-#include "backend/pipeline/RaytracingPipeline.hpp"
+#include "backend/pipeline/ReflectionPipeline.hpp"
 #include "backend/pipeline/UIPipeline.hpp"
 #include "backend/pipeline/BloomPipeline.hpp"
 
@@ -260,7 +260,7 @@ private:
 	friend class GizmosPipeline;
 	friend class SkyboxPipeline;
 	friend class ShadowPipeline;
-	friend class RaytracingPipeline;
+	friend class ReflectionPipeline;
 	friend class UIPipeline;
 	friend class BloomPipeline;
 
@@ -268,7 +268,7 @@ private:
 	std::unique_ptr<GizmosPipeline>					s_GizmosPipeline;
 	std::unique_ptr<SkyboxPipeline>					s_SkyboxPipeline;
 	std::unique_ptr<ShadowPipeline>					s_ShadowPipeline;
-	std::unique_ptr<RaytracingPipeline>				s_RaytracingPipeline;
+	std::unique_ptr<ReflectionPipeline>				s_RaytracingPipeline;
 	std::unique_ptr<UIPipeline>						s_UIPipeline;
 	std::unique_ptr<BloomPipeline>					s_BloomPipeline;
 };

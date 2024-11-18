@@ -133,13 +133,14 @@ const vulkan_objs = [
 
 const rtx_shaders = [
 	maek.GLSLC('shaders/raytracing/raytrace.rchit'),
-	maek.GLSLC('shaders/raytracing/raytrace.rgen'),
-	maek.GLSLC('shaders/raytracing/raytrace.rmiss'),
+	maek.GLSLC('shaders/raytracing/reflections.rgen'),
+	maek.GLSLC('shaders/raytracing/reflections.rmiss'),
 	maek.GLSLC('shaders/raytracing/ao.comp'),
 ];
 
 const rtx_objs = [
-	maek.CPP('backend/pipeline/RaytracingPipeline.cpp', undefined, { depends: [...rtx_shaders] }),
+	maek.CPP('backend/RaytracingContext.cpp', undefined, { depends: [...rtx_shaders] }),
+	maek.CPP('backend/pipeline/ReflectionPipeline.cpp'),
 	maek.CPP('backend/raytracing/RTCore.cpp'),
 	maek.CPP('backend/raytracing/BLASBuilder.cpp'),
 	maek.CPP('backend/raytracing/RaytracingBuilderKHR.cpp')

@@ -127,7 +127,7 @@ VkDeviceSize BlasBuilder::BuildAccelerationStructures(VkCommandBuffer cmd,
         VkAccelerationStructureCreateInfoKHR createInfo = data.MakeCreateInfo();
 
         // Create and store acceleration structure
-        blasAccel[m_currentBlasIdx] = RaytracingPipeline::CreateAccelerationStructure(createInfo);
+        blasAccel[m_currentBlasIdx] = RaytracingContext::CreateAccelerationStructure(createInfo);
         collectedAccel.push_back(blasAccel[m_currentBlasIdx].handle);
 
         // Setup build information for the current BLAS
@@ -145,7 +145,7 @@ VkDeviceSize BlasBuilder::BuildAccelerationStructures(VkCommandBuffer cmd,
     }
 
     // Command to build the acceleration structures on the GPU
-    RaytracingPipeline::vkCmdBuildAccelerationStructuresKHR(cmd, static_cast<uint32_t>(collectedBuildInfo.size()), collectedBuildInfo.data(),
+    RaytracingContext::vkCmdBuildAccelerationStructuresKHR(cmd, static_cast<uint32_t>(collectedBuildInfo.size()), collectedBuildInfo.data(),
         collectedRangeInfo.data());
 
     // Barrier to ensure proper synchronization after building
@@ -154,7 +154,7 @@ VkDeviceSize BlasBuilder::BuildAccelerationStructures(VkCommandBuffer cmd,
     // If a query pool is available, record the properties of the built acceleration structures
     if (m_queryPool)
     {
-        RaytracingPipeline::vkCmdWriteAccelerationStructuresPropertiesKHR(cmd, static_cast<uint32_t>(collectedAccel.size()), collectedAccel.data(),
+        RaytracingContext::vkCmdWriteAccelerationStructuresPropertiesKHR(cmd, static_cast<uint32_t>(collectedAccel.size()), collectedAccel.data(),
             VK_QUERY_TYPE_ACCELERATION_STRUCTURE_COMPACTED_SIZE_KHR, m_queryPool,
             currentQueryIdx);
         currentQueryIdx += static_cast<uint32_t>(collectedAccel.size());
@@ -205,14 +205,14 @@ void BlasBuilder::CmdCompactBlas(VkCommandBuffer cmd,
             VkAccelerationStructureCreateInfoKHR asCreateInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
             asCreateInfo.size = compactSize;
             asCreateInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-            blasAccel[i] = RaytracingPipeline::CreateAccelerationStructure(asCreateInfo);
+            blasAccel[i] = RaytracingContext::CreateAccelerationStructure(asCreateInfo);
 
             // Command to copy the original BLAS to the newly created compacted version.
             VkCopyAccelerationStructureInfoKHR copyInfo{ VK_STRUCTURE_TYPE_COPY_ACCELERATION_STRUCTURE_INFO_KHR };
             copyInfo.src = blasBuildData[i].buildInfo.dstAccelerationStructure;
             copyInfo.dst = blasAccel[i].handle;
             copyInfo.mode = VK_COPY_ACCELERATION_STRUCTURE_MODE_COMPACT_KHR;
-            RaytracingPipeline::vkCmdCopyAccelerationStructureKHR(cmd, &copyInfo);
+            RaytracingContext::vkCmdCopyAccelerationStructureKHR(cmd, &copyInfo);
 
             // Update the build data to reflect the new destination of the BLAS.
             blasBuildData[i].buildInfo.dstAccelerationStructure = blasAccel[i].handle;
@@ -228,7 +228,7 @@ void BlasBuilder::destroyNonCompactedBlas()
 {
     for (auto& blas : m_cleanupBlasAccel)
     {
-        RaytracingPipeline::DeleteAccelerationStructure(blas);
+        RaytracingContext::DeleteAccelerationStructure(blas);
     }
 
     m_cleanupBlasAccel.clear();

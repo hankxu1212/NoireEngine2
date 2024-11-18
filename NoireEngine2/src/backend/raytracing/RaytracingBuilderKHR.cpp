@@ -8,9 +8,9 @@ void RaytracingBuilderKHR::Destroy()
 {
     for(auto& b : m_blas)
     {
-        RaytracingPipeline::DeleteAccelerationStructure(b);
+        RaytracingContext::DeleteAccelerationStructure(b);
     }
-    RaytracingPipeline::DeleteAccelerationStructure(m_tlas);
+    RaytracingContext::DeleteAccelerationStructure(m_tlas);
 
     m_InstanceBuffer.Destroy();
     m_InstanceStagingBuffer.Destroy();
@@ -23,7 +23,7 @@ VkDeviceAddress RaytracingBuilderKHR::getBlasDeviceAddress(uint32_t blasId)
     assert(size_t(blasId) < m_blas.size());
     VkAccelerationStructureDeviceAddressInfoKHR addressInfo{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR};
     addressInfo.accelerationStructure = m_blas[blasId].handle;
-    return RaytracingPipeline::vkGetAccelerationStructureDeviceAddressKHR(VulkanContext::GetDevice(), &addressInfo);
+    return RaytracingContext::vkGetAccelerationStructureDeviceAddressKHR(VulkanContext::GetDevice(), &addressInfo);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ void RaytracingBuilderKHR::BuildBlas(const std::vector<BlasInput>& input, VkBuil
     VkDeviceSize scratchSize = blasBuilder.getScratchSize(hintMaxBudget, blasBuildData, minAlignment);
 
     // Allocate the scratch buffers holding the temporary data of the acceleration structure builder
-    ScratchBuffer blasScratchBuffer = RaytracingPipeline::CreateScratchBuffer(scratchSize);
+    ScratchBuffer blasScratchBuffer = RaytracingContext::CreateScratchBuffer(scratchSize);
 
     // 3) getting the device address for the scratch buffer
     std::vector<VkDeviceAddress> scratchAddresses;
@@ -104,7 +104,7 @@ void RaytracingBuilderKHR::UpdateBlas(uint32_t blasIdx, BlasInput& blas, VkBuild
     buildData.asBuildRangeInfo = blas.asBuildOffsetInfo;
     auto sizeInfo              = buildData.FinalizeGeometry(VulkanContext::GetDevice(), flags);
 
-    ScratchBuffer scratchBuffer = RaytracingPipeline::CreateScratchBuffer(sizeInfo.updateScratchSize);
+    ScratchBuffer scratchBuffer = RaytracingContext::CreateScratchBuffer(sizeInfo.updateScratchSize);
 
     CommandBuffer cmdBuf;
 
@@ -176,7 +176,7 @@ void RaytracingBuilderKHR::CmdCreateTlas(VkCommandBuffer cmdBuf, uint32_t countI
     VkDeviceSize scratchSize = update ? sizeInfo.updateScratchSize : sizeInfo.buildScratchSize;
 
     if (!scratchBuffer.buffer.getBuffer() || scratchBuffer.buffer.getSize() < scratchSize)
-        scratchBuffer = RaytracingPipeline::CreateScratchBuffer(scratchSize);
+        scratchBuffer = RaytracingContext::CreateScratchBuffer(scratchSize);
 
     if (update)
     {  // Update the acceleration structure
@@ -187,7 +187,7 @@ void RaytracingBuilderKHR::CmdCreateTlas(VkCommandBuffer cmdBuf, uint32_t countI
     {  // Create and build the acceleration structure
         VkAccelerationStructureCreateInfoKHR createInfo = tlasBuildData.MakeCreateInfo();
 
-        m_tlas = RaytracingPipeline::CreateAccelerationStructure(createInfo);
+        m_tlas = RaytracingContext::CreateAccelerationStructure(createInfo);
         tlasBuildData.CmdBuildAccelerationStructure(cmdBuf, m_tlas.handle, scratchBuffer.deviceAddress);
     }
 }

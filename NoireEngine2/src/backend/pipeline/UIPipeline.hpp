@@ -7,7 +7,7 @@
 #include "imgui/backends/imgui_impl_vulkan.h"
 #include "imgui/backends/imgui_impl_glfw.h"
 
-class RaytracingPipeline;
+class RaytracingContext;
 class Image2D;
 
 class UIPipeline : public VulkanPipeline

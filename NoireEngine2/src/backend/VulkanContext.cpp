@@ -33,6 +33,7 @@ void VulkanContext::LateInitialize()
     Image2D::Create(Files::Path("../textures/default.png"), VK_FORMAT_R8G8B8A8_SRGB, VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, false, true);
 
     s_Renderer = std::make_unique<Renderer>();
+    s_RaytracingContext = std::make_unique<RaytracingContext>();
 }
 
 void VulkanContext::Update()

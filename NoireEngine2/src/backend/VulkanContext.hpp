@@ -28,6 +28,7 @@
 #include "renderpass/Swapchain.hpp"
 
 #include "renderer/Renderer.hpp"
+#include "RaytracingContext.hpp"
 
 #include "backend/descriptor/DescriptorLayoutCache.hpp"
 #include "core/resources/Resources.hpp"
@@ -141,6 +142,7 @@ private:
 	std::vector<std::unique_ptr<SwapChain>>						m_Swapchains;
 
 	std::unique_ptr<Renderer>									s_Renderer;
+	std::unique_ptr<RaytracingContext>							s_RaytracingContext;
 
 	DescriptorLayoutCache										m_DescriptorLayoutCache;
 

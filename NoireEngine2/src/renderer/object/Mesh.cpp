@@ -15,7 +15,7 @@
 #include "glm/gtx/string_cast.hpp"
 #include "glm/gtx/extended_min_max.hpp"
 
-#include "backend/pipeline/RaytracingPipeline.hpp"
+#include "backend/RaytracingContext.hpp"
 
 Mesh::Mesh(const CreateInfo& createInfo) :
 	m_CreateInfo(createInfo)

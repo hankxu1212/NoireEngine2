@@ -2,8 +2,6 @@
 #include "backend/VulkanContext.hpp"
 #include "imguizmo/ImGuizmo.h"
 #include "glm/gtx/string_cast.hpp"
-
-#include "RaytracingPipeline.hpp"
 #include "renderer/Renderer.hpp"
 
 // allocates a seperate custom descriptor pool for imgui

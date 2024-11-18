@@ -33,7 +33,8 @@ layout(push_constant) uniform params_
 // Tracing a ray and returning the weight based on the distance of the hit
 float TraceRay(in rayQueryEXT rayQuery, in vec3 origin, in vec3 direction)
 {
-    uint flags = rtao_distance_based == 0 ? gl_RayFlagsTerminateOnFirstHitEXT : gl_RayFlagsNoneEXT;
+    // ignore any-hit shaders and closest-hit shaders , and terminate the ray on the first found intersection
+    uint flags = gl_RayFlagsOpaqueEXT | gl_RayFlagsSkipClosestHitShaderEXT | gl_RayFlagsTerminateOnFirstHitEXT;
 
     rayQueryInitializeEXT(rayQuery, topLevelAS, flags, 0xFF, origin, 0.0f, direction, rtao_radius);
 

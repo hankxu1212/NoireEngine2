@@ -1,33 +1,32 @@
 #pragma once
 
-#include "VulkanPipeline.hpp"
 #include "backend/renderpass/Renderpass.hpp"
 #include "backend/buffers/Buffer.hpp"
-#include "backend/descriptor/DescriptorBuilder.hpp"
 #include "backend/raytracing/RaytracingBuilderKHR.hpp"
 #include "backend/images/Image2D.hpp"
 #include "core/Core.hpp"
+#include "core/resources/Module.hpp"
 
 class Renderer;
 
-class RaytracingPipeline : public VulkanPipeline
+class RaytracingContext
 {
+	inline static RaytracingContext* g_Instance;
+
 public:
-	RaytracingPipeline();
+	static RaytracingContext* Get() { return g_Instance; }
 
-	~RaytracingPipeline();
+	RaytracingContext();
 
-	void CreatePipeline() override;
+	~RaytracingContext();
 
 	void CreateAccelerationStructures();
 
-	void Render(const Scene* scene, const CommandBuffer& commandBuffer) override;
-
-	void Prepare(const Scene* scene, const CommandBuffer& commandBuffer);
-
-	void OnUIRender();
-
 	inline VkAccelerationStructureKHR GetTLAS() const { return m_RTBuilder.getAccelerationStructure(); }
+
+	void CreateBottomLevelAccelerationStructure();
+
+	void CreateTopLevelAccelerationStructure(bool update);
 
 public: // ray tracing helpers
 	// Function pointers for ray tracing related stuff
@@ -59,31 +58,8 @@ public: // ray tracing helpers
 	static void DeleteAccelerationStructure(AccelerationStructure& accelerationStructure);
 
 private:
-	VkPipeline m_Pipeline = VK_NULL_HANDLE;
-	VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
-
-	std::vector<VkRayTracingShaderGroupCreateInfoKHR> m_RTShaderGroups;
-
-	struct PushConstantRay
-	{
-		int rayDepth = 5;
-	}m_ReflectionPush;
-
 	RaytracingBuilderKHR m_RTBuilder;
-
-	// SBT
-	Buffer m_rtSBTBuffer;
-	VkStridedDeviceAddressRegionKHR m_rgenRegion{};
-	VkStridedDeviceAddressRegionKHR m_missRegion{};
-	VkStridedDeviceAddressRegionKHR m_hitRegion{};
-	VkStridedDeviceAddressRegionKHR m_callRegion{};
-
-private:
-	void CreateBottomLevelAccelerationStructure();
-	void CreateTopLevelAccelerationStructure(bool update);
-	void CreateRayTracingPipeline();
-	void CreateShaderBindingTables();
-
+	
 	std::vector<VkAccelerationStructureInstanceKHR> m_TlasBuildStructs;
 };
 

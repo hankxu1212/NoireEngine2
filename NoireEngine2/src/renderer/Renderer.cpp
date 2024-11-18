@@ -689,7 +689,7 @@ void Renderer::CreateRayTracingImages()
 void Renderer::CreateRaytracingDescriptors(bool update)
 {
 	// create the descriptors
-	auto as = s_RaytracingPipeline->GetTLAS();
+	auto as = RaytracingContext::Get()->GetTLAS();
 
 	VkWriteDescriptorSetAccelerationStructureKHR descASInfo{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR };
 	descASInfo.accelerationStructureCount = 1;
@@ -745,8 +745,8 @@ void Renderer::Create()
 	s_ShadowPipeline->CreateRenderPass();
 
 #ifdef _NE_USE_RTX
-	s_RaytracingPipeline = std::make_unique<RaytracingPipeline>();
-	s_RaytracingPipeline->CreateAccelerationStructures();
+	s_RaytracingPipeline = std::make_unique<ReflectionPipeline>();
+	RaytracingContext::Get()->CreateAccelerationStructures();
 #endif
 
 	// this relies on shadow pipeline's depth attachment and ray tracing's acceleration structures
