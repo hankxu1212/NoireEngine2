@@ -436,7 +436,7 @@ void ShadowPipeline::T_RenderShadows(uint32_t tid, VkCommandBufferInheritanceInf
 		uint32_t offsetIndex = 0;
 		VertexInput* previouslyBindedVertex = nullptr;
 
-		for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
+		for (int workflowIndex = 0; workflowIndex < N_OPAQUE_MATERIALS; ++workflowIndex)
 		{
 			const auto& workflowInstances = allInstances[workflowIndex];
 			if (workflowInstances.empty())

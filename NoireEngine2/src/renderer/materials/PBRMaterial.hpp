@@ -39,11 +39,7 @@ public:
 public:
 	PBRMaterial() = default;
 
-	static std::shared_ptr<Material> Create();
-
-	static std::shared_ptr<Material> Create(const CreateInfo& createInfo);
-
-	void Load();
+	void Load() override;
 
 	static Material* Deserialize(const Scene::TValueMap& obj);
 
@@ -60,8 +56,9 @@ public:
 	void* getPushPointer() const override { return (void*)&m_Uniform; };
 
 private:
+	friend class Material;
+
 	PBRMaterial(const CreateInfo& createInfo);
-	static std::shared_ptr<Material> Create(const Node& node);
 
 	CreateInfo						m_CreateInfo;
 	MaterialUniform					m_Uniform;

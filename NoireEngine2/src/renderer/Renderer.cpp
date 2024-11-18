@@ -15,8 +15,6 @@
 #include "core/resources/Files.hpp"
 
 #include "renderer/materials/Material.hpp"
-#include "renderer/materials/Materials.hpp"
-
 #include "renderer/object/Mesh.hpp"
 #include "renderer/scene/Scene.hpp"
 #include "renderer/scene/SceneManager.hpp"
@@ -33,7 +31,9 @@
 #define G_BUFFER_COLOR_FORMAT VK_FORMAT_R8G8B8A8_UNORM
 #define G_BUFFER_POSNORM_FORMAT VK_FORMAT_R32G32B32A32_SFLOAT
 #define G_BUFFER_EMISSION_FORMAT VK_FORMAT_R16G16B16A16_SFLOAT
-#define RTX_REFLECTION_FORMAT VK_FORMAT_R8G8B8A8_UNORM
+#define RTX_REFLECTION_FORMAT G_BUFFER_COLOR_FORMAT
+#define RTX_TRANSPARENCY_FORMAT G_BUFFER_COLOR_FORMAT
+
 #define DEPTH_ARRAY_SCALE 1024
 
 static inline void InsertPipelineMemoryBarrier(const CommandBuffer& buf)
@@ -228,7 +228,7 @@ void Renderer::OnUIRender()
 		}
 		ImGui::Columns(1);
 
-		s_RaytracingPipeline->OnUIRender();
+		s_ReflectionPipeline->OnUIRender();
 	}
 
 	if (ImGui::CollapsingHeader("Renderer Statistics", &showMenu))
@@ -672,7 +672,7 @@ void Renderer::CreateRayTracingImages()
 		s_RaytracedAOImage->Load();
 	}
 
-	// ray traced reflection (rgba32f)
+	// ray traced reflection (rgba8)
 	{
 		s_RaytracedReflectionsImage = std::make_unique<Image2D>(
 			extent.x, extent.y,
@@ -745,8 +745,12 @@ void Renderer::Create()
 	s_ShadowPipeline->CreateRenderPass();
 
 #ifdef _NE_USE_RTX
-	s_RaytracingPipeline = std::make_unique<ReflectionPipeline>();
+	s_ReflectionPipeline = std::make_unique<ReflectionPipeline>();
+
+	s_TransparencyPipeline = std::make_unique<TransparencyPipeline>();
+
 	RaytracingContext::Get()->CreateAccelerationStructures();
+
 #endif
 
 	// this relies on shadow pipeline's depth attachment and ray tracing's acceleration structures
@@ -772,7 +776,10 @@ void Renderer::Create()
 	s_BloomPipeline->CreatePipeline();
 
 #ifdef _NE_USE_RTX
-	s_RaytracingPipeline->CreatePipeline();
+	s_ReflectionPipeline->CreatePipeline();
+
+	//s_TransparencyPipeline->CreatePipeline();
+
 	AddUIViewportImages();
 #endif
 
@@ -797,7 +804,7 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 
 #ifdef _NE_USE_RTX
 		// updates acceleration structures as needed
-		s_RaytracingPipeline->Prepare(scene, commandBuffer);
+		s_ReflectionPipeline->Prepare(scene, commandBuffer);
 #endif
 	}
 	
@@ -809,6 +816,8 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		// draw rtx
 #ifdef _NE_USE_RTX
 		RunRTXReflection(scene, commandBuffer);
+
+		//RunRTXTransparency(scene, commandBuffer);
 #endif
 
 		// render shadow passes
@@ -1232,7 +1241,7 @@ void Renderer::CompactDraws(const std::vector<ObjectInstance>& objects, uint32_t
 void Renderer::PrepareIndirectDrawBuffer(const Scene* scene)
 {
 	const auto& allInstances = scene->getObjectInstances();
-	m_IndirectBatches.resize(allInstances.size());
+	m_IndirectBatches.resize(N_OPAQUE_MATERIALS);
 
 	ObjectsDrawn = 0;
 	NumDrawCalls = 0;
@@ -1243,7 +1252,7 @@ void Renderer::PrepareIndirectDrawBuffer(const Scene* scene)
 	//draw all instances in relation to a certain material:
 	uint32_t instanceIndex = 0;
 
-	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
+	for (int workflowIndex = 0; workflowIndex < N_OPAQUE_MATERIALS; ++workflowIndex)
 	{
 		const auto& workflowInstances = allInstances[workflowIndex];
 		if (workflowInstances.empty())
@@ -1300,7 +1309,7 @@ void Renderer::DrawScene(const Scene* scene, const CommandBuffer& commandBuffer)
 		0, nullptr //dynamic offsets count, ptr
 	);
 
-	for (int workflowIndex = 0; workflowIndex < allInstances.size(); ++workflowIndex)
+	for (int workflowIndex = 0; workflowIndex < N_OPAQUE_MATERIALS; ++workflowIndex)
 	{
 		const auto& workflowInstances = allInstances[workflowIndex];
 		if (workflowInstances.empty())
@@ -1401,7 +1410,7 @@ void Renderer::RunAOCompute(const Scene* scene, const CommandBuffer& commandBuff
 
 void Renderer::RunRTXReflection(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	s_RaytracingPipeline->Render(scene, commandBuffer);
+	s_ReflectionPipeline->Render(scene, commandBuffer);
 
 	// Adding a barrier to be sure the ray tracing pipeline shader has finished
 	// writing to the reflection image before fragment shader reads from it
@@ -1414,6 +1423,11 @@ void Renderer::RunRTXReflection(const Scene* scene, const CommandBuffer& command
 		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 		VK_IMAGE_ASPECT_COLOR_BIT,
 		1, 0, 1, 0);
+}
+
+void Renderer::RunRTXTransparency(const Scene* scene, const CommandBuffer& commandBuffer)
+{
+	s_TransparencyPipeline->Render(scene, commandBuffer);
 }
 
 void Renderer::RunPost(const CommandBuffer& commandBuffer)

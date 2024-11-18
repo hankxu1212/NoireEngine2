@@ -89,6 +89,8 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\pipeline\TransparencyPipeline.cpp" />
+    <ClCompile Include="src\renderer\materials\GlassMaterial.cpp" />
     <ClCompile Include="src\backend\pipeline\ReflectionPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\BloomPipeline.cpp" />
     <ClCompile Include="src\backend\raytracing\BLASBuilder.cpp" />
@@ -242,6 +244,8 @@
     <ClCompile Include="src\backend\pipeline\VulkanGraphicsPipelineBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\pipeline\TransparencyPipeline.hpp" />
+    <ClInclude Include="src\renderer\materials\GlassMaterial.hpp" />
     <ClInclude Include="src\backend\pipeline\ReflectionPipeline.hpp" />
     <ClInclude Include="src\backend\pipeline\BloomPipeline.hpp" />
     <ClInclude Include="src\backend\raytracing\BLASBuilder.h" />
@@ -432,6 +436,11 @@
     <None Include="src\shaders\glsl\utils.glsl" />
     <None Include="src\shaders\lambertian.frag" />
     <None Include="src\shaders\lambertian.vert" />
+    <None Include="src\shaders\raytracing\transparency.glsl" />
+    <None Include="src\shaders\raytracing\transparency.rgen" />
+    <None Include="src\shaders\raytracing\transparency.rmiss" />
+    <None Include="src\shaders\raytracing\transparency_opaque.rchit" />
+    <None Include="src\shaders\raytracing\transparency_transparent.rchit" />
     <None Include="src\shaders\wireframe.vert" />
     <None Include="src\shaders\passthrough.vert" />
     <None Include="src\shaders\pbr.frag" />
@@ -444,7 +453,7 @@
     <None Include="src\shaders\raytracing\reflections.rchit" />
     <None Include="src\shaders\raytracing\reflections.rgen" />
     <None Include="src\shaders\raytracing\reflections.rmiss" />
-    <None Include="src\shaders\raytracing\rtxcore.glsl" />
+    <None Include="src\shaders\raytracing\reflections.glsl" />
     <None Include="src\shaders\shadow\shadowmapping.frag" />
     <None Include="src\shaders\shadow\shadowmapping.vert" />
     <None Include="src\shaders\skybox.frag" />

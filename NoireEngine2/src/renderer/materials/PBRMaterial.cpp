@@ -74,7 +74,7 @@ Material* PBRMaterial::Deserialize(const Scene::TValueMap& obj)
 				createInfo.roughness = roughnessVal.as_float();
 		}
 
-		return Create(createInfo).get();
+		return Create<PBRMaterial>(createInfo).get();
 	}
 	catch (std::exception& e) {
 		NE_WARN("Failed to deserialize value as Material: {}", e.what());
@@ -84,33 +84,6 @@ Material* PBRMaterial::Deserialize(const Scene::TValueMap& obj)
 
 PBRMaterial::PBRMaterial(const CreateInfo& createInfo) :
 	m_CreateInfo(createInfo) {
-}
-
-std::shared_ptr<Material> PBRMaterial::Create()
-{
-	CreateInfo defaultInfo;
-	return Create(defaultInfo);
-}
-
-std::shared_ptr<Material> PBRMaterial::Create(const CreateInfo& createInfo)
-{
-	PBRMaterial temp(createInfo);
-	Node node;
-	node << temp;
-	return Create(node);
-}
-
-std::shared_ptr<Material> PBRMaterial::Create(const Node& node)
-{
-	if (auto resource = Resources::Get()->Find<Material>(node)) {
-		return resource;
-	}
-
-	auto result = std::make_shared<PBRMaterial>();
-	Resources::Get()->Add(node, std::dynamic_pointer_cast<Resource>(result));
-	node >> *result;
-	result->Load();
-	return result;
 }
 
 void PBRMaterial::Load()

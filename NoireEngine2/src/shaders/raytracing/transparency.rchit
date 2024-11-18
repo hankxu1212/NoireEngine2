@@ -27,7 +27,6 @@ layout(constant_id = 0) const int MATERIAL_TYPE = 0;
 
 void main()
 {
-
     // Object data
     ObjectDesc objResource = OBJECTS[gl_InstanceCustomIndexEXT];
     Indices indices = Indices(objResource.indexAddress);
@@ -53,29 +52,17 @@ void main()
 
     const vec2 UV = v0.texCoord * barycentrics.x + v1.texCoord * barycentrics.y + v2.texCoord * barycentrics.z;
 
-    // glass
-    if (MATERIAL_TYPE == 2)
-    {
-        prd.done = 0;
-        prd.rayOrigin = worldPos;
-
-        // Compute refraction direction
-        float eta = (dot(-gl_WorldRayDirectionEXT, n) > 0.0) ? 1.0 / 1.5 : 1.5; // Adjust eta based on entry/exit
-        vec3 refractedDir = refract(gl_WorldRayDirectionEXT, n, eta);
-        prd.rayDir = refractedDir;
-        return;
-    }
-
     // return early if is first bounce:
     if (prd.depth == 0)
     {
         prd.done      = 0;
         prd.rayOrigin = worldPos;
         prd.rayDir    = reflect(gl_WorldRayDirectionEXT, n);
+        prd.hitValue = vec3(0);
         return;
     }
 
-    vec3 color = vec3(0);
+    vec3 color;
     if (MATERIAL_TYPE == 0) // lambertian
     {
         LambertianMaterial material = LAMBERTIAN_MATERIAL_ReadFrombuffer(objResource.offset);
@@ -89,8 +76,6 @@ void main()
 		    texColor *= texture(textures[material.albedoTexId], UV).rgb;
 
 	    color = texColor * ambientLighting;
-        prd.rayDir = reflect(gl_WorldRayDirectionEXT, n);
-        prd.done = 1;
     }
     else if (MATERIAL_TYPE == 1) // pbr
     {
@@ -142,10 +127,11 @@ void main()
 
         // multiply attenuation with specular
         prd.attenuation *= F;
-        prd.rayDir = reflect(gl_WorldRayDirectionEXT, n);
-        prd.done = 0;
     }
 
+    // Reflection
+    prd.done      = MATERIAL_TYPE == 0 ? 1 : 0; // done if hit a lambertian surface
     prd.rayOrigin = worldPos;
+    prd.rayDir    = reflect(gl_WorldRayDirectionEXT, n);
     prd.hitValue = color;
 }

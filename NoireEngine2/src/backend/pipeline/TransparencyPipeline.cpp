@@ -1,4 +1,4 @@
-#include "ReflectionPipeline.hpp"
+#include "TransparencyPipeline.hpp"
 
 #include "backend/RaytracingContext.hpp"
 #include "backend/shader/VulkanShader.h"
@@ -14,7 +14,7 @@
 
 #pragma warning (disable:4702)
 
-ReflectionPipeline::~ReflectionPipeline()
+TransparencyPipeline::~TransparencyPipeline()
 {
 	m_rtSBTBuffer.Destroy();
 
@@ -29,13 +29,13 @@ ReflectionPipeline::~ReflectionPipeline()
 	}
 }
 
-void ReflectionPipeline::CreatePipeline()
+void TransparencyPipeline::CreatePipeline()
 {
 	CreateRayTracingPipeline();
 	CreateShaderBindingTables();
 }
 
-void ReflectionPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
+void TransparencyPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_Pipeline);
 
@@ -68,25 +68,17 @@ void ReflectionPipeline::Render(const Scene* scene, const CommandBuffer& command
 	RaytracingContext::vkCmdTraceRaysKHR(commandBuffer, &m_rgenRegion, &m_missRegion, &m_hitRegion, &m_callRegion, extent.width, extent.height, 1);
 }
 
-void ReflectionPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
+void TransparencyPipeline::Prepare(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	if (scene->isSceneDirty)
-		RaytracingContext::Get()->CreateTopLevelAccelerationStructure(true);
+	//if (scene->isSceneDirty)
+	//	RaytracingContext::Get()->CreateTopLevelAccelerationStructure(true);
 }
 
-void ReflectionPipeline::OnUIRender()
+void TransparencyPipeline::OnUIRender()
 {
-	ImGui::SeparatorText("Ray Traced Reflections"); // ---------------------------------
-	ImGui::Columns(2);
-
-	// Modify Maximum Samples
-	ImGui::Text("Ray Depth");
-	ImGui::NextColumn();
-	ImGui::DragInt("##RTX_REFLECTIONS_MAX_DEPTH", &m_ReflectionPush.rayDepth, 1, 1, 10);
-	ImGui::Columns(1);
 }
 
-void ReflectionPipeline::CreateRayTracingPipeline()
+void TransparencyPipeline::CreateRayTracingPipeline()
 {
 	enum StageIndices
 	{
@@ -188,12 +180,12 @@ void ReflectionPipeline::CreateRayTracingPipeline()
 	NE_DEBUG("Built rtx pipeline", Logger::CYAN, Logger::BOLD);
 }
 
-void ReflectionPipeline::CreateShaderBindingTables()
+void TransparencyPipeline::CreateShaderBindingTables()
 {
 	auto& rayTracingPipelineProperties = RaytracingContext::Get()->rayTracingPipelineProperties;
 
 	uint32_t missCount = 1;
-	uint32_t hitCount = 3;
+	uint32_t hitCount = 2;
 	uint32_t handleCount = /*raygen: always 1*/1 + missCount + hitCount;
 	uint32_t handleSize = rayTracingPipelineProperties.shaderGroupHandleSize;
 

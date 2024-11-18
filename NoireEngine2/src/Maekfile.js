@@ -69,6 +69,7 @@ const renderer_objs = [
 	maek.CPP('renderer/materials/Material.cpp'),
 	maek.CPP('renderer/materials/LambertianMaterial.cpp'),
 	maek.CPP('renderer/materials/PBRMaterial.cpp'),
+	maek.CPP('renderer/materials/GlassMaterial.cpp'),
 	maek.CPP('renderer/AABB.cpp'),
 	maek.CPP('renderer/scene/SceneManager.cpp'),
 	maek.CPP('renderer/animation/Animation.cpp'),
@@ -135,12 +136,16 @@ const rtx_shaders = [
 	maek.GLSLC('shaders/raytracing/reflections.rchit'),
 	maek.GLSLC('shaders/raytracing/reflections.rgen'),
 	maek.GLSLC('shaders/raytracing/reflections.rmiss'),
+	maek.GLSLC('shaders/raytracing/transparency.rchit'),
+	maek.GLSLC('shaders/raytracing/transparency.rgen'),
+	maek.GLSLC('shaders/raytracing/transparency.rmiss'),
 	maek.GLSLC('shaders/raytracing/ao.comp'),
 ];
 
 const rtx_objs = [
 	maek.CPP('backend/RaytracingContext.cpp', undefined, { depends: [...rtx_shaders] }),
 	maek.CPP('backend/pipeline/ReflectionPipeline.cpp'),
+	maek.CPP('backend/pipeline/TransparencyPipeline.cpp'),
 	maek.CPP('backend/raytracing/RTCore.cpp'),
 	maek.CPP('backend/raytracing/BLASBuilder.cpp'),
 	maek.CPP('backend/raytracing/RaytracingBuilderKHR.cpp')

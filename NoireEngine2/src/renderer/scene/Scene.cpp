@@ -28,7 +28,7 @@ void Scene::Load(const std::string& path)
 	InstantiateCoreScripts();
 	UpdateSceneInfo();
 
-	m_ObjectInstances.resize(MAX_WORKFLOWS);
+	m_ObjectInstances.resize(N_TOTAL_MATERIALS);
 	PrepareAccelerationStructures();
 }
 

@@ -468,6 +468,12 @@
     <ClCompile Include="src\backend\pipeline\ReflectionPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\materials\GlassMaterial.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\pipeline\TransparencyPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glfw-3.4.bin.WIN64\include\GLFW\glfw3.h">
@@ -974,6 +980,12 @@
     <ClInclude Include="src\backend\shader\ShaderSpecialization.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\renderer\materials\GlassMaterial.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\pipeline\TransparencyPipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Maekfile.js" />
@@ -1011,7 +1023,7 @@
     <None Include="src\shaders\shadow\shadowmapping.frag" />
     <None Include="src\shaders\shadow\shadowmapping.vert" />
     <None Include="src\shaders\glsl\shadows.glsl" />
-    <None Include="src\shaders\raytracing\rtxcore.glsl" />
+    <None Include="src\shaders\raytracing\reflections.glsl" />
     <None Include="src\shaders\raytracing\reflections.rchit" />
     <None Include="src\shaders\raytracing\reflections.rgen" />
     <None Include="src\shaders\raytracing\reflections.rmiss" />
@@ -1025,6 +1037,11 @@
     <None Include="src\shaders\postprocessing\bloom_up_sample.frag" />
     <None Include="src\shaders\wireframe.vert" />
     <None Include="src\shaders\wireframe.frag" />
+    <None Include="src\shaders\raytracing\transparency.rgen" />
+    <None Include="src\shaders\raytracing\transparency.rmiss" />
+    <None Include="src\shaders\raytracing\transparency.glsl" />
+    <None Include="src\shaders\raytracing\transparency_opaque.rchit" />
+    <None Include="src\shaders\raytracing\transparency_transparent.rchit" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\default.png">

@@ -1,4 +1,5 @@
 #include "LambertianMaterial.hpp"
+
 #include "utils/Logger.hpp"
 #include "backend/images/Image2D.hpp"
 #include "core/resources/Files.hpp"
@@ -7,6 +8,10 @@
 
 #include "editor/ImGuiExtension.hpp"
 #include <limits>
+
+LambertianMaterial::LambertianMaterial(const CreateInfo& createInfo) :
+	m_CreateInfo(createInfo) {
+}
 
 Material* LambertianMaterial::Deserialize(const Scene::TValueMap& obj)
 {
@@ -51,43 +56,12 @@ Material* LambertianMaterial::Deserialize(const Scene::TValueMap& obj)
 			}
 		}
 
-		return Create(createInfo).get();
+		return Create<LambertianMaterial>(createInfo).get();
 	}
 	catch (std::exception& e) {
 		NE_WARN("Failed to deserialize value as Material: {}", e.what());
 		return nullptr;
 	}
-}
-
-LambertianMaterial::LambertianMaterial(const CreateInfo& createInfo) :
-	m_CreateInfo(createInfo) {
-}
-
-std::shared_ptr<Material> LambertianMaterial::Create()
-{
-	CreateInfo defaultInfo;
-	return Create(defaultInfo);
-}
-
-std::shared_ptr<Material> LambertianMaterial::Create(const CreateInfo& createInfo)
-{
-	LambertianMaterial temp(createInfo);
-	Node node;
-	node << temp;
-	return Create(node);
-}
-
-std::shared_ptr<Material> LambertianMaterial::Create(const Node& node)
-{
-	if (auto resource = Resources::Get()->Find<Material>(node)) {
-		return resource;
-	}
-
-	auto result = std::make_shared<LambertianMaterial>();
-	Resources::Get()->Add(node, std::dynamic_pointer_cast<Resource>(result));
-	node >> *result;
-	result->Load();
-	return result;
 }
 
 void LambertianMaterial::Load()

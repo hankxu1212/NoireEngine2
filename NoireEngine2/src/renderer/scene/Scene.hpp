@@ -21,7 +21,7 @@ class Transform;
 class CameraComponent;
 
 #define MAX_NUM_TOTAL_LIGHTS 20
-#define MAX_WORKFLOWS 2
+#define N_TOTAL_MATERIALS 3
 #define GGX_MIP_LEVELS 6
 
 namespace Core {

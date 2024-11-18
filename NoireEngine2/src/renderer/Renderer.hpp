@@ -7,12 +7,15 @@
 #include "backend/descriptor/DescriptorBuilder.hpp"
 #include "backend/renderpass/Renderpass.hpp"
 
+#include "renderer/materials/Materials.hpp"
+
 #include "backend/pipeline/SkyboxPipeline.hpp"
 #include "backend/pipeline/GizmosPipeline.hpp"
 #include "backend/pipeline/ShadowPipeline.hpp"
 #include "backend/pipeline/ReflectionPipeline.hpp"
 #include "backend/pipeline/UIPipeline.hpp"
 #include "backend/pipeline/BloomPipeline.hpp"
+#include "backend/pipeline/TransparencyPipeline.hpp"
 
 #include <type_traits>
 #include "glm/glm.hpp"
@@ -21,6 +24,7 @@
 #include "utils/UUID.hpp"
 
 #define _NE_USE_RTX
+#define N_OPAQUE_MATERIALS 2
 
 class Renderer : Singleton
 {
@@ -117,6 +121,9 @@ private:
 	// run ray tracing pipeline for reflection
 	void RunRTXReflection(const Scene* scene, const CommandBuffer& commandBuffer);
 
+	// run ray tracing pipeline for transparency
+	void RunRTXTransparency(const Scene* scene, const CommandBuffer& commandBuffer);
+
 	// composition pass, to compose ambient occlusion and color from G buffer and emission
 	void RunPost(const CommandBuffer& commandBuffer);
 
@@ -184,7 +191,7 @@ private:
 	START_BINDING(RTXBindings)
 		TLAS,  // Top-level acceleration structure
 		ReflectionImage,   // reflection
-		AOImage // ao image
+		AOImage, // ao image
 	END_BINDING();
 
 #pragma endregion
@@ -223,7 +230,6 @@ private:
 	std::unique_ptr<Image2D> s_RaytracedAOImage;
 	std::unique_ptr<Image2D> s_RaytracedReflectionsImage;
 
-
 	// post pipeline
 	struct PostPush
 	{
@@ -253,7 +259,7 @@ private:
 	VkPipelineLayout m_RaytracedAOComputePipelineLayout = VK_NULL_HANDLE;
 
 	// material pipelines
-	std::array<VkPipeline, N_MATERIAL_WORKFLOWS> m_MaterialPipelines{};
+	std::array<VkPipeline, N_OPAQUE_MATERIALS> m_MaterialPipelines{};
 	VkPipelineLayout m_MaterialPipelineLayout = VK_NULL_HANDLE;
 
 private:
@@ -263,13 +269,15 @@ private:
 	friend class ReflectionPipeline;
 	friend class UIPipeline;
 	friend class BloomPipeline;
+	friend class TransparencyPipeline;
 
 private:
 	std::unique_ptr<GizmosPipeline>					s_GizmosPipeline;
 	std::unique_ptr<SkyboxPipeline>					s_SkyboxPipeline;
 	std::unique_ptr<ShadowPipeline>					s_ShadowPipeline;
-	std::unique_ptr<ReflectionPipeline>				s_RaytracingPipeline;
+	std::unique_ptr<ReflectionPipeline>				s_ReflectionPipeline;
 	std::unique_ptr<UIPipeline>						s_UIPipeline;
 	std::unique_ptr<BloomPipeline>					s_BloomPipeline;
+	std::unique_ptr<TransparencyPipeline>			s_TransparencyPipeline;
 };
 

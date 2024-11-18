@@ -3,8 +3,7 @@
 #include "glm/gtx/string_cast.hpp"
 #include "utils/Logger.hpp"
 
-#include "LambertianMaterial.hpp"
-#include "PBRMaterial.hpp"
+#include "Materials.hpp"
 
 Material* Material::Deserialize(const Scene::TValueMap& obj)
 {
@@ -16,10 +15,14 @@ Material* Material::Deserialize(const Scene::TValueMap& obj)
 	if (pbrIt != obj.end())
 		return PBRMaterial::Deserialize(obj);
 
+	auto glassIt = obj.find("glass");
+	if (glassIt != obj.end())
+		return GlassMaterial::Deserialize(obj);
+
 	return CreateDefault().get();
 }
 
 std::shared_ptr<Material> Material::CreateDefault()
 {
-	return PBRMaterial::Create();
+	return Create<PBRMaterial, PBRMaterial::CreateInfo>();
 }
