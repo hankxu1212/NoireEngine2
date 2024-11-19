@@ -25,6 +25,8 @@ const vec3 Fdielectric = vec3(0.04);
 
 layout(constant_id = 0) const int MATERIAL_TYPE = 0;
 
+#include "rtutils.glsl"
+
 void main()
 {
     // Object data
@@ -53,13 +55,7 @@ void main()
     // glass
     if (MATERIAL_TYPE == 2)
     {
-        prd.done = 0;
-        prd.rayOrigin = worldPos;
-
-        // Compute refraction direction
-        float eta = (dot(-gl_WorldRayDirectionEXT, n) > 0.0) ? 1.0 / 1.5 : 1.5; // Adjust eta based on entry/exit
-        vec3 refractedDir = refract(gl_WorldRayDirectionEXT, n, eta);
-        prd.rayDir = refractedDir;
+        prd.done = 1;
         return;
     }
 

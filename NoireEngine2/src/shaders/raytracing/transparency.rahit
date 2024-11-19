@@ -11,6 +11,8 @@
 #include "transparency.glsl"
 #include "../host.glsl"
 
+layout (set = 0, binding = 1, rgba8) uniform image2D G_Color;
+
 hitAttributeEXT vec2 attribs;
 
 layout(location = 0) rayPayloadInEXT hitPayload prd;
@@ -24,6 +26,8 @@ const vec3 Fdielectric = vec3(0.04);
 #include "../glsl/pbr.glsl"
 
 layout(constant_id = 0) const int MATERIAL_TYPE = 0;
+
+#include "rtutils.glsl"
 
 void main()
 {
@@ -52,26 +56,108 @@ void main()
 
     const vec2 UV = v0.texCoord * barycentrics.x + v1.texCoord * barycentrics.y + v2.texCoord * barycentrics.z;
 
-    vec3 color;
     if (MATERIAL_TYPE == 0) // lambertian
     {
+        if (prd.depth == 0)
+        {
+            prd.done = 1;
+            return;
+        }
+
         LambertianMaterial material = LAMBERTIAN_MATERIAL_ReadFrombuffer(objResource.offset);
-        prd.done = 1;
-        prd.hitValue = material.albedo.rgb;
+
+        // sample diffuse irradiance
+	    vec3 ambientLighting = texture(diffuseIrradiance, n).rgb * material.environmentLightIntensity;
+
+	    // material
+	    vec3 texColor = material.albedo.rgb;
+	    if (material.albedoTexId >= 0)
+		    texColor *= texture(textures[material.albedoTexId], UV).rgb;
+
+	    vec3 color = texColor * ambientLighting;
+        prd.rayDir = reflect(gl_WorldRayDirectionEXT, n);
+        prd.hitValue = color;
     }
     else if (MATERIAL_TYPE == 1) // pbr
     {
-        PBRMaterial material = PBR_MATERIAL_ReadFrombuffer(objResource.offset);
-        prd.done = 1;
-        prd.hitValue = material.albedo.rgb;
+        if (prd.depth == 0)
+        {
+            prd.done = 1;
+            return;
+        }
+
+    	PBRMaterial material = PBR_MATERIAL_ReadFrombuffer(objResource.offset);
+        vec3 V = normalize(vec3(scene.cameraPos) - worldPos);
+
+        // albedo 
+	    vec3 albedo = material.albedo.rgb;
+	    if (material.albedoTexId >= 0)
+		    albedo *= texture(textures[material.albedoTexId], UV).rgb;
+
+        // roughness
+        float roughness = material.roughness;
+        if (material.roughnessTexId >= 0)
+            roughness *= texture(textures[material.roughnessTexId], UV).a;
+
+        // metallic
+        float metalness = material.metallic;
+        if (material.metallicTexId >= 0)
+            metalness *= texture(textures[material.metallicTexId], UV).a;
+
+       	// light out
+        float cosLo = max(0.0, dot(n, V));
+
+        // specular reflection
+        vec3 R = reflect(-V, n);
+
+        // Fresnel
+        vec3 F0 = mix(Fdielectric, albedo, metalness);
+
+        // lambertian diffuse irradiance
+        vec3 irradiance = texture(diffuseIrradiance, n).rgb / PI;
+
+        vec3 F = FresnelSchlickRoughness(F0, cosLo, roughness);
+
+        // Diffuse contribution for ambient light
+        vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
+        vec3 diffuseIBL = kd * albedo * irradiance;
+
+        // Specular IBL from pre-filtered environment map
+	    float lod = roughness * MAX_REFLECTION_LOD;
+        vec3 specularIrradiance = textureLod(prefilterEnvMap, R, lod).rgb;
+
+        // Cook-Torrance specular split-sum approximation
+        vec2 specularBRDF = texture(specularBRDF, vec2(cosLo, roughness)).rg;
+        vec3 specularIBL = (F * specularBRDF.x + specularBRDF.y) * specularIrradiance;
+
+        vec3 color = diffuseIBL + specularIBL * material.environmentLightIntensity;
+
+        // multiply attenuation with specular
+        prd.attenuation *= F;
+        prd.rayDir = reflect(gl_WorldRayDirectionEXT, n);
+        prd.hitValue = color;
     }
     else if (MATERIAL_TYPE == 2)
     {
         prd.done = 0;
-        // Compute refraction direction
-        float eta = (dot(-gl_WorldRayDirectionEXT, n) > 0.0) ? 1.0 / 1.5 : 1.5; // Adjust eta based on entry/exit
-        vec3 refractedDir = refract(gl_WorldRayDirectionEXT, n, eta);
-        prd.rayOrigin = worldPos;
-        prd.rayDir = refractedDir;
+
+        float cosTheta = dot(gl_WorldRayDirectionEXT, n);
+        bool isEntry = cosTheta < 0;
+        float n1 = isEntry ? 1.0 : 1.5;
+        float n2 = isEntry ? 1.5 : 1.0;
+
+        vec3 rayDir;
+        vec3 F = FresnelSchlick(Fdielectric, cosTheta);
+        if (TransmissionDirection(n1, n2, gl_WorldRayDirectionEXT, n, rayDir))
+        {
+            prd.attenuation = 1 - F;
+        }
+        else
+        {
+            rayDir = reflect(gl_WorldRayDirectionEXT, n);
+            prd.attenuation = F;
+        }
+        prd.rayDir = rayDir;
+        prd.rayOrigin = worldPos + rayDir * 0.01;
     }
 }

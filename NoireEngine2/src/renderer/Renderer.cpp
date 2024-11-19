@@ -229,6 +229,8 @@ void Renderer::OnUIRender()
 		ImGui::Columns(1);
 
 		s_ReflectionPipeline->OnUIRender();
+
+		s_TransparencyPipeline->OnUIRender();
 	}
 
 	if (ImGui::CollapsingHeader("Renderer Statistics", &showMenu))
@@ -451,7 +453,7 @@ void Renderer::CreateWorldDescriptors(bool update)
 
 		// build world buffer descriptor
 		auto uniformStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT |
-			VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+			VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
 
 		VkDescriptorBufferInfo World_info = workspace.World.GetDescriptorInfo();
 
@@ -463,7 +465,7 @@ void Renderer::CreateWorldDescriptors(bool update)
 
 		DescriptorBuilder builder = DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 			.BindBuffer(World::SceneUniform, &World_info, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, uniformStages)
-			.BindImage(World::GBufferColor, &gBufferColorInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.BindImage(World::GBufferColor, &gBufferColorInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR)
 			.BindImage(World::GBufferNormal, &gBufferNormalInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
 			.BindImage(World::GBufferEmissive, &gBufferEmissionInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 
@@ -535,7 +537,7 @@ void Renderer::CreateTextureDescriptors()
 	}
 
 	// actually build the descriptor set now
-	auto stages = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_FRAGMENT_BIT;
+	auto stages = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR | VK_SHADER_STAGE_FRAGMENT_BIT;
 
 	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 		.BindImage(0, textureDescriptors.data(),
@@ -561,7 +563,7 @@ void Renderer::CreateIBLDescriptors()
 	VkDescriptorImageInfo specularBRDFInfo = scene->m_SpecularBRDF->GetDescriptorInfo();
 	VkDescriptorImageInfo prefilteredEnvMapInfo = scene->m_PrefilteredEnvMap->GetDescriptorInfo();
 
-	auto stages = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+	auto stages = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
 	DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 		.BindImage(IBL::Skybox, &cubeMapInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages | VK_SHADER_STAGE_MISS_BIT_KHR)
 		.BindImage(IBL::LambertianLUT, &lambertianLUTInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, stages)
@@ -832,8 +834,6 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 		// draw rtx
 #ifdef _NE_USE_RTX
 		RunRTXReflection(scene, commandBuffer);
-
-		RunRTXTransparency(scene, commandBuffer);
 #endif
 
 		// render shadow passes
@@ -849,6 +849,10 @@ void Renderer::Render(const CommandBuffer& commandBuffer)
 				s_SkyboxPipeline->Render(scene, commandBuffer);
 		}
 		s_OffscreenPass->End(commandBuffer);
+
+#ifdef _NE_USE_RTX
+		RunRTXTransparency(scene, commandBuffer);
+#endif
 
 		// bloom
 		s_BloomPipeline->Render(scene, commandBuffer);
@@ -1443,7 +1447,33 @@ void Renderer::RunRTXReflection(const Scene* scene, const CommandBuffer& command
 
 void Renderer::RunRTXTransparency(const Scene* scene, const CommandBuffer& commandBuffer)
 {
+	if (scene->getObjectInstances()[2].empty())
+		return;
+
+	// Adding a barrier to be sure the fragment shader has finished color g buffer before running it
+	Image::InsertImageMemoryBarrier(commandBuffer, workspaces[CURR_FRAME].GBufferColors->getImage(),
+		VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+		VK_ACCESS_SHADER_READ_BIT,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+		VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+		VK_IMAGE_ASPECT_COLOR_BIT,
+		1, 0, 1, 0);
+
 	s_TransparencyPipeline->Render(scene, commandBuffer);
+
+	// Adding a barrier to be sure the rtx pipeline has finished
+	// writing to the transparency image before the post shader is using it
+	Image::InsertImageMemoryBarrier(commandBuffer, s_RaytracedTransparencyImage->getImage(),
+		VK_ACCESS_SHADER_WRITE_BIT,
+		VK_ACCESS_SHADER_READ_BIT,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_IMAGE_LAYOUT_GENERAL,
+		VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		VK_IMAGE_ASPECT_COLOR_BIT,
+		1, 0, 1, 0);
 }
 
 void Renderer::RunPost(const CommandBuffer& commandBuffer)

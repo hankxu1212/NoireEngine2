@@ -1,3 +1,6 @@
+#ifndef _INCLUDE_PBR
+#define _INCLUDE_PBR
+
 #include "utils.glsl"
 
 // GGX/Towbridge-Reitz normal distribution function.
@@ -23,10 +26,11 @@ float GeometrySmith(float cosLi, float cosLo, float roughness)
 	return SchlickG1(cosLi, k) * SchlickG1(cosLo, k);
 }
 
-// Shlick's approximation of the Fresnel factor.
+/** Compute reflectance , given the cosine of the angle of incidence and the
+reflectance at normal incidence. */
 vec3 FresnelSchlick(vec3 F0, float cosTheta)
 {
-	return F0 + (vec3(1.0) - F0) * pow(1.0 - cosTheta, 5.0);
+	return mix(F0, vec3(1.0), pow(1.0 - cosTheta, 5.0));
 }
 
 // variation of FresnelSchlick that takes into account roughness
@@ -42,3 +46,5 @@ float GeometrySmith_IBL(float cosLi, float cosLo, float roughness)
 	float k = (r * r) / 2.0; // Epic suggests using this roughness remapping for IBL lighting.
 	return SchlickG1(cosLi, k) * SchlickG1(cosLo, k);
 }
+
+#endif

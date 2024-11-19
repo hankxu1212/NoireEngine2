@@ -37,14 +37,14 @@ void TransparencyPipeline::CreatePipeline()
 
 void TransparencyPipeline::Render(const Scene* scene, const CommandBuffer& commandBuffer)
 {
-	m_TransparencyIsDirty |= scene->isSceneDirty;
+	//m_TransparencyIsDirty |= scene->isSceneDirty;
 
-	if (m_TransparencyIsDirty)
-	{
-		m_TransparencyPush.frame = -1;
-		m_TransparencyIsDirty = false;
-	}
-	m_TransparencyPush.frame++;
+	//if (m_TransparencyIsDirty)
+	//{
+	//	m_TransparencyPush.frame = -1;
+	//	m_TransparencyIsDirty = false;
+	//}
+	//m_TransparencyPush.frame++;
 
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_Pipeline);
 
@@ -85,6 +85,14 @@ void TransparencyPipeline::Prepare(const Scene* scene, const CommandBuffer& comm
 
 void TransparencyPipeline::OnUIRender()
 {
+	ImGui::SeparatorText("Ray Traced Transparency"); // ---------------------------------
+	ImGui::Columns(2);
+
+	// Modify Maximum Samples
+	ImGui::Text("Ray Depth");
+	ImGui::NextColumn();
+	ImGui::DragInt("##RTX_TRANSPARENCY_MAX_DEPTH", &m_TransparencyPush.rayDepth, 1, 1, 10);
+	ImGui::Columns(1);
 }
 
 void TransparencyPipeline::CreateRayTracingPipeline()

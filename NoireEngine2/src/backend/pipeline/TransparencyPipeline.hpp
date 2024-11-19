@@ -31,7 +31,6 @@ private:
 	struct PushConstantRay
 	{
 		int rayDepth = 3;
-		int frame = -1;
 	}m_TransparencyPush;
 
 	bool m_TransparencyIsDirty = false;
