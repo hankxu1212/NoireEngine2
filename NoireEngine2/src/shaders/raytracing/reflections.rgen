@@ -5,6 +5,7 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
 #include "reflections.glsl"
+#include "../../backend/raytracing/RTDefines.h"
 
 ///////////////////////////////////////////////
 // Set 0: world
@@ -50,7 +51,7 @@ void main()
     {
         traceRayEXT(topLevelAS,     // acceleration structure
                     rayFlags,       // rayFlags
-                    0xFF,           // cullMask
+                    INSTANCE_OPAQUE,           // cullMask
                     0,              // sbtRecordOffset
                     0,              // sbtRecordStride
                     0,              // missIndex

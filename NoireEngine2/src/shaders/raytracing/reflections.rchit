@@ -53,6 +53,7 @@ void main()
     const vec3 n = normalize(vec3(nrm * gl_WorldToObjectEXT));  // Transforming the normal to world space
 
     // glass
+    // this should never reach cuz of INSTANCE_OPAQUE mask in rgen
     if (MATERIAL_TYPE == 2)
     {
         prd.done = 1;

@@ -33,6 +33,7 @@
 #define G_BUFFER_EMISSION_FORMAT VK_FORMAT_R16G16B16A16_SFLOAT
 #define RTX_REFLECTION_FORMAT G_BUFFER_COLOR_FORMAT
 #define RTX_TRANSPARENCY_FORMAT G_BUFFER_COLOR_FORMAT
+#define RTX_TRANSPARENCY_MASK_FORMAT VK_FORMAT_R8_UNORM
 
 #define DEPTH_ARRAY_SCALE 1024
 
@@ -268,6 +269,7 @@ void Renderer::AddUIViewportImages()
 	s_UIPipeline->AppendDebugImage(s_RaytracedAOImage.get(), "Ray Traced AO");
 	s_UIPipeline->AppendDebugImage(s_RaytracedReflectionsImage.get(), "Ray Traced Reflection");
 	s_UIPipeline->AppendDebugImage(s_RaytracedTransparencyImage.get(), "Ray Traced Transparency");
+	s_UIPipeline->AppendDebugImage(s_RaytracedTransparencyMask.get(), "Transparency Mask");
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferColors.get(), "G Buffer Color");
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferNormals.get(), "G Buffer Position Normals");
 	s_UIPipeline->AppendDebugImage(workspaces[0].GBufferEmission.get(), "G Buffer Emission");
@@ -688,7 +690,7 @@ void Renderer::CreateRayTracingImages()
 		s_RaytracedReflectionsImage->Load();
 	}
 
-	// ray traced reflection (rgba8)
+	// ray traced transparency (rgba8)
 	{
 		s_RaytracedTransparencyImage = std::make_unique<Image2D>(
 			extent.x, extent.y,
@@ -699,6 +701,19 @@ void Renderer::CreateRayTracingImages()
 		);
 
 		s_RaytracedTransparencyImage->Load();
+	}
+
+	// transparency mask (rgba8)
+	{
+		s_RaytracedTransparencyMask = std::make_unique<Image2D>(
+			extent.x, extent.y,
+			RTX_TRANSPARENCY_MASK_FORMAT,
+			VK_IMAGE_LAYOUT_GENERAL,
+			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+			false
+		);
+
+		s_RaytracedTransparencyMask->Load();
 	}
 }
 
@@ -714,12 +729,14 @@ void Renderer::CreateRaytracingDescriptors(bool update)
 	VkDescriptorImageInfo reflectImageInfo = s_RaytracedReflectionsImage->GetDescriptorInfo();
 	VkDescriptorImageInfo aoImageInfo = s_RaytracedAOImage->GetDescriptorInfo();
 	VkDescriptorImageInfo transparencyImageInfo = s_RaytracedTransparencyImage->GetDescriptorInfo();
+	VkDescriptorImageInfo transparencyMaskInfo = s_RaytracedTransparencyMask->GetDescriptorInfo();
 
 	DescriptorBuilder builder = DescriptorBuilder::Start(VulkanContext::Get()->getDescriptorLayoutCache(), &m_DescriptorAllocator)
 		.BindAccelerationStructure(RTXBindings::TLAS, descASInfo, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_COMPUTE_BIT)
 		.BindImage(RTXBindings::ReflectionImage, &reflectImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_FRAGMENT_BIT)
 		.BindImage(RTXBindings::AOImage, &aoImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
-		.BindImage(RTXBindings::TransparencyImage, &transparencyImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_RAYGEN_BIT_KHR);
+		.BindImage(RTXBindings::TransparencyImage, &transparencyImageInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_RAYGEN_BIT_KHR)
+		.BindImage(RTXBindings::TransparencyMask, &transparencyMaskInfo, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_RAYGEN_BIT_KHR);
 
 	if (update)
 		builder.Write(set5_RayTracing);

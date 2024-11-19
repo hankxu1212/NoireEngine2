@@ -58,12 +58,6 @@ void main()
 
     if (MATERIAL_TYPE == 0) // lambertian
     {
-        if (prd.depth == 0)
-        {
-            prd.done = 1;
-            return;
-        }
-
         LambertianMaterial material = LAMBERTIAN_MATERIAL_ReadFrombuffer(objResource.offset);
 
         // sample diffuse irradiance
@@ -80,12 +74,6 @@ void main()
     }
     else if (MATERIAL_TYPE == 1) // pbr
     {
-        if (prd.depth == 0)
-        {
-            prd.done = 1;
-            return;
-        }
-
     	PBRMaterial material = PBR_MATERIAL_ReadFrombuffer(objResource.offset);
         vec3 V = normalize(vec3(scene.cameraPos) - worldPos);
 
@@ -141,23 +129,28 @@ void main()
     {
         prd.done = 0;
 
+        //GlassMaterial material = GLASS_MATERIAL_ReadFromBuffer(objResource.offset);
+        GlassMaterial material;
+        material.IOR = 1.5;
+
         float cosTheta = dot(gl_WorldRayDirectionEXT, n);
         bool isEntry = cosTheta < 0;
-        float n1 = isEntry ? 1.0 : 1.5;
-        float n2 = isEntry ? 1.5 : 1.0;
+        float n1 = isEntry ? 1.0 : material.IOR;
+        float n2 = isEntry ? material.IOR : 1.0;
 
-        vec3 rayDir;
-        vec3 F = FresnelSchlick(Fdielectric, cosTheta);
-        if (TransmissionDirection(n1, n2, gl_WorldRayDirectionEXT, n, rayDir))
+        vec3 rayDir = refract(gl_WorldRayDirectionEXT, n, n1/n2);
+        vec3 F = FresnelSchlick(Fdielectric, abs(cosTheta));
+        if (rayDir != vec3(0))
         {
-            prd.attenuation = 1 - F;
+            prd.attenuation *= 1 - F;
         }
         else
         {
             rayDir = reflect(gl_WorldRayDirectionEXT, n);
-            prd.attenuation = F;
+            prd.attenuation *= F;
         }
         prd.rayDir = rayDir;
         prd.rayOrigin = worldPos + rayDir * 0.01;
+        prd.writeToMask = 1;
     }
 }

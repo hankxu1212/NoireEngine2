@@ -7,6 +7,7 @@ layout(set = 0, binding = 1, rgba8) uniform image2D G_Color;
 layout(set = 0, binding = 3) uniform sampler2D G_Emission;
 layout(set = 1, binding = 2, r32f) uniform image2D raytracedAOSampler;
 layout(set = 1, binding = 3, rgba8) uniform image2D raytracedTransparencySampler;
+layout(set = 1, binding = 4, r8) uniform image2D transparencyMask;
 
 #include "glsl/utils.glsl"
 
@@ -24,24 +25,31 @@ void main()
 	
 	vec3 color = imageLoad(G_Color, texelCoord).rgb;
 
+	// ambient occlusion
 	float ao = 0;
 	if (useAO == 1)
 		ao = imageLoad(raytracedAOSampler, texelCoord).x;
 	color *= (ao == 0 ? 1 : ao);
 
+	// transparency
 	vec3 transparentColor = imageLoad(raytracedTransparencySampler, texelCoord).rgb;
-	if (transparentColor != vec3(0))
-		color = transparentColor;
+	float mask = imageLoad(transparencyMask, texelCoord).r;
 	
+	color = mix(color, transparentColor, mask);
+
+	// todo: bloom is incorrect atm cuz it applies over the transparency mask
+	// bloom
 	if (useBloom == 1)
 	{
 		vec3 bloomColor = texture(G_Emission, uv).rgb;  
-	    // tone mapping
+	    
+		// tone mapping for bloom
 		bloomColor = vec3(1.0) - exp(-bloomColor * exposure);
 	
 		color += bloomColor;
 	}
 	
+	// tone map
 	if (useToneMapping == 1)
 		color = ACES(color);
 	

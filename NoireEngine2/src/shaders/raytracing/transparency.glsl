@@ -6,6 +6,7 @@ struct hitPayload
     int  done;
     vec3 rayDir;
     vec3 attenuation;
+    int writeToMask;
 };
 
 layout(push_constant) uniform constants 

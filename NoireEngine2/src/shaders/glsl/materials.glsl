@@ -22,6 +22,11 @@ struct PBRMaterial
 	float normalStrength;
 };
 
+struct GlassMaterial
+{
+    float IOR;
+};
+
 #define FLT_AT(i) MATERIAL_BUFFER_F[offset + i]
 #define INT_AT(i) MATERIAL_BUFFER_INT[offset + i]
 
@@ -78,5 +83,12 @@ PBRMaterial PBR_MATERIAL_ReadFrombuffer(uint offset)
 
     mat.normalStrength = FLT_AT(13);
 
+    return mat;
+}
+
+GlassMaterial GLASS_MATERIAL_ReadFromBuffer(uint offset)
+{
+    GlassMaterial mat;
+    mat.IOR = FLT_AT(0);
     return mat;
 }

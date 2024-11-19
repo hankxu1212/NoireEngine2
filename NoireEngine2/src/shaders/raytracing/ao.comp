@@ -9,6 +9,7 @@
 
 #include "../glsl/sampling.glsl"
 #include "../glsl/random.glsl"
+#include "../../backend/raytracing/RTDefines.h"
 
 // TODO: make this specialization constant
 const int GROUP_SIZE = 16;
@@ -36,7 +37,7 @@ float TraceRay(in rayQueryEXT rayQuery, in vec3 origin, in vec3 direction)
     // ignore any-hit shaders and closest-hit shaders , and terminate the ray on the first found intersection
     uint flags = gl_RayFlagsOpaqueEXT | gl_RayFlagsSkipClosestHitShaderEXT | gl_RayFlagsTerminateOnFirstHitEXT;
 
-    rayQueryInitializeEXT(rayQuery, topLevelAS, flags, 0xFF, origin, 0.0f, direction, rtao_radius);
+    rayQueryInitializeEXT(rayQuery, topLevelAS, flags, INSTANCE_OPAQUE, origin, 0.0f, direction, rtao_radius);
 
     // Start traversal: return false if traversal is complete
     while(rayQueryProceedEXT(rayQuery)) { }

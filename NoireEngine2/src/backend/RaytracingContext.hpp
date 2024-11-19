@@ -6,6 +6,7 @@
 #include "backend/images/Image2D.hpp"
 #include "core/Core.hpp"
 #include "core/resources/Module.hpp"
+#include "backend/raytracing/RTDefines.h"
 
 class Renderer;
 

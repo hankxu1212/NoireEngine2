@@ -211,7 +211,21 @@ void RaytracingContext::CreateTopLevelAccelerationStructure(bool update)
 			rayInst.instanceCustomIndex = instanceIndex; // gl_InstanceCustomIndexEXT
 			rayInst.accelerationStructureReference = m_RTBuilder.getBlasDeviceAddress(workflowInstances[i].mesh->getID());
 			rayInst.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-			rayInst.mask = 0xFF; //  Only be hit if rayMask & instance.mask != 0
+
+			uint32_t mask;
+			switch (workflowInstances[i].material->getWorkflow())
+			{
+			case Material::Workflow::Lambertian: case Material::Workflow::PBR:
+				mask = INSTANCE_OPAQUE;
+				break;
+			case Material::Workflow::Glass:
+				mask = INSTANCE_TRANSLUCENT;
+				break;
+			default:
+				mask = INSTANCE_OPAQUE;
+			}
+			rayInst.mask = mask;
+
 			rayInst.instanceShaderBindingTableRecordOffset = (uint32_t)workflowInstances[i].material->getWorkflow();
 
 			m_TlasBuildStructs.emplace_back(rayInst);

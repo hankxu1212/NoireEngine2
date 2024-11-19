@@ -90,6 +90,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\backend\pipeline\TransparencyPipeline.cpp" />
+    <ClCompile Include="src\backend\raytracing\RTDefines.h" />
     <ClCompile Include="src\renderer\materials\GlassMaterial.cpp" />
     <ClCompile Include="src\backend\pipeline\ReflectionPipeline.cpp" />
     <ClCompile Include="src\backend\pipeline\BloomPipeline.cpp" />
