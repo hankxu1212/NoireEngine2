@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<!-- saved from url=(0069)http://graphics.cs.cmu.edu/courses/15-472-f24/A3/report-template.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>15-472-s24: A3 - Lights</title>
+<style>
+/* feel free to style your report in a fancier way! */
+
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;700&Anonymous+Pro&display=swap');
+
+html {
+	background:#505055;
+}
+
+body {
+	font-family: 'Quicksand', sans-serif;
+	color:#000;
+	background:#eeeee8;
+	font-size:15px;
+	margin: 1em auto 50vh auto;
+	padding: 1em 2em 1em 2em;
+	max-width:45em;
+	border-radius:4px;
+	box-shadow:0 0 10px #0008;
+}
+
+h1 { font-size: 20px; font-weight: 700; }
+h2 { font-size: 16px; font-weight: 700; }
+h3 { font-size: 16px; font-weight: 400; }
+h4 { font-size: 14px; font-weight: 400; }
+
+h1, h2, h3, h4 {
+	margin: 15px 0 0 -10px;
+}
+
+p {
+	margin: 5px 0 0 0;
+}
+
+.subtitle {
+	display:block;
+	font-size:16px;
+	font-weight:400;
+}
+
+.placeholder {
+	color:#800;
+	font-style:italic;
+}
+
+kbd {
+	display:inline-block;
+	background:#ccc;
+	color:#444;
+	font-style:normal;
+	font-weight:700;
+	border-radius:8px;
+	padding:1px 6px;
+	margin:1px;
+	border:1.5px solid #aaa;
+}
+
+code {
+	font-family: 'Anonymous Pro', monospace;
+	background: #222;
+	color:#fff;
+	border-radius:4px;
+	padding:2px 4px;
+	margin:1px;
+}
+
+code var {
+	color:#ef5;
+	font-style:italic;
+}
+
+.atag {
+	font-family: 'Calistoga', serif;
+	font-size:90%;
+	color:#000;
+	background:#b00;
+
+	display:inline-block;
+	padding:1px 4px;
+	border-radius: 4px;
+	line-height:120%;
+}
+.atag:before {
+	content:'»';
+}
+.atag.extra {
+	background:#b08;
+}
+.atag.creative {
+	/* thanks, shout.horse! */
+	background:linear-gradient(0.4turn, #ffe680, #916f6f);
+}
+
+</style>
+</head>
+<body>
+<h1>Finals
+<span class="subtitle">by <span class="placeholder">Hank Xu (ninghuax)</span></span>
+</h1>
+
+<p class="placeholder">
+	Noire Engine 2 supports a Forward+ rasterization pipeline, carrying a small compressed G-buffer, into a RTX-powered realtime ray tracing pipeline.
+</p>
+
+
+
+<h2>Final Project Features<br>
+	- Ray Traced Reflections<br>
+	- Compute-driven Ray Traced Ambience Occlusion<br>
+	- Physically Based Bloom<br>
+	- WIP: Ray traced transparency </h2>
+
+<p>Here is an outline of my rendering architecture:<img src="Architecture.png" width="700"/><br></p>
+<p>
+	The bulk of the code can be found in <code>Renderer.cpp</code>. Here is the <code>Render</code> function:
+</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #272822; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .2em;"><table><tr><td><pre style="margin: 0; line-height: 125%"> 1
+	2
+	3
+	4
+	5
+	6
+	7
+	8
+	9
+   10
+   11
+   12
+   13
+   14
+   15
+   16
+   17
+   18
+   19
+   20
+   21
+   22
+   23
+   24
+   25
+   26
+   27
+   28
+   29
+   30
+   31
+   32
+   33
+   34
+   35
+   36
+   37
+   38
+   39
+   40
+   41
+   42
+   43
+   44
+   45
+   46
+   47
+   48
+   49
+   50
+   51
+   52
+   53
+   54
+   55
+   56
+   57
+   58
+   59
+   60
+   61
+   62
+   63
+   64
+   65
+   66
+   67
+   68
+   69
+   70
+   71
+   72
+   73
+   74
+   75
+   76
+   77
+   78</pre></td><td><pre style="margin: 0; line-height: 125%"><span style="color: #66d9ef">void</span> <span style="color: #f8f8f2">Renderer</span><span style="color: #f92672">::</span><span style="color: #f8f8f2">Render(</span><span style="color: #66d9ef">const</span> <span style="color: #f8f8f2">CommandBuffer</span><span style="color: #f92672">&amp;</span> <span style="color: #f8f8f2">commandBuffer)</span>
+   <span style="color: #f8f8f2">{</span>
+	   <span style="color: #66d9ef">const</span> <span style="color: #f8f8f2">Scene</span><span style="color: #f92672">*</span> <span style="color: #f8f8f2">scene</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">SceneManager</span><span style="color: #f92672">::</span><span style="color: #f8f8f2">Get()</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">getScene();</span>
+	   
+	   <span style="color: #75715e">// prepare and upload/update info and buffers</span>
+	   <span style="color: #f8f8f2">{</span>
+		   <span style="color: #f8f8f2">Prepare(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+   
+		   <span style="color: #f8f8f2">s_ShadowPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">Prepare(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+   
+		   <span style="color: #66d9ef">if</span> <span style="color: #f8f8f2">(UseGizmos)</span>
+			   <span style="color: #f8f8f2">s_GizmosPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">Prepare(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+		   
+		   <span style="color: #66d9ef">if</span> <span style="color: #f8f8f2">(DrawSkybox)</span>
+			   <span style="color: #f8f8f2">s_SkyboxPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">Prepare(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+   
+   <span style="color: #75715e">#ifdef _NE_USE_RTX</span>
+		   <span style="color: #75715e">// updates acceleration structures as needed</span>
+		   <span style="color: #f8f8f2">s_ReflectionPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">Prepare(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+   <span style="color: #75715e">#endif</span>
+	   <span style="color: #f8f8f2">}</span>
+	   
+	   <span style="color: #75715e">//memory barrier to make sure copies complete before rendering happens:</span>
+	   <span style="color: #f8f8f2">InsertPipelineMemoryBarrier(commandBuffer);</span>
+   
+	   <span style="color: #75715e">// render objects</span>
+	   <span style="color: #f8f8f2">{</span>
+		   <span style="color: #75715e">// draw rtx</span>
+   <span style="color: #75715e">#ifdef _NE_USE_RTX</span>
+		   <span style="color: #f8f8f2">RunRTXReflection(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+   <span style="color: #75715e">#endif</span>
+   
+		   <span style="color: #75715e">// render shadow passes</span>
+		   <span style="color: #f8f8f2">s_ShadowPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">Render(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+   
+		   <span style="color: #75715e">// draw scene</span>
+		   <span style="color: #f8f8f2">s_OffscreenPass</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">Begin(commandBuffer,</span> <span style="color: #f8f8f2">m_OffscreenFrameBuffers[CURR_FRAME]);</span>
+		   <span style="color: #f8f8f2">{</span>
+			   <span style="color: #f8f8f2">DrawScene(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+   
+			   <span style="color: #75715e">// draw skybox</span>
+			   <span style="color: #66d9ef">if</span> <span style="color: #f8f8f2">(DrawSkybox)</span>
+				   <span style="color: #f8f8f2">s_SkyboxPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">Render(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+		   <span style="color: #f8f8f2">}</span>
+		   <span style="color: #f8f8f2">s_OffscreenPass</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">End(commandBuffer);</span>
+   
+   <span style="color: #75715e">#ifdef _NE_USE_RTX</span>
+		   <span style="color: #f8f8f2">RunRTXTransparency(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+   <span style="color: #75715e">#endif</span>
+   
+		   <span style="color: #75715e">// bloom</span>
+		   <span style="color: #f8f8f2">s_BloomPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">Render(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+   
+		   <span style="color: #75715e">// ray traced AO</span>
+		   <span style="color: #f8f8f2">RunAOCompute(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+   
+		   <span style="color: #75715e">// compose together everything and get ready to present</span>
+		   <span style="color: #f8f8f2">s_CompositionPass</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">Begin(commandBuffer,</span> <span style="color: #f8f8f2">m_CompositionFrameBuffers[CURR_FRAME]);</span>
+		   <span style="color: #f8f8f2">{</span>
+			   <span style="color: #f8f8f2">RunPost(commandBuffer);</span>
+		   <span style="color: #f8f8f2">}</span>
+		   <span style="color: #f8f8f2">s_CompositionPass</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">End(commandBuffer);</span>
+   
+		   <span style="color: #75715e">// gizmos pass</span>
+		   <span style="color: #f8f8f2">s_UIPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">BeginRenderPass(commandBuffer);</span>
+		   <span style="color: #66d9ef">if</span> <span style="color: #f8f8f2">(UseGizmos)</span>
+			   <span style="color: #f8f8f2">s_GizmosPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">Render(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+		   <span style="color: #f8f8f2">s_UIPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">EndRenderPass(commandBuffer);</span>
+   
+		   <span style="color: #75715e">// UI pass</span>
+		   <span style="color: #f8f8f2">s_UIPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">FinalizeUI();</span>
+		   <span style="color: #f8f8f2">s_UIPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">BeginRenderPass(commandBuffer);</span> 
+		   <span style="color: #f8f8f2">{</span>
+			   <span style="color: #f8f8f2">s_UIPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">Render(scene,</span> <span style="color: #f8f8f2">commandBuffer);</span>
+		   <span style="color: #f8f8f2">}</span>
+		   <span style="color: #f8f8f2">s_UIPipeline</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">EndRenderPass(commandBuffer);</span>
+	   <span style="color: #f8f8f2">}</span>
+   <span style="color: #f8f8f2">}</span>
+   </pre></td></tr></table></div>
+	
+
+<h2>Ray Traced Reflections</h2>
+
+<p>
+	The bulk of the ray tracing work comes from building the acceleration structures. This is handled in <code>RaytracingContext</code>.
+	The bottom level acceleration structures are created ONCE on initialization for all the loaded meshes in the scene.
+	The top level acceleration structures are created, built once on initilization with <code>VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR</code> flags
+	to allow update, and it is updated whenever the scene is changed (scene.isDirty). The scene dirty flag is computed 
+	based on whether any geometry has a changed transform in the last update cycle. Furthermore, the TLAS are built with an instance mask as follows:
+
+	<!-- HTML generated using hilite.me --><div style="background: #272822; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .2em;"><pre style="margin: 0; line-height: 125%"><span style="color: #66d9ef">uint32_t</span> <span style="color: #f8f8f2">mask;</span>
+<span style="color: #66d9ef">switch</span> <span style="color: #f8f8f2">(workflowInstances[i].material</span><span style="color: #f92672">-&gt;</span><span style="color: #f8f8f2">getWorkflow())</span>
+<span style="color: #f8f8f2">{</span>
+<span style="color: #66d9ef">case</span> <span style="color: #f8f8f2">Material</span>:<span style="color: #f92672">:</span><span style="color: #f8f8f2">Workflow</span><span style="color: #f92672">::</span><span style="color: #f8f8f2">Lambertian</span><span style="color: #f92672">:</span> <span style="color: #66d9ef">case</span> <span style="color: #f8f8f2">Material</span>:<span style="color: #f92672">:</span><span style="color: #f8f8f2">Workflow</span><span style="color: #f92672">::</span><span style="color: #f8f8f2">PBR</span><span style="color: #f92672">:</span>
+	<span style="color: #f8f8f2">mask</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">INSTANCE_OPAQUE;</span>
+	<span style="color: #66d9ef">break</span><span style="color: #f8f8f2">;</span>
+<span style="color: #66d9ef">case</span> <span style="color: #f8f8f2">Material</span>:<span style="color: #f92672">:</span><span style="color: #f8f8f2">Workflow</span><span style="color: #f92672">::</span><span style="color: #f8f8f2">Glass</span><span style="color: #f92672">:</span>
+	<span style="color: #f8f8f2">mask</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">INSTANCE_TRANSLUCENT;</span>
+	<span style="color: #66d9ef">break</span><span style="color: #f8f8f2">;</span>
+<span style="color: #f8f8f2">default:</span>
+	<span style="color: #f8f8f2">mask</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">INSTANCE_OPAQUE;</span>
+<span style="color: #f8f8f2">}</span>
+<span style="color: #f8f8f2">rayInst.mask</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">mask;</span>
+</pre></div>
+
+where
+<!-- HTML generated using hilite.me --><div style="background: #272822; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .2em;"><pre style="margin: 0; line-height: 125%"><span style="color: #75715e">#define INSTANCE_OPAQUE (1 &lt;&lt; 0)</span>
+<span style="color: #75715e">#define INSTANCE_TRANSLUCENT (1 &lt;&lt; 1)</span>
+<span style="color: #75715e">#define INSTANCE_IS_SOMETHING_ELSE (1 &lt;&lt; 2)</span>
+</pre></div>
+
+in the actual building code, we check if we are updating or initializing:
+
+<!-- HTML generated using hilite.me --><div style="background: #272822; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .2em;"><pre style="margin: 0; line-height: 125%"><span style="color: #66d9ef">if</span> <span style="color: #f8f8f2">(update)</span>
+<span style="color: #f8f8f2">{</span>  <span style="color: #75715e">// Update the acceleration structure</span>
+	<span style="color: #f8f8f2">tlasBuildData.asGeometry[</span><span style="color: #ae81ff">0</span><span style="color: #f8f8f2">].geometry.instances.data.deviceAddress</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">instBufferAddr;</span>
+	<span style="color: #f8f8f2">tlasBuildData.CmdUpdateAccelerationStructure(cmdBuf,</span> <span style="color: #f8f8f2">m_tlas.handle,</span> <span style="color: #f8f8f2">scratchBuffer.deviceAddress);</span>
+<span style="color: #f8f8f2">}</span>
+<span style="color: #66d9ef">else</span>
+<span style="color: #f8f8f2">{</span>  <span style="color: #75715e">// Create and build the acceleration structure</span>
+	<span style="color: #f8f8f2">VkAccelerationStructureCreateInfoKHR</span> <span style="color: #f8f8f2">createInfo</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">tlasBuildData.MakeCreateInfo();</span>
+
+	<span style="color: #f8f8f2">m_tlas</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">RaytracingContext</span><span style="color: #f92672">::</span><span style="color: #f8f8f2">CreateAccelerationStructure(createInfo);</span>
+	<span style="color: #f8f8f2">tlasBuildData.CmdBuildAccelerationStructure(cmdBuf,</span> <span style="color: #f8f8f2">m_tlas.handle,</span> <span style="color: #f8f8f2">scratchBuffer.deviceAddress);</span>
+<span style="color: #f8f8f2">}</span>
+</pre></div>
+
+Now lets talk about reflections! For simplicity, I assumed perfect mirror reflections for all materials.
+The reflection is a built in part of the main lighting pass, subsituting the prefiltered environment map with the reflection map instead as a part of the BRDF.
+<!-- HTML generated using hilite.me --><div style="background: #272822; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .2em;"><pre style="margin: 0; line-height: 125%"><span style="color: #75715e">// Specular IBL from pre-filtered environment map</span>
+<span style="color: #75715e">//float lod = roughness * MAX_REFLECTION_LOD;</span>
+<span style="color: #75715e">//vec3 specularIrradiance = textureLod(prefilterEnvMap, R, lod).rgb;</span>
+
+<span style="color: #75715e">// obtain reflection color from rtx</span>
+<span style="color: #66d9ef">ivec2</span> <span style="color: #f8f8f2">pixelCoord</span> <span style="color: #f92672">=</span> <span style="color: #66d9ef">ivec2</span><span style="color: #f8f8f2">(gl_FragCoord.xy);</span>
+<span style="color: #66d9ef">vec3</span> <span style="color: #f8f8f2">reflectionColor</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">imageLoad(raytracedReflections,</span> <span style="color: #f8f8f2">pixelCoord).rgb;</span>
+</pre></div>
+
+Now, whats the shader for ray tracing? The rays are dispatched from a pipeline. The rays are dispatched iteratively with a customizable depth:
+<!-- HTML generated using hilite.me --><div style="background: #272822; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .2em;"><pre style="margin: 0; line-height: 125%"><span style="color: #66d9ef">vec3</span> <span style="color: #f8f8f2">hitValue</span> <span style="color: #f92672">=</span> <span style="color: #66d9ef">vec3</span><span style="color: #f8f8f2">(</span><span style="color: #ae81ff">0</span><span style="color: #f8f8f2">);</span>
+<span style="color: #66d9ef">for</span><span style="color: #f8f8f2">(;;)</span>
+<span style="color: #f8f8f2">{</span>
+	<span style="color: #f8f8f2">traceRayEXT(topLevelAS,</span>     <span style="color: #75715e">// acceleration structure</span>
+				<span style="color: #f8f8f2">rayFlags,</span>       <span style="color: #75715e">// rayFlags</span>
+				<span style="color: #f8f8f2">INSTANCE_OPAQUE,</span>           <span style="color: #75715e">// cullMask</span>
+				<span style="color: #ae81ff">0</span><span style="color: #f8f8f2">,</span>              <span style="color: #75715e">// sbtRecordOffset</span>
+				<span style="color: #ae81ff">0</span><span style="color: #f8f8f2">,</span>              <span style="color: #75715e">// sbtRecordStride</span>
+				<span style="color: #ae81ff">0</span><span style="color: #f8f8f2">,</span>              <span style="color: #75715e">// missIndex</span>
+				<span style="color: #f8f8f2">prd.rayOrigin,</span>     <span style="color: #75715e">// ray origin</span>
+				<span style="color: #f8f8f2">tMin,</span>           <span style="color: #75715e">// ray min range</span>
+				<span style="color: #f8f8f2">prd.rayDir,</span>  <span style="color: #75715e">// ray direction</span>
+				<span style="color: #f8f8f2">tMax,</span>           <span style="color: #75715e">// ray max range</span>
+				<span style="color: #ae81ff">0</span>               <span style="color: #75715e">// payload (location = 0)</span>
+	<span style="color: #f8f8f2">);</span>
+	<span style="color: #f8f8f2">hitValue</span> <span style="color: #f92672">+=</span> <span style="color: #f8f8f2">prd.hitValue</span> <span style="color: #f92672">*</span> <span style="color: #f8f8f2">prd.attenuation;</span>
+
+	<span style="color: #f8f8f2">prd.depth</span><span style="color: #f92672">++</span><span style="color: #f8f8f2">;</span>
+	<span style="color: #66d9ef">if</span><span style="color: #f8f8f2">(prd.done</span> <span style="color: #f92672">==</span> <span style="color: #ae81ff">1</span> <span style="color: #f92672">||</span> <span style="color: #f8f8f2">prd.depth</span> <span style="color: #f92672">&gt;=</span> <span style="color: #f8f8f2">rayConstants.rayDepth)</span>
+		<span style="color: #66d9ef">break</span><span style="color: #f8f8f2">;</span>
+<span style="color: #f8f8f2">}</span>
+
+<span style="color: #f8f8f2">imageStore(raytracedReflections,</span> <span style="color: #66d9ef">ivec2</span><span style="color: #f8f8f2">(gl_LaunchIDEXT.xy),</span> <span style="color: #66d9ef">vec4</span><span style="color: #f8f8f2">(hitValue,</span> <span style="color: #ae81ff">1.0</span><span style="color: #f8f8f2">));</span>
+</pre></div>
+
+The closest hit shader is pretty straightforward -- it gets information from object description buffer and material buffer, and shades the pixel accordingly.
+For performance reasons, no direct lighting is considered here. See <code>shaders/raytracing/reflections.rchit</code>.
+<br><br>
+Here is an example scene: Some materials are lambertian and others PBR.
+</p>
+
+<img src="Reflection.png" width="700"/><br>
+<img src="Reflection-Reflection.png" width="300"/>
+<img src="Reflection-AO.png" width="300"/>
+
+<h3>Compute-driven Ray Traced Ambience Occlusion</h3> 
+<p>
+	Lets talk about AO. Instead of disptching from pipeline, the AO rays are dispatched from compute shaders an ray queries. The direction and position are obtained from
+	the compressed G-buffer normals, and the rays are aggregated overtime. Heres a snippet of the ray queries:
+
+<!-- HTML generated using hilite.me --><div style="background: #272822; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .2em;"><pre style="margin: 0; line-height: 125%"><span style="color: #75715e">// Tracing a ray and returning the weight based on the distance of the hit</span>
+<span style="color: #66d9ef">float</span> <span style="color: #f8f8f2">TraceRay(</span><span style="color: #66d9ef">in</span> <span style="color: #f8f8f2">rayQueryEXT</span> <span style="color: #f8f8f2">rayQuery,</span> <span style="color: #66d9ef">in</span> <span style="color: #66d9ef">vec3</span> <span style="color: #f8f8f2">origin,</span> <span style="color: #66d9ef">in</span> <span style="color: #66d9ef">vec3</span> <span style="color: #f8f8f2">direction)</span>
+<span style="color: #f8f8f2">{</span>
+    <span style="color: #75715e">// ignore any-hit shaders and closest-hit shaders , and terminate the ray on the first found intersection</span>
+    <span style="color: #f8f8f2">uint</span> <span style="color: #f8f8f2">flags</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">gl_RayFlagsOpaqueEXT</span> <span style="color: #f92672">|</span> <span style="color: #f8f8f2">gl_RayFlagsSkipClosestHitShaderEXT</span> <span style="color: #f92672">|</span> <span style="color: #f8f8f2">gl_RayFlagsTerminateOnFirstHitEXT;</span>
+
+    <span style="color: #f8f8f2">rayQueryInitializeEXT(rayQuery,</span> <span style="color: #f8f8f2">topLevelAS,</span> <span style="color: #f8f8f2">flags,</span> <span style="color: #f8f8f2">INSTANCE_OPAQUE,</span> <span style="color: #f8f8f2">origin,</span> <span style="color: #ae81ff">0.0</span><span style="color: #f8f8f2">f,</span> <span style="color: #f8f8f2">direction,</span> <span style="color: #f8f8f2">rtao_radius);</span>
+
+    <span style="color: #75715e">// Start traversal: return false if traversal is complete</span>
+    <span style="color: #66d9ef">while</span><span style="color: #f8f8f2">(rayQueryProceedEXT(rayQuery))</span> <span style="color: #f8f8f2">{</span> <span style="color: #f8f8f2">}</span>
+
+    <span style="color: #66d9ef">float</span> <span style="color: #f8f8f2">intersectionType</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">rayQueryGetIntersectionTypeEXT(rayQuery,</span> <span style="color: #66d9ef">true</span><span style="color: #f8f8f2">);</span>
+    <span style="color: #66d9ef">return</span> <span style="color: #f8f8f2">(intersectionType</span> <span style="color: #f92672">!=</span> <span style="color: #f8f8f2">gl_RayQueryCommittedIntersectionNoneEXT)</span>
+        <span style="color: #f92672">?</span> <span style="color: #f8f8f2">(rtao_distance_based</span> <span style="color: #f92672">==</span> <span style="color: #ae81ff">0</span> <span style="color: #f92672">?</span> <span style="color: #ae81ff">1.0</span><span style="color: #f8f8f2">f</span> <span style="color: #f92672">:</span> <span style="color: #f8f8f2">(</span><span style="color: #ae81ff">1.0</span><span style="color: #f8f8f2">f</span> <span style="color: #f92672">-</span> <span style="color: #f8f8f2">(rayQueryGetIntersectionTEXT(rayQuery,</span> <span style="color: #66d9ef">true</span><span style="color: #f8f8f2">)</span> <span style="color: #f92672">/</span> <span style="color: #f8f8f2">rtao_radius)))</span>
+        <span style="color: #f92672">:</span> <span style="color: #ae81ff">0.0</span><span style="color: #f8f8f2">f;</span>
+<span style="color: #f8f8f2">}</span>
+</pre></div>
+
+<br><br>
+Here is an example scene with G buffer color, G buffer Position-normal, G buffer HDR, AO, and reflection textures respectively.
+
+</p>
+<img src="AO.png" width="700"/><br>
+<img src="AO-Color.png" width="300"/>
+<img src="AO-PosN.png" width="300"/>
+<img src="AO-HDR.png" width="300"/>
+<img src="AO-AO.png" width="300"/>
+<img src="AO-Reflection.png" width="300"/>
+
+<h3>Physically Based Bloom</h3>
+<p>
+	I initially wanted simple bloom using a simple vertical and horizontal gaussian pass, but it looked really bad.
+	So I implemented the downsampling and upsampling approach by taking a 3x3 tent sampling. I also used Karis average for the first downsampling passe
+	to reduce fireflies
+</p>
+<img src="Bloom.png" width="700"/><br>
+<img src="Bloom-PosN.png" width="300"/>
+<img src="Bloom-HDR.png" width="300"/>
+<img src="Bloom-AO.png" width="300"/>
+
+
+<h2>Ray traced transparency</h2>
+This is still WIP, but the big idea is using ray tracing for glass and transparent materials. However the shaders are not quite working at this moment and I'm not 
+sure if its a acceleration structure issue or a ray tracing issue.
+</p>
+
+<h3>Bench marking</h3>
+Bench marking different ray depths for reflections:
+
+Bench marking different scene complexities:
+
+
+</body></html>
