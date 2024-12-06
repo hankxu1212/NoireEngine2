@@ -2,7 +2,7 @@
 <!-- saved from url=(0069)http://graphics.cs.cmu.edu/courses/15-472-f24/A3/report-template.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>15-472-s24: A3 - Lights</title>
+<title>15-472-f24: Final Project</title>
 <style>
 /* feel free to style your report in a fancier way! */
 
@@ -398,6 +398,7 @@ Here is an example scene: Some materials are lambertian and others PBR.
 Here is an example scene with G buffer color, G buffer Position-normal, G buffer HDR, AO, and reflection textures respectively.
 
 </p>
+
 <img src="AO.png" width="700"/><br>
 <img src="AO-Color.png" width="300"/>
 <img src="AO-PosN.png" width="300"/>
@@ -405,7 +406,21 @@ Here is an example scene with G buffer color, G buffer Position-normal, G buffer
 <img src="AO-AO.png" width="300"/>
 <img src="AO-Reflection.png" width="300"/>
 
-<h3>Physically Based Bloom</h3>
+<p>
+	Heres another one:
+
+<img src="library.png" width="700"/><br>
+<img src="library_PosN.png" width="300"/>
+<img src="library_HDR.png" width="300"/>
+<img src="library_AO.png" width="300"/>
+<img src="library_reflections.png" width="300"/>
+
+<br>The textures and models are created and owned by my game studio, Team Crescendo. 
+Textures UVs dont quite line up here cuz we dont support multiple materials on the same model.
+This scene is used in my upcoming game, <a href="https://store.steampowered.com/app/3240610/Noire/">Memoria Wake</a>.
+
+</p>
+<h2>Physically Based Bloom</h2>
 <p>
 	I initially wanted simple bloom using a simple vertical and horizontal gaussian pass, but it looked really bad.
 	So I implemented the downsampling and upsampling approach by taking a 3x3 tent sampling. I also used Karis average for the first downsampling passe
@@ -419,13 +434,18 @@ Here is an example scene with G buffer color, G buffer Position-normal, G buffer
 
 <h2>Ray traced transparency</h2>
 This is still WIP, but the big idea is using ray tracing for glass and transparent materials. However the shaders are not quite working at this moment and I'm not 
-sure if its a acceleration structure issue or a ray tracing issue.
+sure if its a acceleration structure issue or a ray tracing issue. Feel free to take a look at transparency.* shaders.
 </p>
 
 <h3>Bench marking</h3>
 Bench marking different ray depths for reflections:
+<br>
+Results of bench marking on the library scene above:
+<img src="raybounces.png" width="700"/><br>
 
-Bench marking different scene complexities:
-
+Bench marking different scene complexities: (frame time is in ms)
+This is with Ray depth = 5, tested by adding a BUNCH of mice.
+<img src="mice.png" width="700"/><br>
+<img src="frame.png" width="700"/><br>
 
 </body></html>

@@ -68,7 +68,7 @@ void TransparencyPipeline::Render(const Scene* scene, const CommandBuffer& comma
 	);
 
 	vkCmdPushConstants(commandBuffer, m_PipelineLayout,
-		VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR,
+		VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
 		0, sizeof(PushConstantRay), &m_TransparencyPush);
 
 	const SwapChain* swapchain = VulkanContext::Get()->getSwapChain(0);
@@ -101,7 +101,7 @@ void TransparencyPipeline::CreateRayTracingPipeline()
 	{
 		eRaygen,
 		eMiss,
-		eAnyHit, // <---- 3 specializations of this one
+		eClosestHit, // <---- 3 specializations of this one
 		eShaderGroupCount = 5
 	};
 
@@ -125,11 +125,11 @@ void TransparencyPipeline::CreateRayTracingPipeline()
 
 	// Hit Group - Any Hit (no closest hit)
 	// Create many variation of the closest hit
-	VulkanShader anyHitModule("../spv/shaders/raytracing/transparency.rahit.spv", VulkanShader::ShaderStage::RTX_AHit);
+	VulkanShader anyHitModule("../spv/shaders/raytracing/transparency.rchit.spv", VulkanShader::ShaderStage::RTX_CHit);
 	for (uint32_t s = 0; s < (uint32_t)specializations.size(); s++)
 	{
-		stages[eAnyHit + s] = anyHitModule.shaderStage();
-		stages[eAnyHit + s].pSpecializationInfo = specializations[s].GetSpecialization();
+		stages[eClosestHit + s] = anyHitModule.shaderStage();
+		stages[eClosestHit + s].pSpecializationInfo = specializations[s].GetSpecialization();
 	}
 
 	// Shader groups
@@ -155,12 +155,12 @@ void TransparencyPipeline::CreateRayTracingPipeline()
 	{
 		group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
 		group.generalShader = VK_SHADER_UNUSED_KHR;
-		group.anyHitShader = eAnyHit + s;  // Using variation of the closest hit
+		group.closestHitShader = eClosestHit + s;  // Using variation of the closest hit
 		m_RTShaderGroups.push_back(group);
 	}
 
 	// Push constant: we want to be able to update constants used by the shaders
-	VkPushConstantRange pushConstant{ VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR,
+	VkPushConstantRange pushConstant{ VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
 									 0, sizeof(PushConstantRay) };
 
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };

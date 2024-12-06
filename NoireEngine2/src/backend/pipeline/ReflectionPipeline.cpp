@@ -82,7 +82,7 @@ void ReflectionPipeline::OnUIRender()
 	// Modify Maximum Samples
 	ImGui::Text("Ray Depth");
 	ImGui::NextColumn();
-	ImGui::DragInt("##RTX_REFLECTIONS_MAX_DEPTH", &m_ReflectionPush.rayDepth, 1, 1, 10);
+	ImGui::DragInt("##RTX_REFLECTIONS_MAX_DEPTH", &m_ReflectionPush.rayDepth, 1, 1, 1000);
 	ImGui::Columns(1);
 }
 

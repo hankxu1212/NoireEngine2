@@ -439,7 +439,7 @@
     <None Include="src\shaders\lambertian.vert" />
     <None Include="src\shaders\raytracing\rtutils.glsl" />
     <None Include="src\shaders\raytracing\transparency.glsl" />
-    <None Include="src\shaders\raytracing\transparency.rahit" />
+    <None Include="src\shaders\raytracing\transparency.rchit" />
     <None Include="src\shaders\raytracing\transparency.rgen" />
     <None Include="src\shaders\raytracing\transparency.rmiss" />
     <None Include="src\shaders\raytracing\transparency_opaque.rchit" />

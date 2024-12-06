@@ -152,7 +152,7 @@ static RaytracingBuilderKHR::BlasInput MeshToGeometry(Mesh* mesh)
 	// Build
 	VkAccelerationStructureGeometryKHR accelerationStructureGeometry{};
 	accelerationStructureGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
-	accelerationStructureGeometry.flags = VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
+	accelerationStructureGeometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
 	accelerationStructureGeometry.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
 	accelerationStructureGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
 	accelerationStructureGeometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
@@ -210,21 +210,26 @@ void RaytracingContext::CreateTopLevelAccelerationStructure(bool update)
 			rayInst.transform = ToTransformMatrixKHR(workflowInstances[i].m_TransformUniform.modelMatrix); // Position of the instance
 			rayInst.instanceCustomIndex = instanceIndex; // gl_InstanceCustomIndexEXT
 			rayInst.accelerationStructureReference = m_RTBuilder.getBlasDeviceAddress(workflowInstances[i].mesh->getID());
-			rayInst.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 
 			uint32_t mask;
+			VkGeometryInstanceFlagsKHR flags;
 			switch (workflowInstances[i].material->getWorkflow())
 			{
 			case Material::Workflow::Lambertian: case Material::Workflow::PBR:
 				mask = INSTANCE_OPAQUE;
+				flags = VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR;
 				break;
 			case Material::Workflow::Glass:
+				flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 				mask = INSTANCE_TRANSLUCENT;
 				break;
 			default:
-				mask = INSTANCE_OPAQUE;
+				flags = 0;
+				mask = INSTANCE_IS_SOMETHING_ELSE;
 			}
+
 			rayInst.mask = mask;
+			rayInst.flags = flags;
 
 			rayInst.instanceShaderBindingTableRecordOffset = (uint32_t)workflowInstances[i].material->getWorkflow();
 
